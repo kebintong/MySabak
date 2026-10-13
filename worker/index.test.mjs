@@ -1,8 +1,10 @@
-// Tests for worker/index.js (the TomTom proxy). Run: npm test
-// TomTom is faked, so these run offline and never use a real key.
+// Tests for the TomTom proxy (index.js) and a guard against committed keys.
+// Run: node --test worker/   TomTom is faked, so these run offline and never use a real key.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import worker from '../worker/index.js';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import worker from './index.js';
 
 const KEY = 'TEST_KEY_123';
 const SITE = 'https://mysabak.example.workers.dev';
@@ -91,4 +93,24 @@ test('a missing TOMTOM_KEY secret gives a clear 503', async () => {
   const res = await call('/api/tomtom/search/2/reverseGeocode/10,123.json', {}, { ...env, TOMTOM_KEY: '' });
   assert.equal(res.status, 503);
   assert.match((await res.json()).error, /TOMTOM_KEY/);
+});
+
+// ---------- Repo guards ----------
+const tracked = () => execFileSync('git', ['ls-files'], { encoding: 'utf8' }).split('\n').filter(Boolean);
+
+test('no API keys in the committed code', () => {
+  const keyLike = /(tomtomKey|geoapifyKey)\s*:\s*['"][A-Za-z0-9]{16,}|TOMTOM_KEY\s*=\s*['"]?[A-Za-z0-9]{16,}|[?&]key=[A-Za-z0-9]{24,}/;
+  const offenders = tracked()
+    .filter((f) => /\.(js|mjs|json|jsonc|html|toml|yml|yaml)$|(^|\/)\.dev\.vars|(^|\/)\.env/.test(f))
+    .filter((f) => keyLike.test(readFileSync(f, 'utf8')));
+  assert.deepEqual(offenders, [], 'Keys belong in the TOMTOM_KEY Cloudflare secret (see README.md)');
+});
+
+test('local secret files are not committed', () => {
+  assert.deepEqual(tracked().filter((f) => /(^|\/)(\.dev\.vars|\.env)(\..*)?$/.test(f)), []);
+});
+
+test('only the website is published (no worker code or config in public/)', () => {
+  const leaked = tracked().filter((f) => f.startsWith('public/') && /(^|\/)(worker|wrangler|\.dev\.vars|\.env)/.test(f));
+  assert.deepEqual(leaked, []);
 });

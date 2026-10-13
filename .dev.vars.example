@@ -1,3 +1,0 @@
-# Copy this file to .dev.vars and paste your TomTom key.
-# .dev.vars is ignored by git. It is used by `npx wrangler dev` and `python serve.py`.
-TOMTOM_KEY=paste-your-tomtom-key-here

@@ -1,0 +1,3 @@
+# Old address of the app (before it moved to the site root). Cloudflare reads this file; it is not served.
+/html / 301
+/html/* / 301

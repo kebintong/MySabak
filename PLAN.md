@@ -74,15 +74,15 @@ Google's $200 monthly credit ended in March 2025. Google now gives a set number 
 - [ ] Choose the backend (see open questions).
 
 ### Phase 1 · Real map (no backend needed)
-- [ ] `html/index.html`: add MapLibre CSS and JS from a CDN; replace the drawn map with a real map container.
-- [ ] `scripts/index.js`: replace my drawing code (view, zoom, drag and marker positioning) with MapLibre's built-in versions.
+- [ ] `public/index.html`: add MapLibre CSS and JS from a CDN; replace the drawn map with a real map container.
+- [ ] `public/scripts/index.js`: replace my drawing code (view, zoom, drag and marker positioning) with MapLibre's built-in versions.
   - Pickup dot, current-location ring, destination pin and labels become `maplibregl.Marker`s (reuse the existing markup).
   - The route becomes a line layer drawn in the brand purple with a white outline.
 - [ ] Locate button → phone GPS (`navigator.geolocation`) + fly the map to that point. Handle "permission denied" with a friendly message.
 - [ ] "Pick on map" → a real map tap. Drop the pin and continue to vehicle selection.
 - [ ] Restyle the map: soft lavender ground, green parks, white roads, to match Design A.
-- [ ] `html/sw.js`: don't save map tiles in the offline cache, which would grow without limit.
-- [ ] `css/index.css`: remove the old drawn-map styles; style MapLibre's attribution and controls to match.
+- [ ] `public/sw.js`: don't save map tiles in the offline cache, which would grow without limit.
+- [ ] `public/css/index.css`: remove the old drawn-map styles; style MapLibre's attribution and controls to match.
 
 ### Phase 2 · Search
 - [ ] Suggestion dropdown under "Where to?": waits until the user pauses typing (about 300 ms), needs 3+ characters, favours results near the user or the Cebu area.
@@ -92,7 +92,7 @@ Google's $200 monthly credit ended in March 2025. Google now gives a set number 
 
 ### Phase 3 · Routing + fares
 - [ ] Backend endpoint: send pickup and drop-off → get back distance, travel time, the route line, and a fare per vehicle.
-- [ ] `estimateTrip()` in `index.js` calls the backend (it becomes async, with a loading state on the vehicle cards).
+- [ ] `estimateTrip()` in `public/scripts/index.js` calls the backend (it becomes async, with a loading state on the vehicle cards).
 - [ ] The map zooms to fit the whole route; the `[FARE]`, `[Distance]` and `[Travel time]` placeholders fill in automatically.
 - [ ] Show the fare breakdown (base + distance) on mobile too, since it's the "no hidden charges" proof.
 
@@ -101,7 +101,7 @@ Google's $200 monthly credit ended in March 2025. Google now gives a set number 
 
 ### Before launch
 - [x] Keep API keys off the browser: TomTom goes through the Cloudflare Worker (`worker/index.js`), key stored as a Cloudflare secret.
-- [ ] Add a Cloudflare rate-limiting rule on `/api/*` once mysabak.com is on Cloudflare (see DEPLOY.md).
+- [ ] Add a Cloudflare rate-limiting rule on `/api/*` once mysabak.com is on Cloudflare (see README.md).
 - [ ] Cache search and routing results on the backend.
 - [ ] Attribution visible (MapLibre adds it automatically), plus a "report a map issue" link.
 - [ ] Set quota alerts on every provider account.
