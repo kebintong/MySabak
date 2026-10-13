@@ -1,7 +1,7 @@
 /* Driver home (pages/driver.html): online switch, job requests, earnings, payouts.
    Job requests come only from the backend through onJobRequest(); the demo sends none. */
 import { CONFIG } from '../config.js';
-import { driverStatus, setOnline, onJobRequest, acceptJob, driverEarnings, errorMessage } from '../api.js';
+import { driverStatus, setOnline, onJobRequest, acceptJob, driverEarnings, driverSignOut, errorMessage } from '../api.js';
 import { $, mountChrome, toast, peso, esc, when } from '../ui.js';
 
 mountChrome();
@@ -46,6 +46,7 @@ async function toggleOnline() {
     stopJobs = online ? onJobRequest(showJob) : () => {};
     paintOnline();
   } catch (err) {
+    if (err.status === 401) { location.replace('/pages/drive.html'); return; }
     toast(err.status === 403 ? 'You can go online once your application is approved.' : errorMessage(err));
   }
 }
@@ -63,7 +64,7 @@ async function loadEarnings() {
 
 async function start() {
   const d = await driverStatus();
-  if (d.status === 'none') { $('#notDriver').hidden = false; return; }
+  if (!d.signedIn) { location.replace('/pages/drive.html'); return; } // sign in first
   $('#driverHome').hidden = false;
   const vehicle = CONFIG.vehicles.find((v) => v.id === d.vehicle);
   bind('firstName', (d.name || 'driver').split(' ')[0]);
@@ -77,6 +78,11 @@ async function start() {
   loadEarnings();
   $('#onlineBtn').addEventListener('click', toggleOnline);
   $('#payoutBtn').addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.'));
+  $('#signOutBtn').addEventListener('click', async () => {
+    stopJobs();
+    await driverSignOut();
+    location.href = '/pages/drive.html';
+  });
 }
 
 start();

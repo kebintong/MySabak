@@ -319,27 +319,62 @@ export async function supportStats() {
    Drive (driver side)
    ========================================================= */
 
+const samePhone = (a, b) => {
+  const norm = (p) => String(p || '').replace(/\D/g, '').replace(/^63/, '0');
+  return norm(a) !== '' && norm(a) === norm(b);
+};
+
 /**
- * Driver application.
- * DEMO: approved straight away so the driver home can be shown. Files aren't uploaded.
- * @param {{name, phone, email, city, vehicle:'motor'|'sedan'|'suv', plate, model, year,
+ * Driver sign-in with mobile number + password.
+ * DEMO: any password works for the number used at sign-up (passwords are never stored in the browser).
+ * Backend: check the password on the server and start a session (e.g. an httpOnly cookie).
+ * @returns {Promise<{status:'review'|'approved'|'rejected'}>}  throws { status: 401 } when the number/password don't match
+ */
+export async function driverSignIn({ phone, password }) {
+  if (!phone || !password) throw Object.assign(new Error('Enter your mobile number and password.'), { status: 400 });
+  await wait(700);
+  const d = demo.get('driver', null);
+  if (!d || !samePhone(d.phone, phone)) {
+    throw Object.assign(new Error('No driver account uses that mobile number. Check it, or sign up.'), { status: 401 });
+  }
+  demo.set('driverSession', { phone: d.phone, at: Date.now() });
+  return { status: d.status };
+}
+
+/** Sign the driver out (and offline). */
+export async function driverSignOut() {
+  const d = demo.get('driver', null);
+  if (d) demo.set('driver', { ...d, online: false });
+  demo.set('driverSession', null);
+}
+
+/**
+ * Driver application. Signs the new driver in.
+ * DEMO: approved straight away so the driver home can be shown. Files aren't uploaded and the
+ * password isn't kept.
+ * @param {{name, phone, email, city, password, vehicle:'motor'|'sedan'|'suv', plate, model, year,
  *   licenseNumber, files:{license, orcr, selfie}, agreed:boolean}} application
  * @returns {Promise<{status:'review'|'approved', demo:boolean}>}
  */
 export async function driverApply(application) {
   await wait(1200);
-  const { files, ...data } = application; // eslint-disable-line no-unused-vars
+  const { files, password, ...data } = application; // eslint-disable-line no-unused-vars
   demo.set('driver', { ...data, status: 'approved', online: false, appliedAt: Date.now() });
+  demo.set('driverSession', { phone: data.phone, at: Date.now() });
   return { status: 'approved', demo: true };
 }
 
 /**
- * The signed-in driver's status.
- * @returns {Promise<{status:'none'|'review'|'approved'|'rejected', name?:string, vehicle?:string, plate?:string, online:boolean}>}
+ * The driver's account status and whether they're signed in on this device.
+ * @returns {Promise<{status:'none'|'review'|'approved'|'rejected', signedIn:boolean,
+ *   name?:string, vehicle?:string, plate?:string, online:boolean}>}
  */
 export async function driverStatus() {
   const d = demo.get('driver', null);
-  return d ? { status: d.status, name: d.name, vehicle: d.vehicle, plate: d.plate, online: Boolean(d.online) } : { status: 'none', online: false };
+  const session = demo.get('driverSession', null);
+  if (!d) return { status: 'none', signedIn: false, online: false };
+  const signedIn = Boolean(session && samePhone(session.phone, d.phone));
+  return { status: d.status, signedIn, name: d.name, vehicle: d.vehicle, plate: d.plate, online: signedIn && Boolean(d.online) };
 }
 
 /**
@@ -348,7 +383,8 @@ export async function driverStatus() {
  */
 export async function setOnline(online) {
   const d = demo.get('driver', null);
-  if (!d || d.status !== 'approved') throw Object.assign(new Error('Not approved yet'), { status: 403 });
+  if (!d || !demo.get('driverSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  if (d.status !== 'approved') throw Object.assign(new Error('Not approved yet'), { status: 403 });
   demo.set('driver', { ...d, online: Boolean(online) });
   return { online: Boolean(online) };
 }

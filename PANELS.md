@@ -36,7 +36,7 @@ missing.
 ### Top bar
 | Element | Data | Source |
 |---|---|---|
-| Logo | none | `assets/images/logo.png` |
+| Logo | none | `assets/images/logo.svg` (favicon + app icons: `favicon.svg`, `icons/`) |
 | Install app | none | browser install prompt |
 | Sign in | user session | not built: goes to `pages/account.html` |
 
@@ -96,9 +96,9 @@ the trip ends.** The demo shows it right after booking, with a "Demo" note. Tip 
 ## Drive (driver side)
 | Page | What it does | Source |
 |---|---|---|
-| `pages/drive.html` | pitch, requirements, how it works; button becomes "Go to driver home" once signed up | `driverStatus()` |
-| `pages/drive-signup.html` | about you, vehicle, license number, document uploads (license, OR/CR, selfie), consent | `driverApply(application)` |
-| `pages/driver.html` | approval status, Go online / offline, job requests, earnings, payouts | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()` |
+| `pages/drive.html` | **Driver sign in**: mobile number, password (show/hide), keep me signed in, forgot password, Sign in, Terms of Service + Privacy Policy, then "Wanna work as a driver? Sign up". Signed-in drivers go straight to the driver home | `driverStatus()`, `driverSignIn()` |
+| `pages/drive-signup.html` | 3-step sign-up: **About you** (name, mobile, email, city, password) → **Vehicle** (Motor / Sedan / SUV, plate, year, make and model) → **Documents** (license number, license, OR/CR, selfie, consent). "Already a driver? Sign in" | `driverApply(application)` (signs the driver in) |
+| `pages/driver.html` | needs sign-in (otherwise back to `drive.html`); approval status, Go online / offline, job requests, earnings, payouts, Sign out | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
 
 **Job requests:** the driver home listens with `onJobRequest(onJob)` while online and shows each request with
 Accept / Decline. The demo sends none. Backend: connect your realtime channel there. Express and Shop jobs
@@ -132,6 +132,7 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
 | `bookRide(booking)` | `{ id, demo }` | Book / Send |
 | `sendTip(tip)` / `myTips()` | `{ id, amount }` / `Tip[]` | tip sheet, Support page |
 | `supportStats()` | `SupportStats` | Support page |
+| `driverSignIn({ phone, password })` / `driverSignOut()` | `{ status }` (401 if no match) / nothing | driver sign in, driver home |
 | `driverApply(application)` / `driverStatus()` | `{ status }` / `DriverStatus` | Drive pages |
 | `setOnline(online)` | `{ online }` | driver home |
 | `onJobRequest(onJob)` → `stop()` | calls `onJob(JobRequest)` | driver home |
@@ -170,13 +171,14 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
 { "period": "October 2026", "tipsTotal": 125000, "ordersFeeFree": 8400,
   "breakdown": [{ "label": "Maps, servers and the app", "share": 40 }] }
 
-// Driver application (files are File objects from the form; upload them to your storage)
-{ "name": "Juan Dela Cruz", "phone": "09175551234", "email": "", "city": "Cebu City",
+// Driver application (files are File objects from the form; upload them to your storage;
+// hash the password on the server; the demo never stores it)
+{ "name": "Juan Dela Cruz", "phone": "09175551234", "email": "", "city": "Cebu City", "password": "••••••••",
   "vehicle": "sedan", "plate": "GAA 1234", "model": "Toyota Vios", "year": 2019,
   "licenseNumber": "G01-23-456789", "files": { "license": {}, "orcr": {}, "selfie": {} }, "agreed": true }
 
-// DriverStatus
-{ "status": "approved", "name": "Juan Dela Cruz", "vehicle": "sedan", "plate": "GAA 1234", "online": false }
+// DriverStatus (signedIn: this device has a driver session)
+{ "status": "approved", "signedIn": true, "name": "Juan Dela Cruz", "vehicle": "sedan", "plate": "GAA 1234", "online": false }
 
 // JobRequest (from your realtime channel → onJob)
 { "id": "J-1", "kind": "shop", "pickup": { "lng": 123.893, "lat": 10.318, "label": "Lutong Bahay Kitchen" },
@@ -209,7 +211,7 @@ Any design works as long as `api.js` returns the shapes above. One option:
 | `POST /api/trips/estimate` `{ pickup, dropoff }` → `{ trip, fares }` | `routeBetween` + `faresFor` |
 | `POST /api/bookings` → `{ id }` | `bookRide` (Ride and Express) |
 | `POST /api/tips` · `GET /api/me/tips` · `GET /api/support/stats` | tips, Support page |
-| `POST /api/drivers` (multipart) · `GET /api/drivers/me` · `PUT /api/drivers/me/online` | Drive |
+| `POST /api/drivers` (multipart) · `POST /api/drivers/session` · `DELETE /api/drivers/session` · `GET /api/drivers/me` · `PUT /api/drivers/me/online` | Drive (sign-up, sign in/out, status, online) |
 | `WS /api/drivers/me/jobs` · `POST /api/jobs/:id/accept` · `POST /api/jobs/:id/status` | job requests |
 | `GET /api/drivers/me/earnings` | earnings |
 | `GET /api/shops` · `GET /api/shops/:id` · `POST /api/shops/:id/quote` | Shop |

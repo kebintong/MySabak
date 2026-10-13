@@ -32,7 +32,7 @@ export function mountChrome() {
   const top = $('[data-topbar]');
   if (top) {
     top.innerHTML = `
-      <a class="brand" href="/" aria-label="mysabak home"><img src="/assets/images/logo.png" alt="mysabak" width="154" height="42"></a>
+      <a class="brand" href="/" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="150" height="35"></a>
       <div class="topbar__actions"><a class="btn btn--dark" href="/pages/account.html">Sign in</a></div>`;
   }
   const nav = $('[data-tabs]');
@@ -61,6 +61,17 @@ export function registerServiceWorker() {
       if (w && w.scriptURL !== worker) r.unregister();
     })).catch(() => {});
   });
+}
+
+/** Show / hide buttons next to password fields: <button data-reveal="inputId">. */
+export function wirePasswordReveal(root = document) {
+  $$('[data-reveal]', root).forEach((btn) => btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.reveal);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Show' : 'Hide';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  }));
 }
 
 /* ---------- Toast ---------- */
