@@ -19,7 +19,7 @@ async function render(order) {
   const fee = order.deliveryFee;
   const total = order.subtotal + (typeof fee === 'number' ? fee : 0) + tipTotal;
   $('#receipt').innerHTML = `
-    ${order.lines.map((l) => `<div class="receipt__row"><dt>${esc(l.name)}<span>${l.qty} × ${peso(l.price)}</span></dt><dd>${peso(l.price * l.qty)}</dd></div>`).join('')}
+    ${order.lines.map((l) => `<div class="receipt__row"><dt>${esc(l.name)}${(l.options || []).length ? `<span>${esc(l.options.join(', '))}</span>` : ''}${l.note ? `<span>“${esc(l.note)}”</span>` : ''}<span>${l.qty} × ${peso(l.price)}</span></dt><dd>${peso(l.price * l.qty)}</dd></div>`).join('')}
     <div class="receipt__row"><dt>Items subtotal<span>to ${esc(order.shop.name)}</span></dt><dd>${peso(order.subtotal)}</dd></div>
     <div class="receipt__row"><dt>Delivery fee<span>100% to your rider</span></dt><dd>${pesoOr(fee)}</dd></div>
     ${tipTotal ? `<div class="receipt__row"><dt>Tip<span>100% to mysabak</span></dt><dd>${peso(tipTotal)}</dd></div>` : ''}

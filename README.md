@@ -13,9 +13,11 @@ assets/
   js/config.js      settings: vehicles, fares, tips, parcel sizes, delivery rates
   js/api.js         every server call  ← backend replaces this file
   js/demo-data.js   sample shops for the demo (delete when api.js is live)
+  js/demo-art.js    drawn placeholder pictures for shops and menu items (delete when photos come from the API)
   js/app.js         Ride screen      js/map.js   map, markers, route line
   js/ui.js          shared: top bar, tabs, toast, address search, tip sheet
   js/money.js       money maths      js/cart.js  shop cart
+  js/menu.js        menu options: prices, rules, shop hours    js/shop-map.js  map + pins on Shop pages
   js/pages/         one script per page in pages/
   js/sw.js          offline cache
   fonts/  images/   map label font · logo, app icons, icons.svg

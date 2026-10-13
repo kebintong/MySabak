@@ -2,7 +2,7 @@
 import { CONFIG } from '../config.js';
 import { shopMenu, deliveryQuote, placeOrder, addressFor, errorMessage } from '../api.js';
 import { cartTotals } from '../money.js';
-import { getCart, setQty, clearCart } from '../cart.js';
+import { getCart, setLineQty, clearCart } from '../cart.js';
 import { $, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast } from '../ui.js';
 
 mountChrome();
@@ -15,11 +15,14 @@ function renderLines() {
   const t = cartTotals(getCart(), shop.menu);
   if (!t.count) { showEmpty(); return t; }
   $('#lines').innerHTML = t.lines.map((l) => `<li class="row">
-      <div class="row__main"><span class="row__title">${esc(l.name)}</span><span class="row__sub">${peso(l.price)} each</span></div>
+      <div class="row__main"><span class="row__title">${esc(l.name)}</span>
+        ${l.options.length ? `<span class="row__sub">${esc(l.options.join(', '))}</span>` : ''}
+        ${l.note ? `<span class="row__sub">“${esc(l.note)}”</span>` : ''}
+        <span class="row__sub">${peso(l.price)} each</span></div>
       <div class="stepper" role="group" aria-label="${esc(l.name)} quantity">
-        <button type="button" data-step="-1" data-id="${l.id}" aria-label="One less">${icon('i-minus', 'icon--sm')}</button>
+        <button type="button" data-step="-1" data-line="${esc(l.key)}" aria-label="One less">${icon('i-minus', 'icon--sm')}</button>
         <span>${l.qty}</span>
-        <button type="button" data-step="1" data-id="${l.id}" aria-label="One more">${icon('i-plus', 'icon--sm')}</button>
+        <button type="button" data-step="1" data-line="${esc(l.key)}" aria-label="One more">${icon('i-plus', 'icon--sm')}</button>
       </div><span class="row__end">${peso(l.total)}</span></li>`).join('');
   return t;
 }
@@ -81,8 +84,8 @@ async function start() {
   $('#lines').addEventListener('click', (e) => {
     const b = e.target.closest('[data-step]');
     if (!b) return;
-    const c = getCart();
-    setQty(shop.id, b.dataset.id, (c.items[b.dataset.id] || 0) + Number(b.dataset.step));
+    const line = getCart().lines.find((l) => l.key === b.dataset.line);
+    if (line) setLineQty(line.key, line.qty + Number(b.dataset.step));
     if (renderLines().count) renderSummary();
   });
 
@@ -94,7 +97,7 @@ async function start() {
     btn.disabled = true;
     btn.textContent = 'Placing order…';
     try {
-      const items = Object.entries(getCart().items).map(([id, qty]) => ({ id, qty }));
+      const items = getCart().lines.map(({ id, qty, picks, note }) => ({ id, qty, picks, note }));
       const { id } = await placeOrder({ shopId: shop.id, items, address, notes: (data.get('notes') || '').trim(), payment: data.get('payment') });
       clearCart();
       location.href = `/pages/order.html?id=${encodeURIComponent(id)}`;

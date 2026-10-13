@@ -57,6 +57,16 @@ function styleUrl() {
   return tomtomUrl(`/maps/orbis/assets/styles/${TT_STYLE_VERSION}/style.json`, { apiVersion: 1, map: themeById(CONFIG.mapStyle).base }).toString();
 }
 
+/** What any mysabak map needs: TomTom style through the proxy, restyled as the street theme. Used by shop-map.js too. */
+export function baseMapOptions() {
+  const theme = themeById(CONFIG.mapStyle);
+  return {
+    style: styleUrl(),
+    transformRequest: (url) => viaProxy(url),
+    transformStyle: (_prev, next) => (theme.street ? streetStyle(next) : next),
+  };
+}
+
 /**
  * Start the map.
  * @param {object} ctx
@@ -126,8 +136,8 @@ export function initMap(ctx) {
   map.on('click', (e) => on.mapTapped({ lng: e.lngLat.lng, lat: e.lngLat.lat }));
 
   // The street theme rewrites TomTom's style before the first frame, so its own colours never flash.
-  const theme = themeById(CONFIG.mapStyle);
-  map.setStyle(styleUrl(), { transformStyle: (_prev, next) => (theme.street ? streetStyle(next) : next) });
+  const base = baseMapOptions();
+  map.setStyle(base.style, { transformStyle: base.transformStyle });
 }
 
 /* ---------- Street theme ----------

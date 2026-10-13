@@ -2,6 +2,7 @@
    mysabak · money and distance helpers (pure functions, no browser APIs)
    Used by the screens and by api.js. Tested in tests/money.test.mjs.
    ========================================================= */
+import { unitPrice, pickLabels } from './menu.js';
 
 export const isNum = (n) => typeof n === 'number' && Number.isFinite(n);
 
@@ -34,18 +35,20 @@ export function rateFor({ base, perKm }, km) {
 }
 
 /**
- * Cart lines and totals for one shop.
- * @param {{items: Object<string, number>}} cart   item id → quantity
- * @param {Array<{id:string, name:string, price:number}>} menu
- * @returns {{lines: Array<{id, name, price, qty, total}>, count:number, subtotal:number}}
+ * Cart lines and totals for one shop. Prices come from the menu, never from the cart.
+ * @param {{lines: Array<{key, id, qty, picks, note}>}} cart
+ * @param {Array<{id:string, name:string, price:number, options?:Array}>} menu
+ * @returns {{lines: Array<{key, id, name, price, qty, total, options:string[], note}>, count:number, subtotal:number}}
+ *   price: one item with its options. options: short words for the picks ("Garlic rice", "Large").
  */
 export function cartTotals(cart, menu) {
   const byId = new Map(menu.map((m) => [m.id, m]));
-  const lines = Object.entries((cart && cart.items) || {})
-    .filter(([id, qty]) => byId.has(id) && qty > 0)
-    .map(([id, qty]) => {
-      const item = byId.get(id);
-      return { id, name: item.name, price: item.price, qty, total: item.price * qty };
+  const lines = ((cart && cart.lines) || [])
+    .filter((l) => byId.has(l.id) && l.qty > 0)
+    .map((l) => {
+      const item = byId.get(l.id);
+      const price = unitPrice(item, l.picks);
+      return { key: l.key, id: l.id, name: item.name, price, qty: l.qty, total: price * l.qty, options: pickLabels(item, l.picks), note: l.note || '' };
     });
   return {
     lines,

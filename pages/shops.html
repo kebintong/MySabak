@@ -18,37 +18,53 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/assets/css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/assets/js/pages/shops.js"></script>
 </head>
-<body class="page">
+<body class="page page--map">
   <div class="app">
+    <!-- Map first: every shop is a pin, in the shop's colour -->
+    <div class="map" id="map" role="region" aria-label="Map of shops near you">
+      <div class="map__canvas" id="mapCanvas"></div>
+    </div>
+
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
-    <main class="content">
-      <div class="content__inner content__inner--wide">
-
-        <header class="page-head">
-          <h1 class="page-title">Shops</h1>
-          <p class="lede">Order from local shops. Delivered by mysabak riders, who keep 100% of the delivery fee.</p>
-        </header>
-        <p class="demo-note">Demo: these are sample shops with made-up menus.</p>
-
-        <div class="field">
-          <label for="shopSearch" class="sr-only">Search shops and items</label>
-          <div class="searchbox"><svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-search"/></svg><input class="input" id="shopSearch" type="search" placeholder="Search shops or items" autocomplete="off"></div>
+    <section class="finder" aria-labelledby="finderTitle">
+      <div class="finder__top">
+        <h1 class="finder__title" id="finderTitle">Shops near you</h1>
+        <div class="searchbox searchbox--float">
+          <label for="shopSearch" class="sr-only">Search shops or items</label>
+          <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-search"/></svg>
+          <input class="input" id="shopSearch" type="search" placeholder="Search shops or items" autocomplete="off">
         </div>
-        <div class="chips chips--wrap" id="categories" role="group" aria-label="Categories"></div>
-
-        <section aria-label="Shops near you"><ul class="shop-grid" id="shopList"></ul></section>
-
-        <section class="card" id="ordersCard" aria-labelledby="ordersTitle" hidden>
-          <h2 class="card__title" id="ordersTitle">Your orders</h2>
-          <ul class="list" id="orderList"></ul>
-        </section>
+        <div class="fchips" id="categories" role="group" aria-label="Categories"></div>
       </div>
-    </main>
+
+      <div class="finder__sheet" id="sheet">
+        <button type="button" class="finder__handle" id="sheetHandle" aria-expanded="false" aria-controls="sheet">
+          <span aria-hidden="true"></span><span class="sr-only">Show more of the list</span>
+        </button>
+        <div id="picked" aria-live="polite"></div>
+        <div class="finder__head"><h2 id="shopCount">Shops nearby</h2><span>Closest first</span></div>
+        <div class="finder__scroll" id="sheetScroll">
+          <ul class="srows" id="shopList" aria-labelledby="shopCount"></ul>
+
+          <section class="finder__orders" id="ordersCard" aria-labelledby="ordersTitle" hidden>
+            <h2 class="finder__sub" id="ordersTitle">Your orders</h2>
+            <ul class="list" id="orderList"></ul>
+          </section>
+          <p class="finder__note">Demo: sample shops with made-up menus. Delivered by mysabak riders, who keep 100% of the delivery fee.</p>
+        </div>
+      </div>
+    </section>
+
+    <button type="button" class="map-locate" id="locateBtn" aria-label="Show shops near my location">
+      <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+    </button>
 
     <div class="bottom">
       <nav class="dock tabs" data-tabs="shops" aria-label="Main"></nav>

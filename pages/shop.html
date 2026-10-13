@@ -18,38 +18,62 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/assets/css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/assets/js/pages/shop.js"></script>
 </head>
-<body class="page">
+<body class="page page--shop">
   <div class="app">
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
-    <main class="content">
-      <div class="content__inner">
+    <main class="content" id="content">
+      <div class="shop-layout">
 
-        <header class="page-head">
-          <a class="page-head__back" href="/pages/shops.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Shops</a>
-          <div class="shop-head">
-            <span class="shop-tile shop-tile--lg" id="shopTile" aria-hidden="true"></span>
-            <div>
-              <h1 class="page-title" id="shopName">Shop</h1>
-              <p class="lede" id="shopMeta"></p>
+        <!-- Where the shop is: route map + shop card -->
+        <aside class="shop-side" aria-label="About the shop">
+          <div class="shop-hero">
+            <div class="shop-hero__map"><div class="shop-hero__canvas" id="heroMap"></div></div>
+            <a class="shop-hero__back" href="/pages/shops.html" aria-label="Back to shops"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg></a>
+            <span class="shop-hero__eta" id="eta" hidden></span>
+          </div>
+          <div class="shop-info">
+            <span class="shop-info__ava" id="shopAva" aria-hidden="true"></span>
+            <div class="shop-info__body">
+              <h1 class="shop-info__name" id="shopName">Shop</h1>
+              <p class="shop-info__addr" id="shopAddr"></p>
+              <p class="shop-info__facts" id="shopFacts"></p>
+            </div>
+            <div class="shop-info__actions">
+              <a class="shop-info__link" id="directions" href="#" target="_blank" rel="noopener"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Get directions</a>
+              <a class="shop-info__link" id="phone" href="#"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg><span></span></a>
             </div>
           </div>
-        </header>
+          <p class="shop-about" id="shopAbout"></p>
+        </aside>
 
-        <section class="card" aria-labelledby="menuTitle">
-          <h2 class="card__title" id="menuTitle">Menu</h2>
-          <ul class="list" id="menu"></ul>
-        </section>
+        <!-- Menu: section tabs, then each section -->
+        <div class="shop-main">
+          <nav class="menu-tabs" id="menuTabs" aria-label="Menu sections"></nav>
+          <div id="menu"></div>
+          <p class="finder__note">Demo: sample menu and drawn pictures. Prices are what the shop charges; the delivery fee goes 100% to your rider.</p>
+        </div>
 
-        <a class="cartbar" id="cartBar" href="/pages/checkout.html" hidden>
-          <svg class="icon icon--white" aria-hidden="true"><use href="/assets/images/icons.svg#i-cart"/></svg><span id="cartCount">0 items</span><span class="cartbar__total" id="cartTotal">₱0</span><span class="cartbar__go">Checkout <svg class="icon icon--white icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
-        </a>
+        <!-- Your order: a side column on wide screens, a sheet on phones and tablets -->
+        <dialog class="cart-panel" id="cartPanel" aria-labelledby="cartTitle">
+          <div class="cart-panel__head">
+            <h2 id="cartTitle">Your order</h2>
+            <button type="button" class="icon-btn cart-panel__close" id="cartClose" aria-label="Close"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="/assets/images/icons.svg#i-close"/></svg></button>
+          </div>
+          <div class="cart-panel__body" id="cartBody"></div>
+        </dialog>
       </div>
     </main>
+
+    <button type="button" class="cart-pill" id="cartPill" aria-controls="cartPanel" aria-expanded="false" hidden>
+      <span id="cartCount">0 items</span><b id="cartPillTotal">View order</b>
+    </button>
 
     <div class="bottom">
       <nav class="dock tabs" data-tabs="shops" aria-label="Main"></nav>

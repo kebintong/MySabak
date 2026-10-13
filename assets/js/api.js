@@ -18,6 +18,7 @@
 import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
 import { SHOPS, SHOP_CATEGORIES } from './demo-data.js';
+import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
 /** Base of the TomTom proxy. map.js uses it for the map style and tiles. */
 export const TOMTOM_PROXY = new URL('/api/tomtom', location.origin).href;
@@ -438,22 +439,25 @@ export async function driverEarnings() {
 /**
  * Shops near a point, nearest first.
  * DEMO: sample shops from demo-data.js.
- * @returns {Promise<{categories:Array<{id,name}>, shops:Array<{id, name, category, area, hours, color, km:number|null}>}>}
+ * @returns {Promise<{categories:Array<{id,name}>, shops:Array<{id, name, sign, category, area, address, phone,
+ *   lng, lat, hours, opensAt, closesAt, color, tint, rating, image, about, items:number, km:number|null}>}>}
  */
 export async function listShops({ near, category = 'all', q = '' } = {}) {
   const text = q.trim().toLowerCase();
   const shops = SHOPS
     .filter((s) => category === 'all' || s.category === category)
-    .filter((s) => !text || s.name.toLowerCase().includes(text) || s.menu.some((m) => m.name.toLowerCase().includes(text)))
-    .map(({ menu, ...s }) => ({ ...s, items: menu.length, km: near ? haversineKm(near, s) : null }))
+    .filter((s) => !text || [s.name, s.area].some((t) => t.toLowerCase().includes(text)) || s.menu.some((m) => m.name.toLowerCase().includes(text)))
+    .map(({ menu, ...s }) => ({ ...s, items: menu.filter((m) => !m.bundle).length, km: near ? haversineKm(near, s) : null }))
     .sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
   return { categories: SHOP_CATEGORIES, shops };
 }
 
 /**
- * One shop and its menu.
- * @returns {Promise<{id, name, category, area, hours, color, lng, lat,
- *   menu:Array<{id, name, price:number, note?:string}>}>}
+ * One shop and its menu. Menu items keep the order to show them in; `section` groups them.
+ * @returns {Promise<{id, name, sign, category, area, address, phone, lng, lat, hours, opensAt, closesAt,
+ *   color, tint, rating, image, about,
+ *   menu:Array<{id, name, note, price:number, section, tag?, bundle?, image:string|null, art?, options:Array}>}>}
+ *   options: [{id, name, type:'one'|'many', required, max?, choices:[{name, price, hint?}], showIf?}] (see menu.js)
  */
 export async function shopMenu(shopId) {
   const shop = SHOPS.find((s) => s.id === shopId);
@@ -475,15 +479,22 @@ export async function deliveryQuote(shopId, address) {
 
 /**
  * Place a shop order. Items go to the shop, the delivery fee to the rider.
+ * The server prices every line from its own menu (base price + picked options); the browser's prices are ignored.
  * DEMO: saved in this browser with status 'placed'; no shop or rider is told.
- * @param {{shopId, items:Array<{id, qty}>, address:{lng,lat,label}, notes:string, payment:string}} order
+ * @param {{shopId, items:Array<{id, qty, picks?, note?}>, address:{lng,lat,label}, notes:string, payment:string}} order
  * @returns {Promise<{id:string}>}
  */
 export async function placeOrder(order) {
   const shop = await shopMenu(order.shopId);
   const byId = new Map(shop.menu.map((m) => [m.id, m]));
-  const lines = order.items.filter((l) => byId.has(l.id) && l.qty > 0)
-    .map((l) => ({ id: l.id, name: byId.get(l.id).name, price: byId.get(l.id).price, qty: l.qty }));
+  const lines = (order.items || []).filter((l) => byId.has(l.id) && l.qty > 0).map((l) => {
+    const item = byId.get(l.id);
+    const picks = cleanPicks(item, l.picks);
+    return {
+      id: l.id, name: item.name, price: unitPrice(item, picks), qty: Math.min(Math.round(l.qty), 99),
+      picks, options: pickLabels(item, picks), note: String(l.note || '').trim().slice(0, 200),
+    };
+  });
   if (!lines.length) throw Object.assign(new Error('Your cart is empty.'), { status: 400 });
   const quote = await deliveryQuote(order.shopId, order.address);
   await wait(1000);
