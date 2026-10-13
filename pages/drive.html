@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Drive · mysabak</title>
-  <meta name="theme-color" content="#5630d8">
+  <title>Driver sign in · mysabak</title>
+  <meta name="theme-color" content="#6542DA">
   <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,48 +23,36 @@
     <main class="content">
       <div class="content__inner">
 
-        <header class="page-head">
-          <h1 class="page-title">Drive with mysabak</h1>
-          <p class="lede">Keep 100% of every fare. No commission, no booking fees.</p>
-        </header>
+        <div class="auth">
+          <section class="card auth-card" aria-labelledby="signinTitle">
+            <div class="auth-card__head">
+              <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
+              <h1 class="auth-card__title" id="signinTitle">Driver sign in</h1>
+              <p class="lede">Welcome back. Sign in to go online and keep 100% of every fare.</p>
+            </div>
 
-        <section class="card hero-cta">
-          <div class="hero-cta__text">
-            <span class="split__pct">100%</span>
-            <span class="muted">of the fare is yours, on every Ride, Express and Shop delivery.</span>
-          </div>
-          <a class="button" href="/pages/drive-signup.html" id="driveCta">Sign up to drive <svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-arrow"/></svg></a>
-        </section>
+            <form class="form" id="signinForm" novalidate>
+              <label class="field"><span class="field__label">Mobile number</span>
+                <input class="input" name="phone" type="tel" inputmode="tel" required pattern="[+0-9 ]{10,16}" placeholder="09XX XXX XXXX" autocomplete="tel"></label>
+              <div class="field"><label class="field__label" for="password">Password</label>
+              <div class="input-wrap"><input class="input" id="password" name="password" type="password" required minlength="8" autocomplete="current-password">
+              <button type="button" class="input-wrap__btn" data-reveal="password" aria-label="Show password">Show</button></div></div>
+              <div class="auth-row">
+                <label class="check"><input type="checkbox" name="remember" checked><span>Keep me signed in</span></label>
+                <a href="#" class="auth-link" id="forgot">Forgot password?</a>
+              </div>
+              <p class="field__error" id="signinError" role="alert" hidden></p>
+              <button type="submit" class="button button--block" id="signinBtn">Sign in</button>
+              <p class="auth-legal">By signing in, you agree to mysabak’s <a href="#" data-soon="Terms of Service">Terms of Service</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</p>
+            </form>
 
-        <section class="card" aria-labelledby="whyTitle">
-          <h2 class="card__title" id="whyTitle">Why drive with mysabak</h2>
-          <ul class="list">
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span><div class="row__main"><span class="row__title">You keep the whole fare</span><span class="row__sub">mysabak runs on riders’ optional tips, not on a cut of your earnings.</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-box"/></svg></span><div class="row__main"><span class="row__title">Rides, Express and Shop deliveries</span><span class="row__sub">More kinds of jobs, one app.</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-clock"/></svg></span><div class="row__main"><span class="row__title">Your own hours</span><span class="row__sub">Go online when you want, stop when you want.</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-card"/></svg></span><div class="row__main"><span class="row__title">Payouts to GCash or bank</span><span class="row__sub">See every trip and fare in your earnings.</span></div></li>
-          </ul>
-        </section>
-
-        <section class="card" aria-labelledby="needTitle">
-          <h2 class="card__title" id="needTitle">What you need</h2>
-          <ul class="list">
-            <li class="row"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-check"/></svg><div class="row__main"><span class="row__title">A valid driver’s license</span></div></li>
-            <li class="row"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-check"/></svg><div class="row__main"><span class="row__title">A motorcycle, sedan or SUV with OR/CR</span></div></li>
-            <li class="row"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-check"/></svg><div class="row__main"><span class="row__title">A smartphone with mobile data</span></div></li>
-            <li class="row"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-check"/></svg><div class="row__main"><span class="row__title">A clear selfie for the ID check</span></div></li>
-          </ul>
-          <p class="card__foot">Final requirements follow LTFRB rules for your vehicle type.</p>
-        </section>
-
-        <section class="card" aria-labelledby="howTitle">
-          <h2 class="card__title" id="howTitle">How it works</h2>
-          <ol class="steps">
-            <li><strong>Sign up</strong><span>Your details, vehicle and documents. About 5 minutes.</span></li>
-            <li><strong>We review</strong><span>We check your documents and let you know by text.</span></li>
-            <li><strong>Go online</strong><span>Accept requests near you and keep every fare.</span></li>
-          </ol>
-        </section>
+            <div class="auth-alt">
+              <span>Wanna work as a driver?</span>
+              <a class="auth-link auth-link--strong" href="/pages/drive-signup.html">Sign up</a>
+            </div>
+            <p class="demo-note">Demo: sign in with the mobile number you signed up with. Any password works; none is stored.</p>
+          </section>
+        </div>
       </div>
     </main>
 

@@ -31,14 +31,35 @@ test('fares go to the driver: no fare until rates are set', () => {
   assert.ok(Object.values(fares).every((f) => f === null));
 });
 
-test('driver sign-up: no documents are stored by the demo; approved status lets the driver go online', async () => {
-  assert.equal((await api.driverStatus()).status, 'none');
-  await assert.rejects(api.setOnline(true), { status: 403 });
-  await api.driverApply({ name: 'Juan Dela Cruz', vehicle: 'sedan', plate: 'GAA 1234', files: { license: 'x', orcr: 'y', selfie: 'z' }, agreed: true });
+test('driver sign-up: no documents or password stored by the demo; signed in and able to go online', async () => {
+  assert.deepEqual(await api.driverStatus(), { status: 'none', signedIn: false, online: false });
+  await assert.rejects(api.setOnline(true), { status: 401 });
+  await api.driverApply({
+    name: 'Juan Dela Cruz', phone: '09175551234', password: 'secret-pass-123', vehicle: 'sedan', plate: 'GAA 1234',
+    files: { license: 'x', orcr: 'y', selfie: 'z' }, agreed: true,
+  });
   const d = await api.driverStatus();
   assert.equal(d.status, 'approved');
-  assert.equal(JSON.stringify(localStorage.getItem('mysabak.demo.driver')).includes('files'), false);
+  assert.equal(d.signedIn, true);
+  const saved = localStorage.getItem('mysabak.demo.driver');
+  assert.equal(saved.includes('files'), false);
+  assert.equal(saved.includes('secret-pass-123'), false);
+  assert.equal(saved.includes('password'), false);
   assert.deepEqual(await api.setOnline(true), { online: true });
+});
+
+test('driver sign-in / sign-out', async () => {
+  await api.driverSignOut();
+  const out = await api.driverStatus();
+  assert.equal(out.signedIn, false);
+  assert.equal(out.online, false);
+  await assert.rejects(api.setOnline(true), { status: 401 });
+  await assert.rejects(api.driverSignIn({ phone: '09170000000', password: 'whatever1' }), { status: 401 });
+  await assert.rejects(api.driverSignIn({ phone: '09175551234', password: '' }), { status: 400 });
+  // the same number written as +63 917 555 1234 signs in
+  assert.deepEqual(await api.driverSignIn({ phone: '+63 917 555 1234', password: 'whatever1' }), { status: 'approved' });
+  assert.equal((await api.driverStatus()).signedIn, true);
+  assert.equal(JSON.stringify(localStorage.getItem('mysabak.demo.driverSession')).includes('whatever1'), false);
 });
 
 test('no fake job requests: onJobRequest never fires in the demo', async () => {

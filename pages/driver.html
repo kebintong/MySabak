@@ -6,7 +6,9 @@
   <title>Driver home · mysabak</title>
   <meta name="theme-color" content="#5630d8">
   <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,16 +23,13 @@
     <main class="content">
       <div class="content__inner">
 
-        <div id="notDriver" class="card" hidden>
-          <h1 class="card__title">You’re not signed up to drive yet</h1>
-          <p class="lede">Sign up in about 5 minutes and keep 100% of every fare.</p>
-          <p><a class="button" href="/pages/drive-signup.html">Sign up to drive</a></p>
-        </div>
-
-        <div id="driverHome" hidden>
-          <header class="page-head">
-            <h1 class="page-title">Hi, <span data-bind="firstName">driver</span></h1>
-            <p class="lede"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+        <div id="driverHome" class="stack" hidden>
+          <header class="page-head page-head--row">
+            <div>
+              <h1 class="page-title">Hi, <span data-bind="firstName">driver</span></h1>
+              <p class="lede"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+            </div>
+            <button type="button" class="button button--ghost" id="signOutBtn">Sign out</button>
           </header>
 
           <section class="card online" aria-labelledby="onlineTitle">

@@ -231,7 +231,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   background: var(--surface);
   box-shadow: var(--shadow-md);
 }
-.brand img { width: 110px; height: 30px; display: block; object-fit: contain; }
+.brand img { width: 112px; height: 30px; display: block; object-fit: contain; }
 
 .topbar__actions { display: flex; gap: 10px; }
 
@@ -672,7 +672,7 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
   :root { --gutter: 24px; }
 
   .brand { padding: 8px 14px; border-radius: 16px; }
-  .brand img { width: 154px; height: 42px; }
+  .brand img { width: 150px; height: 42px; }
   .btn { height: 48px; font-size: 14px; }
   .btn--dark { padding: 0 20px; }
 
@@ -976,22 +976,27 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
    Content pages (Shops, Support, Drive…): scrolling column under the top bar,
    above the tab bar. Shared components: card, buttons, fields, lists, sheet.
    ========================================================= */
+.page {
+  --content-top: calc(68px + var(--safe-t));     /* below the top bar */
+  --content-bottom: calc(112px + var(--safe-b)); /* room for the tab bar */
+}
 .page .content {
   position: absolute;
-  inset: 0;
+  left: 0; right: 0; bottom: 0;
+  top: var(--content-top);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: calc(76px + var(--safe-t)) var(--gutter) calc(112px + var(--safe-b));
+  padding: 10px var(--gutter) var(--content-bottom);
+  /* soft edge where content scrolls away under the top bar */
+  -webkit-mask-image: linear-gradient(transparent, #000 14px);
+  mask-image: linear-gradient(transparent, #000 14px);
   z-index: 1;
 }
-.page::before { /* keeps scrolled content from showing behind the top bar */
-  content: "";
-  position: fixed;
-  left: 0; right: 0; top: 0;
-  height: calc(68px + var(--safe-t));
-  background: linear-gradient(var(--map-ground) 70%, rgba(236, 232, 223, 0));
-  z-index: 2;
-  pointer-events: none;
+.page .app { /* decorative map behind every content page */
+  background:
+    linear-gradient(rgba(236, 232, 223, 0.35), rgba(236, 232, 223, 0.55)),
+    url("/assets/images/map-bg.svg") center / cover no-repeat,
+    var(--map-ground);
 }
 .content__inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .content__inner--wide { max-width: 960px; }
@@ -1206,23 +1211,91 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 
 .card__foot { margin: 12px 0 0; font-size: 13px; line-height: 1.45; color: var(--sub); }
 
-/* Drive landing */
-.hero-cta { display: flex; flex-direction: column; gap: 14px; background: linear-gradient(135deg, #fff 0%, var(--tint) 100%); }
-.hero-cta__text { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 15px; }
-.hero-cta__text .split__pct { font-size: 40px; color: var(--brand); }
-@media (min-width: 640px) { .hero-cta { flex-direction: row; align-items: center; justify-content: space-between; } }
-.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: step; }
-.steps li { position: relative; padding-left: 44px; display: flex; flex-direction: column; gap: 2px; counter-increment: step; }
-.steps li::before {
-  content: counter(step);
-  position: absolute; left: 0; top: 0;
-  width: 30px; height: 30px; border-radius: 50%;
-  background: var(--tint); color: var(--brand-deep);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 14px;
+/* Driver sign-in / sign-up: centred card over the map background */
+.auth {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  min-height: calc(100dvh - var(--content-top) - var(--content-bottom) - 10px);
+  display: flex; flex-direction: column; justify-content: center;
 }
-.steps strong { font-size: 15px; color: var(--ink); }
-.steps span { font-size: 14px; color: var(--sub); }
+.auth--wide { max-width: 560px; }
+.auth-card {
+  padding: 28px 22px 22px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 24px 60px rgba(36, 25, 87, 0.18);
+  display: flex; flex-direction: column; gap: 18px;
+}
+@media (min-width: 640px) { .auth-card { padding: 32px 32px 26px; } }
+.auth-card__head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.auth-card__badge { width: 52px; height: 52px; border-radius: 16px; background: var(--tint); display: flex; align-items: center; justify-content: center; }
+.auth-card__title { margin: 4px 0 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--navy); }
+.auth-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.auth-row .check { align-items: center; }
+.auth-row .check input { margin-top: 0; }
+.auth-link { font-size: 14px; font-weight: 700; color: var(--brand-deep); text-decoration: none; }
+.auth-link:hover { text-decoration: underline; }
+.auth-link--strong { color: var(--brand); }
+.auth-legal { margin: 0; font-size: 12.5px; line-height: 1.5; text-align: center; color: var(--sub); }
+.auth-legal a, .check a { color: var(--brand-deep); font-weight: 600; }
+.auth-alt {
+  display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 14px; color: var(--muted);
+}
+.field__error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fdecec; color: #a32020; font-size: 13.5px; font-weight: 600; }
+
+/* Password with Show / Hide */
+.input-wrap { position: relative; }
+.input-wrap .input { padding-right: 72px; }
+.input-wrap__btn {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  height: 34px; padding: 0 10px;
+  border: none; border-radius: 8px; background: transparent;
+  font-size: 13px; font-weight: 700; color: var(--brand-deep);
+}
+.input-wrap__btn:hover { background: var(--tint); }
+
+/* Sign-up steps */
+.wizard__steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wizard__steps li {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12.5px; font-weight: 700; color: var(--sub);
+}
+.wizard__steps li::before { content: ""; height: 4px; border-radius: 999px; background: var(--chip-close); order: -1; }
+.wizard__steps span { display: none; }
+.wizard__steps li.is-current { color: var(--navy); }
+.wizard__steps li.is-current::before, .wizard__steps li.is-done::before { background: var(--brand); }
+.wizard__steps li.is-done { color: var(--brand-deep); }
+.wizard__step { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.wizard__step[hidden] { display: none; }
+.wizard__nav { display: flex; gap: 10px; }
+.wizard__nav .button { flex: 1; }
+
+/* Vehicle picker */
+.pick-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pick { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.pick__box {
+  height: 100%;
+  padding: 14px 10px;
+  border: 1.5px solid var(--line-brand);
+  border-radius: 16px;
+  background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  transition: border-color .15s, background-color .15s;
+}
+.pick__box .icon { stroke: var(--muted); }
+.pick__name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.pick__hint { font-size: 12px; color: var(--sub); }
+.pick input:checked + .pick__box { border-color: var(--brand); background: var(--tint); }
+.pick input:checked + .pick__box .icon { stroke: var(--brand); }
+.pick input:focus-visible + .pick__box { outline: 3px solid rgba(86, 48, 216, 0.45); outline-offset: 2px; }
+
+.page-head--row { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.page-head--row .button { min-height: 40px; padding: 0 14px; font-size: 14px; flex-shrink: 0; }
 
 /* Driver home: online switch */
 .online__top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -1335,8 +1408,7 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 .badge--wait { background: #fff4d6; color: #7a5b0e; }
 
 @media (min-width: 900px) {
-  .page .content { padding-top: calc(104px + var(--safe-t)); padding-bottom: calc(128px + var(--safe-b)); }
-  .page::before { height: calc(96px + var(--safe-t)); }
+  .page { --content-top: calc(92px + var(--safe-t)); --content-bottom: calc(128px + var(--safe-b)); }
   .page-title { font-size: 34px; }
 }
 
