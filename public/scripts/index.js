@@ -369,8 +369,11 @@
   const OLD_THEME_NAMES = ['mysabak', 'lavender'];
   const themeById = (id) => THEMES.find((t) => t.id === (OLD_THEME_NAMES.includes(id) ? 'street' : id)) || THEMES[0];
 
+  const TT_STYLE_VERSION = '0.6.0-0';
   function styleUrl() {
-    return ttUrl('/maps/orbis/assets/styles/0.*/style', { apiVersion: 1, map: themeById(CONFIG.mapStyle).base }).toString();
+    // Same style address TomTom's own Maps SDK uses (style.json, pinned version).
+    // The earlier '0.*/style' address got 403 "not allowed to access this endpoint".
+    return ttUrl(`/maps/orbis/assets/styles/${TT_STYLE_VERSION}/style.json`, { apiVersion: 1, map: themeById(CONFIG.mapStyle).base }).toString();
   }
 
   function initMap() {

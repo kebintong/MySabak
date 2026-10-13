@@ -33,16 +33,17 @@ test('app files are served from the assets', async () => {
 });
 
 test('adds the key on the way to TomTom', async () => {
-  const res = await call('/api/tomtom/maps/orbis/assets/styles/0.*/style?apiVersion=1&map=basic_street-light', { headers: sameSite });
+  const res = await call('/api/tomtom/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1&map=basic_street-light', { headers: sameSite });
   assert.equal(res.status, 200);
   const { url } = calls[0];
-  assert.equal(url.origin + url.pathname, 'https://api.tomtom.com/maps/orbis/assets/styles/0.*/style');
+  assert.equal(url.origin + url.pathname, 'https://api.tomtom.com/maps/orbis/assets/styles/0.6.0-0/style.json');
   assert.equal(url.searchParams.get('key'), KEY);
   assert.equal(url.searchParams.get('map'), 'basic_street-light');
+  assert.equal(calls[0].init.headers.get('tomtom-api-key'), null); // maps: key only in the URL, like TomTom's SDK
 });
 
 test('never sends the key back to the browser', async () => {
-  const res = await call('/api/tomtom/maps/orbis/assets/styles/0.*/style?apiVersion=1', { headers: sameSite });
+  const res = await call('/api/tomtom/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1', { headers: sameSite });
   const body = await res.text();
   assert.ok(!body.includes(KEY));
   assert.ok(body.includes('key=&apiVersion=1'));
