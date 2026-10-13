@@ -346,6 +346,7 @@ body:not([data-state="request"]) .map-controls { display: none; }
 
 /* ---- Step 1: Where to? ---- */
 .panel--request {
+  position: relative;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -1893,6 +1894,12 @@ body.is-status-hidden .statusbar { display: flex; }
 body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { display: none; }
 @media (min-width: 900px) {
   .statusbar { width: min(560px, 100%); }
+}
+/* Phones: the "Saan tayo?" panel can be hidden to a slim bar too */
+body:not(.is-request-hidden) .statusbar.reqbar { display: none; }
+body.is-request-hidden .statusbar.reqbar { display: flex; }
+@media (max-width: 899.98px) {
+  body.is-request-hidden .panel--request { display: none; }
 }
 
 /* =========================================================

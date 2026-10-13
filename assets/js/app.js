@@ -191,6 +191,14 @@ function setupPaySheet() {
 }
 
 /* ---------- Booking → finding a driver → trip ---------- */
+/* Phones: hide / show the "Saan tayo?" panel (step "request") to see the map */
+function setRequestHidden(hidden) {
+  el.body.classList.toggle('is-request-hidden', hidden);
+  $('#reqBar').setAttribute('aria-expanded', String(!hidden));
+  requestAnimationFrame(() => frame());
+  (hidden ? $('#reqBar') : $('#hideRequest')).focus();
+}
+
 /* Hide / show the floating status card (steps "search" and "trip") */
 function setStatusHidden(hidden) {
   state.statusHidden = hidden;
@@ -571,6 +579,7 @@ function render() {
   const w = words();
   ['askTitle', 'askHint', 'bookVerb', 'seeLabel', 'payTitle', 'searchTitle'].forEach((k) => setBind(k, w[k]));
   if (state.step === 'search') { setBind('barTitle', `${w.searchTitle}…`); setBind('barSub', `${v.name} · ${pay.name}`); }
+  setBind('reqBarSub', `${state.mode === 'express' ? 'Express' : 'Ride'} · ${state.mode === 'express' ? 'set where it goes' : 'set your drop-off'}`);
   setBind('stepArriving', w.steps[0]);
   setBind('stepTrip', w.steps[1]);
   setBind('stepDone', w.steps[2]);
@@ -936,6 +945,8 @@ $$('[data-book]').forEach((btn) => btn.addEventListener('click', book));
 $('#payBtn').addEventListener('click', book);
 $('#cancelSearch').addEventListener('click', () => cancelBooking());
 $$('[data-hide-status]').forEach((b) => b.addEventListener('click', () => setStatusHidden(true)));
+$('#hideRequest').addEventListener('click', () => setRequestHidden(true));
+$('#reqBar').addEventListener('click', () => setRequestHidden(false));
 $('#statusBar').addEventListener('click', () => setStatusHidden(false));
 $('#cancelTrip').addEventListener('click', () => cancelBooking({ ask: true }));
 $('#callDriver').addEventListener('click', () => {
