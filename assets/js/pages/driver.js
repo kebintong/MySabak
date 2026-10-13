@@ -41,10 +41,14 @@ function mapPadding() {
   const app = $('.app').getBoundingClientRect();
   if (DESKTOP.matches) return { top: 110, bottom: 140, left: $('.finder').getBoundingClientRect().right - app.left + 40, right: 60 };
   const top = $('.finder__top').getBoundingClientRect().bottom - app.top + 40;
-  const bottom = app.bottom - $('#sheet').getBoundingClientRect().top + 24;
+  const edge = document.body.classList.contains('is-sheet-hidden') ? $('#sheetBar') : $('#sheet');
+  const bottom = app.bottom - edge.getBoundingClientRect().top + 24;
   return { top, bottom: Math.min(bottom, app.height - top - 80), left: 40, right: 40 };
 }
-const map = shopMap($('#mapCanvas'), { onPin: (id) => pick(id, { fromMap: true }), padding: mapPadding });
+const map = shopMap($('#mapCanvas'), {
+  onPin: (id) => { if (document.body.classList.contains('is-sheet-hidden')) setSheetHidden(false); pick(id, { fromMap: true }); },
+  padding: mapPadding,
+});
 const pinOf = (j) => ({ id: j.id, name: `${peso(j.fare)} · ${KIND[j.kind].name}`, area: j.pickup.label, color: KIND[j.kind].color, lng: j.pickup.lng, lat: j.pickup.lat });
 
 let routeToken = 0;
@@ -146,6 +150,7 @@ function renderJobs() {
   else html = shown.map(jobCard).join('');
   $('#jobList').innerHTML = html;
   if (!shown.some((j) => j.id === picked)) picked = null;
+  paintBar();
 }
 
 function pick(id, { fromMap = false } = {}) {
@@ -222,6 +227,33 @@ function renderActive() {
       </div>
       ${job.status === 'to_pickup' ? '<button type="button" class="trip__cancel" data-cancel-job>Cancel job</button>' : ''}
     </article>`;
+}
+
+/* Phones: hide the list (and filter chips) to a slim bar above the tab bar, or bring it back */
+function setSheetHidden(hidden) {
+  document.body.classList.toggle('is-sheet-hidden', hidden);
+  $('#sheetBar').setAttribute('aria-expanded', String(!hidden));
+  (hidden ? $('#sheetBar') : $('#hideSheet')).focus({ preventScroll: true });
+  requestAnimationFrame(() => {
+    map.resize();
+    if (!job) map.fit([[me.lng, me.lat]].concat(visibleJobs().map((j) => [j.pickup.lng, j.pickup.lat])), { animate: true, maxZoom: 15 });
+  });
+}
+
+// What the slim bar says
+function paintBar() {
+  let title;
+  let sub;
+  if (!approved) { title = 'Application under review'; sub = 'Go online once you’re approved'; } else if (job) {
+    title = jobWords(job).title;
+    sub = `${KIND[job.kind].name} · ${peso(job.fare)} · ${job.status === 'started' ? job.dropoff.label : job.pickup.label}`;
+  } else if (!online) { title = 'You’re offline'; sub = 'Go online to get requests'; } else {
+    const shown = visibleJobs();
+    title = shown.length ? `${shown.length} request${shown.length === 1 ? '' : 's'} near you` : 'Waiting for requests…';
+    sub = shown.length ? `Nearest: ${KIND[shown[0].kind].name} ${peso(shown[0].fare)} · ${kmAway(shown[0].pickup).toFixed(1)} km away` : 'They show on the map as they come in';
+  }
+  bindAll('barTitle', title);
+  bindAll('barSub', sub);
 }
 
 function paintAll() {
@@ -364,6 +396,9 @@ window.addEventListener('pointerup', (e) => {
 handle.addEventListener('click', () => { if (Date.now() - draggedAt > 400) setExpanded(!sheet.classList.contains('is-expanded')); });
 $('#sheetScroll').addEventListener('touchmove', () => { if (!DESKTOP.matches) setExpanded(true); }, { passive: true });
 DESKTOP.addEventListener('change', () => { setExpanded(false); map.resize(); });
+
+$('#hideSheet').addEventListener('click', () => setSheetHidden(true));
+$('#sheetBar').addEventListener('click', () => setSheetHidden(false));
 
 $('#locateBtn').addEventListener('click', async () => {
   try {
