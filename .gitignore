@@ -4,3 +4,4 @@
 # Cloudflare / Node
 .wrangler/
 node_modules/
+dist/

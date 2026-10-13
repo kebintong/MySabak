@@ -939,6 +939,51 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 /* Toast springs in */
 .toast { transition: opacity .2s, transform .4s var(--spring); }
 
+/* =========================================================
+   Placeholder pages (pages/*.html): "coming soon" card
+   ========================================================= */
+.page .soon {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -58%);
+  width: min(440px, calc(100vw - 2 * var(--gutter)));
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  z-index: 2;
+}
+.soon__badge {
+  width: 56px; height: 56px;
+  border-radius: 18px;
+  background: var(--tint);
+  display: flex; align-items: center; justify-content: center;
+}
+.soon__title { margin: 4px 0 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--navy); }
+.soon__text { margin: 0; font-size: 15px; line-height: 1.5; color: var(--sub); }
+.soon__tag {
+  margin: 4px 0 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--field);
+  font-size: 13px; font-weight: 700; color: var(--brand-deep);
+}
+.soon__back {
+  margin-top: 8px;
+  height: 46px; padding: 0 20px;
+  border-radius: 14px;
+  display: inline-flex; align-items: center;
+  background: var(--brand); color: #fff;
+  font-weight: 700; text-decoration: none;
+}
+.soon__back:hover { background: var(--brand-deep); color: #fff; }
+.page .dock.tabs { width: 100%; }
+@media (min-width: 900px) {
+  .page .dock.tabs { width: auto; padding: 0 14px; } /* desktop: just wide enough for the tabs */
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;

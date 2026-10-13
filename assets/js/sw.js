@@ -1,20 +1,25 @@
 /* mysabak service worker — caches the app shell so it opens offline.
    Bump CACHE when you change any of the files below.
-   It sits at the site root so it can look after every page. */
-const CACHE = 'mysabak-v11';
+   It lives in assets/js/ but looks after the whole site: app.js registers it with
+   scope '/', which the server allows with a Service-Worker-Allowed: / header
+   (assets/dev/worker.js on Cloudflare, serve.py locally). */
+const CACHE = 'mysabak-v12';
 const SHELL = [
-  './',
-  './css/index.css',
-  './scripts/config.js',
-  './scripts/index.js',
-  './manifest.webmanifest',
-  './assets/sabak-logo.png',
-  './assets/icons/icon-192.png',
-  './assets/icons/icon-512.png',
-  './assets/fonts/glyphs/GoogleSansText-Regular/0-255.pbf',
-  './assets/fonts/glyphs/GoogleSansText-Medium/0-255.pbf',
-  './assets/fonts/glyphs/GoogleSansText-Bold/0-255.pbf',
-  './assets/fonts/glyphs/GoogleSansText-Italic/0-255.pbf',
+  '/',
+  '/assets/css/style.css',
+  '/assets/js/config.js',
+  '/assets/js/api.js',
+  '/assets/js/map.js',
+  '/assets/js/app.js',
+  '/assets/manifest.webmanifest',
+  '/assets/images/logo.png',
+  '/assets/images/icons.svg',
+  '/assets/images/icons/icon-192.png',
+  '/assets/images/icons/icon-512.png',
+  '/assets/fonts/GoogleSansText-Regular/0-255.pbf',
+  '/assets/fonts/GoogleSansText-Medium/0-255.pbf',
+  '/assets/fonts/GoogleSansText-Bold/0-255.pbf',
+  '/assets/fonts/GoogleSansText-Italic/0-255.pbf',
 ];
 
 self.addEventListener('install', (event) => {
@@ -30,7 +35,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // Network first for our own files (so updates show up), cache as fallback.
-// That includes the map label fonts (assets/fonts/glyphs): a small, fixed set.
+// That includes the map label fonts (assets/fonts): a small, fixed set.
 // Google Fonts: cache first.
 // TomTom (/api/tomtom/…: tiles, search, routes) and MapLibre (CDN) go straight to the network:
 // MapLibre keeps its own tile cache; caching tiles here would grow without limit.

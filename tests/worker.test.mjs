@@ -1,10 +1,10 @@
-// Tests for the TomTom proxy (index.js) and a guard against committed keys.
-// Run: node --test worker/   TomTom is faked, so these run offline and never use a real key.
+// Tests for the demo server (assets/dev/worker.js) and a guard against committed keys.
+// Run: node --test "tests/*.test.mjs"   TomTom is faked, so these run offline and never use a real key.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import worker from './index.js';
+import worker from '../assets/dev/worker.js';
 
 const KEY = 'TEST_KEY_123';
 const SITE = 'https://mysabak.example.workers.dev';
@@ -27,8 +27,8 @@ const call = (path, init = {}, e = env) => worker.fetch(new Request(SITE + path,
 const sameSite = { 'sec-fetch-site': 'same-origin' };
 
 test('app files are served from the assets', async () => {
-  const res = await call('/html/');
-  assert.equal(await res.text(), 'asset:/html/');
+  const res = await call('/pages/drive.html');
+  assert.equal(await res.text(), 'asset:/pages/drive.html');
   assert.equal(calls.length, 0);
 });
 
@@ -96,6 +96,18 @@ test('a missing TOMTOM_KEY secret gives a clear 503', async () => {
   assert.match((await res.json()).error, /TOMTOM_KEY/);
 });
 
+test('the service worker may look after the whole site', async () => {
+  const res = await call('/assets/js/sw.js');
+  assert.equal(res.headers.get('service-worker-allowed'), '/');
+  assert.equal(await res.text(), 'asset:/assets/js/sw.js');
+});
+
+test('old /html/ links go to the home page', async () => {
+  const res = await call('/html/index.html');
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), `${SITE}/`);
+});
+
 // ---------- /api/health ----------
 test('health: reports which TomTom product refuses the key, without showing the key', async () => {
   globalThis.fetch = async (url) => {
@@ -146,7 +158,7 @@ test('local secret files are not committed', () => {
   assert.deepEqual(tracked().filter((f) => /(^|\/)(\.dev\.vars|\.env)(\..*)?$/.test(f)), []);
 });
 
-test('only the website is published (no worker code or config in public/)', () => {
-  const leaked = tracked().filter((f) => f.startsWith('public/') && /(^|\/)(worker|wrangler|\.dev\.vars|\.env)/.test(f));
-  assert.deepEqual(leaked, []);
+test('server code and config stay in assets/dev/ (the folder CI leaves out of the website)', () => {
+  const misplaced = tracked().filter((f) => /(^|\/)(worker\.js|wrangler\.(jsonc|toml|json))$/.test(f) && !f.startsWith('assets/dev/'));
+  assert.deepEqual(misplaced, []);
 });
