@@ -34,7 +34,7 @@
     paymentMethod: '[Payment method]',
 
     tomtomKey: (USER.tomtomKey || readSavedKey()).trim(),
-    mapStyle: USER.mapStyle || 'lavender', // see THEMES below
+    mapStyle: USER.mapStyle || 'street', // see THEMES below
     startCenter: USER.startCenter || [123.8854, 10.3157], // Cebu City [lng, lat]
     startZoom: USER.startZoom || 15,
     countryCode: USER.countryCode || 'ph',
@@ -360,10 +360,10 @@
     return { url: u.toString() };
   }
 
-  /* Map looks. `base` is the TomTom style; `tint` recolours it in mysabak colours.
-     'lavender' is the chosen mysabak look; the others are TomTom's own styles (set in config.js). */
+  /* Map looks. `base` is the TomTom style; `street` restyles it as the mysabak street map.
+     'street' is the chosen mysabak look; the others are TomTom's own styles (set in config.js). */
   const THEMES = [
-    { id: 'lavender',                   base: 'basic_street-light', tint: true },
+    { id: 'street',                     base: 'basic_street-light', street: true },
     { id: 'basic_street-light',         base: 'basic_street-light' },
     { id: 'basic_mono-light',           base: 'basic_mono-light' },
     { id: 'basic_street-light-driving', base: 'basic_street-light-driving' },
@@ -371,7 +371,8 @@
     { id: 'basic_street-dark',          base: 'basic_street-dark' },
     { id: 'basic_street-satellite',     base: 'basic_street-satellite' },
   ];
-  const themeById = (id) => THEMES.find((t) => t.id === (id === 'mysabak' ? 'lavender' : id)) || THEMES[0];
+  const OLD_THEME_NAMES = ['mysabak', 'lavender'];
+  const themeById = (id) => THEMES.find((t) => t.id === (OLD_THEME_NAMES.includes(id) ? 'street' : id)) || THEMES[0];
 
   function styleUrl() {
     return ttUrl('/maps/orbis/assets/styles/0.*/style', { apiVersion: 1, map: themeById(CONFIG.mapStyle).base }).toString();
@@ -391,7 +392,7 @@
     el.body.classList.remove('no-map');
     map = new maplibregl.Map({
       container: 'mapCanvas',
-      style: styleUrl(),
+      // style is set at the end, once the listeners are attached (see setStyle below)
       // Every TomTom request (tiles come from api.tomtom.com and a–d.api.tomtom.com,
       // plus fonts and icons) needs the key; the Orbis map services also want apiVersion.
       transformRequest: (url) => addTomTomParams(url),
@@ -425,7 +426,6 @@
 
     let firstLoad = true;
     map.on('style.load', () => {
-      if (themeById(CONFIG.mapStyle).tint) tintStyle();
       addRouteLayers();
       mapReady = true;
       drawnRoute = null; // redraw the route on the new style
@@ -449,13 +449,48 @@
       const p = { lng: e.lngLat.lng, lat: e.lngLat.lat };
       goToChoose('Pinned location', p, { nameFromMap: true });
     });
+
+    // The street theme rewrites TomTom's style before the first frame, so its own colours never flash.
+    const theme = themeById(CONFIG.mapStyle);
+    map.setStyle(styleUrl(), { transformStyle: (_prev, next) => (theme.street ? streetStyle(next) : next) });
   }
 
-  /* ---------- Lavender theme ----------
-     Keeps every TomTom layer (parks, woods, water, buildings, 3D, rail, landmarks, labels)
-     and only shifts colours: land/buildings/roads → lavender & white, greens → soft mint,
-     water → soft blue, text → deep navy. Landmark icons and route shields keep their colours. */
-  const COLOR_PROPS = ['background-color', 'fill-color', 'fill-outline-color', 'line-color', 'fill-extrusion-color', 'text-color', 'text-halo-color', 'icon-color'];
+  /* ---------- Street theme ----------
+     A clean street map like the mysabak mock-up: cream land, white streets, yellow main roads,
+     orange highways, soft green parks, blue water, and every map label in Google Sans Text.
+     TomTom tags each style layer with metadata.group (area, water, road, building, places_label,
+     road_label, …). Colours inside a layer are matched by hue, so TomTom's per-category colour
+     expressions keep working. 3D buildings and the small "micro" POIs are hidden to keep it clean.
+     Route shields and landmark icons keep TomTom's colours. */
+  const STREET = {
+    land: '#ece8df', landShade: '#e4e0d6', park: '#cce5c2', wood: '#bedcb2', water: '#aed2ee',
+    building: '#e4dfd6', buildingEdge: '#d8d2c7',
+    street: '#ffffff', streetEdge: '#ddd8cd', path: '#d3cec3',
+    main: '#fce6a4', mainEdge: '#e6c778', highway: '#f7c27a', highwayEdge: '#e2a24e',
+    rail: '#cbc6bc', ferry: '#7fb0da',
+    text: '#3c4043', textSoft: '#5f6368', district: '#6b6f73', textFaint: '#9aa0a6',
+    textGreen: '#3a7d4f', textWater: '#3f78a8', halo: '#ffffff', waterHalo: 'rgba(174, 210, 238, 0.6)',
+  };
+
+  /* Map label fonts: Google Sans at its text optical size, which is Google Sans Text, turned into
+     MapLibre glyphs in assets/fonts/glyphs (open font licence: assets/fonts/glyphs/OFL.txt).
+     Only the map labels use it; the app UI keeps its own fonts. */
+  const GLYPHS = `${new URL('../assets/fonts/glyphs/', location.href).href}{fontstack}/{range}.pbf`;
+  const FONT = {
+    regular: ['GoogleSansText-Regular'],
+    medium: ['GoogleSansText-Medium'],
+    bold: ['GoogleSansText-Bold'],
+    italic: ['GoogleSansText-Italic'],
+  };
+
+  // Keep TomTom's weight for each label (its font names say Regular / Medium / Bold …)
+  function fontFor(original) {
+    const s = JSON.stringify(original || '');
+    if (/medium|semi/i.test(s)) return FONT.medium;
+    if (/bold|black|heavy/i.test(s)) return FONT.bold;
+    if (/italic/i.test(s)) return FONT.italic;
+    return FONT.regular;
+  }
 
   function parseColor(str) {
     if (typeof str !== 'string') return null;
@@ -483,59 +518,129 @@
     return { h, s: sat * 100, l: l * 100, a };
   }
 
-  const clampN = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const isGreen = ({ h, s }) => h >= 70 && h <= 170 && s > 15;
+  const isBlue = ({ h, s }) => h >= 180 && h <= 240 && s > 20;
+  const isWarm = ({ h, s }) => h >= 15 && h <= 70 && s > 25; // TomTom's yellow/orange main roads
+  const groupOf = (layer) => (layer.metadata && layer.metadata.group) || '';
 
-  function lavenderColor(c, layer) {
-    const { h, s, l, a } = c;
-    const isRoad = layer['source-layer'] === 'roads' && layer.type === 'line';
-    const isRoadFill = isRoad && !/outline|dash|arrow|construction/i.test(layer.id);
-    const out = (H, S, L) => `hsla(${Math.round(H)}, ${Math.round(S)}%, ${Math.round(L * 10) / 10}%, ${a})`;
-
-    // Greens (parks, woods, grass, sports): soft mint, keep their light/dark differences;
-    // dark greens (park and landmark names) stay dark enough to read
-    if (h >= 70 && h <= 170 && s > 15) {
-      if (l < 50) return out(152, 32, clampN(l, 24, 36));
-      return out(140, clampN(s * 0.55, 18, 36), clampN(78 + (l - 72) * 0.6, 72, 92));
-    }
-    // Water and blue map features: soft blue; dark blue text stays readable
-    if (h >= 180 && h <= 235 && s > 25) {
-      if (l < 55) return out(212, 45, clampN(l, 25, 45));
-      return out(207, clampN(s * 0.7, 35, 62), clampN(l + 3, 80, 92));
-    }
-    // Yellow/orange main roads and highways: light lavender (the "cartoon" colours go)
-    if (isRoad && h >= 15 && h <= 70 && s > 25) return l < 75 ? out(255, 35, clampN(l + 8, 72, 82)) : out(255, 70, 92);
-    // Neutrals and warm greys (land, built-up areas, buildings, road fills/outlines, text)
-    if (s <= 30 || (h >= 20 && h <= 65)) {
-      if (isRoadFill && l >= 60) return out(262, 40, 99);          // road surfaces → white (edges stay lavender)
-      if (l < 45) return out(252, 35, clampN(l, 8, 40));          // text → deep navy
-      if (l > 96) return out(262, 40, 99);                         // whites (road fills, halos)
-      if (l > 85) return out(262, clampN(s, 18, 30), l);           // land, background
-      return out(258, clampN(s + 4, 14, 26), l);                   // buildings, outlines
-    }
-    return null; // landmark icons, shields, borders: keep TomTom's colour
+  // Keep the original transparency
+  function withAlpha(hex, a) {
+    if (a >= 1) return hex;
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${Math.round(a * 1000) / 1000})`;
   }
 
-  function recolorValue(v, layer) {
+  // Swap every colour inside a paint value (plain colours and colour expressions alike)
+  function recolorValue(v, pick) {
     if (typeof v === 'string') {
       const c = parseColor(v);
-      if (!c) return v;
-      return lavenderColor(c, layer) || v;
+      const next = c && pick(c);
+      return next ? withAlpha(next, c.a) : v;
     }
-    if (Array.isArray(v)) return v.map((x) => recolorValue(x, layer));
+    if (Array.isArray(v)) return v.map((x) => recolorValue(x, pick));
     return v;
   }
 
-  function tintStyle() {
-    const layers = (map.getStyle() && map.getStyle().layers) || [];
-    layers.forEach((layer) => {
-      COLOR_PROPS.forEach((prop) => {
-        const val = layer.paint && layer.paint[prop];
-        if (val === undefined) return;
-        const next = recolorValue(val, layer);
-        if (JSON.stringify(next) === JSON.stringify(val)) return;
-        try { map.setPaintProperty(layer.id, prop, next); } catch (_) { /* leave as is */ }
-      });
+  function firstColor(v) {
+    if (typeof v === 'string') return parseColor(v);
+    if (Array.isArray(v)) for (const x of v) { const c = firstColor(x); if (c) return c; }
+    return null;
+  }
+
+  // Land, water, buildings and roads
+  function shapeColor(c, layer) {
+    const g = groupOf(layer);
+    const id = layer.id.toLowerCase();
+    const edge = layer.type === 'line' && /outline|casing/.test(id);
+
+    if (g === 'water') return STREET.water;
+    if (g === 'building') return layer.type === 'line' || /outline/.test(id) ? STREET.buildingEdge : STREET.building;
+    if (g === 'road' || g === 'road_area' || g === 'transit_area') {
+      if (/ferry/.test(id)) return STREET.ferry;
+      if (/railway|subway|aerialway|tram/.test(id)) return STREET.rail;
+      if (layer.type !== 'line') return isGreen(c) ? STREET.park : STREET.street; // squares, pedestrian areas
+      if (isWarm(c)) {
+        const highway = c.h < 38 || c.l < 68; // the more orange / darker of TomTom's road colours
+        if (highway) return edge ? STREET.highwayEdge : STREET.highway;
+        return edge ? STREET.mainEdge : STREET.main;
+      }
+      if (edge) return STREET.streetEdge;
+      return c.l >= 75 ? STREET.street : STREET.path; // grey paths and tracks stay visible
+    }
+    if (g === 'area' || g === 'background') {
+      if (isGreen(c)) return c.l < 75 ? STREET.wood : STREET.park;
+      if (isBlue(c)) return STREET.water;
+      return g === 'background' || c.l >= 88 ? STREET.land : STREET.landShade;
+    }
+    return null; // borders and the rest: keep TomTom's colour
+  }
+
+  // Text colour for labels that aren't places, roads or water (parks, landmarks, borders)
+  function labelColor(c) {
+    if (isGreen(c)) return STREET.textGreen;
+    if (isBlue(c)) return STREET.textWater;
+    return c.l < 35 ? STREET.text : STREET.textSoft;
+  }
+
+  const WATER_NAME = /water|ocean|sea|river|lake|bay|strait|channel|stream|canal|reservoir/;
+
+  function styleLabel(layer) {
+    const { paint, layout } = layer;
+    const g = groupOf(layer);
+    const id = layer.id.toLowerCase();
+    const textColor = firstColor(paint['text-color']);
+
+    if (g === 'places_label' && /neighbo|suburb|village|hamlet|quarter|district/.test(id)) {
+      // Barangays and districts: small grey capitals, like the mock-up
+      layout['text-font'] = FONT.medium;
+      layout['text-transform'] = 'uppercase';
+      layout['text-letter-spacing'] = 0.12;
+      paint['text-color'] = STREET.district;
+      paint['text-halo-color'] = STREET.halo;
+    } else if (g === 'places_label') {
+      layout['text-font'] = /city|capital/.test(id) ? FONT.bold : fontFor(layout['text-font']);
+      paint['text-color'] = STREET.text;
+      paint['text-halo-color'] = STREET.halo;
+    } else if (g === 'road_label' && /shield|exit/.test(id)) {
+      layout['text-font'] = FONT.medium; // shields keep TomTom's colours
+    } else if (g === 'road_label') {
+      layout['text-font'] = fontFor(layout['text-font']);
+      paint['text-color'] = STREET.textSoft;
+      paint['text-halo-color'] = STREET.halo;
+    } else if (g === 'address_point_label') {
+      layout['text-font'] = FONT.regular;
+      paint['text-color'] = STREET.textFaint;
+      paint['text-halo-color'] = STREET.halo;
+    } else if (WATER_NAME.test(id) || (g === 'label' && textColor && isBlue(textColor))) {
+      layout['text-font'] = FONT.italic;
+      paint['text-color'] = STREET.textWater;
+      paint['text-halo-color'] = STREET.waterHalo;
+    } else {
+      layout['text-font'] = fontFor(layout['text-font']);
+      if (paint['text-color'] !== undefined) paint['text-color'] = recolorValue(paint['text-color'], labelColor);
+      if (paint['text-halo-color'] !== undefined) paint['text-halo-color'] = STREET.halo;
+    }
+  }
+
+  const SHAPE_PROPS = ['background-color', 'fill-color', 'fill-outline-color', 'line-color'];
+
+  function streetStyle(style) {
+    style.glyphs = GLYPHS;
+    (style.layers || []).forEach((layer) => {
+      layer.paint = layer.paint || {};
+      layer.layout = layer.layout || {};
+      if (layer.type === 'fill-extrusion' || layer.id === 'POI - Micro') {
+        layer.layout.visibility = 'none';
+      } else if (layer.type === 'symbol') {
+        // Every label must switch font: the glyphs URL now only serves Google Sans Text
+        if (layer.layout['text-field'] !== undefined) styleLabel(layer);
+      } else {
+        SHAPE_PROPS.forEach((prop) => {
+          if (layer.paint[prop] !== undefined) layer.paint[prop] = recolorValue(layer.paint[prop], (c) => shapeColor(c, layer));
+        });
+      }
     });
+    return style;
   }
 
   // The route sits on top of everything (roads, buildings, labels) so nothing covers it.
@@ -1254,7 +1359,13 @@
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('../sw.js').catch(() => { /* offline support is optional */ });
+      navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
+      // sw.js used to live at the site root; remove that old worker if this browser still has it.
+      const oldWorker = new URL('../sw.js', location.href).href;
+      navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => {
+        const w = r.active || r.waiting || r.installing;
+        if (w && w.scriptURL === oldWorker) r.unregister();
+      })).catch(() => {});
     });
   }
 

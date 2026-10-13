@@ -81,7 +81,7 @@ Google's $200 monthly credit ended in March 2025. Google now gives a set number 
 - [ ] Locate button → phone GPS (`navigator.geolocation`) + fly the map to that point. Handle "permission denied" with a friendly message.
 - [ ] "Pick on map" → a real map tap. Drop the pin and continue to vehicle selection.
 - [ ] Restyle the map: soft lavender ground, green parks, white roads, to match Design A.
-- [ ] `sw.js`: don't save map tiles in the offline cache, which would grow without limit.
+- [ ] `html/sw.js`: don't save map tiles in the offline cache, which would grow without limit.
 - [ ] `css/index.css`: remove the old drawn-map styles; style MapLibre's attribution and controls to match.
 
 ### Phase 2 · Search

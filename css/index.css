@@ -18,9 +18,9 @@
   --surface: #ffffff;
   --chip-close: #ece8f5;
 
-  --map-ground: #f1eef6;
-  --map-park: #ddefdf;
-  --map-water: #cfe3f5;
+  --map-ground: #ece8df;
+  --map-park: #cce5c2;
+  --map-water: #aed2ee;
   --map-road: #ffffff;
 
   --shadow-sm: 0 6px 18px rgba(23, 18, 43, 0.12);
