@@ -18,61 +18,75 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/assets/css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/assets/js/pages/driver.js"></script>
 </head>
-<body class="page">
+<body class="page page--map page--driver">
   <div class="app">
+    <!-- Map first: every job request is a pin; the chosen one shows its route -->
+    <div class="map" id="map" role="region" aria-label="Map of job requests near you">
+      <div class="map__canvas" id="mapCanvas"></div>
+    </div>
+
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
-    <main class="content">
-      <div class="content__inner">
+    <section class="finder finder--driver" aria-labelledby="driverTitle" hidden id="driverHome">
+      <div class="finder__top">
+        <div class="dhead desktop-only">
+          <div>
+            <h1 class="dhead__title" id="driverTitle">Hi, <span data-bind="firstName">driver</span></h1>
+            <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+          </div>
+          <button type="button" class="button button--ghost dhead__out" data-signout>Sign out</button>
+        </div>
+        <button type="button" class="onbar" id="onlineBtn" aria-pressed="false">
+          <span class="onbar__dot" aria-hidden="true"></span>
+          <span class="onbar__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
+          <span class="onbar__go" data-bind="onlineAction">Go online</span>
+        </button>
+        <div class="fchips" id="kinds" role="group" aria-label="Show requests for"></div>
+      </div>
 
-        <div id="driverHome" class="stack" hidden>
-          <header class="page-head page-head--row">
-            <div>
-              <h1 class="page-title">Hi, <span data-bind="firstName">driver</span></h1>
-              <p class="lede"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
-            </div>
-            <button type="button" class="button button--ghost" id="signOutBtn">Sign out</button>
-          </header>
+      <div class="finder__sheet" id="sheet">
+        <button type="button" class="finder__handle" id="sheetHandle" aria-expanded="false" aria-controls="sheet">
+          <span aria-hidden="true"></span><span class="sr-only">Show more of the list</span>
+        </button>
+        <div class="dhead mobile-only">
+          <div>
+            <p class="dhead__title">Hi, <span data-bind="firstName">driver</span></p>
+            <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+          </div>
+          <button type="button" class="button button--ghost dhead__out" data-signout>Sign out</button>
+        </div>
+        <div class="finder__head" id="reqHead"><h2 id="reqCount">Requests</h2><span>Nearest first</span></div>
+        <div class="finder__scroll" id="sheetScroll">
+          <div id="activeJob" aria-live="polite"></div>
+          <ul class="jobs" id="jobList" aria-labelledby="reqCount" aria-live="polite"></ul>
 
-          <section class="card online" aria-labelledby="onlineTitle">
-            <div class="online__top">
-              <div>
-                <h2 class="card__title" id="onlineTitle" data-bind="onlineTitle">You’re offline</h2>
-                <p class="muted small" data-bind="onlineHint">Go online to get Ride, Express and Shop delivery requests near you.</p>
-              </div>
-              <button type="button" class="online__toggle" id="onlineBtn" aria-pressed="false"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-power"/></svg><span>Go online</span></button>
-            </div>
-            <div class="online__waiting" id="waiting" hidden>
-              <span class="online__pulse" aria-hidden="true"></span>
-              <span>Waiting for requests nearby…</span>
-            </div>
-            <div id="jobs"><!-- job requests from onJobRequest() appear here --></div>
-          </section>
-
-          <section class="card" aria-labelledby="earnTitle">
-            <h2 class="card__title" id="earnTitle">Earnings</h2>
+          <section class="dearn" aria-labelledby="earnTitle">
+            <h2 class="finder__sub" id="earnTitle">Earnings</h2>
             <div class="stats">
               <div class="stat"><span class="stat__value" data-bind="today">₱0</span><span class="stat__label">Today</span></div>
               <div class="stat"><span class="stat__value" data-bind="week">₱0</span><span class="stat__label">This week</span></div>
             </div>
             <ul class="list" id="trips"></ul>
-            <p class="card__foot">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
+            <div class="row dearn__payout">
+              <span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
+              <div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
+              <button type="button" class="button button--ghost" id="payoutBtn">Set up</button>
+            </div>
           </section>
-
-          <section class="card" aria-labelledby="payTitle">
-            <h2 class="card__title" id="payTitle">Payouts</h2>
-            <ul class="list">
-              <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span><div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
-                <button type="button" class="button button--ghost" id="payoutBtn">Set up</button></li>
-            </ul>
-          </section>
+          <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
         </div>
       </div>
-    </main>
+    </section>
+
+    <button type="button" class="map-locate" id="locateBtn" aria-label="Center on my location">
+      <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+    </button>
 
     <div class="bottom">
       <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>

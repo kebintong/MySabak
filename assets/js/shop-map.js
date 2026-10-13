@@ -1,7 +1,8 @@
 /* =========================================================
    mysabak · Shop maps (Shops list and the shop page)
    A MapLibre map in the mysabak street style with a pin per shop (in the shop's
-   colour), the customer's "You" dot and an optional route line.
+   colour), the customer's "You" dot and an optional route line. The driver home uses it
+   too: one pin per job request, the driver's dot, and the route + drop-off of the chosen job.
    If the map can't load, the container shows the drawn map background instead
    and the screens keep working without it.
    ========================================================= */
@@ -48,6 +49,7 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
   let route = null;
   const pins = new Map(); // id → { marker, el, shop }
   let you = null;
+  let dest = null;
 
   map.on('style.load', () => {
     ready = true;
@@ -111,6 +113,17 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
       }
       you.setLngLat([point.lng, point.lat]).addTo(map);
     },
+    /** A drop-off flag (null hides it). */
+    setDest(point, label = 'Drop-off') {
+      if (!point) { if (dest) dest.remove(); dest = null; return; }
+      if (!dest) {
+        const el = document.createElement('div');
+        el.className = 'dest-flag';
+        dest = new maplibregl.Marker({ element: el, anchor: 'bottom' });
+      }
+      dest.getElement().innerHTML = `<svg viewBox="0 0 30 40" aria-hidden="true"><path d="M15 39C12 34 2 27 2 15a13 13 0 0 1 26 0c0 12-10 19-13 24Z"/><rect x="10" y="10" width="10" height="10" rx="2"/></svg><span class="spin__label">${esc(label)}</span>`;
+      dest.setLngLat([point.lng, point.lat]).addTo(map);
+    },
     /** Route line from the customer to the shop ([lng, lat] pairs; null clears it). */
     setRoute(coords) { route = coords && coords.length > 1 ? coords : null; drawRoute(); },
     /** Fit these points ([lng, lat]) in view. */
@@ -128,7 +141,7 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
 
 function stub() {
   const noop = () => {};
-  return { map: null, setShops: noop, setActive: noop, setUser: noop, setRoute: noop, fit: noop, resize: noop };
+  return { map: null, setShops: noop, setActive: noop, setUser: noop, setDest: noop, setRoute: noop, fit: noop, resize: noop };
 }
 
 /**
