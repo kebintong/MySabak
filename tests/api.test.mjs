@@ -88,3 +88,23 @@ test('shop: list, order with delivery fee unknown until rates are set, order sta
   assert.equal(order.deliveryFee, null);
   await assert.rejects(api.placeOrder({ shopId: 'lutong-bahay', items: [], address: { lng: 0, lat: 0 } }), { status: 400 });
 });
+
+test('shop: the order is priced from the menu, options included; made-up prices and picks are ignored', async () => {
+  const { id } = await api.placeOrder({
+    shopId: 'lutong-bahay',
+    items: [
+      { id: 'adobo', qty: 1, price: 1, picks: { size: 'Family', meal: 'Meal', drink: 'Cola', add: ['Fried egg', 'Gold leaf'] }, note: ' no onions ' },
+      { id: 'barkada', qty: 2, picks: { anything: 'x' } },
+    ],
+    address: { lng: 123.89, lat: 10.317, label: 'Escario St' },
+    payment: 'gcash',
+  });
+  const order = await api.orderStatus(id);
+  const [adobo, bundle] = order.lines;
+  assert.equal(adobo.price, 120 + 260 + 45 + 20);
+  assert.deepEqual(adobo.options, ['Family', 'Meal', 'Cola', 'Fried egg']);
+  assert.equal(adobo.note, 'no onions');
+  assert.equal(bundle.price, 520);
+  assert.equal(order.subtotal, 445 + 1040);
+});
+

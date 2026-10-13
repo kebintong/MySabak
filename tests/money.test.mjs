@@ -17,13 +17,17 @@ test('fares and delivery fees: base + perKm × km, or null until rates are set',
   assert.equal(rateFor({ base: 40, perKm: 10 }, null), null);
 });
 
-test('cart totals ignore unknown items and zero quantities', () => {
-  const menu = [{ id: 'a', name: 'Adobo', price: 120 }, { id: 'b', name: 'Lumpia', price: 85 }];
-  const t = cartTotals({ items: { a: 2, b: 1, gone: 3, z: 0 } }, menu);
-  assert.equal(t.count, 3);
-  assert.equal(t.subtotal, 325);
-  assert.deepEqual(t.lines.map((l) => l.id), ['a', 'b']);
-  assert.deepEqual(cartTotals({ items: {} }, menu), { lines: [], count: 0, subtotal: 0 });
+test('cart totals: menu prices plus options; unknown items and zero quantities ignored', () => {
+  const menu = [
+    { id: 'a', name: 'Adobo', price: 120, options: [{ id: 'rice', name: 'Rice', type: 'one', choices: [{ name: 'Plain', price: 0 }, { name: 'Garlic', price: 15 }] }] },
+    { id: 'b', name: 'Lumpia', price: 85 },
+  ];
+  const line = (id, qty, picks = {}) => ({ key: id + JSON.stringify(picks), id, qty, picks, note: '' });
+  const t = cartTotals({ lines: [line('a', 2), line('a', 1, { rice: 'Garlic' }), line('b', 1), line('gone', 3), line('b', 0)] }, menu);
+  assert.equal(t.count, 4);
+  assert.equal(t.subtotal, 120 * 2 + 135 + 85);
+  assert.deepEqual(t.lines.map((l) => [l.id, l.price, l.options]), [['a', 120, []], ['a', 135, ['Garlic']], ['b', 85, []]]);
+  assert.deepEqual(cartTotals({ lines: [] }, menu), { lines: [], count: 0, subtotal: 0 });
 });
 
 test('distance and peso formatting', () => {

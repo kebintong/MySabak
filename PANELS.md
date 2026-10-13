@@ -108,12 +108,25 @@ Accept / Decline. The demo sends none. Backend: connect your realtime channel th
 need a photo at pickup and delivery (`updateJob(id, status, { photo })`).
 
 ## Shop (Stage 1: ordering + delivery, no POS)
+Design: "Map first". Shops are found on the map; each shop opens on a route map.
+
 | Page | What it does | Source |
 |---|---|---|
-| `pages/shops.html` | search, categories, nearby shops, your orders | `listShops()`, `myOrders()` |
-| `pages/shop.html?id=…` | menu with + / −, cart bar (one shop per cart, kept in the browser) | `shopMenu()` |
-| `pages/checkout.html` | items, delivery address (search or "use my location"), notes, payment, summary | `deliveryQuote()`, `placeOrder()` |
+| `pages/shops.html` | full-screen map, one pin per shop in its colour; search + category chips float on top; tap a pin to preview the shop (dark card); list of shops, closest first, in a pull-up sheet (phones) or a side panel (desktop); your orders | `listShops()`, `myOrders()` |
+| `pages/shop.html?id=…` | route map from the customer to the shop (when location is allowed), shop card (photo, address, rating, hours, open now, distance, directions, phone), menu section tabs, items in sideways rows (phones) or a grid (desktop), bundles, an options sheet per item, "Your order" (a sheet on phones and tablets, a column on wide screens) | `shopMenu()`, `routeBetween()` |
+| `pages/checkout.html` | items with their options, delivery address (search or "use my location"), notes, payment, summary | `deliveryQuote()`, `placeOrder()` |
 | `pages/order.html?id=…` | status timeline, receipt (items → shop, delivery → rider, tip → mysabak), tip button, details | `orderStatus()`, `myTips()`, `sendTip()` |
+
+**Item options.** Each menu item can have option groups (size, make it a meal, drink, rice, add-ons…).
+A group is single choice (`one`, defaults to its first choice) or multiple choice (`many`, up to `max`).
+`showIf` hides a group until another group has a certain pick (the drink only shows once a meal is picked).
+The price of one item is its `price` plus every picked choice. `assets/js/menu.js` has the rules and
+`tests/menu.test.mjs` tests them; **the server must price orders the same way** and ignore prices sent by the browser.
+Bundles (`bundle: true`) are fixed combos with no options. A cart is for one shop and lives in the browser
+(`assets/js/cart.js`).
+
+**Pictures.** Shops and items have `image` (a photo URL). While it is `null`, the demo draws a placeholder
+(`assets/js/demo-art.js`, keyed by `art`). Send photos and delete that file.
 
 Shops and menus in the demo are **samples** (`assets/js/demo-data.js`); delete that file once `listShops()` /
 `shopMenu()` call your API.
@@ -194,14 +207,35 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
   "tipsToMysabak": 120, "payout": { "method": "GCash •••• 1234", "next": "Mon, Oct 19" } }
 
 // Shop (list item has `km` and `items` count instead of `menu`)
-{ "id": "lutong-bahay", "name": "Lutong Bahay Kitchen", "category": "food", "area": "Capitol Site",
-  "hours": "9:00 AM – 9:00 PM", "color": "#f7c27a", "lng": 123.893, "lat": 10.318,
-  "menu": [{ "id": "adobo", "name": "Chicken adobo + rice", "price": 120, "note": "Classic, slow-cooked" }] }
+// opensAt / closesAt: Cebu time, for "Open now". color / tint: pin and placeholder colours. image: photo URL or null.
+{ "id": "lutong-bahay", "name": "Lutong Bahay Kitchen", "sign": "LUTONG BAHAY", "category": "food", "area": "Capitol Site",
+  "address": "Escario St, Capitol Site, Cebu City", "phone": "0917 555 0142", "rating": 4.8,
+  "hours": "9:00 AM – 9:00 PM", "opensAt": "09:00", "closesAt": "21:00",
+  "color": "#E0782F", "tint": "#FCE3CC", "image": null, "lng": 123.893, "lat": 10.318,
+  "about": "Home-style Filipino plates cooked in small batches through the day.",
+  "menu": [
+    { "id": "solo", "name": "Solo Busog Meal", "note": "Adobo, rice, iced tea and leche flan.", "price": 199,
+      "section": "Bundles", "bundle": true, "image": null, "options": [] },
+    { "id": "adobo", "name": "Chicken adobo + rice", "note": "Classic, slow-cooked", "price": 120,
+      "section": "Mains", "tag": "Best seller", "image": null, "options": [
+        { "id": "size", "name": "Size", "type": "one", "required": true, "choices": [
+          { "name": "Solo", "price": 0, "hint": "1 person" }, { "name": "Sharing", "price": 110, "hint": "good for 2–3" }] },
+        { "id": "meal", "name": "Make it a meal", "type": "one", "required": true, "choices": [
+          { "name": "Ala carte", "price": 0 }, { "name": "Meal", "price": 45, "hint": "with a regular drink" }] },
+        { "id": "drink", "name": "Choose your drink", "type": "one", "required": true,
+          "showIf": { "group": "meal", "notIn": ["Ala carte"] }, "choices": [{ "name": "Iced tea", "price": 0 }, { "name": "Fresh buko juice", "price": 30 }] },
+        { "id": "add", "name": "Add-ons", "type": "many", "required": false, "max": 3, "choices": [
+          { "name": "Fried egg", "price": 20 }, { "name": "Atchara", "price": 15 }] }] }] }
 
-// Order
+// placeOrder() sends items as { id, qty, picks, note }:
+{ "id": "adobo", "qty": 2, "picks": { "size": "Sharing", "meal": "Meal", "drink": "Iced tea", "add": ["Fried egg"] }, "note": "no onions" }
+
+// Order (each line priced by the server: price = item price + picked choices)
 { "id": "SHOP-1", "shop": { "id": "lutong-bahay", "name": "Lutong Bahay Kitchen", "area": "Capitol Site" },
-  "lines": [{ "id": "adobo", "name": "Chicken adobo + rice", "price": 120, "qty": 2 }],
-  "subtotal": 240, "deliveryFee": 45, "address": { "lng": 123.89, "lat": 10.317, "label": "Escario St" },
+  "lines": [{ "id": "adobo", "name": "Chicken adobo + rice", "price": 295, "qty": 2,
+    "picks": { "size": "Sharing", "meal": "Meal", "drink": "Iced tea", "add": ["Fried egg"] },
+    "options": ["Sharing", "Meal", "Iced tea", "Fried egg"], "note": "no onions" }],
+  "subtotal": 590, "deliveryFee": 45, "address": { "lng": 123.89, "lat": 10.317, "label": "Escario St" },
   "notes": "Blue gate", "payment": "cash", "status": "preparing", "placedAt": 1791882196490 }
 // status: placed → accepted → preparing → picked_up → delivered (or cancelled)
 ```
