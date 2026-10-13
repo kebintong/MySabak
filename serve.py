@@ -41,6 +41,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ".js": "text/javascript",
         ".css": "text/css",
         ".svg": "image/svg+xml",
+        ".pbf": "application/x-protobuf",
     }
 
     def do_GET(self):
@@ -54,9 +55,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         # Always fetch fresh files while developing.
         self.send_header("Cache-Control", "no-store, must-revalidate")
-        # Let sw.js (at the root) control /html/ pages.
-        if self.path.split("?")[0].endswith("sw.js"):
-            self.send_header("Service-Worker-Allowed", "/")
         super().end_headers()
 
     def log_message(self, fmt, *args):

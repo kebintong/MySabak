@@ -9,9 +9,10 @@ window.MYSABAK_CONFIG = {
   // Leave empty to paste it in the app instead (saved in that browser only).
   tomtomKey: 'k1Vy6wTXDbCb7igZxXVuXEND9MB7zsBZ',
 
-  // Map look: 'lavender' (mysabak colours, full detail). TomTom's own styles also work:
+  // Map look: 'street' (mysabak street map: cream land, yellow main roads, Google Sans Text labels).
+  // TomTom's own styles also work:
   // 'basic_street-light', 'basic_mono-light', 'basic_street-dark', 'basic_street-satellite'
-  mapStyle: 'lavender',
+  mapStyle: 'street',
 
   // Where the map opens if location is off: Cebu City [longitude, latitude]
   startCenter: [123.8854, 10.3157],
