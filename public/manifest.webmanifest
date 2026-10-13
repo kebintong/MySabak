@@ -3,7 +3,7 @@
   "short_name": "mysabak",
   "description": "Rides, delivery and express with no booking fees and no hidden charges.",
   "lang": "en-PH",
-  "start_url": "./html/",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

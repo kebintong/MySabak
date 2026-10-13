@@ -3,7 +3,7 @@
    Vanilla JS. No build step.
 
    TomTom (one free API key, no credit card). Every TomTom call goes through /api/tomtom/…,
-   which worker/index.js (Cloudflare) or serve.py (local) forwards with the key added,
+   which worker/index.js (Cloudflare Worker) forwards with the key added,
    so the key never reaches the browser.
 
      Map:     TomTom Orbis map style, drawn with MapLibre GL JS
@@ -62,7 +62,7 @@
   /* =========================================================
      TomTom APIs
      ========================================================= */
-  const TT = new URL('../api/tomtom', location.href).href; // our proxy (adds the key server-side)
+  const TT = new URL('/api/tomtom', location.origin).href; // our proxy (adds the key server-side)
   const TT_HOSTS = /^https:\/\/([a-d]\.)?api\.tomtom\.com/;
 
   /** fetch() with TomTom-friendly errors: err.status 0 = network/blocked. */
@@ -462,7 +462,7 @@
   /* Map label fonts: Google Sans at its text optical size, which is Google Sans Text, turned into
      MapLibre glyphs in assets/fonts/glyphs (open font licence: assets/fonts/glyphs/OFL.txt).
      Only the map labels use it; the app UI keeps its own fonts. */
-  const GLYPHS = `${new URL('../assets/fonts/glyphs/', location.href).href}{fontstack}/{range}.pbf`;
+  const GLYPHS = `${new URL('/assets/fonts/glyphs/', location.origin).href}{fontstack}/{range}.pbf`;
   const FONT = {
     regular: ['GoogleSansText-Regular'],
     medium: ['GoogleSansText-Medium'],
@@ -1280,12 +1280,12 @@
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
-      // sw.js used to live at the site root; remove that old worker if this browser still has it.
-      const oldWorker = new URL('../sw.js', location.href).href;
+      const worker = new URL('/sw.js', location.origin).href;
+      navigator.serviceWorker.register(worker).catch(() => { /* offline support is optional */ });
+      // Older versions installed sw.js elsewhere (/html/sw.js); remove those.
       navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => {
         const w = r.active || r.waiting || r.installing;
-        if (w && w.scriptURL === oldWorker) r.unregister();
+        if (w && w.scriptURL !== worker) r.unregister();
       })).catch(() => {});
     });
   }

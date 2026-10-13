@@ -1,24 +1,20 @@
 /* mysabak service worker — caches the app shell so it opens offline.
    Bump CACHE when you change any of the files below.
-
-   It lives in html/ (next to the page) because a service worker only controls pages
-   in its own folder and below. From scripts/ or a sw/ folder it couldn't control
-   html/index.html unless the server sent a Service-Worker-Allowed header,
-   which static hosts like GitHub Pages can't. Paths below are relative to this file. */
-const CACHE = 'mysabak-v10';
+   It sits at the site root so it can look after every page. */
+const CACHE = 'mysabak-v11';
 const SHELL = [
   './',
-  '../css/index.css',
-  '../scripts/config.js',
-  '../scripts/index.js',
-  '../manifest.webmanifest',
-  '../assets/sabak-logo.png',
-  '../assets/icons/icon-192.png',
-  '../assets/icons/icon-512.png',
-  '../assets/fonts/glyphs/GoogleSansText-Regular/0-255.pbf',
-  '../assets/fonts/glyphs/GoogleSansText-Medium/0-255.pbf',
-  '../assets/fonts/glyphs/GoogleSansText-Bold/0-255.pbf',
-  '../assets/fonts/glyphs/GoogleSansText-Italic/0-255.pbf',
+  './css/index.css',
+  './scripts/config.js',
+  './scripts/index.js',
+  './manifest.webmanifest',
+  './assets/sabak-logo.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/fonts/glyphs/GoogleSansText-Regular/0-255.pbf',
+  './assets/fonts/glyphs/GoogleSansText-Medium/0-255.pbf',
+  './assets/fonts/glyphs/GoogleSansText-Bold/0-255.pbf',
+  './assets/fonts/glyphs/GoogleSansText-Italic/0-255.pbf',
 ];
 
 self.addEventListener('install', (event) => {

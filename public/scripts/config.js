@@ -1,9 +1,9 @@
 /* =========================================================
    mysabak · app settings (public: no keys in here)
 
-   The TomTom API key is a secret on the server:
-     Cloudflare:  npx wrangler secret put TOMTOM_KEY  (or the dashboard)
-     Local:       .dev.vars (copy .dev.vars.example; git ignores it)
+   The TomTom API key is a secret on the server (see README.md):
+     Cloudflare:  Worker → Settings → Variables and secrets → TOMTOM_KEY (type Secret)
+     Local:       a .dev.vars file with TOMTOM_KEY=… (git ignores it)
    TomTom free tier each month: 10,000 place suggestions, 20,000 address lookups,
    20,000 routes, 200,000 map tiles.
    ========================================================= */
