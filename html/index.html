@@ -199,28 +199,6 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <!-- TomTom key setup -->
-    <dialog class="key-dialog" id="keyDialog" aria-labelledby="keyTitle">
-      <form id="keyForm" class="key-dialog__body" method="dialog" autocomplete="off">
-        <span class="key-dialog__badge" aria-hidden="true"><svg class="icon icon--lg" aria-hidden="true"><use href="#i-pin"/></svg></span>
-        <h2 id="keyTitle" class="key-dialog__title">Connect TomTom</h2>
-        <p class="key-dialog__text">The map, place search and routes use one free TomTom API key. No credit card needed.</p>
-        <ol class="key-dialog__steps">
-          <li>Sign up at <a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a>.</li>
-          <li>Open your <b>Dashboard</b> and copy the API key (one is created for you).</li>
-          <li>Paste it here.</li>
-        </ol>
-        <label for="keyInput" class="key-dialog__label">TomTom API key</label>
-        <input id="keyInput" class="key-dialog__input" type="text" spellcheck="false" placeholder="Paste your key">
-        <p id="keyStatus" class="key-status" role="status" aria-live="polite"></p>
-        <div class="key-dialog__actions">
-          <button type="button" class="key-btn key-btn--link" id="keyClear">Remove saved key</button>
-          <button type="button" class="key-btn key-btn--ghost" id="keyCancel">Not now</button>
-          <button type="submit" class="key-btn" id="keySave">Test &amp; save</button>
-        </div>
-        <p class="key-dialog__fine">Saved in this browser only. You can also put it in <code>scripts/config.js</code>.</p>
-      </form>
-    </dialog>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>

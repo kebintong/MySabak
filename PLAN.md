@@ -100,7 +100,8 @@ Google's $200 monthly credit ended in March 2025. Google now gives a set number 
 - `[ETA]` needs live driver locations (driver app + backend + real-time updates). This isn't a map-provider job; plan it with booking and dispatch.
 
 ### Before launch
-- [ ] Lock any API keys to the mysabak.com domain.
+- [x] Keep API keys off the browser: TomTom goes through the Cloudflare Worker (`worker/index.js`), key stored as a Cloudflare secret.
+- [ ] Add a Cloudflare rate-limiting rule on `/api/*` once mysabak.com is on Cloudflare (see DEPLOY.md).
 - [ ] Cache search and routing results on the backend.
 - [ ] Attribution visible (MapLibre adds it automatically), plus a "report a map issue" link.
 - [ ] Set quota alerts on every provider account.

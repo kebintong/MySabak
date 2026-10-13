@@ -1,0 +1,18 @@
+# Files that stay off the website (Cloudflare reads this when it uploads the site).
+.git
+.github
+.wrangler
+node_modules
+worker
+wrangler.jsonc
+wrangler.toml
+.dev.vars*
+.env*
+.gitignore
+.assetsignore
+serve.py
+__pycache__
+PLAN.md
+README.md
+DEPLOY.md
+LICENSE

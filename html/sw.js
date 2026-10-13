@@ -5,9 +5,9 @@
    in its own folder and below. From scripts/ or a sw/ folder it couldn't control
    html/index.html unless the server sent a Service-Worker-Allowed header,
    which static hosts like GitHub Pages can't. Paths below are relative to this file. */
-const CACHE = 'mysabak-v9';
+const CACHE = 'mysabak-v10';
 const SHELL = [
-  './index.html',
+  './',
   '../css/index.css',
   '../scripts/config.js',
   '../scripts/index.js',
@@ -36,12 +36,13 @@ self.addEventListener('activate', (event) => {
 // Network first for our own files (so updates show up), cache as fallback.
 // That includes the map label fonts (assets/fonts/glyphs): a small, fixed set.
 // Google Fonts: cache first.
-// TomTom (tiles, search, routes) and MapLibre (CDN) go straight to the network:
+// TomTom (/api/tomtom/…: tiles, search, routes) and MapLibre (CDN) go straight to the network:
 // MapLibre keeps its own tile cache; caching tiles here would grow without limit.
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return;
 
   if (url.origin === self.location.origin) {
     event.respondWith(
