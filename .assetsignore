@@ -6,6 +6,10 @@ node_modules
 worker
 wrangler.jsonc
 wrangler.toml
+package.json
+package-lock.json
+tests
+dist
 .dev.vars*
 .env*
 .gitignore

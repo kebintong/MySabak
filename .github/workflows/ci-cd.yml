@@ -1,0 +1,69 @@
+# CI: checks every pull request and every push.
+# CD: when main passes the checks, deploys to Cloudflare Workers.
+# Setup (Cloudflare API token + account ID as GitHub secrets): see DEPLOY.md.
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: # "Run workflow" button: re-deploy main by hand
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install tools (Wrangler)
+        run: npm ci
+
+      - name: JavaScript syntax
+        run: for f in scripts/*.js html/sw.js worker/index.js; do node --check "$f"; done
+
+      - name: serve.py compiles
+        run: python3 -m py_compile serve.py
+
+      - name: Tests (Worker proxy, no keys committed, private files hidden)
+        run: npm test
+
+      - name: Cloudflare config builds
+        run: npm run check
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Deploy
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

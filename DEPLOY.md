@@ -22,25 +22,29 @@ The old key was committed to GitHub, so treat it as public.
    website address, so TomTom would refuse its requests.
 5. Geoapify (no longer used): delete the key `8306…3764` in your Geoapify dashboard.
 
-## 2. Deploy
+## 2. Set up automatic deploys (GitHub Actions)
 
-### Option A: from GitHub (deploys again on every push)
+`.github/workflows/ci-cd.yml` checks every pull request, and deploys `main` to Cloudflare
+once the checks pass. It needs two GitHub secrets:
 
-1. Merge this branch into `main`.
-2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Import a repository**.
-3. Pick `kebintong/MySabak` and set:
-   - Project name: `mysabak` (must match `"name"` in `wrangler.jsonc`)
-   - Build command: *(leave empty)*
-   - Deploy command: `npx wrangler deploy`
-   - Root directory: `/`
-4. **Save and Deploy**. The first deploy works, but the map shows an error until step 3 below.
+1. **Cloudflare API token:** Cloudflare dashboard → your profile → **API Tokens** → **Create Token**
+   → template **Edit Cloudflare Workers** → *Account resources*: your account, *Zone resources*: All zones
+   → **Create** → copy the token.
+2. **Account ID:** Cloudflare dashboard → **Workers & Pages** → copy **Account ID** from the right side.
+3. GitHub → `kebintong/MySabak` → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
+   - `CLOUDFLARE_API_TOKEN` = the token
+   - `CLOUDFLARE_ACCOUNT_ID` = the account ID
+4. Deploy: merge a pull request into `main`, or open **Actions** → **CI/CD** → **Run workflow**.
+   The first run creates the `mysabak` Worker.
 
-### Option B: from your computer (needs Node.js 20+)
+Use GitHub Actions *or* Cloudflare's own "Import a repository" (Workers Builds), not both, or every push
+deploys twice. If you already imported the repo in Cloudflare: Worker `mysabak` → **Settings** → **Build**
+→ **Disconnect**.
 
-```sh
-npx wrangler login
-npx wrangler deploy
-```
+Optional: GitHub → **Settings** → **Branches** → add a rule for `main` → **Require status checks to pass**
+→ pick **Check**. Then nothing reaches `main` (and the live site) without passing the checks.
+
+Deploying from your computer still works (Node.js 22+): `npm install`, `npx wrangler login`, `npm run deploy`.
 
 ## 3. Add the key as a secret
 
@@ -55,7 +59,8 @@ or:
 npx wrangler secret put TOMTOM_KEY
 ```
 
-Secrets stay when you deploy again; you only set it once.
+Secrets stay when you deploy again; you only set it once. The key never goes into GitHub,
+not even as a GitHub secret: only Cloudflare has it.
 
 Open `https://mysabak.<your-subdomain>.workers.dev`. You should see the map.
 
@@ -73,7 +78,9 @@ Open `https://mysabak.<your-subdomain>.workers.dev`. You should see the map.
 1. Copy `.dev.vars.example` to `.dev.vars` and paste your key. Git ignores `.dev.vars`.
 2. Either:
    - `python serve.py` → <http://localhost:8000/html/> (same proxy, Python only), or
-   - `npx wrangler dev` → <http://localhost:8787/html/> (the real Cloudflare runtime).
+   - `npm install`, then `npm run dev` → <http://localhost:8787/html/> (the real Cloudflare runtime).
+3. Before pushing: `npm test` (what CI runs: proxy tests, no keys committed, private files hidden)
+   and `npm run check` (the Cloudflare config builds).
 
 ## Settings
 
