@@ -145,3 +145,37 @@ test('ride booking: a demo driver accepts, the trip reports where the driver is,
   assert.deepEqual(await api.rateRide(id, 5), { ok: true });
   await assert.rejects(api.findDriver('RIDE-nope'), { status: 404 });
 });
+
+test('demo driver account: signs in with its password only, is approved and can go online', async () => {
+  const { DEMO_ACCOUNTS } = await import('../assets/js/demo-data.js');
+  const acc = DEMO_ACCOUNTS.driver;
+  await assert.rejects(api.driverSignIn({ login: acc.email, password: 'wrong-password' }), { status: 401 });
+  assert.deepEqual(await api.driverSignIn({ login: acc.phone, password: acc.password }), { status: 'approved' });
+  const d = await api.driverStatus();
+  assert.equal(d.signedIn, true);
+  assert.deepEqual(await api.setOnline(true), { online: true });
+  assert.equal(localStorage.getItem('mysabak.demo.driver').includes(acc.password), false, 'password not stored');
+  await api.driverSignOut();
+});
+
+test('demo merchant account: sign in, open/close, sold out items, sign out', async () => {
+  const { DEMO_ACCOUNTS } = await import('../assets/js/demo-data.js');
+  const acc = DEMO_ACCOUNTS.merchant;
+  await assert.rejects(api.merchantHome(), { status: 401 });
+  await assert.rejects(api.merchantSignIn({ login: acc.email, password: 'nope-nope' }), { status: 401 });
+  await api.merchantSignIn({ login: 'Merchant@mysabak.demo', password: acc.password });
+  let home = await api.merchantHome();
+  assert.equal(home.shop.id, acc.shop.id);
+  assert.equal(home.open, true);
+  assert.deepEqual(home.orders, []);
+  await api.setShopOpen(false);
+  await api.setItemAvailable('adobo', false);
+  home = await api.merchantHome();
+  assert.equal(home.open, false);
+  assert.equal(home.available.adobo, false);
+  assert.equal(home.available.lumpia, true);
+  const { shops } = await api.listShops({});
+  assert.equal(shops.some((s) => s.id === acc.shop.id), false, 'the merchant shop is not listed publicly');
+  await api.merchantSignOut();
+  await assert.rejects(api.merchantHome(), { status: 401 });
+});

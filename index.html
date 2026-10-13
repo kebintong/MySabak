@@ -154,8 +154,16 @@
         </button>
       </section>
 
+      <!-- Steps 3–4 hidden: a slim bar that brings the status card back -->
+      <button type="button" class="statusbar" id="statusBar" data-show="search trip" aria-controls="searchPanel tripPanel" aria-expanded="false">
+        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
+        <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Finding you a driver</span><span class="statusbar__sub" data-bind="barSub"></span></span>
+        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span>
+      </button>
+
       <!-- Step 3 · Finding a driver -->
-      <section class="panel panel--search" data-show="search" aria-labelledby="searchTitle" aria-live="polite">
+      <section class="panel panel--search" id="searchPanel" data-show="search" aria-labelledby="searchTitle" aria-live="polite">
+        <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
         <div class="searching">
           <span class="searching__icon" aria-hidden="true"><span></span><svg class="icon icon--xl icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
           <div class="searching__text">
@@ -168,7 +176,8 @@
       </section>
 
       <!-- Step 4 · Driver on the way / on the trip -->
-      <section class="panel panel--trip" data-show="trip" aria-labelledby="tripTitle" aria-live="polite">
+      <section class="panel panel--trip" id="tripPanel" data-show="trip" aria-labelledby="tripTitle" aria-live="polite">
+        <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
         <div class="trip__head">
           <div>
             <h2 class="trip__title" id="tripTitle" data-bind="tripTitle">Your driver is on the way</h2>
@@ -248,7 +257,7 @@
             <button type="button" class="yourprice__step" data-price-step="1" aria-label="Raise the price"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
           </div>
           <div class="yourprice__chips" id="tipChips" role="group" aria-label="Add a tip"><!-- No tip, +₱10, +₱20, +₱50 --></div>
-          <label class="yourprice__custom"><span id="customLabel">Or type your price</span>
+          <label class="yourprice__custom" id="customRow" hidden><span id="customLabel">Your price</span>
             <span class="yourprice__input"><span aria-hidden="true">₱</span><input class="input" id="customPrice" type="number" inputmode="numeric" min="0" step="1" placeholder="90"></span></label>
           <dl class="receipt" id="priceBreakdown"></dl>
           <p class="tip__note"><svg class="icon icon--sm" aria-hidden="true"><use href="assets/images/icons.svg#i-shield"/></svg>Your driver keeps 100% of the fare. The extra goes to mysabak and keeps rides fee-free for drivers.</p>

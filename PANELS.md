@@ -85,7 +85,8 @@ Receiver name, receiver mobile, size (`CONFIG.parcelSizes`), what's being sent, 
 | Element | Data | Source |
 |---|---|---|
 | Pay with: Cash / GCash / Online banking | payment method | `CONFIG.ridePayments` |
-| Your price (− / +, No tip · +₱10 · +₱20 · +₱50, or type a price) | fare + tip | `faresFor()`; split with `splitPrice()` in `money.js` |
+| Your price (− / +, No tip · +₱10 · +₱20 · +₱50 · **Custom**) | fare + tip | `faresFor()`; split with `splitPrice()` in `money.js` |
+| Custom (shown after tapping Custom) | "Your price (fare ₱90 + tip)", or "Tip amount" while the fare is unknown | same |
 | Breakdown | Fare (100% to your driver), Tip (100% to mysabak), You pay | same |
 | Find a driver · ₱110 | the booking | `bookRide({ …, payment, price: { fare, tip, total } })` |
 
@@ -106,8 +107,12 @@ Radar around the pickup, "Finding you a driver…", vehicle · price · payment,
 | Call / Message | `driver.phone` | demo shows a toast |
 | Cancel ride (before pickup only) | none | `cancelRide(id)` |
 
-`onTripUpdate()` is where the backend plugs in its realtime channel. **The demo moves the driver to the pickup,
-then along the route, in about 15 seconds.**
+`onTripUpdate()` is where the backend plugs in its realtime channel. **The demo driver drives the real roads to
+the pickup (TomTom route), waits, then follows the trip route: about 25 seconds.** The car glides between
+position updates (`moveDriver()` in `map.js`), so real updates every 1–2 seconds also look smooth.
+
+**Hide / show:** the status card (finding a driver, trip) has a hide button; it shrinks to a slim bar with the
+status and a **Show** button.
 
 ### Ride complete (when `onTripUpdate` reports `completed`)
 Purple header with a check, "You've arrived" (Express: "Parcel delivered") and the drop-off + time; the route
@@ -164,8 +169,28 @@ Bundles (`bundle: true`) are fixed combos with no options. A cart is for one sho
 **The demo has no shops** (`SHOPS = []` in `demo-data.js`), so Shops shows its "No shops yet" state until
 `listShops()` / `shopMenu()` return real shops. The tests use a made-up shop in `tests/fixtures.mjs`.
 
+## Merchant (shop owners; no POS, that's Stage 2)
+| Page | What it does | Source |
+|---|---|---|
+| `pages/merchant.html` | **Merchant sign in**: mobile number or email + password, then the dashboard | `merchantSignIn({ login, password })`, `merchantHome()` |
+| `pages/merchant-home.html` | shop name + Open/Closed; **Orders** in tabs New · Preparing · Ready · Done with Accept / Decline / Start preparing / Ready for pickup; **Accepting orders** switch; orders and sales today; **Menu** with an Available switch per item (sold out); Sign out | `merchantHome()`, `updateMerchantOrder()`, `setShopOpen()`, `setItemAvailable()`, `merchantSignOut()` |
+
+Order status gains `ready` (ready for the rider): placed → accepted → preparing → ready → picked_up → delivered.
+Backend: `shopMenu()` should leave out (or mark) items the merchant switched off, and a closed shop can't take orders.
+
+## Demo accounts
+Given logins so the company can try both partner sides (`DEMO_ACCOUNTS` in `assets/js/demo-data.js`; delete with that file):
+
+| Account | Sign in at | Mobile number | Email | Password |
+|---|---|---|---|---|
+| Driver (approved, can go online) | `pages/drive.html` | 0917 000 0001 | driver@mysabak.demo | `mysabak-demo` |
+| Merchant ("Demo Kitchen", not listed on Shops) | `pages/merchant.html` | 0917 000 0002 | merchant@mysabak.demo | `mysabak-demo` |
+
+The driver still gets no job requests in the demo, and the merchant gets no orders (no public shops).
+
 ## Account (`pages/account.html`)
-Placeholder until sign-in (mobile number + one-time code) exists. Links to this browser's demo tips, orders and driver home.
+Placeholder until sign-in (mobile number + one-time code) exists. "For partners" links to Driver sign in and
+Merchant sign in; "On this device" links to this browser's demo tips, orders and driver home.
 
 ---
 
@@ -191,6 +216,10 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
 | `acceptJob(id)` / `updateJob(id, status, { photo })` | `{ ok }` | driver home |
 | `driverEarnings()` | `Earnings` | driver home |
 | `listShops({ near, category, q })` / `shopMenu(id)` | `{ categories, shops }` / `Shop` | Shop pages |
+| `merchantSignIn({ login, password })` / `merchantSignOut()` | `{ shopId }` (401 if no match) / nothing | merchant sign in |
+| `merchantHome()` | `{ name, shop, open, available: { itemId: bool }, orders, today: { orders, sales } }` (401 if signed out) | merchant dashboard |
+| `setShopOpen(open)` / `setItemAvailable(itemId, available)` | `{ open }` / `{ ok }` | merchant dashboard |
+| `updateMerchantOrder(orderId, action)` | `{ status }` (409 if the step isn't possible) | merchant dashboard; actions in `MERCHANT_ACTIONS` |
 | `deliveryQuote(shopId, address)` | `{ km, fee \| null }` | checkout |
 | `placeOrder(order)` / `orderStatus(id)` / `myOrders()` | `{ id }` / `Order` / `Order[]` | checkout, order page |
 | `errorMessage(err)` | `string` | toasts; throw errors with `err.status` (HTTP code) |
@@ -282,7 +311,7 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
     "options": ["Sharing", "Meal", "Iced tea", "Fried egg"], "note": "no onions" }],
   "subtotal": 590, "deliveryFee": 45, "address": { "lng": 123.89, "lat": 10.317, "label": "Escario St" },
   "notes": "Blue gate", "payment": "cash", "status": "preparing", "placedAt": 1791882196490 }
-// status: placed → accepted → preparing → picked_up → delivered (or cancelled)
+// status: placed → accepted → preparing → ready → picked_up → delivered (or cancelled)
 ```
 
 ### Suggested endpoints
@@ -299,6 +328,7 @@ Any design works as long as `api.js` returns the shapes above. One option:
 | `WS /api/drivers/me/jobs` · `POST /api/jobs/:id/accept` · `POST /api/jobs/:id/status` | job requests |
 | `GET /api/drivers/me/earnings` | earnings |
 | `GET /api/shops` · `GET /api/shops/:id` · `POST /api/shops/:id/quote` | Shop |
+| `POST /api/merchants/session` · `GET /api/merchants/me` · `PUT /api/merchants/me/open` · `PUT /api/merchants/me/items/:id` · `POST /api/orders/:id/status` | Merchant dashboard |
 | `POST /api/orders` · `GET /api/orders/:id` · `GET /api/me/orders` | orders |
 
 Work fares, fees and tip limits out on the server: anything calculated in the browser can be edited by the user.

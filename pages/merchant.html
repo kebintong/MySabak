@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Merchant sign in · mysabak</title>
+  <meta name="theme-color" content="#6542DA">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/merchant.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <div class="auth">
+          <section class="card auth-card" aria-labelledby="signinTitle">
+            <div class="auth-card__head">
+              <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg></span>
+              <h1 class="auth-card__title" id="signinTitle">Merchant sign in</h1>
+              <p class="lede">Run your shop on mysabak: take orders, open or close, and keep your menu up to date.</p>
+            </div>
+
+            <form class="form" id="signinForm" novalidate>
+              <label class="field"><span class="field__label">Mobile number or email</span>
+                <input class="input" name="login" type="text" required placeholder="09XX XXX XXXX or name@email.com"
+                       autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+              <div class="field"><label class="field__label" for="password">Password</label>
+              <div class="input-wrap"><input class="input" id="password" name="password" type="password" required minlength="8" autocomplete="current-password">
+              <button type="button" class="input-wrap__btn" data-reveal="password" aria-label="Show password">Show</button></div></div>
+              <div class="auth-row">
+                <label class="check"><input type="checkbox" name="remember" checked><span>Keep me signed in</span></label>
+                <a href="#" class="auth-link" id="forgot">Forgot password?</a>
+              </div>
+              <p class="field__error" id="signinError" role="alert" hidden></p>
+              <button type="submit" class="button button--block" id="signinBtn">Sign in</button>
+              <p class="auth-legal">By signing in, you agree to mysabak’s <a href="#" data-soon="Merchant Terms">Merchant Terms</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</p>
+            </form>
+
+            <div class="auth-alt">
+              <span>Want to sell on mysabak?</span>
+              <a class="auth-link auth-link--strong" href="#" id="partnerLink">Become a partner</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="account" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

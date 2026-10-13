@@ -379,10 +379,10 @@ export function updateMap() {
   if (mid && !state.loadingTrip && state.step !== 'trip') markers.time.setLngLat(mid).addTo(map);
   else markers.time.remove();
 
-  // The driver, once one accepted (step "trip")
+  // The driver, once one accepted (step "trip"); glides between position updates
   const pos = state.step === 'trip' && state.driver && state.driver.pos;
-  if (pos) markers.driver.setLngLat([pos.lng, pos.lat]).addTo(map);
-  else markers.driver.remove();
+  if (pos) moveDriver(pos);
+  else { markers.driver.remove(); driverAnim.to = null; cancelAnimationFrame(driverAnim.raf); }
 
   placeLabels();
 
@@ -397,6 +397,39 @@ export function updateMap() {
       animateRoute(state.trip.coords, state.trip.approx);
     }
   }
+}
+
+/* Driver marker: each position update glides over the time since the last one,
+   so it moves smoothly even when updates arrive every second or two. */
+const driverAnim = { from: null, to: null, start: 0, dur: 0, last: 0, raf: 0 };
+const lerp = (a, b, t) => ({ lng: a.lng + (b.lng - a.lng) * t, lat: a.lat + (b.lat - a.lat) * t });
+function driverNow(now) {
+  if (!driverAnim.from) return driverAnim.to;
+  const t = Math.min(1, (now - driverAnim.start) / driverAnim.dur);
+  return lerp(driverAnim.from, driverAnim.to, t);
+}
+function moveDriver(pos) {
+  const now = performance.now();
+  const el = markers.driver.getElement();
+  if (!driverAnim.to) {
+    driverAnim.from = null;
+    driverAnim.to = pos;
+    driverAnim.last = now;
+    markers.driver.setLngLat([pos.lng, pos.lat]).addTo(map);
+    return;
+  }
+  if (driverAnim.to.lng === pos.lng && driverAnim.to.lat === pos.lat) return;
+  const from = driverNow(now);
+  if (Math.abs(pos.lng - from.lng) > 1e-7) el.classList.toggle('is-west', pos.lng < from.lng);
+  Object.assign(driverAnim, { from, to: pos, start: now, dur: Math.min(2000, Math.max(120, now - driverAnim.last)), last: now });
+  if (REDUCED_MOTION.matches) { markers.driver.setLngLat([pos.lng, pos.lat]); return; }
+  cancelAnimationFrame(driverAnim.raf);
+  const step = (t) => {
+    const p = driverNow(t);
+    markers.driver.setLngLat([p.lng, p.lat]);
+    if (t - driverAnim.start < driverAnim.dur) driverAnim.raf = requestAnimationFrame(step);
+  };
+  driverAnim.raf = requestAnimationFrame(step);
 }
 
 /* Draw the route from pickup to drop-off over ~0.8 s */

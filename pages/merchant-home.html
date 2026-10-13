@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Merchant · mysabak</title>
+  <meta name="theme-color" content="#6542DA">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/merchant-home.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner content__inner--wide">
+
+        <div id="merchantHome" class="stack" hidden>
+          <header class="page-head page-head--row merchant-head">
+            <div class="merchant-head__shop">
+              <span class="merchant-head__ava" id="shopAva" aria-hidden="true"></span>
+              <div>
+                <h1 class="page-title" id="shopName">Your shop</h1>
+                <p class="lede"><span id="shopArea"></span> · <span class="badge" id="openBadge">Open</span></p>
+              </div>
+            </div>
+            <button type="button" class="button button--ghost" id="signOutBtn">Sign out</button>
+          </header>
+
+          <div class="merchant-grid">
+            <section class="card" aria-labelledby="ordersTitle">
+              <h2 class="card__title card__title--row" id="ordersTitle">Orders <span class="muted small">Newest first</span></h2>
+              <div class="seg" role="tablist" aria-label="Order status" id="orderTabs"></div>
+              <ul class="list" id="orderList" aria-live="polite"></ul>
+            </section>
+
+            <div class="stack">
+              <section class="card" aria-labelledby="openTitle">
+                <div class="open-row">
+                  <div>
+                    <h2 class="card__title" id="openTitle">Accepting orders</h2>
+                    <p class="muted small" id="openHint">Customers can order now.</p>
+                  </div>
+                  <button type="button" class="switch" id="openSwitch" role="switch" aria-checked="true" aria-labelledby="openTitle"><span></span></button>
+                </div>
+                <div class="stats">
+                  <div class="stat"><span class="stat__value" id="todayOrders">0</span><span class="stat__label">Orders today</span></div>
+                  <div class="stat"><span class="stat__value" id="todaySales">₱0</span><span class="stat__label">Sales today</span></div>
+                </div>
+                <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
+              </section>
+
+              <section class="card" aria-labelledby="menuTitle">
+                <h2 class="card__title card__title--row" id="menuTitle">Menu <span class="muted small">Turn off what’s sold out</span></h2>
+                <ul class="list" id="menuList"></ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="account" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>
