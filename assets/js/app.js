@@ -2,9 +2,12 @@
    mysabak · Ride booking screen (Design A)
    Vanilla JS modules, no build step.
 
-   Two steps on one screen:
+   Two modes: Ride (passengers) and Express (parcels), same screen.
+   Two steps:
      1. "request" – set a drop-off (search, a recent place, or pick on map)
      2. "choose"  – pick Motor / Sedan / SUV, see the fare, book
+                    (Express asks for parcel details first)
+   After a trip: showTripDone() shows the receipt + "Tip mysabak" sheet.
 
    Files:
      config.js  settings (vehicles, fares, map start)
@@ -17,6 +20,7 @@ import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
+import { openTipSheet } from './ui.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const DESKTOP = window.matchMedia('(min-width: 900px)');
@@ -37,8 +41,23 @@ const state = {
   trip: emptyTrip(),
   loadingTrip: false,
   picking: false,
+  mode: 'ride',   // 'ride' | 'express'
+  parcel: null,   // Express: { receiverName, receiverPhone, size, item, notes }
 };
 let tripToken = 0;
+
+/* Words that change between Ride and Express */
+const MODES = {
+  ride: {
+    askTitle: 'Saan tayo?', askHint: 'Set your drop-off below.', placeholder: 'Where to?',
+    bookVerb: 'Book', seeLabel: 'See rides', capacity: (v) => v.capacity,
+  },
+  express: {
+    askTitle: 'Saan ipapadala?', askHint: 'Set where the parcel goes.', placeholder: 'Deliver to?',
+    bookVerb: 'Send with', seeLabel: 'See options', capacity: (v) => v.parcel,
+  },
+};
+const words = () => MODES[state.mode];
 
 /** Real route, or a straight line (with a toast) if routing fails. */
 async function estimateTrip(from, to) {
@@ -51,27 +70,90 @@ async function estimateTrip(from, to) {
   }
 }
 
-/** Book button: hands the trip to api.bookRide() and shows "Finding a driver…" meanwhile. */
+/** Book button: hands the trip to api.bookRide() and shows "Finding a driver…" meanwhile.
+    Express asks for the parcel details first. */
 async function book() {
   if (state.loadingTrip || el.body.classList.contains('is-booking')) return;
+  if (state.mode === 'express' && !state.parcel) { openParcelSheet(); return; }
   const vehicle = vehicleById(state.vehicle);
   el.body.classList.add('is-booking');
   try {
     const res = await bookRide({
+      kind: state.mode,
       vehicle: vehicle.id,
       pickup: { ...state.pickup, label: state.pickupLabel },
       dropoff: { ...state.destPoint, label: state.dest },
       trip: state.trip,
       payment: CONFIG.paymentMethod,
+      ...(state.mode === 'express' ? { parcel: state.parcel } : {}),
     });
     const article = /^[AEIOU]|^SUV/i.test(vehicle.name) ? 'an' : 'a';
-    toast(`Booking request sent for ${article} ${vehicle.name}.${res && res.demo ? ' (Demo — no driver is dispatched.)' : ''}`);
+    toast(state.mode === 'express'
+      ? `Express request sent for ${article} ${vehicle.name}.`
+      : `Booking request sent for ${article} ${vehicle.name}.`);
+    // DEMO: no driver is dispatched, so the "trip done" screen comes straight away.
+    // Live app: call showTripDone() when the backend says the trip ended.
+    if (res && res.demo) setTimeout(() => showTripDone({ id: res.id, kind: state.mode, vehicle, fare: fareFor(vehicle), demo: true }), 900);
   } catch (err) {
     console.warn(err);
     toast(`${errorMessage(err)} Booking didn’t go through.`);
   } finally {
     el.body.classList.remove('is-booking');
   }
+}
+
+/**
+ * Trip / delivery finished: receipt + optional "Tip mysabak".
+ * Backend: call this when your realtime channel reports the order completed.
+ * @param {{id:string, kind:'ride'|'express', vehicle:{name:string}, fare:string, demo?:boolean}} order
+ */
+async function showTripDone(order) {
+  await openTipSheet({
+    orderId: order.id,
+    orderType: order.kind,
+    title: order.kind === 'express' ? 'Parcel delivered' : 'You’ve arrived',
+    subtitle: `${order.vehicle.name} · ${state.dest || 'your drop-off'}`,
+    lines: [{ label: 'Fare', to: '100% to your driver', amount: order.fare }],
+    demoNote: order.demo ? 'Demo: in the live app this appears when the trip ends.' : '',
+  });
+  state.parcel = null;
+  goToRequest({ clear: true });
+}
+
+/* ---------- Express: parcel details ---------- */
+function openParcelSheet() {
+  const dlg = $('#parcelSheet');
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  setTimeout(() => $('input[name="receiverName"]', dlg).focus(), 50);
+}
+function setupParcelSheet() {
+  const dlg = $('#parcelSheet');
+  const form = $('#parcelForm');
+  $('#parcelSizes').insertAdjacentHTML('beforeend', CONFIG.parcelSizes.map((p, i) => `
+    <label class="pill-radio pill-radio--card"><input type="radio" name="size" value="${p.id}"${i === 0 ? ' checked' : ''}>
+      <span>${p.name}<small>${p.hint}</small></span></label>`).join(''));
+  $('[data-close]', dlg).addEventListener('click', () => dlg.close());
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = Object.fromEntries(new FormData(form));
+    state.parcel = {
+      receiverName: data.receiverName.trim(),
+      receiverPhone: data.receiverPhone.replace(/\s+/g, ''),
+      size: data.size,
+      item: data.item.trim(),
+      notes: data.notes.trim(),
+    };
+    dlg.close();
+    book();
+  });
+}
+
+function setMode(mode) {
+  if (state.mode === mode) return;
+  state.mode = mode;
+  state.parcel = null;
+  render();
 }
 
 /* ---------- Elements ---------- */
@@ -242,6 +324,11 @@ function render() {
   setBind('base', baseFor(v));
   setBind('distfare', distanceFareFor(v));
   setBind('payment', CONFIG.paymentMethod);
+  const w = words();
+  ['askTitle', 'askHint', 'bookVerb', 'seeLabel'].forEach((k) => setBind(k, w[k]));
+  el.destInputs.forEach((input) => { input.placeholder = w.placeholder; });
+  el.body.classList.toggle('is-express', state.mode === 'express');
+  $$('.mode__btn').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === state.mode)));
 
   const recent = latestRecent();
   el.recentChip.hidden = !recent;
@@ -254,7 +341,8 @@ function render() {
     btn.tabIndex = on ? 0 : -1;
     $('.v-eta', btn).textContent = etaFor(veh);
     $('.v-fare', btn).textContent = fareFor(veh);
-    btn.setAttribute('aria-label', `${veh.name}, ${veh.capacity}, ${fareFor(veh)}, ${etaFor(veh)} away`);
+    $('.v-cap', btn).textContent = `${w.capacity(veh)} · `;
+    btn.setAttribute('aria-label', `${veh.name}, ${w.capacity(veh)}, ${fareFor(veh)}, ${etaFor(veh)} away`);
   });
 
   el.destDesktop.readOnly = state.step === 'choose';
@@ -545,6 +633,8 @@ el.pickOnMap.addEventListener('click', () => {
 });
 
 $('#editTrip').addEventListener('click', () => goToRequest());
+$$('.mode__btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+setupParcelSheet();
 $('#clearDest').addEventListener('click', () => goToRequest({ clear: true }));
 
 el.vehicles.addEventListener('click', (e) => {

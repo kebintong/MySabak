@@ -6,28 +6,30 @@ Ride booking web app for Cebu: no booking fees, no hidden charges.
 Frontend design demo: plain HTML, CSS and JavaScript modules, no build step.
 
 ```
-index.html          Ride screen (map + "Where to?" + "Choose a vehicle")
-pages/              Drive, Shops, Donate, Account (placeholders for now)
+index.html          Ride screen: Ride | Express, map, booking, tip after the trip
+pages/              support · drive · drive-signup · driver · shops · shop · checkout · order · account
 assets/
   css/style.css     all styles
-  js/config.js      settings: vehicles, fares, where the map starts
+  js/config.js      settings: vehicles, fares, tips, parcel sizes, delivery rates
   js/api.js         every server call  ← backend replaces this file
-  js/map.js         map, markers, route line
-  js/app.js         screens, buttons, state
+  js/demo-data.js   sample shops for the demo (delete when api.js is live)
+  js/app.js         Ride screen      js/map.js   map, markers, route line
+  js/ui.js          shared: top bar, tabs, toast, address search, tip sheet
+  js/money.js       money maths      js/cart.js  shop cart
+  js/pages/         one script per page in pages/
   js/sw.js          offline cache
-  fonts/            map label font (Google Sans Text)
-  images/           logo, app icons, icons.svg
+  fonts/  images/   map label font · logo, app icons, icons.svg
   dev/              demo hosting only (Cloudflare Worker + config); not part of the website
-tests/              tests for the demo hosting + "no keys committed" guard
+tests/              money rules, data layer, demo hosting, "no keys committed"
 serve.py            local test server
-PANELS.md           each screen panel and the data it needs (backend contract)
+PANELS.md           money rules, every panel, and the data shapes (backend contract)
 ```
 
 ## For the backend team
 
-1. Read **[PANELS.md](PANELS.md)**: every panel, the data it shows, and the shapes `api.js` must return.
+1. Read **[PANELS.md](PANELS.md)**: the money rules, every panel, the data it shows, and the shapes `api.js` must return.
 2. Replace the function bodies in **`assets/js/api.js`** with calls to your API. Keep the names and return
-   shapes; nothing else needs to change.
+   shapes; nothing else needs to change. Search it for `DEMO` to find what's still saved in the browser.
 3. **`assets/dev/`** is only the demo's hosting (a Cloudflare Worker that forwards TomTom calls with a
    secret key). Replace it with your server, or delete it once your API is live.
 

@@ -33,9 +33,9 @@ jobs:
           node-version: 22
 
       - name: JavaScript syntax
-        run: for f in assets/js/*.js assets/dev/worker.js; do node --check "$f"; done
+        run: for f in assets/js/*.js assets/js/pages/*.js assets/dev/worker.js; do node --check "$f"; done
 
-      - name: Tests (demo server, no keys committed)
+      - name: Tests (money rules, data layer, demo server, no keys committed)
         run: node --test tests/*.test.mjs
 
       - name: Website builds and Cloudflare config is valid

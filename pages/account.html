@@ -5,42 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Account · mysabak</title>
   <meta name="theme-color" content="#5630d8">
-  <link rel="manifest" href="../assets/manifest.webmanifest">
-  <link rel="icon" type="image/png" sizes="192x192" href="../assets/images/icons/icon-192.png">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/account.js"></script>
 </head>
-<!-- Placeholder page. Backend/frontend: replace the <main> panel with the real Account screen;
-     the header and tab bar are shared with index.html. -->
 <body class="page">
   <div class="app">
-    <header class="topbar">
-      <a class="brand" href="../" aria-label="mysabak home">
-        <img src="../assets/images/logo.png" alt="mysabak" width="154" height="42">
-      </a>
-      <div class="topbar__actions">
-        <a class="btn btn--dark" href="account.html">Sign in</a>
-      </div>
-    </header>
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
 
-    <main class="soon panel" aria-labelledby="soonTitle">
-      <span class="soon__badge" aria-hidden="true"><svg class="icon icon--xl"><use href="../assets/images/icons.svg#i-user"/></svg></span>
-      <h1 id="soonTitle" class="soon__title">Your account</h1>
-      <p class="soon__text">Sign in to save Home and Work, see your past trips and manage how you pay.</p>
-      <p class="soon__tag">Accounts are coming soon.</p>
-      <a class="soon__back" href="../">Book a ride instead</a>
+    <main class="content">
+      <div class="content__inner">
+
+        <!-- Placeholder: sign-in (phone number + one-time code) is a backend feature. -->
+        <header class="page-head">
+          <h1 class="page-title">Your account</h1>
+          <p class="lede">Sign in with your mobile number to keep everything in one place.</p>
+        </header>
+
+        <section class="card" aria-labelledby="soonTitle">
+          <h2 class="card__title card__title--row" id="soonTitle">Sign in <span class="badge badge--wait">Coming soon</span></h2>
+          <ul class="list">
+            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-home"/></svg></span><div class="row__main"><span class="row__title">Saved places</span><span class="row__sub">Home and Work, one tap away</span></div></li>
+            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></span><div class="row__main"><span class="row__title">Trips and orders</span><span class="row__sub">Receipts for every Ride, Express and Shop order</span></div></li>
+            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-card"/></svg></span><div class="row__main"><span class="row__title">Payment methods</span><span class="row__sub">GCash, Maya or card</span></div></li>
+            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg></span><div class="row__main"><span class="row__title">Your tips</span><span class="row__sub">Everything you’ve tipped mysabak</span></div></li>
+          </ul>
+        </section>
+
+        <section class="card" aria-labelledby="nowTitle">
+          <h2 class="card__title" id="nowTitle">On this device</h2>
+          <ul class="list">
+            <li><a class="row row--link" href="/pages/support.html#mineTitle"><div class="row__main"><span class="row__title">Your tips</span><span class="row__sub">Saved in this browser for the demo</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+            <li><a class="row row--link" href="/pages/shops.html#ordersTitle"><div class="row__main"><span class="row__title">Your shop orders</span><span class="row__sub">Saved in this browser for the demo</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+            <li><a class="row row--link" href="/pages/driver.html"><div class="row__main"><span class="row__title">Driver home</span><span class="row__sub">If you signed up to drive</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+          </ul>
+        </section>
+      </div>
     </main>
 
     <div class="bottom">
-      <nav class="dock tabs" aria-label="Main">
-      <a class="tab" href="../"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="../assets/images/icons.svg#i-car"/></svg></span><span class="tab__label">Ride</span><span class="tab__dot desktop-only"></span></a>
-      <a class="tab" href="drive.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="../assets/images/icons.svg#i-wheel"/></svg></span><span class="tab__label">Drive</span><span class="tab__dot desktop-only"></span></a>
-      <a class="tab" href="shops.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="../assets/images/icons.svg#i-bag"/></svg></span><span class="tab__label">Shops</span><span class="tab__dot desktop-only"></span></a>
-      <a class="tab" href="donate.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="../assets/images/icons.svg#i-heart"/></svg></span><span class="tab__label">Donate</span><span class="tab__dot desktop-only"></span></a>
-      <a class="tab is-active mobile-only" href="account.html" aria-current="page"><span class="tab__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="../assets/images/icons.svg#i-user"/></svg></span><span class="tab__label">Account</span></a>
-      </nav>
+      <nav class="dock tabs" data-tabs="account" aria-label="Main"></nav>
     </div>
   </div>
 </body>

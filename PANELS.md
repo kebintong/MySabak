@@ -5,23 +5,47 @@ Every screen panel is listed with the data it shows and where that data comes fr
 
 **All data goes through one file: `assets/js/api.js`.** Replace the bodies of its functions with calls to
 your API, keep the names and return shapes below, and the screens keep working. Nothing else in the
-frontend talks to a server.
+frontend talks to a server. Search `api.js` for `DEMO` to find what's still fake (saved in the browser).
 
 Placeholders like `₱[FARE]` stay visible until real data arrives, so you can see at a glance what's still
 missing.
 
 ---
 
+## Money rules (Stage 1)
+
+| Order | Customer pays | Goes to |
+|---|---|---|
+| Ride / Express | Fare (base + per km) | **Driver, 100%** |
+| Shop | Items | **Shop** |
+| Shop | Delivery fee (base + per km) | **Rider, 100%** |
+| Any order | Tip (optional) | **mysabak, 100%** |
+
+- No booking fees, no cut from drivers. mysabak earns from tips. (Shop POS income is Stage 2 and out of scope.)
+- Tips: nothing picked by default; ₱10 / ₱20 / ₱50 / Custom, capped at ₱500 (`CONFIG.tips`).
+  **E-wallet or card only** (GCash, Maya, card), so drivers never handle mysabak's money on cash trips.
+- Wording everywhere: "Tip mysabak · keeps rides fee-free for drivers" + "Your driver keeps 100% of the fare.
+  Tips go to mysabak." Receipts show the fare/fee and the tip as separate lines.
+- Tips are offered after a trip / delivery ends, from the receipt for 24 hours, and on the Support page
+  ("without a ride").
+
+---
+
 ## Ride screen (`index.html`)
 
-### 1. Top bar
-| Element | Data | Source today |
+### Top bar
+| Element | Data | Source |
 |---|---|---|
 | Logo | none | `assets/images/logo.png` |
 | Install app | none | browser install prompt |
-| Sign in | user session | not built: goes to `pages/account.html` placeholder |
+| Sign in | user session | not built: goes to `pages/account.html` |
 
-### 2. Map
+### Ride | Express switch
+Switches the whole screen between passenger rides and parcel delivery. Express changes the wording
+("Saan ipapadala?", "Deliver to?", "Send with Sedan"), shows what each vehicle carries
+(`CONFIG.vehicles[].parcel`) and asks for parcel details before booking.
+
+### Map
 | Element | Data | Source |
 |---|---|---|
 | Pickup pin + label `[Street, barangay]` | short address of the pickup point | `addressFor(point)` |
@@ -29,38 +53,70 @@ missing.
 | Route line | `trip.coords` | `routeBetween(from, to)` |
 | Time bubble `[Travel time]` | `trip.minutes` | `routeBetween()` |
 
-The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`. To change map provider,
-change `styleUrl()` in `map.js`; the rest of the app doesn't care.
+The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`.
 
-### 3. "Saan tayo?" panel (step 1: `request`)
+### "Saan tayo?" panel (step 1)
 | Element | Data | Source |
 |---|---|---|
 | "Where to?" box + suggestions | places matching the text, near the pickup | `searchPlaces(text, near)` → `placeLocation(place)` |
 | From: Current location | pickup label | GPS + `addressFor()` |
-| Home / Work chips | the user's saved places | **not built** (needs accounts); shape: `{ home: {label, lng, lat}, work: {…} }` |
-| Recent chip | last drop-off | this browser only (`localStorage`); backend can supply the user's recent trips |
+| Home / Work chips | the user's saved places | **not built** (needs accounts) |
+| Recent chip | last drop-off | this browser only; backend can supply recent trips |
 | Pick on map | none | map tap |
 
-### 4. "Choose a vehicle" panel (step 2: `choose`)
+### "Choose a vehicle" panel (step 2)
 | Element | Placeholder | Data | Source |
 |---|---|---|---|
-| Summary line | `[Drop-off place] · [Distance] · [Travel time]` | `trip.distanceKm`, `trip.minutes` | `routeBetween()` |
-| Vehicle cards (Motor / Sedan / SUV) | none | list of vehicles | `CONFIG.vehicles` in `assets/js/config.js` |
+| Summary line | `[Distance] · [Travel time]` | `trip.distanceKm`, `trip.minutes` | `routeBetween()` |
+| Vehicle cards | none | vehicles | `CONFIG.vehicles` |
 | Fare on each card | `₱[FARE]` | `fares[vehicleId].total` | `faresFor(trip)` |
-| Driver ETA on each card | `[ETA]` | `trip.eta[vehicleId]` (minutes) | `routeBetween()`, needs live drivers |
-| Fare note (desktop) | `₱[AMOUNT]` + `₱[AMOUNT]` | `fares[vehicleId].base`, `.distance` | `faresFor(trip)` |
-| Payment button | `[Payment method]` | user's default payment | `CONFIG.paymentMethod`; backend: user profile |
-| Book button | `₱[FARE]` | the booking | `bookRide(booking)` |
+| Driver ETA | `[ETA]` | `trip.eta[vehicleId]` (minutes) | `routeBetween()`; needs live drivers |
+| Fare note (desktop) | `₱[AMOUNT]` + `₱[AMOUNT]` | `.base`, `.distance` | `faresFor(trip)` |
+| Payment button | `[Payment method]` | default payment | `CONFIG.paymentMethod`; backend: user profile |
+| Book / Send button | `₱[FARE]` | the booking | `bookRide(booking)` |
 
-### 5. Booking
-While `bookRide()` runs, the Book button shows "Finding a driver…". When it resolves, a toast confirms.
-The next screen (driver assigned, live tracking) is **not built yet**.
+### Parcel details (Express, before booking)
+Receiver name, receiver mobile, size (`CONFIG.parcelSizes`), what's being sent, notes. Sent inside the booking as `parcel`.
+
+### Trip done + tip (after a trip)
+Receipt (fare, 100% to the driver) and the tip picker. **Backend: call `showTripDone(order)` in `app.js` when
+the trip ends.** The demo shows it right after booking, with a "Demo" note. Tip → `sendTip()`.
 
 ---
 
-## Other pages (`pages/`)
-`drive.html`, `shops.html`, `donate.html`, `account.html` are placeholders: shared top bar and tab bar,
-plus a "coming soon" panel. Replace the `<main>` panel with the real screen.
+## Support (`pages/support.html`; the "Support" tab)
+| Panel | Data | Source |
+|---|---|---|
+| Where your money goes | fixed text: fare 100% driver, delivery fee 100% rider, tips 100% mysabak | page |
+| This month | `₱[AMOUNT]` tipped, `[NUMBER]` fee-free orders | `supportStats()` |
+| What tips pay for | categories with `[—%]` | `supportStats().breakdown` |
+| Support without a ride | tip picker | `sendTip({ orderType: 'direct' })` |
+| Your tips | the user's tips | `myTips()` |
+
+## Drive (driver side)
+| Page | What it does | Source |
+|---|---|---|
+| `pages/drive.html` | pitch, requirements, how it works; button becomes "Go to driver home" once signed up | `driverStatus()` |
+| `pages/drive-signup.html` | about you, vehicle, license number, document uploads (license, OR/CR, selfie), consent | `driverApply(application)` |
+| `pages/driver.html` | approval status, Go online / offline, job requests, earnings, payouts | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()` |
+
+**Job requests:** the driver home listens with `onJobRequest(onJob)` while online and shows each request with
+Accept / Decline. The demo sends none. Backend: connect your realtime channel there. Express and Shop jobs
+need a photo at pickup and delivery (`updateJob(id, status, { photo })`).
+
+## Shop (Stage 1: ordering + delivery, no POS)
+| Page | What it does | Source |
+|---|---|---|
+| `pages/shops.html` | search, categories, nearby shops, your orders | `listShops()`, `myOrders()` |
+| `pages/shop.html?id=…` | menu with + / −, cart bar (one shop per cart, kept in the browser) | `shopMenu()` |
+| `pages/checkout.html` | items, delivery address (search or "use my location"), notes, payment, summary | `deliveryQuote()`, `placeOrder()` |
+| `pages/order.html?id=…` | status timeline, receipt (items → shop, delivery → rider, tip → mysabak), tip button, details | `orderStatus()`, `myTips()`, `sendTip()` |
+
+Shops and menus in the demo are **samples** (`assets/js/demo-data.js`); delete that file once `listShops()` /
+`shopMenu()` call your API.
+
+## Account (`pages/account.html`)
+Placeholder until sign-in (mobile number + one-time code) exists. Links to this browser's demo tips, orders and driver home.
 
 ---
 
@@ -68,60 +124,106 @@ plus a "coming soon" panel. Replace the `<main>` panel with the real screen.
 
 | Function | Returns | Used by |
 |---|---|---|
-| `searchPlaces(text, near, { signal })` | `Place[]` (max 5) with a `far` flag | "Where to?" suggestions |
+| `searchPlaces(text, near, { signal })` | `Place[]` (max 5) with a `far` flag | "Where to?", checkout address |
 | `placeLocation(place)` | `{ lng, lat }` | picking a suggestion |
-| `addressFor({ lng, lat })` | `string \| null` | pickup label, pinned drop-off |
-| `routeBetween(from, to)` | `Trip` | route line, distance, time, ETA |
-| `straightLine(from, to)` | `Trip` with `approx: true` | fallback when routing fails |
-| `faresFor(trip)` | `{ [vehicleId]: Fare \| null }` | fares on cards and Book button |
-| `bookRide(booking)` | `{ id, demo }` | Book button |
-| `errorMessage(err)` | `string` | error toasts; throw errors with `err.status` (HTTP code) |
+| `addressFor({ lng, lat })` | `string \| null` | pickup label, pinned drop-off, "use my location" |
+| `routeBetween(from, to)` / `straightLine(from, to)` | `Trip` | route, distance, time, ETA |
+| `faresFor(trip)` | `{ [vehicleId]: Fare \| null }` | fares |
+| `bookRide(booking)` | `{ id, demo }` | Book / Send |
+| `sendTip(tip)` / `myTips()` | `{ id, amount }` / `Tip[]` | tip sheet, Support page |
+| `supportStats()` | `SupportStats` | Support page |
+| `driverApply(application)` / `driverStatus()` | `{ status }` / `DriverStatus` | Drive pages |
+| `setOnline(online)` | `{ online }` | driver home |
+| `onJobRequest(onJob)` → `stop()` | calls `onJob(JobRequest)` | driver home |
+| `acceptJob(id)` / `updateJob(id, status, { photo })` | `{ ok }` | driver home |
+| `driverEarnings()` | `Earnings` | driver home |
+| `listShops({ near, category, q })` / `shopMenu(id)` | `{ categories, shops }` / `Shop` | Shop pages |
+| `deliveryQuote(shopId, address)` | `{ km, fee \| null }` | checkout |
+| `placeOrder(order)` / `orderStatus(id)` / `myOrders()` | `{ id }` / `Order` / `Order[]` | checkout, order page |
+| `errorMessage(err)` | `string` | toasts; throw errors with `err.status` (HTTP code) |
 
 ### Shapes (example data)
 
 ```jsonc
-// Place (searchPlaces). Either lng/lat, or a `details` id for placeLocation() to resolve.
+// Place
 { "title": "Ayala Center Cebu", "subtitle": "Cebu Business Park, Cebu City", "km": 2.4, "lng": 123.9054, "lat": 10.3181 }
 
-// Trip (routeBetween / straightLine)
-{
-  "coords": [[123.8854, 10.3157], [123.8902, 10.3170], [123.9054, 10.3181]], // [lng, lat] along the road
-  "distanceKm": 6.8,
-  "minutes": 20,
-  "eta": { "motor": 3, "sedan": 5, "suv": 8 },  // minutes until a driver arrives; null if unknown
-  "approx": false                               // true = straight line, no real route
-}
+// Trip
+{ "coords": [[123.8854, 10.3157], [123.9054, 10.3181]], "distanceKm": 6.8, "minutes": 20,
+  "eta": { "motor": 3, "sedan": 5, "suv": 8 }, "approx": false }
 
-// Fare per vehicle (faresFor). null = unknown, shows ₱[FARE]
-{ "motor": { "total": 95, "base": 40, "distance": 55 }, "sedan": { "total": 180, "base": 80, "distance": 100 }, "suv": null }
+// Fare per vehicle (null = unknown → ₱[FARE])
+{ "motor": { "total": 95, "base": 40, "distance": 55 }, "sedan": null, "suv": null }
 
-// Booking (what the Book button sends to bookRide)
-{
-  "vehicle": "sedan",
+// Booking (Ride or Express)
+{ "kind": "express", "vehicle": "sedan",
   "pickup":  { "lng": 123.8854, "lat": 10.3157, "label": "V. Rama Ave, Guadalupe" },
   "dropoff": { "lng": 123.9054, "lat": 10.3181, "label": "Ayala Center Cebu" },
-  "trip":    { "distanceKm": 6.8, "minutes": 20, "coords": [ /* … */ ] },
-  "payment": "GCash"
-}
+  "trip": { "distanceKm": 6.8, "minutes": 20, "coords": [] }, "payment": "GCash",
+  "parcel": { "receiverName": "Maria Santos", "receiverPhone": "09171234567", "size": "medium",
+              "item": "Birthday cake", "notes": "Handle with care" } }   // parcel: Express only
+
+// Tip (orderType "direct" = from the Support page, orderId null)
+{ "orderId": "EXP-123", "orderType": "express", "amount": 20, "method": "gcash" }
+
+// SupportStats (null = unknown)
+{ "period": "October 2026", "tipsTotal": 125000, "ordersFeeFree": 8400,
+  "breakdown": [{ "label": "Maps, servers and the app", "share": 40 }] }
+
+// Driver application (files are File objects from the form; upload them to your storage)
+{ "name": "Juan Dela Cruz", "phone": "09175551234", "email": "", "city": "Cebu City",
+  "vehicle": "sedan", "plate": "GAA 1234", "model": "Toyota Vios", "year": 2019,
+  "licenseNumber": "G01-23-456789", "files": { "license": {}, "orcr": {}, "selfie": {} }, "agreed": true }
+
+// DriverStatus
+{ "status": "approved", "name": "Juan Dela Cruz", "vehicle": "sedan", "plate": "GAA 1234", "online": false }
+
+// JobRequest (from your realtime channel → onJob)
+{ "id": "J-1", "kind": "shop", "pickup": { "lng": 123.893, "lat": 10.318, "label": "Lutong Bahay Kitchen" },
+  "dropoff": { "lng": 123.89, "lat": 10.317, "label": "Escario St" }, "distanceKm": 1.2, "fare": 65,
+  "expiresAt": 1791882196490 }
+
+// Earnings (fares only: drivers keep 100%)
+{ "today": 640, "week": 4210, "trips": [{ "id": "R-1", "kind": "ride", "at": 1791882196490, "fare": 180, "distanceKm": 6.8 }],
+  "tipsToMysabak": 120, "payout": { "method": "GCash •••• 1234", "next": "Mon, Oct 19" } }
+
+// Shop (list item has `km` and `items` count instead of `menu`)
+{ "id": "lutong-bahay", "name": "Lutong Bahay Kitchen", "category": "food", "area": "Capitol Site",
+  "hours": "9:00 AM – 9:00 PM", "color": "#f7c27a", "lng": 123.893, "lat": 10.318,
+  "menu": [{ "id": "adobo", "name": "Chicken adobo + rice", "price": 120, "note": "Classic, slow-cooked" }] }
+
+// Order
+{ "id": "SHOP-1", "shop": { "id": "lutong-bahay", "name": "Lutong Bahay Kitchen", "area": "Capitol Site" },
+  "lines": [{ "id": "adobo", "name": "Chicken adobo + rice", "price": 120, "qty": 2 }],
+  "subtotal": 240, "deliveryFee": 45, "address": { "lng": 123.89, "lat": 10.317, "label": "Escario St" },
+  "notes": "Blue gate", "payment": "cash", "status": "preparing", "placedAt": 1791882196490 }
+// status: placed → accepted → preparing → picked_up → delivered (or cancelled)
 ```
 
 ### Suggested endpoints
-Any design works as long as `api.js` returns the shapes above. One simple option:
+Any design works as long as `api.js` returns the shapes above. One option:
 
 | Endpoint | Feeds |
 |---|---|
-| `GET /api/places?q=ayala&lng=…&lat=…` | `searchPlaces` |
-| `GET /api/address?lng=…&lat=…` | `addressFor` |
+| `GET /api/places?q=…&lng=…&lat=…` · `GET /api/address?lng=…&lat=…` | search, addresses |
 | `POST /api/trips/estimate` `{ pickup, dropoff }` → `{ trip, fares }` | `routeBetween` + `faresFor` |
-| `POST /api/bookings` `{ booking }` → `{ id }` | `bookRide` |
+| `POST /api/bookings` → `{ id }` | `bookRide` (Ride and Express) |
+| `POST /api/tips` · `GET /api/me/tips` · `GET /api/support/stats` | tips, Support page |
+| `POST /api/drivers` (multipart) · `GET /api/drivers/me` · `PUT /api/drivers/me/online` | Drive |
+| `WS /api/drivers/me/jobs` · `POST /api/jobs/:id/accept` · `POST /api/jobs/:id/status` | job requests |
+| `GET /api/drivers/me/earnings` | earnings |
+| `GET /api/shops` · `GET /api/shops/:id` · `POST /api/shops/:id/quote` | Shop |
+| `POST /api/orders` · `GET /api/orders/:id` · `GET /api/me/orders` | orders |
 
-Work fares out on the server: anything calculated in the browser can be edited by the user.
+Work fares, fees and tip limits out on the server: anything calculated in the browser can be edited by the user.
 
 ---
 
 ## Open questions
-1. Is launch Cebu-only, or nationwide? (Search is limited to the Philippines, favouring 40 km around the pickup.)
-2. Fares: the same everywhere, or per city? Base + per-km for Motor / Sedan / SUV are still `null` in `config.js`.
-3. Map provider and budget: the demo uses TomTom's free tier (no card): 10,000 place suggestions,
-   20,000 address lookups, 20,000 routes and 200,000 map tiles a month.
-4. Driver ETA (`trip.eta`) needs live driver locations: driver app + realtime updates.
+1. **Cash trips:** is "tip by e-wallet or card only" OK?
+2. **Shop payments:** online payment means mysabak collects for shops and pays them out (payment-regulation
+   questions); cash on delivery means riders pay the shop up front.
+3. **Driver requirements:** the document list depends on LTFRB rules, especially for motorcycle taxis.
+4. **Tip cap** (₱500 now) and fares / delivery rates (all `null` in `config.js`).
+5. **Legal check** on the tip wording ("Tip mysabak") before launch: tips are mysabak's income, not donations.
+6. Launch area: Cebu only, or nationwide? Search favours 40 km around the pickup, Philippines only.
