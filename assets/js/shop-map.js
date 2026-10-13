@@ -7,7 +7,7 @@
    and the screens keep working without it.
    ========================================================= */
 import { CONFIG } from './config.js';
-import { baseMapOptions } from './map.js';
+import { baseMapOptions, addAttribution } from './map.js';
 
 const ROUTE = '#FF6B4A';
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -40,10 +40,7 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
     touchPitch: false,
   });
   if (interactive) { map.touchZoomRotate.disableRotation(); map.keyboard.disableRotation(); }
-  map.addControl(new maplibregl.AttributionControl({
-    compact: true,
-    customAttribution: '© <a href="https://www.tomtom.com/" target="_blank" rel="noopener">TomTom</a>',
-  }), 'bottom-right');
+  addAttribution(map, 'bottom-right');
 
   let ready = false;
   let route = null;

@@ -94,8 +94,16 @@
     <!-- ============ Bottom area ============ -->
     <div class="bottom">
 
+      <!-- Step 1 hidden (phones): a slim bar that brings the "Saan tayo?" panel back -->
+      <button type="button" class="statusbar reqbar mobile-only" id="reqBar" data-show="request" aria-controls="requestPanel" aria-expanded="true">
+        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="assets/images/icons.svg#i-pin"/></svg></span>
+        <span class="statusbar__text"><span class="statusbar__title" data-bind="askTitle">Saan tayo?</span><span class="statusbar__sub" data-bind="reqBarSub">Ride · set your drop-off</span></span>
+        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span>
+      </button>
+
       <!-- Step 1 · Where to? -->
-      <section class="panel panel--request" data-show="request" aria-label="Set your trip">
+      <section class="panel panel--request" id="requestPanel" data-show="request" aria-label="Set your trip">
+        <button type="button" class="panel__hide mobile-only" id="hideRequest" aria-label="Hide the search to see the map"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
         <div class="mode" role="radiogroup" aria-label="What do you need?">
           <button type="button" class="mode__btn" role="radio" aria-checked="true" data-mode="ride"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg>Ride</button>
           <button type="button" class="mode__btn" role="radio" aria-checked="false" data-mode="express"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-box"/></svg>Express</button>

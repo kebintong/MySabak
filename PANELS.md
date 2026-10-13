@@ -56,7 +56,8 @@ Switches the whole screen between passenger rides and parcel delivery. Express c
 | Route line | `trip.coords` | `routeBetween(from, to)` |
 | Time bubble `[Travel time]` | `trip.minutes` | `routeBetween()` |
 
-The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`.
+The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`. Map credits (© TomTom, © OpenStreetMap) sit behind a
+small ⓘ button that starts closed (`addAttribution()` in `map.js`, used by every map).
 
 ### "Saan tayo?" panel (step 1)
 | Element | Data | Source |
@@ -66,6 +67,7 @@ The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`.
 | Home / Work chips | the user's saved places | **not built** (needs accounts) |
 | Recent chip | last drop-off | this browser only; backend can supply recent trips |
 | Pick on map | none | map tap |
+| Hide (⌄, phones) | none | shrinks the panel to a slim "Saan tayo?" bar with **Show**, to see the map |
 
 ### "Choose a vehicle" panel (step 2)
 | Element | Placeholder | Data | Source |

@@ -57,6 +57,26 @@ function styleUrl() {
   return tomtomUrl(`/maps/orbis/assets/styles/${TT_STYLE_VERSION}/style.json`, { apiVersion: 1, map: themeById(CONFIG.mapStyle).base }).toString();
 }
 
+/**
+ * Map credits (© TomTom, © OpenStreetMap) as a small ⓘ button that starts closed.
+ * MapLibre opens the compact box when map data arrives; we keep it closed until the person taps ⓘ.
+ */
+export function addAttribution(map, position) {
+  map.addControl(new maplibregl.AttributionControl({
+    compact: true,
+    customAttribution: '© <a href="https://www.tomtom.com/" target="_blank" rel="noopener">TomTom</a>',
+  }), position);
+  let tapped = false;
+  map.getContainer().addEventListener('click', (e) => {
+    if (e.target.closest('.maplibregl-ctrl-attrib-button')) tapped = true;
+  }, true);
+  const keepClosed = () => {
+    const box = map.getContainer().querySelector('.maplibregl-ctrl-attrib');
+    if (box && !tapped) box.classList.remove('maplibregl-compact-show');
+  };
+  ['styledata', 'sourcedata', 'resize', 'idle'].forEach((ev) => map.on(ev, keepClosed));
+}
+
 /** What any mysabak map needs: TomTom style through the proxy, restyled as the street theme. Used by shop-map.js too. */
 export function baseMapOptions() {
   const theme = themeById(CONFIG.mapStyle);
@@ -95,10 +115,7 @@ export function initMap(ctx) {
   });
   map.touchZoomRotate.disableRotation();
   map.keyboard.disableRotation();
-  map.addControl(new maplibregl.AttributionControl({
-    compact: true,
-    customAttribution: '© <a href="https://www.tomtom.com/" target="_blank" rel="noopener">TomTom</a>',
-  }), 'top-left');
+  addAttribution(map, 'top-left');
 
   markers.pickup = new maplibregl.Marker({ element: document.getElementById('mkPickup'), anchor: 'center', draggable: true })
     .setLngLat(state.pickup).addTo(map);
