@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sign up to drive · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/drive-signup.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <header class="page-head">
+          <a class="page-head__back" href="/pages/drive.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Drive</a>
+          <h1 class="page-title">Sign up to drive</h1>
+          <p class="lede">About 5 minutes. We’ll text you once your documents are checked.</p>
+        </header>
+
+        <form class="form" id="signupForm" novalidate>
+          <section class="card form" aria-labelledby="aboutTitle">
+            <h2 class="card__title" id="aboutTitle">About you</h2>
+            <div class="form-grid">
+              <label class="field span-2"><span class="field__label">Full name (as on your license)</span>
+                <input class="input" name="name" required autocomplete="name"></label>
+              <label class="field"><span class="field__label">Mobile number</span>
+                <input class="input" name="phone" type="tel" inputmode="tel" required pattern="[+0-9 ]{10,16}" placeholder="09XX XXX XXXX" autocomplete="tel"></label>
+              <label class="field"><span class="field__label">Email <span class="muted">(optional)</span></span>
+                <input class="input" name="email" type="email" autocomplete="email"></label>
+              <label class="field span-2"><span class="field__label">City</span>
+                <select class="select" name="city" required>
+                  <option value="">Choose your city</option>
+                  <option>Cebu City</option><option>Mandaue City</option><option>Lapu-Lapu City</option><option>Talisay City</option><option>Other</option>
+                </select></label>
+            </div>
+          </section>
+
+          <section class="card form" aria-labelledby="vehicleTitle">
+            <h2 class="card__title" id="vehicleTitle">Your vehicle</h2>
+            <fieldset class="pills"><legend>Type</legend><label class="pill-radio pill-radio--card"><input type="radio" name="vehicle" value="motor" required checked><span>Motor<small>Motorcycle</small></span></label><label class="pill-radio pill-radio--card"><input type="radio" name="vehicle" value="sedan" required><span>Sedan<small>Up to 4 riders</small></span></label><label class="pill-radio pill-radio--card"><input type="radio" name="vehicle" value="suv" required><span>SUV<small>Up to 6 riders</small></span></label></fieldset>
+            <div class="form-grid">
+              <label class="field"><span class="field__label">Plate number</span>
+                <input class="input" name="plate" required placeholder="ABC 1234" autocapitalize="characters"></label>
+              <label class="field"><span class="field__label">Make and model</span>
+                <input class="input" name="model" required placeholder="e.g. Honda Click, Toyota Vios"></label>
+              <label class="field"><span class="field__label">Year</span>
+                <input class="input" name="year" type="number" inputmode="numeric" min="1990" max="2027" required placeholder="2020"></label>
+            </div>
+          </section>
+
+          <section class="card form" aria-labelledby="docsTitle">
+            <h2 class="card__title" id="docsTitle">Documents</h2>
+            <label class="field"><span class="field__label">Driver’s license number</span>
+              <input class="input" name="licenseNumber" required placeholder="X00-00-000000" autocapitalize="characters"></label>
+            <label class="file" data-file>
+              <input type="file" name="license" accept="image/*,application/pdf" required>
+              <span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-upload"/></svg></span>
+              <span class="file__text"><span class="file__name">Driver’s license (front)</span><span class="file__status">Photo or PDF</span></span>
+            </label>
+            <label class="file" data-file>
+              <input type="file" name="orcr" accept="image/*,application/pdf" required>
+              <span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-upload"/></svg></span>
+              <span class="file__text"><span class="file__name">Vehicle OR/CR</span><span class="file__status">Photo or PDF</span></span>
+            </label>
+            <label class="file" data-file>
+              <input type="file" name="selfie" accept="image/*,application/pdf" required>
+              <span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-upload"/></svg></span>
+              <span class="file__text"><span class="file__name">Selfie</span><span class="file__status">Face clearly visible, no sunglasses</span></span>
+            </label>
+            <label class="check"><input type="checkbox" name="agreed" required>
+              <span>I confirm these details are true and agree to the Driver Terms and Privacy Notice.</span></label>
+            <p class="demo-note">Demo: files stay on your device and the application is approved straight away.</p>
+          </section>
+
+          <button type="submit" class="button button--block" id="signupBtn">Submit application</button>
+        </form>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

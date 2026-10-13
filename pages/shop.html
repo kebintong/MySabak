@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shop · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/shop.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <header class="page-head">
+          <a class="page-head__back" href="/pages/shops.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Shops</a>
+          <div class="shop-head">
+            <span class="shop-tile shop-tile--lg" id="shopTile" aria-hidden="true"></span>
+            <div>
+              <h1 class="page-title" id="shopName">Shop</h1>
+              <p class="lede" id="shopMeta"></p>
+            </div>
+          </div>
+        </header>
+
+        <section class="card" aria-labelledby="menuTitle">
+          <h2 class="card__title" id="menuTitle">Menu</h2>
+          <ul class="list" id="menu"></ul>
+        </section>
+
+        <a class="cartbar" id="cartBar" href="/pages/checkout.html" hidden>
+          <svg class="icon icon--white" aria-hidden="true"><use href="/assets/images/icons.svg#i-cart"/></svg><span id="cartCount">0 items</span><span class="cartbar__total" id="cartTotal">₱0</span><span class="cartbar__go">Checkout <svg class="icon icon--white icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
+        </a>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="shops" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

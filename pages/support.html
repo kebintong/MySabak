@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Support mysabak · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/support.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <header class="page-head">
+          <h1 class="page-title">Support mysabak</h1>
+          <p class="lede">Drivers keep 100% of every fare. mysabak runs on your tips.</p>
+        </header>
+
+        <section class="card" aria-labelledby="splitTitle">
+          <h2 class="card__title" id="splitTitle">Where your money goes</h2>
+          <div class="split">
+            <div class="split__item"><span class="split__who">Your driver</span><span class="split__what">The fare</span><span class="split__pct">100%</span></div>
+            <div class="split__item"><span class="split__who">Your rider</span><span class="split__what">Shop delivery fee</span><span class="split__pct">100%</span></div>
+            <div class="split__item"><span class="split__who">mysabak</span><span class="split__what">Tips</span><span class="split__pct">100%</span></div>
+          </div>
+          <p class="card__foot">No booking fees and no cut from drivers. Tips are optional and always shown on your receipt.</p>
+        </section>
+
+        <section class="card" aria-labelledby="statsTitle">
+          <h2 class="card__title card__title--row" id="statsTitle">This month <span class="badge" data-bind="period">…</span></h2>
+          <div class="stats">
+            <div class="stat"><span class="stat__value" data-bind="tipsTotal">₱[AMOUNT]</span><span class="stat__label">tipped to mysabak</span></div>
+            <div class="stat"><span class="stat__value" data-bind="ordersFeeFree">[NUMBER]</span><span class="stat__label">trips and deliveries with no fees</span></div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="barsTitle">
+          <h2 class="card__title" id="barsTitle">What tips pay for</h2>
+          <div class="bars" id="bars"></div>
+        </section>
+
+        <section class="card" aria-labelledby="giveTitle">
+          <h2 class="card__title" id="giveTitle">Support without a ride</h2>
+          <div class="tip">
+            <div id="givePicker"></div>
+            <p class="tip__note">This goes to mysabak, not to a driver, and it isn’t a charity donation.</p>
+            <button type="button" class="button button--block" id="giveBtn" disabled>Support mysabak</button>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="mineTitle">
+          <h2 class="card__title" id="mineTitle">Your tips</h2>
+          <ul class="list" id="myTips"></ul>
+        </section>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="support" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

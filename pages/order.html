@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your order · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/order.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <header class="page-head">
+          <a class="page-head__back" href="/pages/shops.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Shops</a>
+          <h1 class="page-title" id="orderTitle">Your order</h1>
+          <p class="lede" id="orderMeta"></p>
+        </header>
+
+        <div id="notFound" class="card" hidden><p class="empty">We couldn’t find this order.</p></div>
+
+        <div id="orderBody" class="stack" hidden>
+          <section class="card" aria-labelledby="trackTitle">
+            <h2 class="card__title" id="trackTitle">Status</h2>
+            <ol class="timeline" id="timeline"></ol>
+            <p class="demo-note">Demo: no shop or rider is connected, so the order stays at “Order placed”.</p>
+          </section>
+
+          <section class="card" aria-labelledby="receiptTitle">
+            <h2 class="card__title" id="receiptTitle">Receipt</h2>
+            <dl class="receipt" id="receipt"></dl>
+            <button type="button" class="button button--ghost button--block card__action" id="tipBtn"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg>Tip mysabak</button>
+          </section>
+
+          <section class="card" aria-labelledby="detailsTitle">
+            <h2 class="card__title" id="detailsTitle">Delivery details</h2>
+            <ul class="list" id="details"></ul>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="shops" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

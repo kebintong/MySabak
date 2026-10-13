@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Checkout · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/checkout.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <header class="page-head">
+          <a class="page-head__back" id="backToShop" href="/pages/shops.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Back to shop</a>
+          <h1 class="page-title">Checkout</h1>
+        </header>
+
+        <div id="emptyCart" class="card" hidden>
+          <p class="empty">Your cart is empty.</p>
+          <a class="button button--block" href="/pages/shops.html">Browse shops</a>
+        </div>
+
+        <form id="checkoutForm" class="form" autocomplete="off" hidden>
+          <section class="card" aria-labelledby="itemsTitle">
+            <h2 class="card__title" id="itemsTitle">Your order from <span id="shopName">the shop</span></h2>
+            <ul class="list" id="lines"></ul>
+          </section>
+
+          <section class="card form" aria-labelledby="addrTitle">
+            <h2 class="card__title" id="addrTitle">Deliver to</h2>
+            <div class="field">
+              <label for="address" class="field__label">Address or place</label>
+              <input class="input" id="address" type="text" placeholder="Search a street, building or landmark" required
+                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addressList">
+              <ul class="suggest" id="addressList" role="listbox" aria-label="Suggested places" hidden></ul>
+            </div>
+            <button type="button" class="button button--ghost" id="useLocation"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>Use my location</button>
+            <label class="field"><span class="field__label">Notes for the rider <span class="muted">(optional)</span></span>
+              <textarea class="textarea" name="notes" placeholder="Unit number, gate, landmark…"></textarea></label>
+          </section>
+
+          <section class="card form" aria-labelledby="payTitle">
+            <h2 class="card__title" id="payTitle">Pay with</h2>
+            <fieldset class="pills" id="payMethods"><legend class="sr-only">Payment method</legend></fieldset>
+          </section>
+
+          <section class="card" aria-labelledby="sumTitle">
+            <h2 class="card__title" id="sumTitle">Summary</h2>
+            <dl class="receipt" id="summary"></dl>
+            <p class="card__foot">No service fee. You can tip mysabak after delivery if you like.</p>
+          </section>
+
+          <button type="submit" class="button button--block" id="placeBtn">Place order</button>
+        </form>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="shops" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>
