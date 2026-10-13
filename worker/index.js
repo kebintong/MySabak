@@ -44,7 +44,9 @@ async function proxyTomTom(request, env, url) {
     const v = request.headers.get(h);
     if (v) headers.set(h, v);
   });
-  headers.set('TomTom-Api-Key', env.TOMTOM_KEY); // the Places Search API reads the key from this header
+  // Places Search reads the key from this header; everything else (maps, search, routing) uses ?key= only,
+  // the same way TomTom's own SDK calls them.
+  if (path.startsWith('/maps/orbis/places/')) headers.set('TomTom-Api-Key', env.TOMTOM_KEY);
 
   const res = await fetch(target, {
     method: request.method,
@@ -96,7 +98,7 @@ async function health(env) {
     }
   };
 
-  const style = await check('map style (Maps / Map Display API)', '/maps/orbis/assets/styles/0.*/style?apiVersion=1&map=basic_street-light');
+  const style = await check('map style (Maps / Map Display API)', '/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1&map=basic_street-light');
   // The tiles the style points at (first vector source), sent through the proxy like the app does
   try {
     const source = Object.values(JSON.parse(style || '{}').sources || {}).find((x) => x.url || (x.tiles && x.tiles[0]));
