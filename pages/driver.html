@@ -59,7 +59,10 @@
             <p class="dhead__title">Hi, <span data-bind="firstName">driver</span></p>
             <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
           </div>
-          <button type="button" class="button button--ghost dhead__out" data-signout>Sign out</button>
+          <div class="dhead__btns">
+            <button type="button" class="button button--ghost dhead__out" data-signout>Sign out</button>
+            <button type="button" class="panel__hide dhead__hide" id="hideSheet" aria-label="Hide the list to see the map"><svg class="icon icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button>
+          </div>
         </div>
         <div class="finder__head" id="reqHead"><h2 id="reqCount">Requests</h2><span>Nearest first</span></div>
         <div class="finder__scroll" id="sheetScroll">
@@ -89,6 +92,12 @@
     </button>
 
     <div class="bottom">
+      <!-- Phones: the list hidden to a slim bar, so the map gets the screen -->
+      <button type="button" class="statusbar dbar mobile-only" id="sheetBar" aria-controls="sheet" aria-expanded="true">
+        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
+        <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Requests</span><span class="statusbar__sub" data-bind="barSub"></span></span>
+        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
+      </button>
       <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>
     </div>
   </div>

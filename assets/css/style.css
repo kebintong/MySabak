@@ -2046,6 +2046,19 @@ body.is-request-hidden .statusbar.reqbar { display: flex; }
   .page--driver .maplibregl-ctrl-bottom-right { bottom: var(--content-bottom); }
 }
 
+/* Driver page, phones: the list can be hidden to a slim bar (like the Ride panel) */
+.dhead__btns { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.dhead__hide { position: static; }
+body:not(.is-sheet-hidden) .statusbar.dbar { display: none; }
+@media (max-width: 899.98px) {
+  body.is-sheet-hidden .statusbar.dbar { display: flex; }
+  body.is-sheet-hidden.page--driver .finder__sheet,
+  body.is-sheet-hidden.page--driver #kinds,
+  body.is-sheet-hidden.page--driver .onbar__text small { display: none; }
+  body.is-sheet-hidden.page--driver .map-locate { bottom: calc(176px + var(--safe-b)); }
+  body.is-sheet-hidden.page--driver .maplibregl-ctrl-bottom-right { bottom: calc(176px + var(--safe-b)); }
+}
+
 /* Order timeline */
 .timeline { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; }
 .timeline li { position: relative; padding: 0 0 18px 34px; font-size: 15px; color: var(--sub); }
