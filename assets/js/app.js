@@ -291,13 +291,13 @@ async function cancelBooking({ ask = false } = {}) {
  */
 function showTripDone(order) {
   const dlg = document.createElement('dialog');
-  dlg.className = 'sheet done';
+  dlg.className = 'done';
   dlg.setAttribute('aria-labelledby', 'doneTitle');
   const p = order.price || { fare: null, tip: 0, total: null };
   const d = order.driver;
   const initials = d.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const time = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
-  dlg.innerHTML = `
+  dlg.innerHTML = `<div class="done__card">
     <div class="done__hero">
       <span class="done__check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
       <h2 class="done__title" id="doneTitle">${esc(words().doneTitle)}</h2>
@@ -329,7 +329,7 @@ function showTripDone(order) {
     <div class="done__foot">
       ${p.tip ? '' : '<button type="button" class="button button--ghost" data-tip-later>Tip mysabak</button>'}
       <button type="button" class="button" data-done autofocus>Done</button>
-    </div>`;
+    </div></div>`;
   document.body.appendChild(dlg);
 
   $('.stars', dlg).addEventListener('click', (e) => {

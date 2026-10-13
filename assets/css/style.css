@@ -973,7 +973,7 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 .toast { transition: opacity .2s, transform .4s var(--spring); }
 
 /* Content pages: tab bar */
-.page .dock.tabs { width: 100%; }
+.page .dock.tabs { width: 100%; flex: none; } /* .tabs is flex: 1; here it would squash the 68px dock to its content */
 @media (min-width: 900px) {
   .page .dock.tabs { width: auto; padding: 0 14px; } /* desktop: just wide enough for the tabs */
 }
@@ -1837,9 +1837,20 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .trip__cancel { flex-basis: 100%; height: 36px; border: 0; background: none; font: 700 13px var(--font-body); color: var(--hot, #d63e25); cursor: pointer; }
 .trip__cancel[hidden] { display: none; }
 
-/* Ride complete */
-.done { max-width: 480px; overflow: hidden; }
-.done[open] { display: flex; flex-direction: column; }
+/* Ride complete: the dialog itself fills the screen and the card sits at its bottom edge.
+   Nothing depends on how the browser places dialogs, so the card can't end up off screen (iPhone). */
+.done {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: transparent; overflow: hidden; color: var(--ink);
+}
+.done[open] { display: flex; align-items: flex-end; justify-content: center; }
+.done::backdrop { background: rgba(23, 18, 43, 0.45); }
+.done__card {
+  width: 100%; max-width: 480px; max-height: calc(100% - 12px - var(--safe-t));
+  display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 24px 24px 0 0; background: var(--surface); box-shadow: var(--shadow-lg);
+  animation: rise .3s var(--ease-out);
+}
 .done__hero {
   flex: none; padding: 26px 20px 22px; text-align: center; color: #fff;
   background:
@@ -1881,7 +1892,8 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 
 @media (min-width: 900px) {
   .panel--search, .panel--trip { width: min(560px, 100%) !important; padding: 20px; border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-lg); }
-  .done { margin: auto; border-radius: 24px; }
+  .done[open] { align-items: center; }
+  .done__card { max-height: calc(100% - 48px); border-radius: 24px; }
 }
 @media (max-width: 380px) {
   .paymethods__list { grid-template-columns: 1fr; }
