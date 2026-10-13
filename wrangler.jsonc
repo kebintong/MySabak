@@ -10,5 +10,8 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"] // /api/tomtom/* goes to worker/index.js
   },
+  // Keep variables set in the dashboard when GitHub Actions deploys (otherwise a deploy deletes them).
+  // TOMTOM_KEY should still be type "Secret": secrets are always kept and their value is hidden.
+  "keep_vars": true,
   "observability": { "enabled": true }
 }
