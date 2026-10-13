@@ -20,7 +20,7 @@ import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
-import { openTipSheet } from './ui.js';
+import { openTipSheet, setupInstall } from './ui.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const DESKTOP = window.matchMedia('(min-width: 900px)');
@@ -170,7 +170,6 @@ const el = {
   destMobile: $('#destMobile'),
   pickOnMap: $('#pickOnMap'),
   recentChip: $('#recentChip'),
-  installBtn: $('#installBtn'),
   toast: $('#toast'),
 };
 
@@ -681,24 +680,7 @@ DESKTOP.addEventListener('change', () => { render(); frame({ animate: false }); 
 /* =========================================================
    PWA: install + offline
    ========================================================= */
-let installPrompt = null;
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-if (isStandalone) el.installBtn.hidden = true;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  installPrompt = e;
-});
-el.installBtn.addEventListener('click', async () => {
-  if (!installPrompt) {
-    toast('Use your browser menu → “Install” or “Add to Home Screen”.');
-    return;
-  }
-  installPrompt.prompt();
-  await installPrompt.userChoice;
-  installPrompt = null;
-});
-window.addEventListener('appinstalled', () => { el.installBtn.hidden = true; });
+setupInstall($('[data-install]'));
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {

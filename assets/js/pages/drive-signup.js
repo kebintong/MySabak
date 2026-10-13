@@ -1,8 +1,34 @@
-/* Driver sign-up (pages/drive-signup.html): 3 steps (about you, vehicle, documents) → driverApply(). */
+/* Driver sign-up (pages/drive-signup.html).
+   Choose how to apply: walk in at the office (#walk-in) or apply online (#online: 3 steps → driverApply()
+   → "Application sent", updates by email). */
+import { CONFIG } from '../config.js';
 import { driverApply, errorMessage } from '../api.js';
 import { $, $$, mountChrome, toast, wirePasswordReveal } from '../ui.js';
 
 mountChrome();
+
+/* ---------- Views: choose / walk-in / online / done ---------- */
+const views = $$('[data-view]');
+function showView(name) {
+  views.forEach((v) => { v.hidden = v.dataset.view !== name; });
+  document.title = `${{ 'walk-in': 'Walk in', online: 'Apply online', done: 'Application sent' }[name] || 'Sign up to drive'} · mysabak`;
+}
+const route = () => {
+  const name = location.hash.slice(1);
+  showView(['walk-in', 'online'].includes(name) ? name : 'choose');
+  window.scrollTo(0, 0);
+  $('.content').scrollTo(0, 0);
+};
+window.addEventListener('hashchange', route);
+
+/* ---------- Walk in: office details (CONFIG.driverOffice) ---------- */
+const office = CONFIG.driverOffice;
+$$('[data-office]').forEach((n) => {
+  const key = n.dataset.office;
+  if (key === 'bring') n.innerHTML = office.bring.map((b) => `<li>${b}</li>`).join('');
+  else n.textContent = office[key];
+});
+$('#directionsBtn').addEventListener('click', () => toast('Directions will open in Maps once the office address is final.'));
 
 const form = $('#signupForm');
 const steps = $$('.wizard__step', form);
@@ -23,7 +49,7 @@ function show(i) {
   next.textContent = i === steps.length - 1 ? 'Submit application' : 'Next';
   const first = $('input:not([type="radio"]):not([type="checkbox"]), select', steps[i]);
   if (first) first.focus({ preventScroll: true });
-  form.closest('.auth-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('.content').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /** Only the fields on the current step have to be valid to move on. */
@@ -62,7 +88,7 @@ form.addEventListener('submit', async (e) => {
     await driverApply({
       name: data.get('name').trim(),
       phone: data.get('phone').replace(/\s+/g, ''),
-      email: data.get('email').trim(),
+      email: data.get('email').trim().toLowerCase(),
       city: data.get('city'),
       password: data.get('newPassword'),
       vehicle: data.get('vehicle'),
@@ -73,10 +99,16 @@ form.addEventListener('submit', async (e) => {
       files: { license: data.get('license'), orcr: data.get('orcr'), selfie: data.get('selfie') },
       agreed: data.get('agreed') === 'on',
     });
-    location.href = '/pages/driver.html';
+    $('[data-bind="doneName"]').textContent = data.get('name').trim().split(' ')[0];
+    $('[data-bind="doneEmail"]').textContent = data.get('email').trim().toLowerCase();
+    showView('done');
+    history.replaceState(null, '', location.pathname); // Back doesn't return to the filled-in form
+    $('.content').scrollTo(0, 0);
   } catch (err) {
     toast(errorMessage(err));
     next.disabled = false;
     next.textContent = 'Submit application';
   }
 });
+
+route();

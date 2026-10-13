@@ -33,7 +33,11 @@ export function mountChrome() {
   if (top) {
     top.innerHTML = `
       <a class="brand" href="/" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="150" height="35"></a>
-      <div class="topbar__actions"><a class="btn btn--dark" href="/pages/account.html">Sign in</a></div>`;
+      <div class="topbar__actions">
+        <button type="button" class="btn btn--ghost btn--install" data-install hidden>${icon('i-download')}<span class="mobile-only">Install</span><span class="desktop-only">Install app</span></button>
+        <a class="btn btn--dark" href="/pages/account.html">Sign in</a>
+      </div>`;
+    setupInstall($('[data-install]', top));
   }
   const nav = $('[data-tabs]');
   if (nav) {
@@ -60,6 +64,102 @@ export function registerServiceWorker() {
       const w = r.active || r.waiting || r.installing;
       if (w && w.scriptURL !== worker) r.unregister();
     })).catch(() => {});
+  });
+}
+
+/* ---------- Install (add to Home Screen / Dock) ---------- */
+/* Chrome, Edge, Brave, Samsung and Android browsers offer a native prompt (beforeinstallprompt;
+   each page's <head> catches it early in window.__installPrompt). Safari on iPhone, iPad and Mac
+   never does, so the button opens step-by-step instructions for the browser being used. */
+export const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
+
+/** Which install instructions fit this device and browser. */
+export function installPlatform(ua = navigator.userAgent, touchPoints = navigator.maxTouchPoints || 0) {
+  const ios = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 0); // iPadOS reports "Macintosh" (Macs have no touch)
+  const android = /Android/.test(ua);
+  const firefox = /Firefox|FxiOS/.test(ua);
+  const safari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg\/|OPR|SamsungBrowser/.test(ua);
+  if (ios) return 'ios';
+  if (/Macintosh/.test(ua) && safari) return 'mac-safari';
+  if (android && /SamsungBrowser/.test(ua)) return 'samsung';
+  if (android && firefox) return 'android-firefox';
+  if (android) return 'android';
+  if (firefox) return 'desktop-firefox';
+  return 'desktop';
+}
+
+const INSTALL_STEPS = {
+  ios: {
+    title: 'Add mysabak to your Home Screen',
+    steps: [`Tap the Share button ${icon('i-share', 'icon--inline')} (bottom of the screen on iPhone, top on iPad).`, 'Scroll down and tap <b>Add to Home Screen</b>.', 'Tap <b>Add</b>. mysabak now opens from your Home Screen like an app.'],
+    note: 'Works in Safari, and in Chrome or Edge on iOS 16.4 or later.',
+  },
+  'mac-safari': {
+    title: 'Add mysabak to your Dock',
+    steps: [`In the menu bar choose <b>File</b>, or click the Share button ${icon('i-share', 'icon--inline')}.`, 'Choose <b>Add to Dock</b>.', 'Click <b>Add</b>. mysabak opens from your Dock and Launchpad.'],
+    note: 'Needs macOS Sonoma (Safari 17) or later. On older Macs, use Chrome, Edge or Brave.',
+  },
+  samsung: {
+    title: 'Add mysabak to your Home screen',
+    steps: ['Tap the menu ☰ at the bottom.', 'Tap <b>Add page to</b>, then <b>Home screen</b>.', 'Tap <b>Add</b>.'],
+  },
+  'android-firefox': {
+    title: 'Add mysabak to your Home screen',
+    steps: [`Tap the menu ${icon('i-menu-dots', 'icon--inline')}.`, 'Tap <b>Install</b> (or <b>Add to Home screen</b>).', 'Tap <b>Add</b>.'],
+  },
+  android: {
+    title: 'Add mysabak to your Home screen',
+    steps: [`Tap the browser menu ${icon('i-menu-dots', 'icon--inline')}.`, 'Tap <b>Install app</b> or <b>Add to Home screen</b>.', 'Tap <b>Install</b>.'],
+  },
+  'desktop-firefox': {
+    title: 'Install mysabak',
+    steps: ['Firefox on computers can’t install web apps yet.', 'Open this page in Chrome, Edge or Brave (or Safari on a Mac).', 'Click <b>Install app</b> again.'],
+  },
+  desktop: {
+    title: 'Install mysabak',
+    steps: ['Click the install icon at the right end of the address bar, or open the browser menu.', 'Choose <b>Install mysabak</b> (Chrome: <b>Cast, save and share → Install page</b>).', 'Click <b>Install</b>. mysabak opens in its own window.'],
+    note: 'Already installed? Open it from your apps or Start menu.',
+  },
+};
+
+function openInstallSheet() {
+  const info = INSTALL_STEPS[installPlatform()];
+  const dlg = document.createElement('dialog');
+  dlg.className = 'sheet';
+  dlg.setAttribute('aria-labelledby', 'installTitle');
+  dlg.innerHTML = `
+    <form method="dialog" class="sheet__body">
+      <span class="sheet__handle" aria-hidden="true"></span>
+      <div class="install__head"><img src="/assets/images/icons/icon-192.png" alt="" width="56" height="56">
+        <div><h2 class="sheet__title" id="installTitle">${info.title}</h2><p class="sheet__sub">Opens full screen, no app store needed.</p></div></div>
+      <ol class="install__steps">${info.steps.map((s) => `<li>${s}</li>`).join('')}</ol>
+      ${info.note ? `<p class="field__hint">${info.note}</p>` : ''}
+      <button type="submit" class="button button--block">Got it</button>
+    </form>`;
+  document.body.appendChild(dlg);
+  dlg.addEventListener('close', () => dlg.remove());
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+}
+
+/** Wire an Install button: native prompt where the browser has one, instructions everywhere else. */
+export function setupInstall(button) {
+  if (!button) return;
+  if (isInstalled()) { button.hidden = true; return; }
+  button.hidden = false;
+  window.addEventListener('appinstalled', () => { button.hidden = true; toast('mysabak is installed. Find it on your Home Screen or in your apps.'); });
+  button.addEventListener('click', async () => {
+    const prompt = installPrompt || window.__installPrompt;
+    if (prompt) {
+      installPrompt = null;
+      window.__installPrompt = null;
+      prompt.prompt();
+      await prompt.userChoice.catch(() => {});
+      return;
+    }
+    openInstallSheet();
   });
 }
 

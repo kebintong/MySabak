@@ -324,18 +324,22 @@ const samePhone = (a, b) => {
   return norm(a) !== '' && norm(a) === norm(b);
 };
 
+const sameEmail = (a, b) => Boolean(a && b) && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+
 /**
- * Driver sign-in with mobile number + password.
- * DEMO: any password works for the number used at sign-up (passwords are never stored in the browser).
+ * Driver sign-in with a mobile number OR an email, plus password.
+ * DEMO: any password works for the number/email used at sign-up (passwords are never stored in the browser).
  * Backend: check the password on the server and start a session (e.g. an httpOnly cookie).
- * @returns {Promise<{status:'review'|'approved'|'rejected'}>}  throws { status: 401 } when the number/password don't match
+ * @param {{login:string, password:string}} creds  login = mobile number or email
+ * @returns {Promise<{status:'review'|'approved'|'rejected'}>}  throws { status: 401 } when they don't match
  */
-export async function driverSignIn({ phone, password }) {
-  if (!phone || !password) throw Object.assign(new Error('Enter your mobile number and password.'), { status: 400 });
+export async function driverSignIn({ login, password }) {
+  if (!login || !password) throw Object.assign(new Error('Enter your mobile number or email, and your password.'), { status: 400 });
   await wait(700);
   const d = demo.get('driver', null);
-  if (!d || !samePhone(d.phone, phone)) {
-    throw Object.assign(new Error('No driver account uses that mobile number. Check it, or sign up.'), { status: 401 });
+  const matches = d && (login.includes('@') ? sameEmail(d.email, login) : samePhone(d.phone, login));
+  if (!matches) {
+    throw Object.assign(new Error('No driver account uses that mobile number or email. Check it, or sign up.'), { status: 401 });
   }
   demo.set('driverSession', { phone: d.phone, at: Date.now() });
   return { status: d.status };
@@ -349,32 +353,34 @@ export async function driverSignOut() {
 }
 
 /**
- * Driver application. Signs the new driver in.
- * DEMO: approved straight away so the driver home can be shown. Files aren't uploaded and the
- * password isn't kept.
+ * Online driver application. It goes into review; updates are sent to the driver's email.
+ * (Walk-in applicants sign up at the office: see CONFIG.driverOffice.)
+ * DEMO: saved in this browser as 'review'. Files aren't uploaded, the password isn't kept and no
+ * email is sent. The driver can sign in to see the status.
  * @param {{name, phone, email, city, password, vehicle:'motor'|'sedan'|'suv', plate, model, year,
  *   licenseNumber, files:{license, orcr, selfie}, agreed:boolean}} application
- * @returns {Promise<{status:'review'|'approved', demo:boolean}>}
+ * @returns {Promise<{status:'review', email:string}>}
  */
 export async function driverApply(application) {
+  if (!application.email) throw Object.assign(new Error('An email is needed for application updates.'), { status: 400 });
   await wait(1200);
   const { files, password, ...data } = application; // eslint-disable-line no-unused-vars
-  demo.set('driver', { ...data, status: 'approved', online: false, appliedAt: Date.now() });
-  demo.set('driverSession', { phone: data.phone, at: Date.now() });
-  return { status: 'approved', demo: true };
+  demo.set('driver', { ...data, method: 'online', status: 'review', online: false, appliedAt: Date.now() });
+  demo.set('driverSession', null);
+  return { status: 'review', email: data.email };
 }
 
 /**
  * The driver's account status and whether they're signed in on this device.
  * @returns {Promise<{status:'none'|'review'|'approved'|'rejected', signedIn:boolean,
- *   name?:string, vehicle?:string, plate?:string, online:boolean}>}
+ *   name?:string, email?:string, vehicle?:string, plate?:string, online:boolean}>}
  */
 export async function driverStatus() {
   const d = demo.get('driver', null);
   const session = demo.get('driverSession', null);
   if (!d) return { status: 'none', signedIn: false, online: false };
   const signedIn = Boolean(session && samePhone(session.phone, d.phone));
-  return { status: d.status, signedIn, name: d.name, vehicle: d.vehicle, plate: d.plate, online: signedIn && Boolean(d.online) };
+  return { status: d.status, signedIn, name: d.name, email: d.email, vehicle: d.vehicle, plate: d.plate, online: signedIn && Boolean(d.online) };
 }
 
 /**

@@ -31,34 +31,34 @@ test('fares go to the driver: no fare until rates are set', () => {
   assert.ok(Object.values(fares).every((f) => f === null));
 });
 
-test('driver sign-up: no documents or password stored by the demo; signed in and able to go online', async () => {
+test('online driver application: goes to review, needs an email, stores no documents or password', async () => {
   assert.deepEqual(await api.driverStatus(), { status: 'none', signedIn: false, online: false });
   await assert.rejects(api.setOnline(true), { status: 401 });
-  await api.driverApply({
+  const base = {
     name: 'Juan Dela Cruz', phone: '09175551234', password: 'secret-pass-123', vehicle: 'sedan', plate: 'GAA 1234',
     files: { license: 'x', orcr: 'y', selfie: 'z' }, agreed: true,
-  });
+  };
+  await assert.rejects(api.driverApply({ ...base, email: '' }), { status: 400 });
+  assert.deepEqual(await api.driverApply({ ...base, email: 'juan@example.com' }), { status: 'review', email: 'juan@example.com' });
   const d = await api.driverStatus();
-  assert.equal(d.status, 'approved');
-  assert.equal(d.signedIn, true);
+  assert.equal(d.status, 'review');
+  assert.equal(d.signedIn, false, 'not signed in automatically');
   const saved = localStorage.getItem('mysabak.demo.driver');
-  assert.equal(saved.includes('files'), false);
-  assert.equal(saved.includes('secret-pass-123'), false);
-  assert.equal(saved.includes('password'), false);
-  assert.deepEqual(await api.setOnline(true), { online: true });
+  for (const secret of ['files', 'secret-pass-123', 'password']) assert.equal(saved.includes(secret), false, secret);
 });
 
-test('driver sign-in / sign-out', async () => {
-  await api.driverSignOut();
-  const out = await api.driverStatus();
-  assert.equal(out.signedIn, false);
-  assert.equal(out.online, false);
-  await assert.rejects(api.setOnline(true), { status: 401 });
-  await assert.rejects(api.driverSignIn({ phone: '09170000000', password: 'whatever1' }), { status: 401 });
-  await assert.rejects(api.driverSignIn({ phone: '09175551234', password: '' }), { status: 400 });
-  // the same number written as +63 917 555 1234 signs in
-  assert.deepEqual(await api.driverSignIn({ phone: '+63 917 555 1234', password: 'whatever1' }), { status: 'approved' });
+test('driver sign-in with mobile number or email; under review can’t go online; sign-out', async () => {
+  await assert.rejects(api.driverSignIn({ login: '09170000000', password: 'whatever1' }), { status: 401 });
+  await assert.rejects(api.driverSignIn({ login: 'someone@else.com', password: 'whatever1' }), { status: 401 });
+  await assert.rejects(api.driverSignIn({ login: '09175551234', password: '' }), { status: 400 });
+  // email, any capitalisation
+  assert.deepEqual(await api.driverSignIn({ login: 'Juan@Example.com', password: 'whatever1' }), { status: 'review' });
   assert.equal((await api.driverStatus()).signedIn, true);
+  await assert.rejects(api.setOnline(true), { status: 403 });
+  await api.driverSignOut();
+  assert.equal((await api.driverStatus()).signedIn, false);
+  // the same number written as +63 917 555 1234
+  assert.deepEqual(await api.driverSignIn({ login: '+639175551234', password: 'whatever1' }), { status: 'review' });
   assert.equal(JSON.stringify(localStorage.getItem('mysabak.demo.driverSession')).includes('whatever1'), false);
 });
 
