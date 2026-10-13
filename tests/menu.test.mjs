@@ -3,9 +3,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { visibleGroups, defaultPicks, cleanPicks, unitPrice, pickLabels, lineKey, openState } from '../assets/js/menu.js';
-import { SHOPS } from '../assets/js/demo-data.js';
+import { TEST_SHOP } from './fixtures.mjs';
 
-const adobo = SHOPS.find((s) => s.id === 'lutong-bahay').menu.find((m) => m.id === 'adobo');
+const adobo = TEST_SHOP.menu.find((m) => m.id === 'adobo');
 
 test('defaults cost nothing extra; the drink only shows with a meal', () => {
   const picks = defaultPicks(adobo);

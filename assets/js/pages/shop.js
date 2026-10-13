@@ -5,7 +5,7 @@ import { shopMenu, routeBetween, straightLine, errorMessage } from '../api.js';
 import { cartTotals } from '../money.js';
 import { visibleGroups, defaultPicks, cleanPicks, unitPrice, openState } from '../menu.js';
 import { getCart, addToCart, setLineQty, hasOtherShop } from '../cart.js';
-import { foodArt, storefront } from '../demo-art.js';
+import { itemPicture, storefront } from '../placeholders.js';
 import { shopMap, knownLocation } from '../shop-map.js';
 import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast } from '../ui.js';
 
@@ -14,7 +14,7 @@ mountChrome();
 const WIDE = window.matchMedia('(min-width: 1200px)'); // "Your order" becomes a column
 let shop = null;
 
-const pic = (item) => (item.image ? `<img src="${esc(item.image)}" alt="">` : foodArt(item.art));
+const pic = (item) => (item.image ? `<img src="${esc(item.image)}" alt="">` : itemPicture(item, shop && shop.color));
 const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 /* ---------- Shop card + map ---------- */

@@ -22,12 +22,15 @@ missing.
 | Any order | Tip (optional) | **mysabak, 100%** |
 
 - No booking fees, no cut from drivers. mysabak earns from tips. (Shop POS income is Stage 2 and out of scope.)
-- Tips: nothing picked by default; ₱10 / ₱20 / ₱50 / Custom, capped at ₱500 (`CONFIG.tips`).
-  **E-wallet or card only** (GCash, Maya, card), so drivers never handle mysabak's money on cash trips.
+- Tips: nothing picked by default; capped at ₱500 (`CONFIG.tips`).
+- **Rides and Express:** the tip is part of booking. After Book the customer picks Cash, GCash or Online banking
+  and can raise "Your price" above the fare (e.g. fare ₱90 → they pay ₱110). The extra (₱20) is the tip.
+  "No tip" is the default. The fare part never changes. See open question 1 for cash.
+- **Shop orders and the Support page:** tips are sent separately, by e-wallet or card (GCash, Maya, card).
 - Wording everywhere: "Tip mysabak · keeps rides fee-free for drivers" + "Your driver keeps 100% of the fare.
   Tips go to mysabak." Receipts show the fare/fee and the tip as separate lines.
-- Tips are offered after a trip / delivery ends, from the receipt for 24 hours, and on the Support page
-  ("without a ride").
+- If a rider didn't tip when booking, the Ride complete screen offers "Tip mysabak" (e-wallet or card). Shop
+  orders can be tipped from the receipt for 24 hours; anyone can tip from the Support page ("without a ride").
 
 ---
 
@@ -72,15 +75,45 @@ The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`.
 | Fare on each card | `₱[FARE]` | `fares[vehicleId].total` | `faresFor(trip)` |
 | Driver ETA | `[ETA]` | `trip.eta[vehicleId]` (minutes) | `routeBetween()`; needs live drivers |
 | Fare note (desktop) | `₱[AMOUNT]` + `₱[AMOUNT]` | `.base`, `.distance` | `faresFor(trip)` |
-| Payment button | `[Payment method]` | default payment | `CONFIG.paymentMethod`; backend: user profile |
-| Book / Send button | `₱[FARE]` | the booking | `bookRide(booking)` |
+| Payment button | `Cash` | chosen payment method | `CONFIG.ridePayments`; opens the pay sheet |
+| Book / Send button | `₱[FARE]` | opens the pay sheet | then `bookRide(booking)` |
 
 ### Parcel details (Express, before booking)
 Receiver name, receiver mobile, size (`CONFIG.parcelSizes`), what's being sent, notes. Sent inside the booking as `parcel`.
 
-### Trip done + tip (after a trip)
-Receipt (fare, 100% to the driver) and the tip picker. **Backend: call `showTripDone(order)` in `app.js` when
-the trip ends.** The demo shows it right after booking, with a "Demo" note. Tip → `sendTip()`.
+### Pay sheet (after Book)
+| Element | Data | Source |
+|---|---|---|
+| Pay with: Cash / GCash / Online banking | payment method | `CONFIG.ridePayments` |
+| Your price (− / +, No tip · +₱10 · +₱20 · +₱50, or type a price) | fare + tip | `faresFor()`; split with `splitPrice()` in `money.js` |
+| Breakdown | Fare (100% to your driver), Tip (100% to mysabak), You pay | same |
+| Find a driver · ₱110 | the booking | `bookRide({ …, payment, price: { fare, tip, total } })` |
+
+When the fare is still unknown (`null` rates), the price shows `₱[FARE] + ₱20` and the box takes a tip instead of a price.
+
+### Finding a driver (step "search")
+Radar around the pickup, "Finding you a driver…", vehicle · price · payment, **Cancel** (`cancelRide(id)`).
+`findDriver(id)` resolves when a driver accepts (rejects with 404 when nobody is free).
+**The demo "finds" a sample driver after ~3 seconds** (`DEMO_DRIVERS` in `demo-data.js`, shown with a "Demo" tag).
+
+### Driver on the way / on the trip (step "trip")
+| Element | Data | Source |
+|---|---|---|
+| Status + "Arriving in 3 min" / "About 16 min to go" | `status`, `etaMinutes` | `onTripUpdate(id, onUpdate)` |
+| Progress: On the way · On the trip · Arrived (Express: Picking up · Delivering · Delivered) | `status` | same |
+| Driver card: initials, name, ★ rating, colour + model, plate | driver | `findDriver(id)` |
+| Car on the map | `driver: { lng, lat }` | `onTripUpdate()` |
+| Call / Message | `driver.phone` | demo shows a toast |
+| Cancel ride (before pickup only) | none | `cancelRide(id)` |
+
+`onTripUpdate()` is where the backend plugs in its realtime channel. **The demo moves the driver to the pickup,
+then along the route, in about 15 seconds.**
+
+### Ride complete (when `onTripUpdate` reports `completed`)
+Purple header with a check, "You've arrived" (Express: "Parcel delivered") and the drop-off + time; the route
+(from → to, vehicle · distance · time); the driver; **rate 1–5 stars** (`rateRide(id, stars)`); receipt (Fare 100% to your
+driver, Tip 100% to mysabak, Total + payment method); **Tip mysabak** if they didn't tip (→ `sendTip()`); Done.
+Built by `showTripDone(order)` in `app.js`.
 
 ---
 
@@ -125,11 +158,11 @@ The price of one item is its `price` plus every picked choice. `assets/js/menu.j
 Bundles (`bundle: true`) are fixed combos with no options. A cart is for one shop and lives in the browser
 (`assets/js/cart.js`).
 
-**Pictures.** Shops and items have `image` (a photo URL). While it is `null`, the demo draws a placeholder
-(`assets/js/demo-art.js`, keyed by `art`). Send photos and delete that file.
+**Pictures.** Shops and items have `image` (a photo URL). While it is `null`, the page shows a plain placeholder
+(`assets/js/placeholders.js`: a drawn storefront in the shop's colour, or the item's first letter).
 
-Shops and menus in the demo are **samples** (`assets/js/demo-data.js`); delete that file once `listShops()` /
-`shopMenu()` call your API.
+**The demo has no shops** (`SHOPS = []` in `demo-data.js`), so Shops shows its "No shops yet" state until
+`listShops()` / `shopMenu()` return real shops. The tests use a made-up shop in `tests/fixtures.mjs`.
 
 ## Account (`pages/account.html`)
 Placeholder until sign-in (mobile number + one-time code) exists. Links to this browser's demo tips, orders and driver home.
@@ -145,7 +178,10 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
 | `addressFor({ lng, lat })` | `string \| null` | pickup label, pinned drop-off, "use my location" |
 | `routeBetween(from, to)` / `straightLine(from, to)` | `Trip` | route, distance, time, ETA |
 | `faresFor(trip)` | `{ [vehicleId]: Fare \| null }` | fares |
-| `bookRide(booking)` | `{ id, demo }` | Book / Send |
+| `bookRide(booking)` | `{ id, demo }` (400 if the payment method isn't allowed) | pay sheet → Find a driver |
+| `findDriver(id)` / `cancelRide(id)` | `Driver` (404: nobody free) / `{ ok }` | finding a driver |
+| `onTripUpdate(id, onUpdate)` → `stop()` | calls `onUpdate(TripUpdate)` | trip panel, car on the map, Ride complete |
+| `rateRide(id, stars)` | `{ ok }` | Ride complete |
 | `sendTip(tip)` / `myTips()` | `{ id, amount }` / `Tip[]` | tip sheet, Support page |
 | `supportStats()` | `SupportStats` | Support page |
 | `driverSignIn({ login, password })` / `driverSignOut()` | `{ status }` (401 if no match; `login` = mobile number or email) / nothing | driver sign in, driver home |
@@ -176,9 +212,18 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
 { "kind": "express", "vehicle": "sedan",
   "pickup":  { "lng": 123.8854, "lat": 10.3157, "label": "V. Rama Ave, Guadalupe" },
   "dropoff": { "lng": 123.9054, "lat": 10.3181, "label": "Ayala Center Cebu" },
-  "trip": { "distanceKm": 6.8, "minutes": 20, "coords": [] }, "payment": "GCash",
+  "trip": { "distanceKm": 6.8, "minutes": 20, "coords": [] },
+  "payment": "gcash",                                  // cash | gcash | bank
+  "price": { "fare": 90, "tip": 20, "total": 110 },    // tip = what they added on top; fare null while unknown
   "parcel": { "receiverName": "Maria Santos", "receiverPhone": "09171234567", "size": "medium",
               "item": "Birthday cake", "notes": "Handle with care" } }   // parcel: Express only
+
+// Driver (from findDriver)
+{ "id": "DRV-1", "name": "Mark R.", "rating": 4.8, "trips": 860, "phone": "+639171234567", "photo": null,
+  "vehicle": { "type": "sedan", "model": "Toyota Vios", "color": "White", "plate": "ABC 1234" } }
+
+// TripUpdate (from onTripUpdate); status: arriving → arrived → on_trip → completed (or cancelled)
+{ "status": "arriving", "driver": { "lng": 123.884, "lat": 10.318 }, "etaMinutes": 3 }
 
 // Tip (orderType "direct" = from the Support page, orderId null)
 { "orderId": "EXP-123", "orderType": "express", "amount": 20, "method": "gcash" }
@@ -247,7 +292,8 @@ Any design works as long as `api.js` returns the shapes above. One option:
 |---|---|
 | `GET /api/places?q=…&lng=…&lat=…` · `GET /api/address?lng=…&lat=…` | search, addresses |
 | `POST /api/trips/estimate` `{ pickup, dropoff }` → `{ trip, fares }` | `routeBetween` + `faresFor` |
-| `POST /api/bookings` → `{ id }` | `bookRide` (Ride and Express) |
+| `POST /api/bookings` → `{ id }` · `DELETE /api/bookings/:id` · `POST /api/bookings/:id/rating` | `bookRide`, `cancelRide`, `rateRide` (Ride and Express) |
+| `WS /api/bookings/:id` (driver found, position, status) | `findDriver`, `onTripUpdate` |
 | `POST /api/tips` · `GET /api/me/tips` · `GET /api/support/stats` | tips, Support page |
 | `POST /api/drivers` (multipart) · `POST /api/drivers/session` · `DELETE /api/drivers/session` · `GET /api/drivers/me` · `PUT /api/drivers/me/online` | Drive (sign-up, sign in/out, status, online) |
 | `WS /api/drivers/me/jobs` · `POST /api/jobs/:id/accept` · `POST /api/jobs/:id/status` | job requests |
@@ -260,7 +306,9 @@ Work fares, fees and tip limits out on the server: anything calculated in the br
 ---
 
 ## Open questions
-1. **Cash trips:** is "tip by e-wallet or card only" OK?
+1. **Tips on cash rides:** the customer hands the driver fare + tip in cash, but the tip belongs to mysabak.
+   How does it reach mysabak (driver remits it, deducted from GCash payouts, or allow tips on cash rides only
+   by e-wallet)? The demo records the tip with the booking's payment method.
 2. **Shop payments:** online payment means mysabak collects for shops and pays them out (payment-regulation
    questions); cash on delivery means riders pay the shop up front.
 3. **Driver requirements:** the document list depends on LTFRB rules, especially for motorcycle taxis.

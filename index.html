@@ -48,16 +48,20 @@
           <span class="mk-label__title" data-bind="pickup">[Street, barangay]</span>
         </span>
       </div>
-      <div class="mk mk--origin" id="mkOrigin" data-show="choose">
+      <div class="mk mk--origin" id="mkOrigin" data-show="choose search trip">
+        <span class="radar" data-show="search" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="ring"></span>
         <span class="mk-label mk-label--origin" data-bind="from">Current location</span>
       </div>
-      <div class="mk mk--dest" id="mkDest" data-show="choose">
+      <div class="mk mk--dest" id="mkDest" data-show="choose search trip">
         <svg width="32" height="44" viewBox="0 0 32 44" aria-hidden="true"><path d="M16 44C16 44 0 26 0 16a16 16 0 0 1 32 0c0 10-16 28-16 28z" fill="#5630d8"/><circle cx="16" cy="16" r="6" fill="#FFFFFF"/></svg>
         <span class="mk-label mk-label--dest" data-bind="dropoff">[Drop-off place]</span>
       </div>
-      <div class="mk mk--time" id="mkTime" data-show="choose">
+      <div class="mk mk--time" id="mkTime" data-show="choose search">
         <span class="mk-label mk-label--time" data-bind="duration">[Travel time]</span>
+      </div>
+      <div class="mk mk--driver" id="mkDriver" data-show="trip" aria-hidden="true">
+        <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-car" data-driver-icon/></svg>
       </div>
     </div>
 
@@ -137,8 +141,8 @@
 
         <div class="choose__foot">
           <button type="button" class="pay" id="payBtn">
-            <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-card"/></svg>
-            <span class="pay__label" data-bind="payment">[Payment method]</span>
+            <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-cash" data-pay-icon/></svg>
+            <span class="pay__label" data-bind="payment">Cash</span>
             <span class="pay__change">Change</span>
           </button>
           <p class="fare-note desktop-only">Fare: base <span data-bind="base">₱[AMOUNT]</span> + distance <span data-bind="distfare">₱[AMOUNT]</span></p>
@@ -147,8 +151,50 @@
         <button type="button" class="book mobile-only" data-book>
           <span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span></span>
           <span class="book__idle" data-bind="fare">₱[FARE]</span>
-          <span class="book__busy" aria-hidden="true">Finding a driver<span class="dots"><i></i><i></i><i></i></span></span>
         </button>
+      </section>
+
+      <!-- Step 3 · Finding a driver -->
+      <section class="panel panel--search" data-show="search" aria-labelledby="searchTitle" aria-live="polite">
+        <div class="searching">
+          <span class="searching__icon" aria-hidden="true"><span></span><svg class="icon icon--xl icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
+          <div class="searching__text">
+            <h2 class="searching__title" id="searchTitle" data-bind="searchTitle">Finding you a driver</h2>
+            <p class="searching__sub"><span data-bind="vehicle">Sedan</span> · <span data-bind="priceTotal">₱[FARE]</span> · <span data-bind="payment">Cash</span></p>
+          </div>
+        </div>
+        <div class="searching__bar" aria-hidden="true"><span></span></div>
+        <button type="button" class="button button--ghost button--block" id="cancelSearch">Cancel</button>
+      </section>
+
+      <!-- Step 4 · Driver on the way / on the trip -->
+      <section class="panel panel--trip" data-show="trip" aria-labelledby="tripTitle" aria-live="polite">
+        <div class="trip__head">
+          <div>
+            <h2 class="trip__title" id="tripTitle" data-bind="tripTitle">Your driver is on the way</h2>
+            <p class="trip__sub" data-bind="tripSub">Arriving in 3 min</p>
+          </div>
+          <span class="trip__eta" data-bind="tripEta" hidden></span>
+        </div>
+        <ol class="trip__steps" aria-label="Trip progress">
+          <li data-step="arriving"><span data-bind="stepArriving">On the way</span></li>
+          <li data-step="on_trip"><span data-bind="stepTrip">On the trip</span></li>
+          <li data-step="completed"><span data-bind="stepDone">Arrived</span></li>
+        </ol>
+        <div class="driver">
+          <span class="driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
+          <div class="driver__main">
+            <span class="driver__name"><span data-bind="driverName">Driver</span> <span class="badge badge--wait driver__demo" id="driverDemo" hidden>Demo</span></span>
+            <span class="driver__meta">★ <span data-bind="driverRating">4.9</span> · <span data-bind="driverCar">White Toyota Vios</span></span>
+          </div>
+          <span class="driver__plate" data-bind="driverPlate">ABC 1234</span>
+        </div>
+        <div class="trip__actions">
+          <button type="button" class="btn-soft" id="callDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-phone"/></svg>Call</button>
+          <button type="button" class="btn-soft" id="messageDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chat"/></svg>Message</button>
+          <span class="trip__pay"><span data-bind="payment">Cash</span> · <b data-bind="priceTotal">₱[FARE]</b></span>
+          <button type="button" class="trip__cancel" id="cancelTrip">Cancel ride</button>
+        </div>
       </section>
 
       <!-- Dock: tabs (+ search on desktop) -->
@@ -173,12 +219,47 @@
             <ul class="suggest" id="suggestDesktop" role="listbox" aria-label="Suggested places" hidden></ul>
           </div>
           <button type="submit" class="cta" data-show="request"><span data-bind="seeLabel">See rides</span> <svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></button>
-          <button type="button" class="cta" data-show="choose" data-book><span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span> · <span data-bind="fare">₱[FARE]</span></span><span class="book__busy" aria-hidden="true">Finding a driver<span class="dots"><i></i><i></i><i></i></span></span></button>
+          <button type="button" class="cta" data-show="choose" data-book><span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span> · <span data-bind="fare">₱[FARE]</span></span></button>
         </form>
       </div>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- After Book: how to pay + your price (an extra on top of the fare is a tip for mysabak) -->
+    <dialog class="sheet paysheet" id="paySheet" aria-labelledby="payTitle">
+      <form class="sheet__body" id="payForm" method="dialog" autocomplete="off">
+        <span class="sheet__handle" aria-hidden="true"></span>
+        <div>
+          <h2 class="sheet__title" id="payTitle" data-bind="payTitle">Confirm your ride</h2>
+          <p class="sheet__sub"><span data-bind="vehicle">Sedan</span> · to <span data-bind="dropoff">[Drop-off place]</span> · <span data-bind="distance">[Distance]</span></p>
+        </div>
+
+        <fieldset class="paymethods"><legend class="paysheet__label">Pay with</legend><div class="paymethods__list" id="payMethods"><!-- from CONFIG.ridePayments --></div></fieldset>
+
+        <section class="yourprice" aria-labelledby="priceLabel">
+          <div class="yourprice__head">
+            <h3 class="paysheet__label" id="priceLabel">Your price</h3>
+            <span class="yourprice__hint">Add a little on top if you like. It’s a tip for mysabak.</span>
+          </div>
+          <div class="yourprice__ctrl">
+            <button type="button" class="yourprice__step" data-price-step="-1" aria-label="Lower the price"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-minus"/></svg></button>
+            <output class="yourprice__value" id="priceValue" aria-live="polite">₱[FARE]</output>
+            <button type="button" class="yourprice__step" data-price-step="1" aria-label="Raise the price"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
+          </div>
+          <div class="yourprice__chips" id="tipChips" role="group" aria-label="Add a tip"><!-- No tip, +₱10, +₱20, +₱50 --></div>
+          <label class="yourprice__custom"><span id="customLabel">Or type your price</span>
+            <span class="yourprice__input"><span aria-hidden="true">₱</span><input class="input" id="customPrice" type="number" inputmode="numeric" min="0" step="1" placeholder="90"></span></label>
+          <dl class="receipt" id="priceBreakdown"></dl>
+          <p class="tip__note"><svg class="icon icon--sm" aria-hidden="true"><use href="assets/images/icons.svg#i-shield"/></svg>Your driver keeps 100% of the fare. The extra goes to mysabak and keeps rides fee-free for drivers.</p>
+        </section>
+
+        <div class="sheet__actions">
+          <button type="button" class="button button--ghost" data-close>Back</button>
+          <button type="submit" class="button" id="findBtn">Find a driver</button>
+        </div>
+      </form>
+    </dialog>
 
     <!-- Express: parcel details (asked when booking in Express mode) -->
     <dialog class="sheet" id="parcelSheet" aria-labelledby="parcelTitle">

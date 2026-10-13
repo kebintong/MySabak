@@ -74,8 +74,11 @@ input::placeholder { color: var(--placeholder); }
 }
 
 /* ---------- State + breakpoint visibility ---------- */
-body[data-state="request"] [data-show="choose"],
-body[data-state="choose"] [data-show="request"] { display: none !important; }
+/* data-show="choose search" = shown in those steps only */
+body[data-state="request"] [data-show]:not([data-show~="request"]),
+body[data-state="choose"] [data-show]:not([data-show~="choose"]),
+body[data-state="search"] [data-show]:not([data-show~="search"]),
+body[data-state="trip"] [data-show]:not([data-show~="trip"]) { display: none !important; }
 
 @media (max-width: 899.98px) {
   .desktop-only { display: none !important; }
@@ -275,7 +278,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   gap: 12px;
   z-index: 2;
 }
-body[data-state="choose"] .map-controls { display: none; }
+body:not([data-state="request"]) .map-controls { display: none; }
 
 .ctrl {
   width: 44px; height: 44px;
@@ -680,7 +683,7 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
   .btn--dark { padding: 0 20px; }
 
   .map-controls { top: calc(96px + var(--safe-t)); }
-  body[data-state="choose"] .map-controls { display: flex; }
+  body:not([data-state="request"]) .map-controls { display: flex; }
 
   .maplibregl-ctrl-top-left { top: calc(96px + var(--safe-t)); }
   .mk--pickup { width: 72px; height: 72px; }
@@ -813,7 +816,8 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
     outline: none;
     text-overflow: ellipsis;
   }
-  body[data-state="choose"] .dock-search__input { font-weight: 700; cursor: pointer; }
+  body:not([data-state="request"]) .dock-search__input { font-weight: 700; }
+  body[data-state="choose"] .dock-search__input { cursor: pointer; }
   .dock-search__clear {
     width: 32px; height: 32px;
     border: none;
@@ -922,11 +926,6 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 }
 
 /* Booking: "Finding a driver…" */
-.book__busy { display: none; align-items: center; gap: 8px; }
-body.is-booking [data-book] .book__idle { display: none; }
-body.is-booking [data-book] .book__busy { display: inline-flex; }
-body.is-booking .book { justify-content: center; }
-body.is-booking [data-book] { cursor: progress; }
 .dots { display: inline-flex; gap: 3px; }
 .dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: dot-wave 1s infinite ease-in-out; }
 .dots i:nth-child(2) { animation-delay: .15s; }
@@ -1473,6 +1472,10 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .finder__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px calc(var(--content-bottom) + 4px); }
 .finder__sub { margin: 18px 6px 4px; font-size: 15px; font-weight: 800; color: var(--navy); }
 .finder__orders .list { padding: 0 6px; }
+.shops-empty { padding: 28px 18px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.shops-empty .icon { width: 30px; height: 30px; }
+.shops-empty h3 { margin: 6px 0 0; font-size: 17px; font-weight: 800; color: var(--navy); }
+.shops-empty p { margin: 0; max-width: 300px; font-size: 13.5px; line-height: 1.5; color: var(--sub); }
 .finder__note { margin: 18px 8px 0; font-size: 12px; line-height: 1.5; color: var(--sub); text-align: center; }
 
 .picked {
@@ -1729,6 +1732,137 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   .cart-panel__close { display: none; }
   .cart-pill { display: none !important; }
   .has-cart .content { padding-bottom: var(--content-bottom); }
+}
+
+/* =========================================================
+   Ride · pay sheet, finding a driver, trip, ride complete
+   ========================================================= */
+/* Pay sheet */
+.paysheet .sheet__body { gap: 16px; }
+.paysheet .sheet__sub { margin: 4px 0 0; }
+.paysheet__label { margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--navy); }
+.paymethods { margin: 0; padding: 0; border: 0; min-width: 0; }
+.paymethods__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.paymethod { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 10px; border: 1.5px solid var(--line-brand); border-radius: 16px; background: #fff; cursor: pointer; transition: border-color .15s, background-color .15s; }
+.paymethod input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.paymethod .icon { stroke: var(--muted); }
+.paymethod__text { display: flex; flex-direction: column; }
+.paymethod__name { font-size: 14px; font-weight: 800; color: var(--ink); }
+.paymethod small { font-size: 11.5px; line-height: 1.3; color: var(--sub); }
+.paymethod:hover { border-color: var(--brand); }
+.paymethod:has(input:checked) { border-color: var(--brand); background: var(--tint); box-shadow: 0 0 0 1px var(--brand); }
+.paymethod:has(input:checked) .icon { stroke: var(--brand); }
+.paymethod:has(input:focus-visible) { outline: 3px solid rgba(86, 48, 216, .45); outline-offset: 2px; }
+
+.yourprice { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 18px; background: var(--field); }
+.yourprice__head { display: flex; flex-direction: column; gap: 2px; }
+.yourprice__head .paysheet__label { margin: 0; }
+.yourprice__hint { font-size: 12.5px; color: var(--sub); }
+.yourprice__ctrl { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px; border-radius: 16px; background: #fff; border: 1px solid var(--line); }
+.yourprice__step { width: 48px; height: 48px; border: 0; border-radius: 12px; background: var(--tint); display: grid; place-items: center; cursor: pointer; }
+.yourprice__step:hover { background: #ebe5fd; }
+.yourprice__step:disabled { opacity: .4; cursor: not-allowed; }
+.yourprice__value { min-width: 0; font-family: var(--font-display); font-size: clamp(20px, 6.4vw, 30px); white-space: nowrap; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; text-align: center; }
+.yourprice__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.yourprice__chips .chip[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+.yourprice__custom { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--sub); }
+.yourprice__input { position: relative; width: 130px; flex-shrink: 0; }
+.yourprice__input > span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--sub); }
+.yourprice__input .input { padding-left: 26px; background: #fff; font-weight: 700; }
+.yourprice .receipt { background: #fff; }
+
+/* Finding a driver */
+.panel--search { padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 14px; }
+.searching { display: flex; align-items: center; gap: 14px; }
+.searching__icon { position: relative; width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; background: var(--brand); display: grid; place-items: center; }
+.searching__icon > span { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--brand); animation: ping 1.6s var(--ease-out) infinite; }
+.searching__title { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--navy); }
+.searching__title::after { content: ""; display: inline-block; width: 1.2em; text-align: left; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+.searching__sub { margin: 2px 0 0; font-size: 13px; color: var(--sub); }
+.searching__bar { height: 4px; border-radius: 999px; background: var(--tint); overflow: hidden; }
+.searching__bar span { display: block; width: 40%; height: 100%; border-radius: inherit; background: var(--brand); animation: sweep 1.4s ease-in-out infinite; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+/* Radar around the pickup while searching */
+.radar { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.radar i { position: absolute; left: -90px; top: -90px; width: 180px; height: 180px; border-radius: 50%; background: rgba(86, 48, 216, .16); border: 1.5px solid rgba(86, 48, 216, .35); animation: radar 2.4s var(--ease-out) infinite; opacity: 0; }
+.radar i:nth-child(2) { animation-delay: .8s; }
+.radar i:nth-child(3) { animation-delay: 1.6s; }
+@keyframes radar { from { transform: scale(.15); opacity: .9; } to { transform: scale(1); opacity: 0; } }
+
+/* Driver on the map */
+.mk--driver { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 3px solid var(--brand); box-shadow: 0 4px 12px rgba(23, 18, 43, .3); display: grid; place-items: center; pointer-events: none; }
+.mk--driver .icon { width: 20px; height: 20px; stroke: var(--brand); }
+
+/* Trip */
+.panel--trip { padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 12px; }
+.trip__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.trip__title { margin: 0; font-family: var(--font-display); font-size: 19px; line-height: 1.2; font-weight: 700; color: var(--navy); }
+.trip__sub { margin: 3px 0 0; font-size: 13.5px; font-weight: 600; color: var(--sub); }
+.trip__steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.trip__steps li { position: relative; padding-top: 10px; font-size: 11.5px; font-weight: 700; color: var(--placeholder); }
+.trip__steps li::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; border-radius: 999px; background: var(--tint); }
+.trip__steps li.is-done { color: var(--brand-deep); }
+.trip__steps li.is-done::before { background: var(--brand); }
+.trip__steps li.is-current { color: var(--navy); }
+.trip__steps li.is-current::before { background: linear-gradient(90deg, var(--brand) 50%, var(--tint) 50%); background-size: 200% 100%; animation: progress 1.6s linear infinite; }
+@keyframes progress { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.driver { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; background: var(--field); }
+.driver__ava { width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.driver__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.driver__name { font-size: 15px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+.driver__demo[hidden] { display: none; }
+.driver__meta { font-size: 12.5px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.driver__plate { flex-shrink: 0; padding: 5px 9px; border-radius: 8px; border: 1.5px solid var(--navy); background: #fff; font-size: 13px; font-weight: 800; letter-spacing: .04em; color: var(--navy); }
+.trip__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trip__actions .btn-soft { grid-area: auto; margin-left: 0; }
+.trip__pay { margin-left: auto; font-size: 13px; color: var(--sub); }
+.trip__pay b { color: var(--navy); }
+.trip__cancel { flex-basis: 100%; height: 36px; border: 0; background: none; font: 700 13px var(--font-body); color: var(--hot, #d63e25); cursor: pointer; }
+.trip__cancel[hidden] { display: none; }
+
+/* Ride complete */
+.done { max-width: 480px; overflow: hidden; }
+.done[open] { display: flex; flex-direction: column; }
+.done__hero {
+  flex: none; padding: 26px 20px 22px; text-align: center; color: #fff;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, .14) 0 40px, transparent 41px),
+    radial-gradient(circle at 88% 70%, rgba(255, 255, 255, .1) 0 60px, transparent 61px),
+    linear-gradient(160deg, var(--brand) 0%, var(--navy) 100%);
+}
+.done__check { width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(23, 18, 43, .3); animation: pop-in .45s var(--spring) both; }
+.done__check svg { width: 34px; height: 34px; fill: none; stroke: var(--brand); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; animation: draw .45s .3s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.done__title { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+.done__sub { margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, .85); }
+.done__body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px calc(20px + var(--safe-b)); display: flex; flex-direction: column; gap: 14px; }
+.done__route { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.done__route li { position: relative; padding-left: 26px; display: flex; flex-direction: column; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.done__route li span { font-size: 11.5px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; }
+.done__route li::before { content: ""; position: absolute; left: 3px; top: 5px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--brand); background: #fff; }
+.done__to::before { background: var(--brand) !important; border-radius: 50% 50% 50% 0 !important; transform: rotate(-45deg); }
+.done__from::after { content: ""; position: absolute; left: 9px; top: 21px; bottom: -12px; width: 2px; background: repeating-linear-gradient(var(--line-brand) 0 4px, transparent 4px 7px); }
+.done__meta { margin: -4px 0 0 26px; font-size: 12.5px; color: var(--sub); }
+.done__driver { display: flex; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.done__rate { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.done__rate-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+.stars { display: flex; gap: 4px; }
+.star { width: 38px; height: 38px; border: 0; border-radius: 10px; background: var(--field); display: grid; place-items: center; cursor: pointer; transition: transform .12s var(--spring), background-color .12s; }
+.star .icon { width: 22px; height: 22px; stroke: var(--placeholder); }
+.star:hover { background: var(--tint); }
+.star.is-on { background: #fff4d6; }
+.star.is-on .icon { stroke: #e0a100; fill: #ffc629; }
+.star:active { transform: scale(.9); }
+
+@media (min-width: 900px) {
+  .panel--search, .panel--trip { width: min(560px, 100%) !important; padding: 20px; border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-lg); }
+  .done { margin: auto; border-radius: 24px; }
+}
+@media (max-width: 380px) {
+  .paymethods__list { grid-template-columns: 1fr; }
+  .paymethod { flex-direction: row; align-items: center; }
 }
 
 /* Order timeline */

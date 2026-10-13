@@ -18,7 +18,16 @@ export const CONFIG = {
     { id: 'suv',   name: 'SUV',   capacity: 'Up to 6',     parcel: 'Large items',   icon: 'i-suv',   base: null, perKm: null },
   ],
   defaultVehicle: 'sedan',
-  paymentMethod: '[Payment method]',
+
+  // How a ride or Express delivery is paid (chosen after tapping Book).
+  // The customer can also raise the price; the extra is a tip, 100% to mysabak.
+  ridePayments: [
+    { id: 'cash',  name: 'Cash',           hint: 'Pay your driver at drop-off', icon: 'i-cash' },
+    { id: 'gcash', name: 'GCash',          hint: 'Pay in the app',              icon: 'i-wallet' },
+    { id: 'bank',  name: 'Online banking', hint: 'Pay from your bank app',      icon: 'i-bank' },
+  ],
+  defaultRidePayment: 'cash',
+  priceStep: 5, // the − / + buttons on "Your price" move by this many pesos
 
   // Express (parcel delivery) sizes, shown in the parcel details form
   parcelSizes: [
@@ -28,7 +37,8 @@ export const CONFIG = {
   ],
 
   // Tips: optional, nothing picked by default, 100% to mysabak (drivers keep 100% of the fare).
-  // E-wallet or card only, so drivers never handle mysabak's money on cash trips.
+  // On rides the tip is added to the price when booking (any payment method, see ridePayments).
+  // Tips sent separately (after a trip, from a shop order, on the Support page) are e-wallet or card only.
   tips: {
     presets: [10, 20, 50],
     max: 500,

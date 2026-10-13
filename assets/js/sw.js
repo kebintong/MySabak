@@ -3,7 +3,7 @@
    It lives in assets/js/ but looks after the whole site: app.js registers it with
    scope '/', which the server allows with a Service-Worker-Allowed: / header
    (assets/dev/worker.js on Cloudflare, serve.py locally). */
-const CACHE = 'mysabak-v15';
+const CACHE = 'mysabak-v16';
 const SHELL = [
   '/',
   '/assets/css/style.css',
@@ -16,7 +16,7 @@ const SHELL = [
   '/assets/js/cart.js',
   '/assets/js/demo-data.js',
   '/assets/js/menu.js',
-  '/assets/js/demo-art.js',
+  '/assets/js/placeholders.js',
   '/assets/js/shop-map.js',
   '/assets/manifest.webmanifest',
   '/assets/images/logo.svg',

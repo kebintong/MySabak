@@ -6,14 +6,14 @@ Ride booking web app for Cebu: no booking fees, no hidden charges.
 Frontend design demo: plain HTML, CSS and JavaScript modules, no build step.
 
 ```
-index.html          Ride screen: Ride | Express, map, booking, tip after the trip
+index.html          Ride screen: Ride | Express, map, Book → pay (Cash / GCash / Online banking, your price) → driver → Ride complete
 pages/              support · drive · drive-signup · driver · shops · shop · checkout · order · account
 assets/
   css/style.css     all styles
   js/config.js      settings: vehicles, fares, tips, parcel sizes, delivery rates
   js/api.js         every server call  ← backend replaces this file
-  js/demo-data.js   sample shops for the demo (delete when api.js is live)
-  js/demo-art.js    drawn placeholder pictures for shops and menu items (delete when photos come from the API)
+  js/demo-data.js   demo-only data: the sample driver the Ride demo "finds" (delete when api.js is live)
+  js/placeholders.js  plain pictures for shops and items that have no photo yet
   js/app.js         Ride screen      js/map.js   map, markers, route line
   js/ui.js          shared: top bar, tabs, toast, address search, tip sheet
   js/money.js       money maths      js/cart.js  shop cart
