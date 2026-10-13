@@ -136,14 +136,16 @@ Built by `showTripDone(order)` in `app.js`.
 |---|---|---|
 | `pages/drive.html` | **Driver sign in**: "Mobile number or email", password (show/hide), keep me signed in, forgot password, Sign in, Terms of Service + Privacy Policy, then "Wanna work as a driver? Sign up". Signed-in drivers go straight to the driver home | `driverStatus()`, `driverSignIn({ login, password })` |
 | `pages/drive-signup.html` | First **choose how to apply**: <br>• **Walk in** (`#walk-in`): office on a small map, address, hours, phone, what to bring, "Get directions" (from `CONFIG.driverOffice`, sample data for now) <br>• **Apply online** (`#online`): About you (name, mobile, **email required**, city, password) → Vehicle → Documents + consent → **"Application sent"**: updates go to their email | `driverApply(application)` → `{ status: 'review', email }` |
-| `pages/driver.html` | needs sign-in (otherwise back to `drive.html`). **Under review**: says updates go to their email and the online switch is locked. **Approved**: Go online / offline, job requests. Earnings, payouts, Sign out | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
+| `pages/driver.html` | **Map first, like Shops.** Needs sign-in (otherwise back to `drive.html`). Full-screen map with the driver's dot and **one pin per request** (purple Ride, orange Express, green Shop delivery). The panel (left on desktop, a pull-up sheet on phones) has: Hi + vehicle/plate + status, Sign out; the **online bar** (Go online / offline); filter chips All · Ride · Express · Shop with counts; **request cards** (kind, fare, pickup + distance from you, drop-off + trip km, payment, rider, time left, Skip / Accept), tapping a card or pin shows its route and drop-off; then Earnings (today, this week, latest trips) and Payout method. **Under review**: the online bar is locked and the list says updates go to their email | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
+| (accepted job) | the list turns into the **job card**: title per step (Go to pickup → Waiting for Ana / Pick up the parcel / Collect the order → Drive to drop-off), 4-step progress, rider + how they pay ("Collect ₱80 in cash" or "Paid by GCash"), Call, pickup/drop-off, **Navigate** (Google Maps), the next-step button (I've arrived → Start trip / Parcel picked up / Order picked up → Complete trip / Parcel delivered / Order delivered), Cancel job (before pickup). The map shows the route to the pickup, then pickup → drop-off. Completing adds the fare to earnings | `activeJob()`, `updateJob(id, status)`, `cancelJob(id)` |
 
 Backend: send the application emails (received, approved, need more info) and flip `status` to `approved`.
 Walk-in applicants are added by office staff; put the real office in `CONFIG.driverOffice` (`assets/js/config.js`).
 
 **Job requests:** the driver home listens with `onJobRequest(onJob)` while online and shows each request with
-Accept / Decline. The demo sends none. Backend: connect your realtime channel there. Express and Shop jobs
-need a photo at pickup and delivery (`updateJob(id, status, { photo })`).
+Skip / Accept. **The demo sends SAMPLE requests** (tagged "Demo"; places from `DEMO_PLACES` in `demo-data.js`):
+three in the first few seconds, then one every 25 seconds, each open for 2 minutes. Backend: connect your realtime
+channel there. Express and Shop jobs need a photo at pickup and delivery (`updateJob(id, status, { photo })`).
 
 ## Shop (Stage 1: ordering + delivery, no POS)
 Design: "Map first". Shops are found on the map; each shop opens on a route map.
@@ -186,7 +188,7 @@ Given logins so the company can try both partner sides (`DEMO_ACCOUNTS` in `asse
 | Driver (approved, can go online) | `pages/drive.html` | 0917 000 0001 | driver@mysabak.demo | `mysabak-demo` |
 | Merchant ("Demo Kitchen", not listed on Shops) | `pages/merchant.html` | 0917 000 0002 | merchant@mysabak.demo | `mysabak-demo` |
 
-The driver still gets no job requests in the demo, and the merchant gets no orders (no public shops).
+The demo driver gets sample job requests when online; the merchant gets no orders (no public shops).
 
 ## Account (`pages/account.html`)
 Placeholder until sign-in (mobile number + one-time code) exists. "For partners" links to Driver sign in and
@@ -212,8 +214,9 @@ Merchant sign in; "On this device" links to this browser's demo tips, orders and
 | `driverSignIn({ login, password })` / `driverSignOut()` | `{ status }` (401 if no match; `login` = mobile number or email) / nothing | driver sign in, driver home |
 | `driverApply(application)` / `driverStatus()` | `{ status: 'review', email }` / `DriverStatus` | Drive pages |
 | `setOnline(online)` | `{ online }` | driver home |
-| `onJobRequest(onJob)` → `stop()` | calls `onJob(JobRequest)` | driver home |
-| `acceptJob(id)` / `updateJob(id, status, { photo })` | `{ ok }` | driver home |
+| `onJobRequest(onJob, { near })` → `stop()` | calls `onJob(JobRequest)` | driver home |
+| `acceptJob(id)` / `updateJob(id, status, { photo })` | `{ ok, job }` (410: gone, 409: already on a job) / `{ ok, status }` (409: out of order) | driver home |
+| `activeJob()` / `cancelJob(id)` | the accepted job or `null` / `{ ok }` (before pickup only) | driver home |
 | `driverEarnings()` | `Earnings` | driver home |
 | `listShops({ near, category, q })` / `shopMenu(id)` | `{ categories, shops }` / `Shop` | Shop pages |
 | `merchantSignIn({ login, password })` / `merchantSignOut()` | `{ shopId }` (401 if no match) / nothing | merchant sign in |
@@ -271,9 +274,10 @@ Merchant sign in; "On this device" links to this browser's demo tips, orders and
 { "status": "review", "signedIn": true, "name": "Juan Dela Cruz", "email": "juan@example.com",
   "vehicle": "sedan", "plate": "GAA 1234", "online": false }
 
-// JobRequest (from your realtime channel → onJob)
-{ "id": "J-1", "kind": "shop", "pickup": { "lng": 123.893, "lat": 10.318, "label": "Lutong Bahay Kitchen" },
+// JobRequest (from your realtime channel → onJob); accepted jobs add "status": to_pickup → arrived → started → completed
+{ "id": "J-1", "kind": "shop", "pickup": { "lng": 123.893, "lat": 10.318, "label": "Demo Kitchen · Capitol Site" },
   "dropoff": { "lng": 123.89, "lat": 10.317, "label": "Escario St" }, "distanceKm": 1.2, "fare": 65,
+  "payment": "cash", "rider": { "name": "Ana" }, "shop": { "name": "Demo Kitchen" },   // shop: Shop jobs; parcel: Express
   "expiresAt": 1791882196490 }
 
 // Earnings (fares only: drivers keep 100%)

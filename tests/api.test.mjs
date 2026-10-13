@@ -66,13 +66,27 @@ test('driver sign-in with mobile number or email; under review can’t go online
   assert.equal(JSON.stringify(localStorage.getItem('mysabak.demo.driverSession')).includes('whatever1'), false);
 });
 
-test('no fake job requests: onJobRequest never fires in the demo', async () => {
-  let calls = 0;
-  const stop = api.onJobRequest(() => { calls += 1; });
-  await new Promise((r) => setTimeout(r, 300));
+test('driver jobs: demo requests are tagged, can be accepted, moved along in order, and pay into earnings', async () => {
+  const jobs = [];
+  const stop = api.onJobRequest((j) => jobs.push(j), { near: { lng: 123.8854, lat: 10.3157 } });
+  await new Promise((r) => setTimeout(r, 1700));
   stop();
-  assert.equal(calls, 0);
-  await assert.rejects(api.acceptJob('J1'), { status: 501 });
+  assert.equal(jobs.length, 1);
+  const [job] = jobs;
+  assert.equal(job.demo, true);
+  assert.ok(['ride', 'express', 'shop'].includes(job.kind));
+  assert.ok(job.fare > 0 && job.distanceKm > 0 && job.pickup.label && job.dropoff.label);
+  await assert.rejects(api.acceptJob('JOB-nope'), { status: 410 });
+  const before = (await api.driverEarnings()).today;
+  const { job: active } = await api.acceptJob(job.id);
+  assert.equal(active.status, 'to_pickup');
+  assert.deepEqual(await api.activeJob(), active);
+  await assert.rejects(api.updateJob(job.id, 'completed'), { status: 409 });
+  for (const step of ['arrived', 'started', 'completed']) assert.equal((await api.updateJob(job.id, step)).status, step);
+  assert.equal(await api.activeJob(), null);
+  const e = await api.driverEarnings();
+  assert.equal(e.today, before + job.fare);
+  assert.equal(e.trips[0].id, job.id);
 });
 
 test('shop: list, order with delivery fee unknown until rates are set, order stays "placed"', async () => {

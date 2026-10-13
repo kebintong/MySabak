@@ -1926,6 +1926,89 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 .morder__actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .morder__actions .button { min-height: 42px; padding: 0 16px; font-size: 14px; }
 
+/* =========================================================
+   Driver home · map first (like Shops)
+   ========================================================= */
+.finder[hidden] { display: none !important; }
+.fchip b { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 4px; padding: 0 5px; border-radius: 999px; background: var(--hot); color: #fff; font-size: 11px; }
+.fchip[aria-pressed="true"] b { background: #fff; color: var(--brand-deep); }
+.dhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dhead__title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--navy); }
+.dhead__meta { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.dhead__out { min-height: 36px; padding: 0 12px; font-size: 13px; flex-shrink: 0; }
+.finder__sheet > .dhead { padding: 0 16px 10px; }
+.finder__sheet > .dhead .dhead__title { font-size: 18px; }
+
+.onbar {
+  width: 100%; min-height: 60px; padding: 10px 10px 10px 14px; display: flex; align-items: center; gap: 12px;
+  border: 0; border-radius: 16px; background: #fff; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  box-shadow: 0 6px 16px -6px rgba(36, 25, 87, .35);
+}
+.onbar__dot { width: 12px; height: 12px; flex-shrink: 0; border-radius: 50%; background: #b9b3c9; position: relative; }
+.onbar.is-on .onbar__dot { background: #2f9e55; }
+.onbar.is-on .onbar__dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #2f9e55; animation: ping 1.6s var(--ease-out) infinite; }
+.onbar__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.onbar__text b { font-size: 15px; color: var(--navy); }
+.onbar__text small { font-size: 12px; color: var(--sub); }
+.onbar__go { flex-shrink: 0; padding: 10px 14px; border-radius: 12px; background: #2f9e55; color: #fff; font-size: 14px; font-weight: 800; }
+.onbar.is-on .onbar__go { background: var(--field); color: var(--navy); }
+.onbar:disabled { cursor: default; }
+.onbar:disabled .onbar__go { background: var(--field); color: var(--sub); }
+
+.jobs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.jobs-wait { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: #eef8f1; color: #2f7a3f; font-size: 14px; font-weight: 600; }
+.jobcard, .activejob {
+  padding: 12px; border-radius: 16px; background: #fff; border: 1.5px solid transparent;
+  box-shadow: 0 1px 0 var(--line), 0 8px 18px -12px rgba(36, 25, 87, .35); cursor: pointer;
+  border-left: 4px solid var(--kind, var(--brand));
+}
+.activejob { cursor: default; margin: 0 0 12px; display: flex; flex-direction: column; gap: 10px; }
+.jobcard:hover { border-color: var(--line-brand); border-left-color: var(--kind); }
+.jobcard.is-picked { border-color: var(--brand); border-left-color: var(--kind); background: var(--tint); }
+.jobcard:focus-visible { outline: 3px solid rgba(86, 48, 216, .45); outline-offset: 2px; }
+.jobcard__top { display: flex; align-items: center; gap: 8px; }
+.jobcard__kind { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--kind); }
+.jobcard__kind .icon { stroke: var(--kind); }
+.jobcard__fare { margin-left: auto; font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--navy); }
+.jobcard__route { list-style: none; margin: 8px 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.jobcard__route li { position: relative; padding-left: 20px; display: flex; flex-direction: column; font-size: 14px; font-weight: 700; color: var(--ink); }
+.jobcard__route li span { font-size: 11.5px; font-weight: 600; color: var(--sub); }
+.jobcard__route li::before { content: ""; position: absolute; left: 2px; top: 4px; width: 9px; height: 9px; border-radius: 50%; border: 2.5px solid var(--kind, var(--brand)); background: #fff; }
+.jobcard__route li + li::before { background: var(--kind, var(--brand)); border-radius: 3px; }
+.jobcard__meta { font-size: 12.5px; color: var(--sub); }
+.jobcard__actions, .activejob__actions { display: flex; gap: 8px; margin-top: 10px; }
+.jobcard__actions .button, .activejob__actions .button { flex: 1; min-height: 44px; font-size: 14px; }
+.jobcard__actions .button--ghost { flex: 0 0 auto; padding: 0 16px; }
+.activejob__title { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--navy); }
+.activejob__sub { margin: -6px 0 0; font-size: 13.5px; color: var(--sub); }
+.activejob .trip__steps { grid-template-columns: repeat(4, 1fr); }
+.activejob .driver .btn-soft { grid-area: auto; margin-left: 0; }
+.activejob .trip__cancel { flex-basis: auto; }
+.dearn { margin-top: 6px; }
+.dearn .stats { margin: 4px 6px 6px; }
+.dearn .list { padding: 0 6px; }
+.dearn__payout { padding: 10px 6px; }
+.dearn__payout .button { min-height: 38px; padding: 0 14px; font-size: 13px; }
+
+.dest-flag { width: 30px; height: 40px; }
+.dest-flag svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 3px 3px rgba(23, 18, 43, .3)); }
+.dest-flag path { fill: var(--navy); stroke: #fff; stroke-width: 2.2; }
+.dest-flag rect { fill: #fff; }
+.dest-flag .spin__label { opacity: 1; }
+
+.page--driver .finder__sheet { height: 52%; }
+.page--driver .finder__sheet.is-expanded { height: calc(100% - var(--content-top) - 124px); }
+.page--driver.has-job #kinds { display: none; }
+.page--driver .map-locate { bottom: calc(52% + 14px); }
+.page--driver .maplibregl-ctrl-bottom-right { bottom: calc(52% + 2px); }
+@media (min-width: 900px) {
+  .page--driver .finder__top { display: flex; flex-direction: column; gap: 12px; }
+  .page--driver .onbar { box-shadow: none; background: var(--field); border: 1px solid var(--line); }
+  .page--driver .finder__sheet, .page--driver .finder__sheet.is-expanded { height: auto; }
+  .page--driver .map-locate { bottom: var(--content-bottom); }
+  .page--driver .maplibregl-ctrl-bottom-right { bottom: var(--content-bottom); }
+}
+
 /* Order timeline */
 .timeline { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; }
 .timeline li { position: relative; padding: 0 0 18px 34px; font-size: 15px; color: var(--sub); }

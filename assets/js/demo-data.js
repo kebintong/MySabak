@@ -50,3 +50,21 @@ export const DEMO_ACCOUNTS = {
     },
   },
 };
+
+/* Driver demo: SAMPLE job requests are made from these Cebu places (approximate positions),
+   so the demo driver has Ride, Express and Shop delivery requests to try. Tagged "Demo" on screen. */
+export const DEMO_PLACES = [
+  { label: 'Ayala Center Cebu', lng: 123.9054, lat: 10.3181 },
+  { label: 'SM City Cebu', lng: 123.9187, lat: 10.3113 },
+  { label: 'Cebu IT Park', lng: 123.9058, lat: 10.3299 },
+  { label: 'Fuente Osmeña Circle', lng: 123.8935, lat: 10.3108 },
+  { label: 'Carbon Market', lng: 123.8984, lat: 10.2930 },
+  { label: 'Robinsons Galleria Cebu', lng: 123.9097, lat: 10.3036 },
+  { label: 'Cebu Provincial Capitol', lng: 123.8920, lat: 10.3172 },
+  { label: 'Guadalupe Church', lng: 123.8810, lat: 10.3220 },
+  { label: 'Banilad Town Centre', lng: 123.9118, lat: 10.3435 },
+  { label: 'Mabolo Church', lng: 123.9145, lat: 10.3175 },
+  { label: 'Colon Street', lng: 123.8990, lat: 10.2965 },
+  { label: 'SM Seaside City Cebu', lng: 123.8790, lat: 10.2820 },
+];
+export const DEMO_RIDERS = ['Ana', 'Paolo', 'Kim', 'Rhea', 'Jomar', 'Lea'];
