@@ -9,6 +9,12 @@
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,8 +34,57 @@
             <div class="auth-card__head">
               <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
               <h1 class="auth-card__title" id="signupTitle">Drive with mysabak</h1>
-              <p class="lede">Keep 100% of every fare. No commission, no booking fees. About 5 minutes.</p>
+              <p class="lede">Keep 100% of every fare. No commission, no booking fees.</p>
             </div>
+
+            <!-- 1 · Choose how to apply -->
+            <div class="view" data-view="choose">
+              <h2 class="view__title">How would you like to apply?</h2>
+              <div class="choices">
+                <a class="choice" href="#online">
+                  <span class="choice__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg></span>
+                  <span class="choice__text"><span class="choice__name">Apply online</span>
+                    <span class="choice__hint">About 5 minutes. Upload your documents and get updates by email.</span></span>
+                  <svg class="icon choice__go" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
+                </a>
+                <a class="choice" href="#walk-in">
+                  <span class="choice__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg></span>
+                  <span class="choice__text"><span class="choice__name">Walk in at our office</span>
+                    <span class="choice__hint">Bring your documents and our team will sign you up on the spot.</span></span>
+                  <svg class="icon choice__go" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- 2a · Walk in -->
+            <div class="view" data-view="walk-in" hidden>
+              <a class="page-head__back" href="#"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Other ways to apply</a>
+              <h2 class="view__title">Walk in at our office</h2>
+              <div class="office-map" role="img" aria-label="Map showing the mysabak Driver Hub">
+                <span class="office-map__pin">
+                  <svg width="32" height="44" viewBox="0 0 32 44" aria-hidden="true"><path d="M16 44C16 44 0 26 0 16a16 16 0 0 1 32 0c0 10-16 28-16 28z" fill="#6542DA"/><circle cx="16" cy="16" r="6" fill="#FFFFFF"/></svg>
+                  <span class="office-map__label" data-office="name">mysabak Driver Hub</span>
+                </span>
+              </div>
+              <ul class="list">
+                <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg></span><div class="row__main"><span class="row__title" data-office="name"></span><span class="row__sub" data-office="address"></span></div></li>
+                <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-clock"/></svg></span><div class="row__main"><span class="row__title">Open</span><span class="row__sub" data-office="hours"></span></div></li>
+                <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg></span><div class="row__main"><span class="row__title">Call ahead</span><span class="row__sub" data-office="phone"></span></div></li>
+              </ul>
+              <div class="bring">
+                <h3 class="bring__title">What to bring</h3>
+                <ul class="bring__list" data-office="bring"></ul>
+                <p class="field__hint">No appointment needed. Final requirements follow LTFRB rules for your vehicle type.</p>
+              </div>
+              <div class="wizard__nav">
+                <a class="button button--ghost" href="#online">Apply online instead</a>
+                <button type="button" class="button" id="directionsBtn"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Get directions</button>
+              </div>
+            </div>
+
+            <!-- 2b · Apply online -->
+            <div class="view" data-view="online" hidden>
+              <a class="page-head__back" href="#"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Other ways to apply</a>
 
             <ol class="wizard__steps" aria-label="Sign-up steps">
               <li class="is-current" data-step-label="1"><span>1</span>About you</li>
@@ -45,8 +100,8 @@
                 <div class="form-grid">
                   <label class="field"><span class="field__label">Mobile number</span>
                     <input class="input" name="phone" type="tel" inputmode="tel" required pattern="[+0-9 ]{10,16}" placeholder="09XX XXX XXXX" autocomplete="tel"></label>
-                  <label class="field"><span class="field__label">Email <span class="muted">(optional)</span></span>
-                    <input class="input" name="email" type="email" autocomplete="email"></label>
+                  <label class="field"><span class="field__label">Email <span class="muted">(for updates)</span></span>
+                    <input class="input" name="email" type="email" required autocomplete="email" placeholder="name@email.com"></label>
                 </div>
                 <div class="form-grid">
                   <label class="field"><span class="field__label">City</span>
@@ -103,7 +158,6 @@
                 <p class="field__hint">Final requirements follow LTFRB rules for your vehicle type.</p>
                 <label class="check"><input type="checkbox" name="agreed" required>
                   <span>I confirm these details are true and agree to mysabak’s <a href="#" data-soon="Driver Terms">Driver Terms</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</span></label>
-                <p class="demo-note">Demo: files stay on your device, the password isn’t stored, and you’re approved straight away.</p>
               </fieldset>
 
               <div class="wizard__nav">
@@ -111,6 +165,20 @@
                 <button type="submit" class="button" id="nextBtn">Next</button>
               </div>
             </form>
+            </div>
+
+            <!-- 3 · Application sent -->
+            <div class="view view--done" data-view="done" hidden>
+              <span class="done__icon" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-check"/></svg></span>
+              <h2 class="view__title">Application sent</h2>
+              <p class="lede">Thanks, <span data-bind="doneName">driver</span>! We’ll check your documents and email updates to <strong data-bind="doneEmail">your email</strong>.</p>
+              <ol class="install__steps">
+                <li>We review your documents, usually within a few working days.</li>
+                <li>You get an email when you’re approved, or if we need anything else.</li>
+                <li>Sign in with your mobile number or email and go online.</li>
+              </ol>
+              <a class="button button--block" href="/pages/drive.html">Go to driver sign in</a>
+            </div>
 
             <div class="auth-alt">
               <span>Already a driver?</span>

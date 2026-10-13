@@ -233,7 +233,10 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 }
 .brand img { width: 112px; height: 30px; display: block; object-fit: contain; }
 
-.topbar__actions { display: flex; gap: 10px; }
+.topbar__actions { display: flex; gap: 8px; }
+.btn--install { padding: 0 12px; color: var(--brand-deep); }
+.btn--install .icon { stroke: var(--brand); }
+.btn--install[hidden] { display: none; }
 
 .btn {
   height: 42px;
@@ -1214,12 +1217,12 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 /* Driver sign-in / sign-up: centred card over the map background */
 .auth {
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
   margin: 0 auto;
   min-height: calc(100dvh - var(--content-top) - var(--content-bottom) - 10px);
   display: flex; flex-direction: column; justify-content: center;
 }
-.auth--wide { max-width: 560px; }
+.auth--wide { max-width: 600px; }
 .auth-card {
   padding: 28px 22px 22px;
   border-radius: 26px;
@@ -1246,6 +1249,54 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
   font-size: 14px; color: var(--muted);
 }
 .field__error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fdecec; color: #a32020; font-size: 13.5px; font-weight: 600; }
+
+/* Sign-up: choose how to apply, walk-in office, done */
+.view { display: flex; flex-direction: column; gap: 16px; }
+.view[hidden] { display: none; }
+.view__title { margin: 0; font-size: 18px; font-weight: 700; color: var(--navy); }
+.choices { display: flex; flex-direction: column; gap: 12px; }
+.choice {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px;
+  border: 1.5px solid var(--line-brand);
+  border-radius: 18px;
+  background: var(--surface);
+  text-decoration: none; color: inherit;
+  transition: border-color .15s, background-color .15s, transform .12s;
+}
+.choice:hover { border-color: var(--brand); background: #fbfaff; color: inherit; }
+.choice:active { transform: scale(.99); }
+.choice__icon { width: 52px; height: 52px; border-radius: 16px; background: var(--tint); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.choice__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.choice__name { font-size: 16px; font-weight: 700; color: var(--ink); }
+.choice__hint { font-size: 13.5px; line-height: 1.4; color: var(--sub); }
+.choice__go { stroke: var(--muted); flex-shrink: 0; }
+
+.office-map {
+  position: relative;
+  height: 180px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line-brand);
+  background: url("/assets/images/map-bg.svg") 42% 46% / 900px auto no-repeat, var(--map-ground);
+}
+.office-map__pin { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; }
+.office-map__pin svg { filter: drop-shadow(0 6px 10px rgba(36, 25, 87, 0.3)); }
+.office-map__label {
+  position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%);
+  padding: 6px 10px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+  font-size: 12.5px; font-weight: 700; color: var(--navy); white-space: nowrap;
+}
+.bring { padding: 14px 16px; border-radius: 16px; background: var(--field); display: flex; flex-direction: column; gap: 8px; }
+.bring__title { margin: 0; font-size: 14px; font-weight: 700; color: var(--navy); }
+.bring__list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.bring__list li { position: relative; padding-left: 20px; font-size: 14px; color: var(--ink); }
+.bring__list li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 10px; height: 6px; border-left: 2px solid var(--brand); border-bottom: 2px solid var(--brand); transform: rotate(-45deg); }
+.wizard__nav .button { text-decoration: none; }
+.view--done { align-items: flex-start; }
+.done__icon { width: 56px; height: 56px; border-radius: 50%; background: #e6f5e9; display: flex; align-items: center; justify-content: center; }
+.done__icon .icon { stroke: #2f9e55; stroke-width: 2.5; }
 
 /* Password with Show / Hide */
 .input-wrap { position: relative; }
@@ -1314,6 +1365,8 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 .online__toggle .icon { stroke: #fff; width: 26px; height: 26px; }
 .online__toggle:active { transform: scale(.95); }
 .online__toggle[aria-pressed="true"] { background: #2f9e55; box-shadow: 0 10px 24px rgba(47, 158, 85, 0.35); }
+.online__toggle:disabled { background: var(--chip-close); color: var(--sub); box-shadow: none; cursor: not-allowed; }
+.online__toggle:disabled .icon { stroke: var(--sub); }
 .online__waiting { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: #eef8f1; color: #2f7a3f; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
 .online__pulse { position: relative; width: 12px; height: 12px; border-radius: 50%; background: #2f9e55; flex-shrink: 0; }
 .online__pulse::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #2f9e55; animation: ping 1.6s var(--ease-out) infinite; }
@@ -1401,6 +1454,23 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 .timeline li.is-done::after { background: var(--brand); }
 .timeline li.is-current { color: var(--navy); font-weight: 800; }
 .timeline li.is-current::before { border-color: var(--brand); box-shadow: 0 0 0 5px rgba(86, 48, 216, 0.15); background: var(--brand); }
+
+/* Install instructions sheet */
+.install__head { display: flex; align-items: center; gap: 14px; }
+.install__head img { border-radius: 14px; flex-shrink: 0; box-shadow: var(--shadow-sm); }
+.install__head .sheet__title { margin: 0; font-size: 20px; }
+.install__head .sheet__sub { margin: 2px 0 0; }
+.install__steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
+.install__steps li { position: relative; padding-left: 40px; min-height: 28px; font-size: 15px; line-height: 1.45; color: var(--ink); counter-increment: step; }
+.install__steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: -1px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--tint); color: var(--brand-deep);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+}
+.icon--inline { width: 18px; height: 18px; vertical-align: -3px; stroke: var(--brand); }
 
 /* Badges */
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: var(--tint); font-size: 12px; font-weight: 700; color: var(--brand-deep); white-space: nowrap; }

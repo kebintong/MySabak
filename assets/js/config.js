@@ -39,6 +39,18 @@ export const CONFIG = {
     ],
   },
 
+  // Where walk-in driver applicants go (Drive → Sign up → Walk in).
+  // SAMPLE details for the demo: replace with the real office.
+  driverOffice: {
+    name: 'mysabak Driver Hub · Cebu',
+    address: '2F Sample Building, Osmeña Boulevard, Cebu City 6000',
+    hours: 'Monday to Saturday, 9:00 AM – 5:00 PM',
+    phone: '(032) 000 0000',
+    lng: 123.8930,
+    lat: 10.3105,
+    bring: ['Driver’s license', 'Vehicle OR/CR', 'One valid government ID', 'Your smartphone'],
+  },
+
   // Shop delivery fee: base + perKm × distance from the shop (100% to the rider).
   // Left as null, checkout shows ₱[AMOUNT].
   delivery: { base: null, perKm: null },

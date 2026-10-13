@@ -37,7 +37,7 @@ missing.
 | Element | Data | Source |
 |---|---|---|
 | Logo | none | `assets/images/logo.svg` (favicon + app icons: `favicon.svg`, `icons/`) |
-| Install app | none | browser install prompt |
+| Install / Install app | none | on every page, every screen size (hidden once installed). Uses the browser's install prompt where there is one (Chrome, Edge, Brave, Android); otherwise opens step-by-step instructions for iPhone/iPad (Share → Add to Home Screen), Mac Safari (File → Add to Dock), Samsung Internet, Firefox. `setupInstall()` in `ui.js` |
 | Sign in | user session | not built: goes to `pages/account.html` |
 
 ### Ride | Express switch
@@ -96,9 +96,12 @@ the trip ends.** The demo shows it right after booking, with a "Demo" note. Tip 
 ## Drive (driver side)
 | Page | What it does | Source |
 |---|---|---|
-| `pages/drive.html` | **Driver sign in**: mobile number, password (show/hide), keep me signed in, forgot password, Sign in, Terms of Service + Privacy Policy, then "Wanna work as a driver? Sign up". Signed-in drivers go straight to the driver home | `driverStatus()`, `driverSignIn()` |
-| `pages/drive-signup.html` | 3-step sign-up: **About you** (name, mobile, email, city, password) → **Vehicle** (Motor / Sedan / SUV, plate, year, make and model) → **Documents** (license number, license, OR/CR, selfie, consent). "Already a driver? Sign in" | `driverApply(application)` (signs the driver in) |
-| `pages/driver.html` | needs sign-in (otherwise back to `drive.html`); approval status, Go online / offline, job requests, earnings, payouts, Sign out | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
+| `pages/drive.html` | **Driver sign in**: "Mobile number or email", password (show/hide), keep me signed in, forgot password, Sign in, Terms of Service + Privacy Policy, then "Wanna work as a driver? Sign up". Signed-in drivers go straight to the driver home | `driverStatus()`, `driverSignIn({ login, password })` |
+| `pages/drive-signup.html` | First **choose how to apply**: <br>• **Walk in** (`#walk-in`): office on a small map, address, hours, phone, what to bring, "Get directions" (from `CONFIG.driverOffice`, sample data for now) <br>• **Apply online** (`#online`): About you (name, mobile, **email required**, city, password) → Vehicle → Documents + consent → **"Application sent"**: updates go to their email | `driverApply(application)` → `{ status: 'review', email }` |
+| `pages/driver.html` | needs sign-in (otherwise back to `drive.html`). **Under review**: says updates go to their email and the online switch is locked. **Approved**: Go online / offline, job requests. Earnings, payouts, Sign out | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
+
+Backend: send the application emails (received, approved, need more info) and flip `status` to `approved`.
+Walk-in applicants are added by office staff; put the real office in `CONFIG.driverOffice` (`assets/js/config.js`).
 
 **Job requests:** the driver home listens with `onJobRequest(onJob)` while online and shows each request with
 Accept / Decline. The demo sends none. Backend: connect your realtime channel there. Express and Shop jobs
@@ -132,8 +135,8 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
 | `bookRide(booking)` | `{ id, demo }` | Book / Send |
 | `sendTip(tip)` / `myTips()` | `{ id, amount }` / `Tip[]` | tip sheet, Support page |
 | `supportStats()` | `SupportStats` | Support page |
-| `driverSignIn({ phone, password })` / `driverSignOut()` | `{ status }` (401 if no match) / nothing | driver sign in, driver home |
-| `driverApply(application)` / `driverStatus()` | `{ status }` / `DriverStatus` | Drive pages |
+| `driverSignIn({ login, password })` / `driverSignOut()` | `{ status }` (401 if no match; `login` = mobile number or email) / nothing | driver sign in, driver home |
+| `driverApply(application)` / `driverStatus()` | `{ status: 'review', email }` / `DriverStatus` | Drive pages |
 | `setOnline(online)` | `{ online }` | driver home |
 | `onJobRequest(onJob)` → `stop()` | calls `onJob(JobRequest)` | driver home |
 | `acceptJob(id)` / `updateJob(id, status, { photo })` | `{ ok }` | driver home |
@@ -178,7 +181,8 @@ Placeholder until sign-in (mobile number + one-time code) exists. Links to this 
   "licenseNumber": "G01-23-456789", "files": { "license": {}, "orcr": {}, "selfie": {} }, "agreed": true }
 
 // DriverStatus (signedIn: this device has a driver session)
-{ "status": "approved", "signedIn": true, "name": "Juan Dela Cruz", "vehicle": "sedan", "plate": "GAA 1234", "online": false }
+{ "status": "review", "signedIn": true, "name": "Juan Dela Cruz", "email": "juan@example.com",
+  "vehicle": "sedan", "plate": "GAA 1234", "online": false }
 
 // JobRequest (from your realtime channel → onJob)
 { "id": "J-1", "kind": "shop", "pickup": { "lng": 123.893, "lat": 10.318, "label": "Lutong Bahay Kitchen" },

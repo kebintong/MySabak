@@ -70,11 +70,22 @@ async function start() {
   bind('firstName', (d.name || 'driver').split(' ')[0]);
   bind('vehicle', [vehicle ? vehicle.name : d.vehicle, d.plate].filter(Boolean).join(' · '));
   const status = $('[data-bind="status"]');
-  status.textContent = d.status === 'approved' ? 'Approved (demo: instantly)' : 'Under review';
+  status.textContent = d.status === 'approved' ? 'Approved' : 'Under review';
   status.classList.add(d.status === 'approved' ? 'badge--ok' : 'badge--wait');
-  online = d.online;
-  if (online) stopJobs = onJobRequest(showJob);
-  paintOnline();
+  if (d.status === 'approved') {
+    online = d.online;
+    if (online) stopJobs = onJobRequest(showJob);
+    paintOnline();
+  } else {
+    // Application still being checked: updates go to the driver's email
+    bind('onlineTitle', 'Application under review');
+    bind('onlineHint', d.email
+      ? `We’ll email ${d.email} when you’re approved. Then you can go online here.`
+      : 'We’ll let you know when you’re approved. Then you can go online here.');
+    const btn = $('#onlineBtn');
+    btn.disabled = true;
+    $('span', btn).textContent = 'Not yet';
+  }
   loadEarnings();
   $('#onlineBtn').addEventListener('click', toggleOnline);
   $('#payoutBtn').addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.'));
