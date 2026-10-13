@@ -41,6 +41,9 @@
 *::after { box-sizing: border-box; }
 
 html, body { height: 100%; }
+/* Every screen is a fixed app layout: nothing scrolls the page itself. iOS can still shift a scrollable root
+   (when focusing or tapping inside a sheet), which pushed bottom sheets off screen, so lock html too. */
+html { overflow: hidden; overscroll-behavior: none; }
 
 body {
   margin: 0;
@@ -1211,6 +1214,13 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
   .sheet { margin: auto; border-radius: 24px; }
   .sheet__handle { display: none; }
 }
+/* Phones: sheets sit on the bottom edge, never taller than the screen (explicit, so iOS can't misplace them) */
+@media (max-width: 899.98px) {
+  .sheet:modal, .cart-panel:modal {
+    position: fixed; inset: auto 0 0 0; margin: 0 auto;
+    max-height: 92vh; max-height: calc(100dvh - 12px - var(--safe-t));
+  }
+}
 
 .card__foot { margin: 12px 0 0; font-size: 13px; line-height: 1.45; color: var(--sub); }
 
@@ -1470,7 +1480,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .finder__head { flex: none; display: flex; justify-content: space-between; align-items: baseline; padding: 2px 16px 6px; }
 .finder__head h2 { margin: 0; font-size: 17px; font-weight: 800; color: var(--navy); }
 .finder__head span { font-size: 12px; color: var(--sub); }
-.finder__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px calc(var(--content-bottom) + 4px); }
+.finder__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 16px; margin-bottom: calc(92px + var(--safe-b)); } /* ends just above the tab bar */
 .finder__sub { margin: 18px 6px 4px; font-size: 15px; font-weight: 800; color: var(--navy); }
 .finder__orders .list { padding: 0 6px; }
 .shops-empty { padding: 28px 18px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
@@ -1532,7 +1542,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   .finder__sheet { position: static; height: auto; flex: 1; min-height: 0; border-radius: 0; box-shadow: none; background: transparent; padding-top: 12px; transition: none; }
   .finder__sheet.is-expanded { height: auto; }
   .finder__handle { display: none; }
-  .finder__scroll { padding: 0 10px 16px; }
+  .finder__scroll { padding: 0 10px 16px; margin-bottom: 0; }
   .map-locate { bottom: var(--content-bottom); }
   .page--map .maplibregl-ctrl-bottom-right { bottom: var(--content-bottom); right: 12px; }
 }
@@ -1842,7 +1852,15 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 @keyframes draw { to { stroke-dashoffset: 0; } }
 .done__title { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; }
 .done__sub { margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, .85); }
-.done__body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px calc(20px + var(--safe-b)); display: flex; flex-direction: column; gap: 14px; }
+.done__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 20px 8px; display: flex; flex-direction: column; gap: 14px; }
+.done__foot { flex: none; display: flex; gap: 10px; padding: 12px 20px calc(16px + var(--safe-b)); border-top: 1px solid var(--line); background: #fff; }
+.done__foot .button { flex: 1; }
+@media (max-height: 760px) {
+  .done__hero { padding: 16px 20px 14px; }
+  .done__check { width: 48px; height: 48px; margin-bottom: 6px; }
+  .done__check svg { width: 26px; height: 26px; }
+  .done__title { font-size: 22px; }
+}
 .done__route { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .done__route li { position: relative; padding-left: 26px; display: flex; flex-direction: column; font-size: 14.5px; font-weight: 700; color: var(--ink); }
 .done__route li span { font-size: 11.5px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; }
