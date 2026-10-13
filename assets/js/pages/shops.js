@@ -3,9 +3,9 @@
 import { CONFIG } from '../config.js';
 import { listShops, myOrders, ORDER_STEPS } from '../api.js';
 import { openState } from '../menu.js';
-import { storefront } from '../demo-art.js';
+import { storefront } from '../placeholders.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, mountChrome, esc, when, peso, toast } from '../ui.js';
+import { $, mountChrome, esc, when, peso, toast, icon } from '../ui.js';
 
 mountChrome();
 
@@ -47,17 +47,22 @@ function renderPicked() {
 }
 
 function renderList() {
-  $('#shopCount').textContent = shops.length ? `${shops.length} shop${shops.length === 1 ? '' : 's'} nearby` : 'No shops found';
+  $('.finder__head span').hidden = !shops.length;
+  $('#shopCount').textContent = shops.length ? `${shops.length} shop${shops.length === 1 ? '' : 's'} nearby` : filtered() ? 'No shops found' : 'Shops nearby';
   $('#shopList').innerHTML = shops.length
     ? shops.map((s) => `<li><a class="srow${s.id === picked ? ' is-picked' : ''}" href="${shopUrl(s)}" data-id="${esc(s.id)}">
         <span class="srow__img">${thumb(s)}</span>
         <span class="srow__body"><span class="srow__name">${esc(s.name)}</span>
           <span class="srow__sub">${esc(s.area)} · ${esc(categoryName(s.category))} · ${s.items} items</span>${openLine(s)}</span>
         <span class="srow__km">${km(s)}</span></a></li>`).join('')
-    : '<li class="empty">No shops match that search. Try another word or category.</li>';
+    : filtered()
+      ? '<li class="empty">No shops match that search. Try another word or category.</li>'
+      : `<li class="shops-empty">${icon('i-store', 'icon--xl')}<h3>No shops yet</h3>
+          <p>Local shops will show up here, on the map and in this list, once they join mysabak.</p></li>`;
 }
 
 let categories = [];
+const filtered = () => category !== 'all' || $('#shopSearch').value.trim() !== '';
 const categoryName = (id) => (categories.find((c) => c.id === id) || { name: id }).name;
 
 async function load({ fit = false } = {}) {

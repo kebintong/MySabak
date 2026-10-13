@@ -13,6 +13,10 @@ before(async () => {
     removeItem: (k) => store.delete(k),
   };
   api = await import('../assets/js/api.js');
+  // The demo ships with no shops; give the shop tests two made-up ones.
+  const { SHOPS } = await import('../assets/js/demo-data.js');
+  const { TEST_SHOP, TEST_SHOP_2 } = await import('./fixtures.mjs');
+  SHOPS.push(TEST_SHOP, TEST_SHOP_2);
 });
 
 test('tips: an amount is required, capped at ₱500, e-wallet or card only', async () => {
@@ -73,10 +77,11 @@ test('no fake job requests: onJobRequest never fires in the demo', async () => {
 
 test('shop: list, order with delivery fee unknown until rates are set, order stays "placed"', async () => {
   const { shops } = await api.listShops({ near: { lng: 123.8854, lat: 10.3157 }, category: 'food' });
-  assert.ok(shops.length >= 2 && shops.every((s) => s.category === 'food'));
+  assert.equal(shops.length, 2);
+  assert.ok(shops.every((s) => s.category === 'food'));
   assert.ok(shops[0].km <= shops[1].km, 'nearest first');
   const { id } = await api.placeOrder({
-    shopId: 'lutong-bahay',
+    shopId: 'test-kitchen',
     items: [{ id: 'adobo', qty: 2 }, { id: 'nope', qty: 1 }],
     address: { lng: 123.89, lat: 10.317, label: 'Escario St' },
     notes: '',
@@ -86,15 +91,15 @@ test('shop: list, order with delivery fee unknown until rates are set, order sta
   assert.equal(order.status, 'placed');
   assert.equal(order.subtotal, 240);
   assert.equal(order.deliveryFee, null);
-  await assert.rejects(api.placeOrder({ shopId: 'lutong-bahay', items: [], address: { lng: 0, lat: 0 } }), { status: 400 });
+  await assert.rejects(api.placeOrder({ shopId: 'test-kitchen', items: [], address: { lng: 0, lat: 0 } }), { status: 400 });
 });
 
 test('shop: the order is priced from the menu, options included; made-up prices and picks are ignored', async () => {
   const { id } = await api.placeOrder({
-    shopId: 'lutong-bahay',
+    shopId: 'test-kitchen',
     items: [
       { id: 'adobo', qty: 1, price: 1, picks: { size: 'Family', meal: 'Meal', drink: 'Cola', add: ['Fried egg', 'Gold leaf'] }, note: ' no onions ' },
-      { id: 'barkada', qty: 2, picks: { anything: 'x' } },
+      { id: 'combo', qty: 2, picks: { anything: 'x' } },
     ],
     address: { lng: 123.89, lat: 10.317, label: 'Escario St' },
     payment: 'gcash',
@@ -108,3 +113,35 @@ test('shop: the order is priced from the menu, options included; made-up prices 
   assert.equal(order.subtotal, 445 + 1040);
 });
 
+
+test('ride booking: payment must be cash, GCash or online banking; the tip on top is capped and goes to mysabak', async () => {
+  const base = {
+    kind: 'ride', vehicle: 'sedan', pickup: { lng: 123.88, lat: 10.31, label: 'A' }, dropoff: { lng: 123.89, lat: 10.32, label: 'B' },
+    trip: { coords: [[123.88, 10.31], [123.89, 10.32]], minutes: 12 },
+  };
+  await assert.rejects(api.bookRide({ ...base, payment: 'crypto', price: { fare: 90, tip: 0, total: 90 } }), { status: 400 });
+  const { id } = await api.bookRide({ ...base, payment: 'cash', price: { fare: 90, tip: 9999, total: 10089 } });
+  const [tip] = await api.myTips();
+  assert.equal(tip.orderId, id);
+  assert.equal(tip.amount, 500);
+  assert.equal(tip.method, 'cash');
+});
+
+test('ride booking: a demo driver accepts, the trip reports where the driver is, and the ride can be rated', async () => {
+  const { id } = await api.bookRide({
+    kind: 'ride', vehicle: 'motor', pickup: { lng: 123.88, lat: 10.31, label: 'A' }, dropoff: { lng: 123.89, lat: 10.32, label: 'B' },
+    trip: { coords: [[123.88, 10.31], [123.89, 10.32]], minutes: 12 }, payment: 'gcash', price: { fare: null, tip: 0, total: null },
+  });
+  const driver = await api.findDriver(id);
+  assert.equal(driver.vehicle.type, 'motor');
+  assert.ok(driver.name && driver.vehicle.plate);
+  const updates = [];
+  const stop = api.onTripUpdate(id, (u) => updates.push(u));
+  await new Promise((r) => setTimeout(r, 300));
+  stop();
+  assert.equal(updates[0].status, 'arriving');
+  assert.ok(Number.isFinite(updates[0].driver.lng) && Number.isFinite(updates[0].driver.lat));
+  await assert.rejects(api.rateRide(id, 0), { status: 400 });
+  assert.deepEqual(await api.rateRide(id, 5), { ok: true });
+  await assert.rejects(api.findDriver('RIDE-nope'), { status: 404 });
+});

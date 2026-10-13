@@ -1,7 +1,7 @@
 // Tests for the pure money helpers (assets/js/money.js). Run: node --test "tests/*.test.mjs"
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanTip, rateFor, cartTotals, haversineKm, peso } from '../assets/js/money.js';
+import { cleanTip, rateFor, cartTotals, haversineKm, peso, splitPrice } from '../assets/js/money.js';
 
 test('tips: whole pesos, capped, anything else means no tip', () => {
   assert.equal(cleanTip(20, 500), 20);
@@ -35,3 +35,13 @@ test('distance and peso formatting', () => {
   assert.ok(km > 2.5 && km < 3, `got ${km}`);
   assert.equal(peso(1234.4), '₱1,234');
 });
+
+test('your price: fare + tip; the fare never goes down; the tip is capped', () => {
+  assert.deepEqual(splitPrice({ fare: 90, price: 110, max: 500 }), { fare: 90, tip: 20, total: 110 });
+  assert.deepEqual(splitPrice({ fare: 90, price: 70, max: 500 }), { fare: 90, tip: 0, total: 90 });
+  assert.deepEqual(splitPrice({ fare: 90, price: 2000, max: 500 }), { fare: 90, tip: 500, total: 590 });
+  assert.deepEqual(splitPrice({ fare: 90, price: null, tip: 20, max: 500 }), { fare: 90, tip: 20, total: 110 });
+  assert.deepEqual(splitPrice({ fare: null, tip: 50, max: 500 }), { fare: null, tip: 50, total: null });
+  assert.deepEqual(splitPrice({ fare: null, tip: 'abc', max: 500 }), { fare: null, tip: 0, total: null });
+});
+

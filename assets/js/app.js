@@ -3,11 +3,14 @@
    Vanilla JS modules, no build step.
 
    Two modes: Ride (passengers) and Express (parcels), same screen.
-   Two steps:
+   Steps:
      1. "request" – set a drop-off (search, a recent place, or pick on map)
-     2. "choose"  – pick Motor / Sedan / SUV, see the fare, book
-                    (Express asks for parcel details first)
-   After a trip: showTripDone() shows the receipt + "Tip mysabak" sheet.
+     2. "choose"  – pick Motor / Sedan / SUV, see the fare, tap Book
+                    (Express asks for parcel details first), then the pay sheet:
+                    Cash / GCash / Online banking + "Your price" (anything above the fare is a tip)
+     3. "search"  – finding a driver
+     4. "trip"    – driver on the way → on the trip
+   After a trip: showTripDone() shows the Ride complete screen.
 
    Files:
      config.js  settings (vehicles, fares, map start)
@@ -18,9 +21,11 @@
 import { CONFIG } from './config.js';
 import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
+  findDriver, cancelRide, onTripUpdate, rateRide,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
 import { openTipSheet, setupInstall } from './ui.js';
+import { splitPrice, cleanTip } from './money.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const DESKTOP = window.matchMedia('(min-width: 900px)');
@@ -43,18 +48,38 @@ const state = {
   picking: false,
   mode: 'ride',   // 'ride' | 'express'
   parcel: null,   // Express: { receiverName, receiverPhone, size, item, notes }
+  payment: CONFIG.defaultRidePayment, // 'cash' | 'gcash' | 'bank'
+  price: null,    // { fare, tip, total } chosen on the pay sheet
+  booking: null,  // { id, demo }
+  driver: null,   // { name, rating, vehicle, …, status, pos, eta }
 };
 let tripToken = 0;
+let bookingToken = 0;
+let stopTrip = () => {};
 
 /* Words that change between Ride and Express */
 const MODES = {
   ride: {
     askTitle: 'Saan tayo?', askHint: 'Set your drop-off below.', placeholder: 'Where to?',
     bookVerb: 'Book', seeLabel: 'See rides', capacity: (v) => v.capacity,
+    payTitle: 'Confirm your ride', searchTitle: 'Finding you a driver',
+    steps: ['On the way', 'On the trip', 'Arrived'],
+    status: {
+      arriving: 'Your driver is on the way', arrived: 'Your driver is here',
+      on_trip: () => `On the way to ${state.dest || 'your drop-off'}`, completed: 'You’ve arrived',
+    },
+    doneTitle: 'You’ve arrived',
   },
   express: {
     askTitle: 'Saan ipapadala?', askHint: 'Set where the parcel goes.', placeholder: 'Deliver to?',
     bookVerb: 'Send with', seeLabel: 'See options', capacity: (v) => v.parcel,
+    payTitle: 'Confirm your delivery', searchTitle: 'Finding a driver for your parcel',
+    steps: ['Picking up', 'Delivering', 'Delivered'],
+    status: {
+      arriving: 'Your driver is coming for the parcel', arrived: 'Your driver is at the pickup',
+      on_trip: 'Your parcel is on the way', completed: 'Parcel delivered',
+    },
+    doneTitle: 'Parcel delivered',
   },
 };
 const words = () => MODES[state.mode];
@@ -70,13 +95,93 @@ async function estimateTrip(from, to) {
   }
 }
 
-/** Book button: hands the trip to api.bookRide() and shows "Finding a driver…" meanwhile.
-    Express asks for the parcel details first. */
-async function book() {
-  if (state.loadingTrip || el.body.classList.contains('is-booking')) return;
+/** Book button: Express asks for the parcel details first, then everyone picks how to pay. */
+function book() {
+  if (state.loadingTrip || state.step !== 'choose') return;
   if (state.mode === 'express' && !state.parcel) { openParcelSheet(); return; }
+  openPaySheet();
+}
+
+/* ---------- Pay sheet: payment method + "Your price" ---------- */
+const paymentById = (id) => CONFIG.ridePayments.find((m) => m.id === id) || CONFIG.ridePayments[0];
+const fareNumber = () => { const f = fareOf(vehicleById(state.vehicle)); return f ? Math.round(f.total) : null; };
+let tipDraft = 0;
+const draftPrice = () => splitPrice({ fare: fareNumber(), tip: tipDraft, max: CONFIG.tips.max });
+const totalText = (p) => (p.total !== null ? peso(p.total) : `${CONFIG.currency}[FARE]${p.tip ? ` + ${peso(p.tip)}` : ''}`);
+
+function openPaySheet() {
+  const dlg = $('#paySheet');
+  tipDraft = state.price ? state.price.tip : 0;
+  $$('input[name="payment"]', dlg).forEach((r) => { r.checked = r.value === state.payment; });
+  $('#customPrice').value = '';
+  renderPrice();
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+}
+
+function renderPrice() {
+  const p = draftPrice();
+  const fare = fareNumber();
+  $('#priceValue').textContent = totalText(p);
+  $$('[data-tip]', $('#tipChips')).forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.tip) === p.tip)));
+  $('[data-price-step="-1"]').disabled = p.tip === 0;
+  $('[data-price-step="1"]').disabled = p.tip >= CONFIG.tips.max;
+  $('#customLabel').textContent = fare !== null ? 'Or type your price' : 'Or type a tip';
+  const input = $('#customPrice');
+  input.placeholder = fare !== null ? String(fare) : '0';
+  input.min = fare !== null ? String(fare) : '0';
+  $('#priceBreakdown').innerHTML = `
+    <div class="receipt__row"><dt>Fare<span>100% to your driver</span></dt><dd>${fare !== null ? peso(fare) : `${CONFIG.currency}[FARE]`}</dd></div>
+    <div class="receipt__row"><dt>Tip<span>100% to mysabak</span></dt><dd>${p.tip ? peso(p.tip) : 'No tip'}</dd></div>
+    <div class="receipt__row receipt__row--total"><dt>You pay</dt><dd>${totalText(p)}</dd></div>`;
+  $('#findBtn').textContent = `Find a driver · ${totalText(p)}`;
+}
+
+function setupPaySheet() {
+  const dlg = $('#paySheet');
+  $('#payMethods').insertAdjacentHTML('beforeend', CONFIG.ridePayments.map((m) => `
+    <label class="paymethod"><input type="radio" name="payment" value="${m.id}">
+      <svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#${m.icon}"/></svg>
+      <span class="paymethod__text"><span class="paymethod__name">${m.name}</span><small>${m.hint}</small></span></label>`).join(''));
+  $('#tipChips').innerHTML = [0, ...CONFIG.tips.presets].map((n) =>
+    `<button type="button" class="chip" data-tip="${n}" aria-pressed="false">${n ? `+${peso(n)}` : 'No tip'}</button>`).join('');
+  $('#tipChips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tip]');
+    if (!b) return;
+    tipDraft = Number(b.dataset.tip);
+    $('#customPrice').value = '';
+    renderPrice();
+  });
+  $$('[data-price-step]', dlg).forEach((b) => b.addEventListener('click', () => {
+    tipDraft = Math.min(CONFIG.tips.max, Math.max(0, draftPrice().tip + Number(b.dataset.priceStep) * CONFIG.priceStep));
+    $('#customPrice').value = '';
+    renderPrice();
+  }));
+  $('#customPrice').addEventListener('input', (e) => {
+    const v = e.target.value;
+    const fare = fareNumber();
+    tipDraft = v === '' ? 0 : fare !== null ? splitPrice({ fare, price: v, max: CONFIG.tips.max }).tip : cleanTip(v, CONFIG.tips.max);
+    renderPrice();
+  });
+  $('[data-close]', dlg).addEventListener('click', () => dlg.close());
+  $('#payForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const picked = $('input[name="payment"]:checked', dlg);
+    state.payment = picked ? picked.value : CONFIG.defaultRidePayment;
+    state.price = draftPrice();
+    dlg.close();
+    startBooking();
+  });
+}
+
+/* ---------- Booking → finding a driver → trip ---------- */
+async function startBooking() {
   const vehicle = vehicleById(state.vehicle);
-  el.body.classList.add('is-booking');
+  const token = ++bookingToken;
+  state.step = 'search';
+  state.driver = null;
+  state.booking = null;
+  render();
+  requestAnimationFrame(() => frame());
   try {
     const res = await bookRide({
       kind: state.mode,
@@ -84,40 +189,143 @@ async function book() {
       pickup: { ...state.pickup, label: state.pickupLabel },
       dropoff: { ...state.destPoint, label: state.dest },
       trip: state.trip,
-      payment: CONFIG.paymentMethod,
+      payment: state.payment,
+      price: state.price,
       ...(state.mode === 'express' ? { parcel: state.parcel } : {}),
     });
-    const article = /^[AEIOU]|^SUV/i.test(vehicle.name) ? 'an' : 'a';
-    toast(state.mode === 'express'
-      ? `Express request sent for ${article} ${vehicle.name}.`
-      : `Booking request sent for ${article} ${vehicle.name}.`);
-    // DEMO: no driver is dispatched, so the "trip done" screen comes straight away.
-    // Live app: call showTripDone() when the backend says the trip ended.
-    if (res && res.demo) setTimeout(() => showTripDone({ id: res.id, kind: state.mode, vehicle, fare: fareFor(vehicle), demo: true }), 900);
+    if (token !== bookingToken) return;
+    state.booking = { id: res.id, demo: res.demo };
+    const driver = await findDriver(res.id);
+    if (token !== bookingToken) return;
+    state.driver = { ...driver, status: 'arriving', pos: null, eta: null };
+    state.step = 'trip';
+    render();
+    stopTrip = onTripUpdate(res.id, onTrip);
   } catch (err) {
+    if (token !== bookingToken || err.status === 499) return;
     console.warn(err);
-    toast(`${errorMessage(err)} Booking didn’t go through.`);
-  } finally {
-    el.body.classList.remove('is-booking');
+    toast(err.status === 404 ? 'No drivers are free nearby right now. Try again in a few minutes.' : `${errorMessage(err)} Booking didn’t go through.`);
+    backToChoose();
   }
 }
 
+function onTrip(update) {
+  if (!state.driver) return;
+  const changed = state.driver.status !== update.status;
+  Object.assign(state.driver, { status: update.status, pos: update.driver, eta: update.etaMinutes });
+  render();
+  if (changed) frame();
+  if (update.status === 'completed') {
+    stopTrip();
+    showTripDone({
+      id: state.booking.id, kind: state.mode, vehicle: vehicleById(state.vehicle), driver: state.driver,
+      from: fromText(), to: state.dest, distance: distanceText(), duration: durationText(),
+      price: state.price, payment: paymentById(state.payment),
+    });
+  } else if (update.status === 'cancelled') {
+    stopTrip();
+    toast('Your driver cancelled. You weren’t charged. Book again to find another driver.');
+    backToChoose();
+  }
+}
+
+function backToChoose() {
+  bookingToken++;
+  stopTrip();
+  state.step = 'choose';
+  state.driver = null;
+  state.booking = null;
+  render();
+  requestAnimationFrame(() => frame());
+}
+
+async function cancelBooking({ ask = false } = {}) {
+  // eslint-disable-next-line no-alert
+  if (ask && !window.confirm('Cancel this ride?')) return;
+  const id = state.booking && state.booking.id;
+  backToChoose();
+  if (id) { try { await cancelRide(id); } catch (err) { console.warn(err); } }
+  toast(state.mode === 'express' ? 'Delivery cancelled.' : 'Ride cancelled.');
+}
+
 /**
- * Trip / delivery finished: receipt + optional "Tip mysabak".
- * Backend: call this when your realtime channel reports the order completed.
- * @param {{id:string, kind:'ride'|'express', vehicle:{name:string}, fare:string, demo?:boolean}} order
+ * Trip / delivery finished: the Ride complete screen (route, driver, what you paid, rating).
+ * Backend: the app calls this when onTripUpdate() reports 'completed'.
  */
-async function showTripDone(order) {
-  await openTipSheet({
-    orderId: order.id,
-    orderType: order.kind,
-    title: order.kind === 'express' ? 'Parcel delivered' : 'You’ve arrived',
-    subtitle: `${order.vehicle.name} · ${state.dest || 'your drop-off'}`,
-    lines: [{ label: 'Fare', to: '100% to your driver', amount: order.fare }],
-    demoNote: order.demo ? 'Demo: in the live app this appears when the trip ends.' : '',
+function showTripDone(order) {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'sheet done';
+  dlg.setAttribute('aria-labelledby', 'doneTitle');
+  const p = order.price || { fare: null, tip: 0, total: null };
+  const d = order.driver;
+  const initials = d.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const time = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
+  dlg.innerHTML = `
+    <div class="done__hero">
+      <span class="done__check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      <h2 class="done__title" id="doneTitle">${esc(words().doneTitle)}</h2>
+      <p class="done__sub">${esc(order.to || 'Your drop-off')} · ${esc(time)}</p>
+    </div>
+    <div class="done__body">
+      <ol class="done__route" aria-label="Trip">
+        <li class="done__from"><span>From</span>${esc(order.from)}</li>
+        <li class="done__to"><span>To</span>${esc(order.to || 'Your drop-off')}</li>
+      </ol>
+      <p class="done__meta">${esc(order.vehicle.name)} · ${esc(order.distance)} · ${esc(order.duration)}</p>
+
+      <div class="done__driver">
+        <span class="driver__ava" aria-hidden="true">${esc(initials)}</span>
+        <div class="driver__main"><span class="driver__name">${esc(d.name)}</span>
+          <span class="driver__meta">${esc(`${d.vehicle.color} ${d.vehicle.model}`)} · ${esc(d.vehicle.plate)}</span></div>
+      </div>
+      <div class="done__rate" role="radiogroup" aria-label="Rate ${esc(d.name)}">
+        <span class="done__rate-label">How was ${esc(d.name.split(' ')[0])}?</span>
+        <span class="stars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="star" role="radio" aria-checked="false" data-star="${n}" aria-label="${n} star${n > 1 ? 's' : ''}"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-star"/></svg></button>`).join('')}</span>
+      </div>
+
+      <dl class="receipt">
+        <div class="receipt__row"><dt>Fare<span>100% to your driver</span></dt><dd>${p.fare !== null ? peso(p.fare) : `${CONFIG.currency}[FARE]`}</dd></div>
+        ${p.tip ? `<div class="receipt__row"><dt>Tip<span>100% to mysabak · thank you!</span></dt><dd>${peso(p.tip)}</dd></div>` : ''}
+        <div class="receipt__row receipt__row--total"><dt>Total<span>${esc(order.payment.name)}</span></dt><dd>${totalText(p)}</dd></div>
+      </dl>
+      <div class="sheet__actions">
+        ${p.tip ? '' : '<button type="button" class="button button--ghost" data-tip-later>Tip mysabak</button>'}
+        <button type="button" class="button" data-done>Done</button>
+      </div>
+    </div>`;
+  document.body.appendChild(dlg);
+
+  $('.stars', dlg).addEventListener('click', (e) => {
+    const b = e.target.closest('[data-star]');
+    if (!b) return;
+    const n = Number(b.dataset.star);
+    $$('.star', dlg).forEach((s) => {
+      s.classList.toggle('is-on', Number(s.dataset.star) <= n);
+      s.setAttribute('aria-checked', String(Number(s.dataset.star) === n));
+    });
+    $('.done__rate-label', dlg).textContent = `Thanks! You gave ${d.name.split(' ')[0]} ${n} star${n > 1 ? 's' : ''}.`;
+    rateRide(order.id, n).catch((err) => console.warn(err));
   });
-  state.parcel = null;
-  goToRequest({ clear: true });
+  const finish = () => {
+    dlg.close();
+    dlg.remove();
+    state.parcel = null;
+    state.price = null;
+    state.driver = null;
+    state.booking = null;
+    goToRequest({ clear: true });
+  };
+  $('[data-done]', dlg).addEventListener('click', finish);
+  dlg.addEventListener('cancel', (e) => { e.preventDefault(); finish(); });
+  const later = $('[data-tip-later]', dlg);
+  if (later) {
+    later.addEventListener('click', async () => {
+      dlg.close();
+      await openTipSheet({ orderId: order.id, orderType: order.kind, title: 'Tip mysabak', subtitle: `${order.vehicle.name} · ${order.to || 'your drop-off'}` });
+      finish();
+    });
+  }
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
 }
 
 /* ---------- Express: parcel details ---------- */
@@ -175,6 +383,7 @@ const el = {
 
 /* ---------- Formatting ---------- */
 const isNum = (n) => typeof n === 'number' && Number.isFinite(n);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const peso = (n) => `${CONFIG.currency}${Math.round(n).toLocaleString('en-PH')}`;
 const vehicleById = (id) => CONFIG.vehicles.find((v) => v.id === id) || CONFIG.vehicles[0];
 
@@ -322,9 +531,18 @@ function render() {
   setBind('fare', fareFor(v));
   setBind('base', baseFor(v));
   setBind('distfare', distanceFareFor(v));
-  setBind('payment', CONFIG.paymentMethod);
+  const pay = paymentById(state.payment);
+  setBind('payment', pay.name);
+  $$('[data-pay-icon]').forEach((u) => u.setAttribute('href', `assets/images/icons.svg#${pay.icon}`));
+  $$('[data-vehicle-icon], [data-driver-icon]').forEach((u) => u.setAttribute('href', `assets/images/icons.svg#${v.icon}`));
+  if (state.price) setBind('priceTotal', totalText(state.price));
+  else setBind('priceTotal', fareFor(v));
+  renderTrip();
   const w = words();
-  ['askTitle', 'askHint', 'bookVerb', 'seeLabel'].forEach((k) => setBind(k, w[k]));
+  ['askTitle', 'askHint', 'bookVerb', 'seeLabel', 'payTitle', 'searchTitle'].forEach((k) => setBind(k, w[k]));
+  setBind('stepArriving', w.steps[0]);
+  setBind('stepTrip', w.steps[1]);
+  setBind('stepDone', w.steps[2]);
   el.destInputs.forEach((input) => { input.placeholder = w.placeholder; });
   el.body.classList.toggle('is-express', state.mode === 'express');
   $$('.mode__btn').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === state.mode)));
@@ -344,10 +562,40 @@ function render() {
     btn.setAttribute('aria-label', `${veh.name}, ${w.capacity(veh)}, ${fareFor(veh)}, ${etaFor(veh)} away`);
   });
 
-  el.destDesktop.readOnly = state.step === 'choose';
+  el.destDesktop.readOnly = state.step !== 'request';
   el.destInputs.forEach((input) => {
     if (document.activeElement !== input) input.value = state.dest;
   });
+}
+
+/* Driver card and trip status (step "trip") */
+const STEP_ORDER = { arriving: 0, arrived: 0, on_trip: 1, completed: 2 };
+function renderTrip() {
+  const d = state.driver;
+  if (!d) return;
+  const w = words();
+  const title = w.status[d.status];
+  setBind('tripTitle', typeof title === 'function' ? title() : title || '');
+  const eta = isNum(d.eta) ? d.eta : null;
+  const sub = {
+    arriving: eta ? `Arriving in ${eta} min` : 'Arriving soon',
+    arrived: `Look for a ${d.vehicle.color.toLowerCase()} ${d.vehicle.model} · ${d.vehicle.plate}`,
+    on_trip: eta ? `About ${eta} min to go` : (state.mode === 'express' ? 'On the way to the receiver' : 'Enjoy the ride'),
+    completed: '',
+  }[d.status];
+  setBind('tripSub', sub || '');
+  const at = STEP_ORDER[d.status] ?? 0;
+  $$('.trip__steps li').forEach((li, i) => {
+    li.classList.toggle('is-done', i < at);
+    li.classList.toggle('is-current', i === at);
+  });
+  setBind('driverName', d.name);
+  setBind('driverInitials', d.name.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase());
+  setBind('driverRating', d.rating.toFixed(1));
+  setBind('driverCar', `${d.vehicle.color} ${d.vehicle.model}`);
+  setBind('driverPlate', d.vehicle.plate);
+  $('#driverDemo').hidden = !d.demo;
+  $('#cancelTrip').hidden = d.status === 'on_trip' || d.status === 'completed';
 }
 
 /* =========================================================
@@ -634,6 +882,7 @@ el.pickOnMap.addEventListener('click', () => {
 $('#editTrip').addEventListener('click', () => goToRequest());
 $$('.mode__btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
 setupParcelSheet();
+setupPaySheet();
 $('#clearDest').addEventListener('click', () => goToRequest({ clear: true }));
 
 el.vehicles.addEventListener('click', (e) => {
@@ -651,7 +900,14 @@ el.vehicles.addEventListener('keydown', (e) => {
 
 $$('[data-book]').forEach((btn) => btn.addEventListener('click', book));
 
-$('#payBtn').addEventListener('click', () => toast('Payment options are coming soon.'));
+$('#payBtn').addEventListener('click', book);
+$('#cancelSearch').addEventListener('click', () => cancelBooking());
+$('#cancelTrip').addEventListener('click', () => cancelBooking({ ask: true }));
+$('#callDriver').addEventListener('click', () => {
+  if (state.driver && state.driver.phone) location.href = `tel:${state.driver.phone}`;
+  else toast('Calling your driver works in the live app.');
+});
+$('#messageDriver').addEventListener('click', () => toast('Messaging your driver works in the live app.'));
 $('#zoomIn').addEventListener('click', zoomIn);
 $('#zoomOut').addEventListener('click', zoomOut);
 $('#locateBtn').addEventListener('click', () => locateUser());

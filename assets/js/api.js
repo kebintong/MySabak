@@ -17,7 +17,7 @@
    ========================================================= */
 import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
-import { SHOPS, SHOP_CATEGORIES } from './demo-data.js';
+import { SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS } from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
 /** Base of the TomTom proxy. map.js uses it for the map style and tiles. */
@@ -252,19 +252,118 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
    ========================================================= */
 
 /**
- * Send a booking (Ride or Express).
- * DEMO: waits 2.2 s and returns a booking id; no driver is dispatched.
- * Backend: create the order, dispatch it, and later tell the app the trip finished
- * (the app then shows the tip screen; see showTripDone() in app.js).
+ * Send a booking (Ride or Express), after the customer picked how to pay and their price.
+ * `price.tip` is what they added on top of the fare (0 = no tip); it goes 100% to mysabak.
+ * The server must work out the fare itself and only trust the tip amount (capped at CONFIG.tips.max).
+ * DEMO: saved in this browser and returns a booking id; no driver is dispatched.
  * @param {{kind:'ride'|'express', vehicle:string, pickup:{lng,lat,label}, dropoff:{lng,lat,label},
- *   trip:object, payment:string, parcel?:{receiverName, receiverPhone, size, item, notes}}} booking
+ *   trip:object, payment:'cash'|'gcash'|'bank', price:{fare:number|null, tip:number, total:number|null},
+ *   parcel?:{receiverName, receiverPhone, size, item, notes}}} booking
  * @returns {Promise<{id:string, demo:boolean}>}
  */
 export async function bookRide(booking) {
-  await wait(2200);
+  if (!CONFIG.ridePayments.some((m) => m.id === booking.payment)) throw Object.assign(new Error('Choose how you’ll pay.'), { status: 400 });
+  const tip = cleanTip(booking.price && booking.price.tip, CONFIG.tips.max);
+  await wait(600);
   const id = demo.id(booking.kind === 'express' ? 'EXP' : 'RIDE');
-  demo.set('lastBooking', { id, ...booking, at: Date.now() });
+  demo.set('lastBooking', { id, ...booking, price: { ...booking.price, tip }, at: Date.now() });
+  if (tip) {
+    const record = { id: demo.id('TIP'), orderId: id, orderType: booking.kind, amount: tip, method: booking.payment, at: Date.now() };
+    demo.set('tips', [record, ...demo.get('tips', [])].slice(0, 50));
+  }
   return { id, demo: true };
+}
+
+/**
+ * Find a driver for a booking. Resolves once a driver accepts.
+ * Rejects with status 404 when no driver is free nearby, 499 when the booking was cancelled.
+ * DEMO: a sample driver (demo-data.js → DEMO_DRIVERS) "accepts" after ~3 seconds.
+ * @returns {Promise<{id:string, name:string, rating:number, trips:number, phone:string|null, photo:string|null,
+ *   vehicle:{type:string, model:string, color:string, plate:string}, demo?:boolean}>}
+ */
+export async function findDriver(bookingId) {
+  const booking = demo.get('lastBooking', null);
+  if (!booking || booking.id !== bookingId) throw Object.assign(new Error('Booking not found'), { status: 404 });
+  await wait(3200);
+  if ((demo.get('cancelled', []) || []).includes(bookingId)) throw Object.assign(new Error('Cancelled'), { status: 499 });
+  const d = DEMO_DRIVERS[booking.vehicle] || DEMO_DRIVERS.sedan;
+  return { id: `DRV-${booking.vehicle}`, name: d.name, rating: d.rating, trips: d.trips, phone: null, photo: null,
+    vehicle: { type: booking.vehicle, ...d.vehicle }, demo: true };
+}
+
+/** Cancel a booking (while searching, or before pickup). DEMO: remembered in this browser. */
+export async function cancelRide(bookingId) {
+  demo.set('cancelled', [bookingId, ...demo.get('cancelled', [])].slice(0, 20));
+  return { ok: true };
+}
+
+/**
+ * Follow a booking once a driver accepted: where the driver is and what's happening.
+ * Calls onUpdate({ status, driver:{lng,lat}, etaMinutes }) whenever it changes.
+ * status: 'arriving' → 'arrived' → 'on_trip' → 'completed' (or 'cancelled').
+ * Backend: push these from your realtime channel (WebSocket, SSE, Firebase…).
+ * DEMO: moves the driver to the pickup, then along the route, in about 15 seconds.
+ * @returns {() => void}  call to stop listening
+ */
+export function onTripUpdate(bookingId, onUpdate) {
+  const b = demo.get('lastBooking', null);
+  if (!b || b.id !== bookingId) return () => {};
+  const pickup = [b.pickup.lng, b.pickup.lat];
+  const route = (b.trip && b.trip.coords && b.trip.coords.length > 1) ? b.trip.coords : [pickup, [b.dropoff.lng, b.dropoff.lat]];
+  const phases = [
+    { status: 'arriving', path: [[pickup[0] - 0.004, pickup[1] + 0.003], pickup], ms: 6000, eta: 3 },
+    { status: 'arrived', path: [pickup], ms: 2000, eta: 0 },
+    { status: 'on_trip', path: route, ms: 9000, eta: (b.trip && b.trip.minutes) || null },
+    { status: 'completed', path: [route[route.length - 1]], ms: 0, eta: 0 },
+  ];
+  let stopped = false;
+  let timer = 0;
+  const started = Date.now();
+  const tick = () => {
+    if (stopped) return;
+    let t = Date.now() - started;
+    let i = 0;
+    while (i < phases.length - 1 && t >= phases[i].ms) { t -= phases[i].ms; i++; }
+    const ph = phases[i];
+    const f = ph.ms ? t / ph.ms : 1;
+    onUpdate({
+      status: ph.status,
+      driver: pointAlong(ph.path, f),
+      etaMinutes: ph.eta === null ? null : Math.max(0, Math.ceil(ph.eta * (1 - f))),
+    });
+    if (ph.status !== 'completed') timer = setTimeout(tick, 250);
+  };
+  tick();
+  return () => { stopped = true; clearTimeout(timer); };
+}
+
+// A point a fraction f (0–1) of the way along a line of [lng, lat] pairs.
+function pointAlong(path, f) {
+  if (path.length === 1) return { lng: path[0][0], lat: path[0][1] };
+  const seg = [];
+  let total = 0;
+  for (let i = 1; i < path.length; i++) {
+    const d = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+    seg.push(d);
+    total += d;
+  }
+  let left = Math.min(1, Math.max(0, f)) * total;
+  for (let i = 0; i < seg.length; i++) {
+    if (left <= seg[i] || i === seg.length - 1) {
+      const k = seg[i] ? Math.min(1, left / seg[i]) : 0;
+      return { lng: path[i][0] + (path[i + 1][0] - path[i][0]) * k, lat: path[i][1] + (path[i + 1][1] - path[i][1]) * k };
+    }
+    left -= seg[i];
+  }
+  return { lng: path[path.length - 1][0], lat: path[path.length - 1][1] };
+}
+
+/** Rate the driver after a trip (1–5 stars). DEMO: saved in this browser. */
+export async function rateRide(bookingId, stars) {
+  const n = Math.round(Number(stars));
+  if (!(n >= 1 && n <= 5)) throw Object.assign(new Error('Pick 1 to 5 stars.'), { status: 400 });
+  demo.set('ratings', { ...demo.get('ratings', {}), [bookingId]: n });
+  return { ok: true };
 }
 
 /* =========================================================

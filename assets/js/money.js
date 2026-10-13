@@ -29,6 +29,20 @@ export function haversineKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+/**
+ * Ride price with an optional tip on top: "Your price" = fare + tip.
+ * The fare goes 100% to the driver; anything the customer adds on top is a tip, 100% to mysabak.
+ * Give `price` (what the customer typed as their price) when the fare is known, or `tip` when it isn't.
+ * The tip is whole pesos, 0 to max; a price below the fare means no tip.
+ * @returns {{fare:number|null, tip:number, total:number|null}}  total null while the fare is unknown
+ */
+export function splitPrice({ fare = null, price = null, tip = 0, max }) {
+  const known = isNum(fare);
+  const extra = known && price !== null && price !== '' ? Math.round(Number(price)) - fare : tip;
+  const cleanExtra = cleanTip(extra, max);
+  return { fare: known ? fare : null, tip: cleanExtra, total: known ? fare + cleanExtra : null };
+}
+
 /** base + perKm × km, or null when the rates or distance aren't known yet. */
 export function rateFor({ base, perKm }, km) {
   return isNum(base) && isNum(perKm) && isNum(km) ? base + perKm * km : null;

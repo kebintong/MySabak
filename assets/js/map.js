@@ -70,7 +70,7 @@ export function baseMapOptions() {
 /**
  * Start the map.
  * @param {object} ctx
- * @param {object} ctx.state   the app's state (pickup, destPoint, trip, step, loadingTrip); read only
+ * @param {object} ctx.state   the app's state (pickup, destPoint, trip, step, loadingTrip, driver); read only
  * @param {object} ctx.el      { app, bottom } elements, to keep the camera clear of the panels
  * @param {object} ctx.on      callbacks: pickupMoved({lng,lat}), mapTapped({lng,lat}), error(message)
  */
@@ -111,6 +111,7 @@ export function initMap(ctx) {
   markers.origin = new maplibregl.Marker({ element: document.getElementById('mkOrigin'), anchor: 'center' }).setLngLat(state.pickup).addTo(map);
   markers.dest = new maplibregl.Marker({ element: document.getElementById('mkDest'), anchor: 'bottom' }).setLngLat(state.pickup);
   markers.time = new maplibregl.Marker({ element: document.getElementById('mkTime'), anchor: 'bottom', offset: [0, -10] }).setLngLat(state.pickup);
+  markers.driver = new maplibregl.Marker({ element: document.getElementById('mkDriver'), anchor: 'center' }).setLngLat(state.pickup);
 
   map.on('move', placeLabels);
 
@@ -353,7 +354,7 @@ function routeMidpoint(coords) {
 }
 
 let lastDest = null;
-/** Sync markers and the route line with the app's state. Call after every state change. */
+/** Sync markers, the driver and the route line with the app's state. Call after every state change. */
 export function updateMap() {
   if (!map) return;
   markers.pickup.setLngLat(state.pickup);
@@ -375,13 +376,18 @@ export function updateMap() {
   }
 
   const mid = routeMidpoint(state.trip.coords);
-  if (mid && !state.loadingTrip) markers.time.setLngLat(mid).addTo(map);
+  if (mid && !state.loadingTrip && state.step !== 'trip') markers.time.setLngLat(mid).addTo(map);
   else markers.time.remove();
+
+  // The driver, once one accepted (step "trip")
+  const pos = state.step === 'trip' && state.driver && state.driver.pos;
+  if (pos) markers.driver.setLngLat([pos.lng, pos.lat]).addTo(map);
+  else markers.driver.remove();
 
   placeLabels();
 
   if (mapReady) {
-    const show = state.step === 'choose' && state.trip.coords;
+    const show = state.step !== 'request' && state.trip.coords;
     if (!show) {
       drawnRoute = null;
       cancelAnimationFrame(routeAnim);
@@ -458,8 +464,10 @@ export function frame({ animate = true } = {}) {
   const desk = DESKTOP.matches;
   const bottom = bottomInset() + 24;
 
-  if (state.step === 'choose' && state.destPoint) {
+  if (state.step !== 'request' && state.destPoint) {
     const ends = [[state.pickup.lng, state.pickup.lat], [state.destPoint.lng, state.destPoint.lat]];
+    const d = state.step === 'trip' && state.driver && state.driver.pos;
+    if (d) ends.push([d.lng, d.lat]);
     const pts = (state.trip.coords || []).concat(ends);
     const bounds = pts.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(pts[0], pts[0]));
     const side = desk ? 170 : 72;
