@@ -1,0 +1,16 @@
+// Cloudflare Workers config for mysabak: https://developers.cloudflare.com/workers/wrangler/configuration/
+// Deploy: npx wrangler deploy · Local test: npx wrangler dev (key goes in .dev.vars)
+// The TomTom key is NOT here. Add it as a secret: npx wrangler secret put TOMTOM_KEY
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mysabak",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    // The project folder is the website; .assetsignore keeps the private files out.
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true }
+}

@@ -2,14 +2,17 @@
    mysabak · Ride booking (Design A)
    Vanilla JS. No build step.
 
-   TomTom (one free API key, no credit card):
+   TomTom (one free API key, no credit card). Every TomTom call goes through /api/tomtom/…,
+   which worker/index.js (Cloudflare) or serve.py (local) forwards with the key added,
+   so the key never reaches the browser.
+
      Map:     TomTom Orbis map style, drawn with MapLibre GL JS
      Search:  Places Search API · Suggest + Details
               (falls back to the classic Search API if the browser blocks it)
      Address: Reverse Geocoding API (pickup street + barangay)
      Routes:  Routing API (real distance + travel time)
 
-   Settings (key, start position, fares) live in scripts/config.js.
+   Settings (start position, fares) live in scripts/config.js.
 
    Two steps on one screen:
      1. "request" – set a drop-off (search, a recent place, or pick on map)
@@ -21,7 +24,6 @@
   /* ---------- Config ---------- */
   const USER = window.MYSABAK_CONFIG || {};
   const RATES = USER.rates || {};
-  const KEY_STORE = 'mysabak.tomtomKey';
 
   const CONFIG = {
     currency: '₱',
@@ -33,7 +35,6 @@
     defaultVehicle: 'sedan',
     paymentMethod: '[Payment method]',
 
-    tomtomKey: (USER.tomtomKey || readSavedKey()).trim(),
     mapStyle: USER.mapStyle || 'street', // see THEMES below
     startCenter: USER.startCenter || [123.8854, 10.3157], // Cebu City [lng, lat]
     startZoom: USER.startZoom || 15,
@@ -42,14 +43,9 @@
     language: 'en-US',
   };
 
-  function readSavedKey() {
-    try { return localStorage.getItem(KEY_STORE) || ''; } catch (_) { return ''; }
-  }
-
   const BRAND = '#5630d8';
   const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
   const DESKTOP = window.matchMedia('(min-width: 900px)');
-  const hasKey = () => Boolean(CONFIG.tomtomKey);
 
   /** Hook for your booking backend. */
   function bookRide(vehicle) {
@@ -66,7 +62,8 @@
   /* =========================================================
      TomTom APIs
      ========================================================= */
-  const TT = 'https://api.tomtom.com';
+  const TT = new URL('../api/tomtom', location.href).href; // our proxy (adds the key server-side)
+  const TT_HOSTS = /^https:\/\/([a-d]\.)?api\.tomtom\.com/;
 
   /** fetch() with TomTom-friendly errors: err.status 0 = network/blocked. */
   async function ttFetch(url, options = {}) {
@@ -81,9 +78,9 @@
     return res.json();
   }
 
-  const ttUrl = (path, params = {}, key = CONFIG.tomtomKey) => {
+  const ttUrl = (path, params = {}) => {
     const url = new URL(TT + path);
-    Object.entries({ ...params, key }).forEach(([k, v]) => {
+    Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
     });
     return url;
@@ -92,7 +89,8 @@
   /** Plain-language reason a TomTom call failed. */
   function ttError(err) {
     if (!err) return 'Something went wrong.';
-    if (err.status === 401 || err.status === 403) return 'TomTom didn’t accept the API key.';
+    if (err.status === 401 || err.status === 403) return 'TomTom didn’t accept the server’s API key.';
+    if (err.status === 503) return 'The map service isn’t set up yet (TOMTOM_KEY is missing on the server).';
     if (err.status === 429) return 'TomTom’s free limit was reached. Try again later.';
     if (err.status === 0) return 'Can’t reach TomTom. Check your internet, or an ad-blocker.';
     return `TomTom had a problem (error ${err.status}).`;
@@ -136,7 +134,6 @@
       method: 'POST',
       signal,
       headers: {
-        'TomTom-Api-Key': CONFIG.tomtomKey,
         'TomTom-Api-Version': '3',
         Attributes: 'results',
         'Accept-Language': CONFIG.language,
@@ -199,7 +196,6 @@
     if (isNum(place.lat) && isNum(place.lng)) return { lat: place.lat, lng: place.lng };
     const data = await ttFetch(TT + place.details, {
       headers: {
-        'TomTom-Api-Key': CONFIG.tomtomKey,
         'TomTom-Api-Version': '3',
         Attributes: 'position',
         'Accept-Language': CONFIG.language,
@@ -211,8 +207,8 @@
   }
 
   /* ---------- Street + barangay for a point ---------- */
-  async function reverseGeocode({ lng, lat }, key = CONFIG.tomtomKey) {
-    const data = await ttFetch(ttUrl(`/search/2/reverseGeocode/${lat},${lng}.json`, { language: CONFIG.language }, key));
+  async function reverseGeocode({ lng, lat }) {
+    const data = await ttFetch(ttUrl(`/search/2/reverseGeocode/${lat},${lng}.json`, { language: CONFIG.language }));
     const a = ((data.addresses || [])[0] || {}).address;
     if (!a) return null;
     const street = a.streetName || a.street;
@@ -241,7 +237,7 @@
     };
   }
 
-  /** Straight line + as-the-crow-flies distance (used when there's no key or routing fails). */
+  /** Straight line + as-the-crow-flies distance (used when routing fails). */
   function straightTrip(from, to) {
     return {
       coords: [[from.lng, from.lat], [to.lng, to.lat]],
@@ -253,7 +249,6 @@
   }
 
   async function estimateTrip(from, to) {
-    if (!hasKey()) return straightTrip(from, to);
     try {
       return await fetchRoute(from, to);
     } catch (err) {
@@ -351,11 +346,11 @@
   const markers = {};
   const EMPTY_LINE = { type: 'FeatureCollection', features: [] };
 
-  function addTomTomParams(raw) {
-    let u;
-    try { u = new URL(raw); } catch (_) { return { url: raw }; }
-    if (!/(^|\.)tomtom\.com$/.test(u.hostname)) return { url: raw };
-    if (!u.searchParams.has('key')) u.searchParams.set('key', CONFIG.tomtomKey);
+  // TomTom's style points at api.tomtom.com (and a–d.api.tomtom.com); send those through our proxy.
+  function viaProxy(raw) {
+    if (!TT_HOSTS.test(raw)) return { url: raw };
+    const u = new URL(raw.replace(TT_HOSTS, TT));
+    u.searchParams.delete('key');
     if (u.pathname.includes('/maps/orbis/') && !u.searchParams.has('apiVersion')) u.searchParams.set('apiVersion', '1');
     return { url: u.toString() };
   }
@@ -380,22 +375,15 @@
 
   function initMap() {
     if (map) return;
-    if (!hasKey()) {
-      el.body.classList.add('no-map');
-      openKeyDialog();
-      return;
-    }
     if (!window.maplibregl) {
       toast('The map couldn’t load. Check your internet connection.');
       return;
     }
-    el.body.classList.remove('no-map');
     map = new maplibregl.Map({
       container: 'mapCanvas',
       // style is set at the end, once the listeners are attached (see setStyle below)
-      // Every TomTom request (tiles come from api.tomtom.com and a–d.api.tomtom.com,
-      // plus fonts and icons) needs the key; the Orbis map services also want apiVersion.
-      transformRequest: (url) => addTomTomParams(url),
+      // Tiles, icons and fonts in TomTom's style go through our proxy, which adds the key.
+      transformRequest: (url) => viaProxy(url),
       center: CONFIG.startCenter,
       zoom: CONFIG.startZoom,
       attributionControl: false,
@@ -439,8 +427,7 @@
       if (!mapReady && !styleErrorShown) {
         styleErrorShown = true;
         const st = e && e.error && e.error.status;
-        if (st === 401 || st === 403) openKeyDialog('TomTom didn’t accept this key for maps. Check the key in your TomTom dashboard.');
-        else toast('Map tiles couldn’t load. Check your connection.');
+        toast(st ? ttError({ status: st }) : 'Map tiles couldn’t load. Check your connection.');
       }
     });
 
@@ -799,12 +786,11 @@
   async function setPickup(point, { fromGPS = false, recenter = true } = {}) {
     state.pickup = { lng: point.lng, lat: point.lat };
     state.pickupFromGPS = fromGPS;
-    if (hasKey()) state.pickupLabel = 'Finding address…';
+    state.pickupLabel = 'Finding address…';
     render();
     if (recenter && state.step === 'request') frame();
     if (state.step === 'choose') refreshTrip();
 
-    if (!hasKey()) return;
     const asked = state.pickup;
     try {
       const label = await reverseGeocode(asked);
@@ -950,7 +936,7 @@
     requestAnimationFrame(() => frame());
     refreshTrip();
 
-    if (nameFromMap && hasKey()) {
+    if (nameFromMap) {
       const asked = state.destPoint;
       try {
         const name = await reverseGeocode(asked);
@@ -1027,10 +1013,6 @@
       chooseSuggestion(s.items[Math.max(0, s.active)]);
       return;
     }
-    if (!hasKey()) {
-      openKeyDialog();
-      return;
-    }
     try {
       const [first] = await searchPlaces(text);
       if (first) chooseSuggestion(first);
@@ -1055,10 +1037,6 @@
       clearTimeout(s.timer);
       const text = input.value.trim();
       if (text.length < 3) { closeSuggest(input); return; }
-      if (!hasKey()) {
-        renderSuggest(input, [], 'Search needs a free TomTom key.', { action: 'Add key' });
-        return;
-      }
       s.timer = setTimeout(async () => {
         if (s.ctrl) s.ctrl.abort();
         s.ctrl = new AbortController();
@@ -1072,7 +1050,7 @@
         } catch (err) {
           if (err.name === 'AbortError') return;
           console.warn(err);
-          renderSuggest(input, [], ttError(err), err.status === 401 || err.status === 403 ? { action: 'Change key' } : {});
+          renderSuggest(input, [], ttError(err));
         }
       }, 300);
     });
@@ -1100,13 +1078,12 @@
     // mousedown keeps focus in the input so the click lands
     list.addEventListener('mousedown', (e) => e.preventDefault());
     list.addEventListener('click', (e) => {
-      if (e.target.closest('[data-key-setup]')) { closeSuggest(input); openKeyDialog(); return; }
       const li = e.target.closest('[data-index]');
       if (li) chooseSuggestion(s.items[Number(li.dataset.index)]);
     });
   }
 
-  function renderSuggest(input, items, message, { action = '', loading = false } = {}) {
+  function renderSuggest(input, items, message, { loading = false } = {}) {
     const s = suggest.get(input);
     s.items = items;
     s.active = items.length ? 0 : -1;
@@ -1120,7 +1097,7 @@
           <span class="suggest__sub"></span>
         </span>
         <span class="suggest__km"></span>
-      </li>`).join('') + (message ? `<li class="suggest__note" role="presentation"><span class="suggest__msg"></span>${action ? '<button type="button" class="suggest__action" data-key-setup></button>' : ''}</li>` : '');
+      </li>`).join('') + (message ? '<li class="suggest__note" role="presentation"><span class="suggest__msg"></span></li>' : '');
     // Set text safely (no HTML from the API)
     items.forEach((p, i) => {
       const li = s.list.children[i];
@@ -1130,8 +1107,6 @@
     });
     if (message) {
       $('.suggest__msg', s.list.lastElementChild).textContent = message;
-      const btn = $('[data-key-setup]', s.list);
-      if (btn) btn.textContent = action;
     }
     s.list.hidden = false;
     input.setAttribute('aria-expanded', 'true');
@@ -1171,60 +1146,6 @@
       toast(`${ttError(err)} Try another result.`);
     }
   }
-
-  /* =========================================================
-     TomTom key setup (saved in this browser)
-     ========================================================= */
-  const keyDialog = $('#keyDialog');
-  const keyInput = $('#keyInput');
-  const keyStatus = $('#keyStatus');
-
-  function openKeyDialog(error = '') {
-    keyInput.value = CONFIG.tomtomKey;
-    keyStatus.textContent = error;
-    keyStatus.className = error ? 'key-status is-error' : 'key-status';
-    if (keyDialog.open) return;
-    if (typeof keyDialog.showModal === 'function') keyDialog.showModal();
-    else keyDialog.setAttribute('open', '');
-    setTimeout(() => keyInput.focus(), 50);
-  }
-  function closeKeyDialog() {
-    if (typeof keyDialog.close === 'function') keyDialog.close();
-    else keyDialog.removeAttribute('open');
-  }
-
-  $('#keyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const key = keyInput.value.trim();
-    if (!key) { keyStatus.textContent = 'Paste your key first.'; keyStatus.className = 'key-status is-error'; return; }
-    const btn = $('#keySave');
-    btn.disabled = true;
-    keyStatus.textContent = 'Testing the key…';
-    keyStatus.className = 'key-status';
-    try {
-      await reverseGeocode({ lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] }, key);
-      try { localStorage.setItem(KEY_STORE, key); } catch (_) { /* storage off: works until reload */ }
-      if (map && CONFIG.tomtomKey !== key) { location.reload(); return; } // map was started with another key
-      CONFIG.tomtomKey = key;
-      searchCache.clear();
-      useClassicSearch = false;
-      closeKeyDialog();
-      toast('TomTom connected. Saan tayo?');
-      initMap();
-      setPickup(state.pickup, { fromGPS: state.pickupFromGPS, recenter: false });
-      locateUser({ quiet: true });
-    } catch (err) {
-      keyStatus.textContent = ttError(err);
-      keyStatus.className = 'key-status is-error';
-    } finally {
-      btn.disabled = false;
-    }
-  });
-  $('#keyCancel').addEventListener('click', closeKeyDialog);
-  $('#keyClear').addEventListener('click', () => {
-    try { localStorage.removeItem(KEY_STORE); } catch (_) { /* nothing saved */ }
-    location.reload();
-  });
 
   /* =========================================================
      Toast
@@ -1375,8 +1296,6 @@
   buildVehicles();
   render();
   initMap();
-  if (hasKey()) {
-    setPickup(state.pickup, { fromGPS: false, recenter: false });
-    locateUser({ quiet: true });
-  }
+  setPickup(state.pickup, { fromGPS: false, recenter: false });
+  locateUser({ quiet: true });
 })();
