@@ -17,7 +17,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  WRANGLER: npx --yes wrangler@4.149.0
+  WRANGLER: npx --yes wrangler@4.149.0 --config assets/dev/wrangler.jsonc
+  # The website = index.html, pages/ and assets/ minus assets/dev/ (demo server code)
+  BUILD_SITE: rm -rf dist && mkdir dist && cp -r index.html pages assets dist/ && rm -rf dist/assets/dev
 
 jobs:
   check:
@@ -31,13 +33,15 @@ jobs:
           node-version: 22
 
       - name: JavaScript syntax
-        run: for f in public/scripts/*.js public/sw.js worker/index.js; do node --check "$f"; done
+        run: for f in assets/js/*.js assets/dev/worker.js; do node --check "$f"; done
 
-      - name: Tests (TomTom proxy, no keys committed)
-        run: node --test worker/*.test.mjs
+      - name: Tests (demo server, no keys committed)
+        run: node --test tests/*.test.mjs
 
-      - name: Cloudflare config builds
-        run: $WRANGLER deploy --dry-run --outdir "$RUNNER_TEMP/dist"
+      - name: Website builds and Cloudflare config is valid
+        run: |
+          eval "$BUILD_SITE"
+          $WRANGLER deploy --dry-run --outdir "$RUNNER_TEMP/out"
 
   deploy:
     name: Deploy to Cloudflare
@@ -56,7 +60,9 @@ jobs:
           node-version: 22
 
       - name: Deploy
-        run: $WRANGLER deploy
+        run: |
+          eval "$BUILD_SITE"
+          $WRANGLER deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,14 +1,16 @@
-// Cloudflare Worker for mysabak. Deployed by GitHub Actions (.github/workflows/ci-cd.yml).
+// Cloudflare Worker for the mysabak demo. Deployed by GitHub Actions (.github/workflows/ci-cd.yml):
+// CI copies the website (index.html, pages/, assets/ without assets/dev/) into dist/ and runs
+//   npx wrangler deploy --config assets/dev/wrangler.jsonc
 // The TomTom key is NOT here: it's the TOMTOM_KEY secret on the Worker (see README.md).
 {
   "$schema": "https://unpkg.com/wrangler@4.149.0/config-schema.json",
   "name": "mysabak",
-  "main": "worker/index.js",
+  "main": "worker.js",
   "compatibility_date": "2025-10-01",
   "assets": {
-    "directory": "./public", // the website: everything in public/ is served as-is
+    "directory": "../../dist", // built by CI; see the comment above
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"] // /api/tomtom/* goes to worker/index.js
+    "run_worker_first": ["/api/*", "/assets/js/sw.js", "/html", "/html/*"]
   },
   // Keep variables set in the dashboard when GitHub Actions deploys (otherwise a deploy deletes them).
   // TOMTOM_KEY should still be type "Secret": secrets are always kept and their value is hidden.

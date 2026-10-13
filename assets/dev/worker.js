@@ -1,6 +1,8 @@
 /* =========================================================
-   mysabak · Cloudflare Worker
-   - Serves the app's files (the "assets" in wrangler.jsonc).
+   mysabak · Cloudflare Worker (DEMO HOSTING, not part of the app)
+   Backend: replace this with your own server. It only does three things:
+   - Serves the website (index.html, pages/, assets/; see wrangler.jsonc),
+     and lets assets/js/sw.js look after the whole site.
    - Forwards /api/tomtom/* to api.tomtom.com with the API key added.
      The key is a Cloudflare secret (TOMTOM_KEY), so it is never in GitHub
      or in the browser.
@@ -25,7 +27,15 @@ export default {
     const url = new URL(request.url);
     if (url.pathname.startsWith(`${PREFIX}/`)) return proxyTomTom(request, env, url);
     if (url.pathname === '/api/health') return health(env);
-    return env.ASSETS.fetch(request);
+    // Old address of the app (it used to live at /html/)
+    if (url.pathname === '/html' || url.pathname.startsWith('/html/')) return Response.redirect(`${url.origin}/`, 301);
+    const res = await env.ASSETS.fetch(request);
+    if (url.pathname === '/assets/js/sw.js') {
+      const out = new Response(res.body, res);
+      out.headers.set('Service-Worker-Allowed', '/'); // the offline cache covers every page, not just /assets/js/
+      return out;
+    }
+    return res;
   },
 };
 
