@@ -325,10 +325,10 @@ function showTripDone(order) {
         ${p.tip ? `<div class="receipt__row"><dt>Tip<span>100% to mysabak · thank you!</span></dt><dd>${peso(p.tip)}</dd></div>` : ''}
         <div class="receipt__row receipt__row--total"><dt>Total<span>${esc(order.payment.name)}</span></dt><dd>${totalText(p)}</dd></div>
       </dl>
-      <div class="sheet__actions">
-        ${p.tip ? '' : '<button type="button" class="button button--ghost" data-tip-later>Tip mysabak</button>'}
-        <button type="button" class="button" data-done>Done</button>
-      </div>
+    </div>
+    <div class="done__foot">
+      ${p.tip ? '' : '<button type="button" class="button button--ghost" data-tip-later>Tip mysabak</button>'}
+      <button type="button" class="button" data-done autofocus>Done</button>
     </div>`;
   document.body.appendChild(dlg);
 
@@ -364,6 +364,7 @@ function showTripDone(order) {
     });
   }
   if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  $('[data-done]', dlg).focus({ preventScroll: true }); // not the first star: focusing it could scroll on iOS
 }
 
 /* ---------- Express: parcel details ---------- */
