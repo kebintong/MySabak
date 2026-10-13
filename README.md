@@ -7,7 +7,7 @@ Frontend design demo: plain HTML, CSS and JavaScript modules, no build step.
 
 ```
 index.html          Ride screen: Ride | Express, map, Book → pay (Cash / GCash / Online banking, your price) → driver → Ride complete
-pages/              support · drive · drive-signup · driver · shops · shop · checkout · order · account
+pages/              support · drive · drive-signup · driver · shops · shop · checkout · order · merchant · merchant-home · account
 assets/
   css/style.css     all styles
   js/config.js      settings: vehicles, fares, tips, parcel sizes, delivery rates
@@ -34,6 +34,13 @@ PANELS.md           money rules, every panel, and the data shapes (backend contr
    shapes; nothing else needs to change. Search it for `DEMO` to find what's still saved in the browser.
 3. **`assets/dev/`** is only the demo's hosting (a Cloudflare Worker that forwards TomTom calls with a
    secret key). Replace it with your server, or delete it once your API is live.
+
+## Demo accounts
+
+| Side | Sign in at | Login | Password |
+|---|---|---|---|
+| Driver | Drive tab (`/pages/drive.html`) | `driver@mysabak.demo` or 0917 000 0001 | `mysabak-demo` |
+| Merchant | Account → Merchant sign in (`/pages/merchant.html`) | `merchant@mysabak.demo` or 0917 000 0002 | `mysabak-demo` |
 
 ## Running it on your computer
 

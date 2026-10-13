@@ -17,7 +17,7 @@
    ========================================================= */
 import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
-import { SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS } from './demo-data.js';
+import { SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS } from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
 /** Base of the TomTom proxy. map.js uses it for the map style and tiles. */
@@ -302,7 +302,8 @@ export async function cancelRide(bookingId) {
  * Calls onUpdate({ status, driver:{lng,lat}, etaMinutes }) whenever it changes.
  * status: 'arriving' → 'arrived' → 'on_trip' → 'completed' (or 'cancelled').
  * Backend: push these from your realtime channel (WebSocket, SSE, Firebase…).
- * DEMO: moves the driver to the pickup, then along the route, in about 15 seconds.
+ * DEMO: the driver drives the real roads to the pickup (TomTom route), waits, then follows the trip route;
+ * about 25 seconds in all.
  * @returns {() => void}  call to stop listening
  */
 export function onTripUpdate(bookingId, onUpdate) {
@@ -310,15 +311,26 @@ export function onTripUpdate(bookingId, onUpdate) {
   if (!b || b.id !== bookingId) return () => {};
   const pickup = [b.pickup.lng, b.pickup.lat];
   const route = (b.trip && b.trip.coords && b.trip.coords.length > 1) ? b.trip.coords : [pickup, [b.dropoff.lng, b.dropoff.lat]];
-  const phases = [
-    { status: 'arriving', path: [[pickup[0] - 0.004, pickup[1] + 0.003], pickup], ms: 6000, eta: 3 },
-    { status: 'arrived', path: [pickup], ms: 2000, eta: 0 },
-    { status: 'on_trip', path: route, ms: 9000, eta: (b.trip && b.trip.minutes) || null },
-    { status: 'completed', path: [route[route.length - 1]], ms: 0, eta: 0 },
-  ];
+  // The demo driver starts about 1 km away and drives the real roads to the pickup.
+  const from = { lng: pickup[0] - 0.007, lat: pickup[1] + 0.005 };
   let stopped = false;
   let timer = 0;
-  const started = Date.now();
+  let phases = null;
+  let started = 0;
+  onUpdate({ status: 'arriving', driver: from, etaMinutes: null });
+
+  const begin = (approach) => {
+    if (stopped) return;
+    const km = approach.distanceKm || 1;
+    phases = [
+      { status: 'arriving', path: approach.coords, ms: Math.min(12000, Math.max(6000, km * 6000)), eta: approach.minutes || 3 },
+      { status: 'arrived', path: [pickup], ms: 2500, eta: 0 },
+      { status: 'on_trip', path: route, ms: 14000, eta: (b.trip && b.trip.minutes) || null },
+      { status: 'completed', path: [route[route.length - 1]], ms: 0, eta: 0 },
+    ];
+    started = Date.now();
+    tick();
+  };
   const tick = () => {
     if (stopped) return;
     let t = Date.now() - started;
@@ -331,19 +343,22 @@ export function onTripUpdate(bookingId, onUpdate) {
       driver: pointAlong(ph.path, f),
       etaMinutes: ph.eta === null ? null : Math.max(0, Math.ceil(ph.eta * (1 - f))),
     });
-    if (ph.status !== 'completed') timer = setTimeout(tick, 250);
+    if (ph.status !== 'completed') timer = setTimeout(tick, 200);
   };
-  tick();
+  const toPickup = { lng: pickup[0], lat: pickup[1] };
+  Promise.race([routeBetween(from, toPickup), wait(3000).then(() => { throw new Error('slow'); })])
+    .then((r) => { r.coords.push(pickup); begin(r); })
+    .catch(() => begin(straightLine(from, toPickup)));
   return () => { stopped = true; clearTimeout(timer); };
 }
 
-// A point a fraction f (0–1) of the way along a line of [lng, lat] pairs.
+// A point a fraction f (0–1) of the way along a line, measured in real distance (km).
 function pointAlong(path, f) {
   if (path.length === 1) return { lng: path[0][0], lat: path[0][1] };
   const seg = [];
   let total = 0;
   for (let i = 1; i < path.length; i++) {
-    const d = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+    const d = haversineKm({ lng: path[i - 1][0], lat: path[i - 1][1] }, { lng: path[i][0], lat: path[i][1] });
     seg.push(d);
     total += d;
   }
@@ -428,7 +443,8 @@ const sameEmail = (a, b) => Boolean(a && b) && String(a).trim().toLowerCase() ==
 
 /**
  * Driver sign-in with a mobile number OR an email, plus password.
- * DEMO: any password works for the number/email used at sign-up (passwords are never stored in the browser).
+ * DEMO: the demo driver account (demo-data.js → DEMO_ACCOUNTS.driver, approved) needs its password; for an
+ * account made with the sign-up form any password works (passwords are never stored in the browser).
  * Backend: check the password on the server and start a session (e.g. an httpOnly cookie).
  * @param {{login:string, password:string}} creds  login = mobile number or email
  * @returns {Promise<{status:'review'|'approved'|'rejected'}>}  throws { status: 401 } when they don't match
@@ -436,8 +452,18 @@ const sameEmail = (a, b) => Boolean(a && b) && String(a).trim().toLowerCase() ==
 export async function driverSignIn({ login, password }) {
   if (!login || !password) throw Object.assign(new Error('Enter your mobile number or email, and your password.'), { status: 400 });
   await wait(700);
+  const isLogin = (acc) => acc && (login.includes('@') ? sameEmail(acc.email, login) : samePhone(acc.phone, login));
+  const demoDriver = DEMO_ACCOUNTS.driver;
+  if (isLogin(demoDriver)) {
+    if (password !== demoDriver.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+    const { password: _, ...profile } = demoDriver; // eslint-disable-line no-unused-vars
+    const prev = demo.get('driver', null);
+    demo.set('driver', { ...profile, method: 'demo', online: prev && prev.method === 'demo' ? prev.online : false });
+    demo.set('driverSession', { phone: demoDriver.phone, at: Date.now() });
+    return { status: demoDriver.status };
+  }
   const d = demo.get('driver', null);
-  const matches = d && (login.includes('@') ? sameEmail(d.email, login) : samePhone(d.phone, login));
+  const matches = isLogin(d);
   if (!matches) {
     throw Object.assign(new Error('No driver account uses that mobile number or email. Check it, or sign up.'), { status: 401 });
   }
@@ -532,6 +558,91 @@ export async function driverEarnings() {
 }
 
 /* =========================================================
+   Merchant (shop owners): sign in, open / close, orders, menu availability. No POS (Stage 2).
+   ========================================================= */
+
+/**
+ * Merchant sign-in with a mobile number OR an email, plus password.
+ * DEMO: only the demo merchant (demo-data.js → DEMO_ACCOUNTS.merchant) exists.
+ * @returns {Promise<{shopId:string}>}  throws { status: 401 } when they don't match
+ */
+export async function merchantSignIn({ login, password }) {
+  if (!login || !password) throw Object.assign(new Error('Enter your mobile number or email, and your password.'), { status: 400 });
+  await wait(700);
+  const m = DEMO_ACCOUNTS.merchant;
+  const isLogin = login.includes('@') ? sameEmail(m.email, login) : samePhone(m.phone, login);
+  if (!isLogin) throw Object.assign(new Error('No merchant account uses that mobile number or email.'), { status: 401 });
+  if (password !== m.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+  demo.set('merchantSession', { shopId: m.shop.id, at: Date.now() });
+  return { shopId: m.shop.id };
+}
+
+export async function merchantSignOut() {
+  demo.set('merchantSession', null);
+}
+
+/** Order statuses a merchant moves through, and the buttons for each. */
+export const MERCHANT_ACTIONS = {
+  placed: [{ id: 'accept', label: 'Accept', to: 'accepted' }, { id: 'decline', label: 'Decline', to: 'cancelled' }],
+  accepted: [{ id: 'preparing', label: 'Start preparing', to: 'preparing' }],
+  preparing: [{ id: 'ready', label: 'Ready for pickup', to: 'ready' }],
+};
+
+/**
+ * Everything the merchant dashboard shows. 401 if not signed in.
+ * DEMO: the shop's open/closed switch and item availability are kept in this browser; orders are the ones
+ * placed for this shop in this browser (none, as the shop isn't listed publicly).
+ * @returns {Promise<{name:string, shop:object, open:boolean, available:Object<string, boolean>,
+ *   orders:Array<Order>, today:{orders:number, sales:number}}>}
+ */
+export async function merchantHome() {
+  const session = demo.get('merchantSession', null);
+  if (!session) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  const m = DEMO_ACCOUNTS.merchant;
+  const settings = demo.get('merchant', { open: true, available: {} });
+  const orders = demo.get('orders', []).filter((o) => o.shop.id === m.shop.id);
+  const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+  const todays = orders.filter((o) => o.placedAt >= midnight.getTime() && o.status !== 'cancelled');
+  return {
+    name: m.name,
+    shop: m.shop,
+    open: settings.open !== false,
+    available: Object.fromEntries(m.shop.menu.map((i) => [i.id, settings.available[i.id] !== false])),
+    orders,
+    today: { orders: todays.length, sales: todays.reduce((n, o) => n + o.subtotal, 0) },
+  };
+}
+
+/** Open or close the shop for orders. */
+export async function setShopOpen(open) {
+  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  const settings = demo.get('merchant', { open: true, available: {} });
+  demo.set('merchant', { ...settings, open: Boolean(open) });
+  return { open: Boolean(open) };
+}
+
+/** Mark a menu item available or sold out. */
+export async function setItemAvailable(itemId, available) {
+  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  const settings = demo.get('merchant', { open: true, available: {} });
+  demo.set('merchant', { ...settings, available: { ...settings.available, [itemId]: Boolean(available) } });
+  return { ok: true };
+}
+
+/** Move an order along (Accept, Decline, Start preparing, Ready for pickup). */
+export async function updateMerchantOrder(orderId, actionId) {
+  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  const orders = demo.get('orders', []);
+  const order = orders.find((o) => o.id === orderId);
+  if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });
+  const action = (MERCHANT_ACTIONS[order.status] || []).find((a) => a.id === actionId);
+  if (!action) throw Object.assign(new Error('That step isn’t possible now.'), { status: 409 });
+  order.status = action.to;
+  demo.set('orders', orders);
+  return { status: order.status };
+}
+
+/* =========================================================
    Shop (Stage 1: ordering + delivery; no POS)
    ========================================================= */
 
@@ -618,6 +729,7 @@ export const ORDER_STEPS = [
   { id: 'placed', name: 'Order placed' },
   { id: 'accepted', name: 'Shop accepted' },
   { id: 'preparing', name: 'Preparing' },
+  { id: 'ready', name: 'Ready for pickup' },
   { id: 'picked_up', name: 'Rider picked up' },
   { id: 'delivered', name: 'Delivered' },
 ];
@@ -626,7 +738,7 @@ export const ORDER_STEPS = [
  * A shop order and where it is.
  * DEMO: stays at 'placed' (no shop or rider updates it).
  * @returns {Promise<{id, shop, lines, subtotal, deliveryFee:number|null, address, notes, payment,
- *   status:'placed'|'accepted'|'preparing'|'picked_up'|'delivered'|'cancelled', placedAt:number}>}
+ *   status:'placed'|'accepted'|'preparing'|'ready'|'picked_up'|'delivered'|'cancelled', placedAt:number}>}
  */
 export async function orderStatus(orderId) {
   const order = demo.get('orders', []).find((o) => o.id === orderId);

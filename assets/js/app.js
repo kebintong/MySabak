@@ -106,12 +106,14 @@ function book() {
 const paymentById = (id) => CONFIG.ridePayments.find((m) => m.id === id) || CONFIG.ridePayments[0];
 const fareNumber = () => { const f = fareOf(vehicleById(state.vehicle)); return f ? Math.round(f.total) : null; };
 let tipDraft = 0;
+let customOpen = false; // the "Custom" chip shows a box to type a price (or a tip while the fare is unknown)
 const draftPrice = () => splitPrice({ fare: fareNumber(), tip: tipDraft, max: CONFIG.tips.max });
 const totalText = (p) => (p.total !== null ? peso(p.total) : `${CONFIG.currency}[FARE]${p.tip ? ` + ${peso(p.tip)}` : ''}`);
 
 function openPaySheet() {
   const dlg = $('#paySheet');
   tipDraft = state.price ? state.price.tip : 0;
+  customOpen = false;
   $$('input[name="payment"]', dlg).forEach((r) => { r.checked = r.value === state.payment; });
   $('#customPrice').value = '';
   renderPrice();
@@ -122,10 +124,13 @@ function renderPrice() {
   const p = draftPrice();
   const fare = fareNumber();
   $('#priceValue').textContent = totalText(p);
-  $$('[data-tip]', $('#tipChips')).forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.tip) === p.tip)));
+  $$('[data-tip]', $('#tipChips')).forEach((b) => b.setAttribute('aria-pressed', String(!customOpen && Number(b.dataset.tip) === p.tip)));
+  $('[data-custom]').setAttribute('aria-pressed', String(customOpen));
+  $('[data-custom]').setAttribute('aria-expanded', String(customOpen));
+  $('#customRow').hidden = !customOpen;
   $('[data-price-step="-1"]').disabled = p.tip === 0;
   $('[data-price-step="1"]').disabled = p.tip >= CONFIG.tips.max;
-  $('#customLabel').textContent = fare !== null ? 'Or type your price' : 'Or type a tip';
+  $('#customLabel').textContent = fare !== null ? `Your price (fare ${peso(fare)} + tip)` : 'Tip amount';
   const input = $('#customPrice');
   input.placeholder = fare !== null ? String(fare) : '0';
   input.min = fare !== null ? String(fare) : '0';
@@ -143,16 +148,28 @@ function setupPaySheet() {
       <svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#${m.icon}"/></svg>
       <span class="paymethod__text"><span class="paymethod__name">${m.name}</span><small>${m.hint}</small></span></label>`).join(''));
   $('#tipChips').innerHTML = [0, ...CONFIG.tips.presets].map((n) =>
-    `<button type="button" class="chip" data-tip="${n}" aria-pressed="false">${n ? `+${peso(n)}` : 'No tip'}</button>`).join('');
+    `<button type="button" class="chip" data-tip="${n}" aria-pressed="false">${n ? `+${peso(n)}` : 'No tip'}</button>`).join('')
+    + '<button type="button" class="chip" data-custom aria-pressed="false" aria-expanded="false" aria-controls="customRow">Custom</button>';
   $('#tipChips').addEventListener('click', (e) => {
+    if (e.target.closest('[data-custom]')) {
+      customOpen = true;
+      renderPrice();
+      const input = $('#customPrice');
+      const fare = fareNumber();
+      if (!input.value) input.value = draftPrice().tip ? String(fare !== null ? fare + draftPrice().tip : draftPrice().tip) : '';
+      input.focus();
+      return;
+    }
     const b = e.target.closest('[data-tip]');
     if (!b) return;
     tipDraft = Number(b.dataset.tip);
+    customOpen = false;
     $('#customPrice').value = '';
     renderPrice();
   });
   $$('[data-price-step]', dlg).forEach((b) => b.addEventListener('click', () => {
     tipDraft = Math.min(CONFIG.tips.max, Math.max(0, draftPrice().tip + Number(b.dataset.priceStep) * CONFIG.priceStep));
+    customOpen = false;
     $('#customPrice').value = '';
     renderPrice();
   }));
@@ -174,9 +191,20 @@ function setupPaySheet() {
 }
 
 /* ---------- Booking → finding a driver → trip ---------- */
+/* Hide / show the floating status card (steps "search" and "trip") */
+function setStatusHidden(hidden) {
+  state.statusHidden = hidden;
+  el.body.classList.toggle('is-status-hidden', hidden);
+  $('#statusBar').setAttribute('aria-expanded', String(!hidden));
+  requestAnimationFrame(() => frame());
+  if (!hidden) { const btn = $(`#${state.step === 'trip' ? 'tripPanel' : 'searchPanel'} [data-hide-status]`); if (btn) btn.focus(); }
+  else $('#statusBar').focus();
+}
+
 async function startBooking() {
   const vehicle = vehicleById(state.vehicle);
   const token = ++bookingToken;
+  setStatusHidden(false);
   state.step = 'search';
   state.driver = null;
   state.booking = null;
@@ -235,6 +263,7 @@ function backToChoose() {
   state.step = 'choose';
   state.driver = null;
   state.booking = null;
+  el.body.classList.remove('is-status-hidden');
   render();
   requestAnimationFrame(() => frame());
 }
@@ -313,6 +342,7 @@ function showTripDone(order) {
     state.price = null;
     state.driver = null;
     state.booking = null;
+    el.body.classList.remove('is-status-hidden');
     goToRequest({ clear: true });
   };
   $('[data-done]', dlg).addEventListener('click', finish);
@@ -540,6 +570,7 @@ function render() {
   renderTrip();
   const w = words();
   ['askTitle', 'askHint', 'bookVerb', 'seeLabel', 'payTitle', 'searchTitle'].forEach((k) => setBind(k, w[k]));
+  if (state.step === 'search') { setBind('barTitle', `${w.searchTitle}…`); setBind('barSub', `${v.name} · ${pay.name}`); }
   setBind('stepArriving', w.steps[0]);
   setBind('stepTrip', w.steps[1]);
   setBind('stepDone', w.steps[2]);
@@ -584,6 +615,8 @@ function renderTrip() {
     completed: '',
   }[d.status];
   setBind('tripSub', sub || '');
+  setBind('barTitle', typeof title === 'function' ? title() : title || '');
+  setBind('barSub', d.status === 'arrived' ? sub : [sub, `${d.name} · ${d.vehicle.plate}`].filter(Boolean).join(' · '));
   const at = STEP_ORDER[d.status] ?? 0;
   $$('.trip__steps li').forEach((li, i) => {
     li.classList.toggle('is-done', i < at);
@@ -902,6 +935,8 @@ $$('[data-book]').forEach((btn) => btn.addEventListener('click', book));
 
 $('#payBtn').addEventListener('click', book);
 $('#cancelSearch').addEventListener('click', () => cancelBooking());
+$$('[data-hide-status]').forEach((b) => b.addEventListener('click', () => setStatusHidden(true)));
+$('#statusBar').addEventListener('click', () => setStatusHidden(false));
 $('#cancelTrip').addEventListener('click', () => cancelBooking({ ask: true }));
 $('#callDriver').addEventListener('click', () => {
   if (state.driver && state.driver.phone) location.href = `tel:${state.driver.phone}`;
