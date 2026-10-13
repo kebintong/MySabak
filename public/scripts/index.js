@@ -89,7 +89,7 @@
   /** Plain-language reason a TomTom call failed. */
   function ttError(err) {
     if (!err) return 'Something went wrong.';
-    if (err.status === 401 || err.status === 403) return 'TomTom didn’t accept the server’s API key.';
+    if (err.status === 401 || err.status === 403) return 'TomTom refused the API key for this service. Open /api/health to see which TomTom products the key is missing.';
     if (err.status === 503) return 'The map service isn’t set up yet (TOMTOM_KEY is missing on the server).';
     if (err.status === 429) return 'TomTom’s free limit was reached. Try again later.';
     if (err.status === 0) return 'Can’t reach TomTom. Check your internet, or an ad-blocker.';

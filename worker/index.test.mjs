@@ -95,6 +95,41 @@ test('a missing TOMTOM_KEY secret gives a clear 503', async () => {
   assert.match((await res.json()).error, /TOMTOM_KEY/);
 });
 
+// ---------- /api/health ----------
+test('health: reports which TomTom product refuses the key, without showing the key', async () => {
+  globalThis.fetch = async (url) => {
+    calls.push({ url: new URL(url) });
+    if (String(url).includes('/styles/')) return new Response(`Forbidden for key ${KEY}: Map Display not enabled`, { status: 403 });
+    return Response.json({ fine: true });
+  };
+  const res = await call('/api/health');
+  const body = await res.text();
+  const report = JSON.parse(body);
+  assert.equal(res.status, 502);
+  assert.equal(report.ok, false);
+  assert.equal(report.results['map style (Maps / Map Display API)'].status, 403);
+  assert.match(report.results['map style (Maps / Map Display API)'].tomtom_says, /Map Display not enabled/);
+  assert.equal(report.results['address lookup (Search API)'].ok, true);
+  assert.equal(report.results['routes (Routing API)'].ok, true);
+  assert.ok(!body.includes(KEY));
+  assert.ok(calls.every((c) => c.url.searchParams.get('key') === KEY)); // same path as the app: key added by the proxy
+});
+
+test('health: all green, including the tiles named in the style', async () => {
+  const res = await call('/api/health');
+  const report = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(report.ok, true);
+  assert.equal(report.results['map tiles (Maps / Map Display API)'].ok, true);
+  assert.ok(calls.some((c) => c.url.pathname === '/maps/orbis/tile/15/27119/15256.pbf'));
+});
+
+test('health: says so when the secret is missing', async () => {
+  const res = await call('/api/health', {}, { ...env, TOMTOM_KEY: '' });
+  assert.equal(res.status, 503);
+  assert.match((await res.json()).TOMTOM_KEY, /missing/);
+});
+
 // ---------- Repo guards ----------
 const tracked = () => execFileSync('git', ['ls-files'], { encoding: 'utf8' }).split('\n').filter(Boolean);
 

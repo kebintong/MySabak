@@ -38,6 +38,17 @@ To re-deploy by hand: Actions → CI/CD → **Run workflow**.
 Optional: once `mysabak.com` is on Cloudflare, add it under the Worker's Settings → Domains & Routes,
 and add a rate-limiting rule on `/api/*` (Security → WAF) so scripts can't use up the TomTom quota.
 
+## If the map or search doesn't work
+
+Open **`/api/health`** on the live site (e.g. `https://mysabak.<you>.workers.dev/api/health`).
+It tries every TomTom service the app uses and shows which ones refuse the key, with TomTom's reason.
+
+- **A line fails with 401/403:** that TomTom product isn't enabled for the key. In the TomTom dashboard
+  (developer.tomtom.com → Keys), enable it for the key, or create a new key with all of them:
+  Maps / Map Display, Search, Places Search (Orbis) and Routing.
+- **`TOMTOM_KEY: missing`:** add the key on the Worker, as type **Secret**. A plain-text *Variable*
+  is shown to anyone who opens the dashboard. Secrets are hidden and always survive deploys.
+
 ## Running it on your computer
 
 Needs Node.js 22+.
