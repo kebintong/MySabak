@@ -2,7 +2,7 @@
 import {
   merchantHome, setShopOpen, setItemAvailable, updateMerchantOrder, MERCHANT_ACTIONS, ORDER_STEPS, errorMessage,
 } from '../api.js';
-import { storefront, itemPicture } from '../placeholders.js';
+import { itemPicture } from '../placeholders.js';
 import { $, mountChrome, esc, peso, when, toast } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -44,7 +44,7 @@ function countUp(el, to, format = String) {
     const eased = 1 - (1 - t) ** 3;
     el.textContent = format(Math.round(from + (to - from) * eased));
     if (t < 1) requestAnimationFrame(step);
-    else { el.textContent = format(to); el.parentElement.classList.remove('is-bumped'); void el.offsetWidth; el.parentElement.classList.add('is-bumped'); }
+    else el.textContent = format(to);
   };
   requestAnimationFrame(step);
 }
@@ -122,7 +122,7 @@ function renderMenu() {
     const on = home.available[i.id];
     const variants = variantsOf(i);
     return `<li class="pcard${on ? '' : ' is-off'}" style="--i:${n}">
-      <div class="pcard__img">${i.image ? `<img src="${esc(i.image)}" alt="" loading="lazy">` : itemPicture(i, home.shop.color)}
+      <div class="pcard__img">${i.image ? `<img src="${esc(i.image)}" alt="" loading="lazy">` : itemPicture(i, '#5630d8')}
         <span class="pcard__section">${esc(i.section || '')}</span><span class="pcard__sold">Sold out</span></div>
       <div class="pcard__body">
         <div class="pcard__top"><h3 class="pcard__name">${esc(i.name)}</h3><span class="pcard__price">${variants.length > 1 ? '<small>from</small> ' : ''}${peso(i.price)}</span></div>
@@ -146,7 +146,8 @@ function render() {
   $('#shopName').textContent = home.shop.name;
   $('#shopArea').textContent = home.shop.area;
   $('#shopHours').textContent = home.shop.hours || '';
-  $('#shopAva').innerHTML = home.shop.image ? `<img src="${esc(home.shop.image)}" alt="">` : storefront(home.shop);
+  $('#shopAva').innerHTML = home.shop.image ? `<img src="${esc(home.shop.image)}" alt="">`
+    : esc(home.shop.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase());
   renderOpen();
   renderStats();
   renderOrders();

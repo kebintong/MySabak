@@ -1,8 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160"><!-- Sample menu picture: leche flan -->
-<rect width="240" height="160" fill="#fde3d6"/><circle cx="206" cy="30" r="40" fill="#feeee6"/>
-<ellipse cx="120" cy="118" rx="86" ry="22" fill="#e9c2ae"/><ellipse cx="120" cy="112" rx="82" ry="20" fill="#fff"/>
-<path d="M70 108V74c0-8 22-14 50-14s50 6 50 14v34c0 8-22 12-50 12s-50-4-50-12z" fill="#f4c95d"/>
-<ellipse cx="120" cy="74" rx="50" ry="14" fill="#b8641c"/><ellipse cx="120" cy="72" rx="44" ry="10" fill="#cf7a26"/>
-<path d="M72 80c4 10 2 16 6 22M168 80c-3 9-1 14-5 22M96 86c2 8 0 12 3 18" stroke="#b8641c" stroke-width="5" stroke-linecap="round" fill="none"/>
-<ellipse cx="104" cy="70" rx="12" ry="3" fill="#e9a25a" opacity=".8"/><path d="M62 112c10 6 30 6 40 4M178 112c-10 6-26 6-36 4" stroke="#cf7a26" stroke-width="4" stroke-linecap="round" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" fill="none" stroke="#5630d8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><!-- Sample menu picture: leche flan (line drawing, brand colour) -->
+<rect width="240" height="150" fill="#f7f5fd" stroke="none"/><ellipse cx="120" cy="110" rx="76" ry="16"/>
+<path d="M78 104V74c0-8 20-12 42-12s42 4 42 12v30c0 6-20 10-42 10s-42-4-42-10z" fill="#5630d8" fill-opacity=".08"/>
+<ellipse cx="120" cy="74" rx="42" ry="11" fill="#5630d8" fill-opacity=".25"/><path d="M84 80c3 8 1 12 4 18M156 80c-3 8-1 12-4 18" stroke-opacity=".6"/>
 </svg>
