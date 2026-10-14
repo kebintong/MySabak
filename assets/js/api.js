@@ -766,18 +766,18 @@ export async function merchantHome() {
 
 /** DEMO: Demo Kitchen's sample orders, made once per browser and then kept (so Accept etc. stick). */
 function sampleMerchantOrders() {
-  let saved = demo.get('merchantOrders', null);
+  let saved = demo.get('merchantSampleOrders', null);
   if (!saved) {
     const now = Date.now();
     saved = DEMO_MERCHANT_ORDERS.map(({ minutesAgo, lines, ...o }) => ({
       ...o,
       shop: { id: DEMO_ACCOUNTS.merchant.shop.id, name: DEMO_ACCOUNTS.merchant.shop.name },
-      lines: lines.map((l) => ({ ...l, options: [], note: '' })),
+      lines: lines.map((l) => ({ options: [], ...l, note: '' })),
       subtotal: lines.reduce((n, l) => n + l.price * l.qty, 0),
       placedAt: now - minutesAgo * 60000,
       demo: true,
     }));
-    demo.set('merchantOrders', saved);
+    demo.set('merchantSampleOrders', saved);
   }
   return saved;
 }
@@ -801,7 +801,7 @@ export async function setItemAvailable(itemId, available) {
 /** Move an order along (Accept, Decline, Start preparing, Ready for pickup). */
 export async function updateMerchantOrder(orderId, actionId) {
   if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
-  const key = sampleMerchantOrders().some((o) => o.id === orderId) ? 'merchantOrders' : 'orders';
+  const key = sampleMerchantOrders().some((o) => o.id === orderId) ? 'merchantSampleOrders' : 'orders';
   const orders = demo.get(key, []);
   const order = orders.find((o) => o.id === orderId);
   if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });

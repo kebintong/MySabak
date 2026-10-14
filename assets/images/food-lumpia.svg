@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" fill="none" stroke="#5630d8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><!-- Sample menu picture: lumpiang shanghai (line drawing, brand colour) -->
+<rect width="240" height="150" fill="#f7f5fd" stroke="none"/><rect x="46" y="36" width="148" height="80" rx="14"/>
+<g transform="rotate(-12 120 76)" fill="#5630d8" fill-opacity=".12"><rect x="70" y="50" width="90" height="14" rx="7"/><rect x="76" y="70" width="90" height="14" rx="7"/><rect x="72" y="90" width="90" height="14" rx="7"/></g>
+<g transform="rotate(-12 120 76)" stroke-opacity=".45"><path d="M92 52l3 10M112 52l3 10M132 52l3 10M98 72l3 10M118 72l3 10M138 72l3 10M94 92l3 10M114 92l3 10M134 92l3 10"/></g>
+<ellipse cx="172" cy="100" rx="12" ry="7" fill="#5630d8" fill-opacity=".25"/>
+</svg>

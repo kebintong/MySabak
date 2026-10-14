@@ -24,6 +24,11 @@ export const DEMO_DRIVERS = {
   suv: { name: 'Liza M.', rating: 4.9, trips: 530, vehicle: { model: 'Toyota Innova', color: 'Silver', plate: 'NBC 5678' } },
 };
 
+/** A required "Size" (or other) choice whose prices are added to the item price. */
+const variant = (choices, name = 'Size') => ({
+  id: 'size', name, type: 'one', required: true, choices: choices.map(([n, price]) => ({ name: n, price })),
+});
+
 /* Demo accounts, so the company can try the driver and merchant sides.
    SAMPLE logins: delete with this file when real accounts exist (passwords are checked on the server). */
 export const DEMO_ACCOUNTS = {
@@ -44,12 +49,27 @@ export const DEMO_ACCOUNTS = {
       address: 'Escario St, Capitol Site, Cebu City', phone: '0917 000 0002',
       lng: 123.8930, lat: 10.3180, hours: '9:00 AM – 9:00 PM', opensAt: '09:00', closesAt: '21:00',
       color: '#5630d8', tint: '#ece6ff', image: null,
+      // SAMPLE menu: drawn pictures (assets/images/food-*.svg), a short description (`note`) and variants as a
+      // required single-choice option; each variant's price is added to the item price.
       menu: [
-        { id: 'adobo', name: 'Chicken adobo + rice', price: 120, section: 'Mains', image: null, options: [] },
-        { id: 'sinigang', name: 'Pork sinigang', price: 150, section: 'Mains', image: null, options: [] },
-        { id: 'lumpia', name: 'Lumpia (6 pcs)', price: 85, section: 'Sides', image: null, options: [] },
-        { id: 'rice', name: 'Extra rice', price: 20, section: 'Sides', image: null, options: [] },
-        { id: 'leche', name: 'Leche flan', price: 60, section: 'Desserts', image: null, options: [] },
+        { id: 'adobo', name: 'Chicken adobo + rice', price: 120, section: 'Mains', image: '/assets/images/food-adobo.svg',
+          note: 'Chicken braised in soy, vinegar and garlic, with steamed rice.',
+          options: [variant([['Solo', 0], ['Sharing', 110], ['Family', 260]])] },
+        { id: 'sinigang', name: 'Pork sinigang', price: 150, section: 'Mains', image: '/assets/images/food-sinigang.svg',
+          note: 'Sour tamarind soup with pork belly, kangkong, radish and tomato.',
+          options: [variant([['Bowl', 0], ['Good for 3', 140]])] },
+        { id: 'lumpia', name: 'Lumpiang shanghai', price: 85, section: 'Sides', image: '/assets/images/food-lumpia.svg',
+          note: 'Crispy pork spring rolls with sweet chili dip.',
+          options: [variant([['6 pcs', 0], ['12 pcs', 75], ['24 pcs', 155]], 'Pieces')] },
+        { id: 'rice', name: 'Rice', price: 20, section: 'Sides', image: '/assets/images/food-rice.svg',
+          note: 'Freshly steamed, or fried with toasted garlic.',
+          options: [variant([['Plain', 0], ['Garlic', 10]], 'Kind')] },
+        { id: 'leche', name: 'Leche flan', price: 60, section: 'Desserts', image: '/assets/images/food-leche.svg',
+          note: 'Silky egg custard under dark caramel.',
+          options: [variant([['Slice', 0], ['Whole llanera', 160]])] },
+        { id: 'icedtea', name: 'House iced tea', price: 35, section: 'Drinks', image: '/assets/images/food-icedtea.svg',
+          note: 'Brewed black tea with calamansi.',
+          options: [variant([['Regular', 0], ['Large', 15], ['Pitcher', 85]])] },
       ],
     },
   },
@@ -59,15 +79,15 @@ export const DEMO_ACCOUNTS = {
    dashboard) and last week's sales, so the dashboard isn't empty. Tagged "Sample" on screen. */
 export const DEMO_MERCHANT_ORDERS = [
   { id: 'DK-1042', customer: 'Ana', minutesAgo: 2, status: 'placed', notes: 'Please add extra sauce.',
-    lines: [{ name: 'Chicken adobo + rice', qty: 2, price: 120 }, { name: 'Leche flan', qty: 1, price: 60 }] },
+    lines: [{ name: 'Chicken adobo + rice', qty: 1, price: 230, options: ['Sharing'] }, { name: 'Leche flan', qty: 1, price: 60, options: ['Slice'] }] },
   { id: 'DK-1041', customer: 'Paolo', minutesAgo: 6, status: 'placed', notes: '',
-    lines: [{ name: 'Pork sinigang', qty: 1, price: 150 }, { name: 'Extra rice', qty: 2, price: 20 }] },
+    lines: [{ name: 'Pork sinigang', qty: 1, price: 150 }, { name: 'Rice', qty: 2, price: 30, options: ['Garlic'] }] },
   { id: 'DK-1040', customer: 'Kim', minutesAgo: 14, status: 'preparing', notes: '',
-    lines: [{ name: 'Lumpia (6 pcs)', qty: 2, price: 85 }] },
+    lines: [{ name: 'Lumpiang shanghai', qty: 1, price: 160, options: ['12 pcs'] }] },
   { id: 'DK-1039', customer: 'Rhea', minutesAgo: 25, status: 'ready', notes: 'No utensils.',
-    lines: [{ name: 'Chicken adobo + rice', qty: 1, price: 120 }, { name: 'Lumpia (6 pcs)', qty: 1, price: 85 }] },
+    lines: [{ name: 'Chicken adobo + rice', qty: 1, price: 120 }, { name: 'Lumpiang shanghai', qty: 1, price: 85, options: ['6 pcs'] }] },
   { id: 'DK-1038', customer: 'Jomar', minutesAgo: 70, status: 'delivered', notes: '',
-    lines: [{ name: 'Pork sinigang', qty: 2, price: 150 }, { name: 'Extra rice', qty: 2, price: 20 }] },
+    lines: [{ name: 'Pork sinigang', qty: 2, price: 150 }, { name: 'Rice', qty: 2, price: 30, options: ['Garlic'] }] },
 ];
 /* Sales per day for the last 7 days, oldest first (the last one is today, before the sample orders). */
 export const DEMO_MERCHANT_WEEK = [1840, 2210, 1675, 2490, 3120, 3560, 0];

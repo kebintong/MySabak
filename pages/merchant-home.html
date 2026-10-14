@@ -21,13 +21,13 @@
   <link rel="stylesheet" href="/assets/css/style.css">
   <script type="module" src="/assets/js/pages/merchant-home.js"></script>
 </head>
-<body class="page">
+<body class="page page--merchant">
   <div class="app">
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <div class="content__inner content__inner--wide">
+      <div class="content__inner content__inner--full">
 
         <div id="merchantHome" class="stack mdash" hidden>
           <!-- Hero: shop, greeting, open / closed -->
@@ -44,7 +44,7 @@
               <span class="live" id="openBadge"><span class="live__dot" aria-hidden="true"></span><span id="openLabel">Open</span></span>
               <div class="mhero__switch">
                 <span id="openHint">Accepting orders</span>
-                <button type="button" class="switch switch--light" id="openSwitch" role="switch" aria-checked="true" aria-label="Accepting orders"><span></span></button>
+                <button type="button" class="switch" id="openSwitch" role="switch" aria-checked="true" aria-label="Accepting orders"><span></span></button>
               </div>
             </div>
           </header>
@@ -70,13 +70,17 @@
                 <div class="wchart" id="weekChart" role="img"></div>
                 <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
               </section>
-
-              <section class="card" aria-labelledby="menuTitle">
-                <h2 class="card__title card__title--row" id="menuTitle">Menu <span class="muted small" id="menuCount"></span></h2>
-                <ul class="list" id="menuList"></ul>
-              </section>
             </div>
           </div>
+
+          <!-- Products: picture, short description, variant prices, Available switch -->
+          <section class="card products" aria-labelledby="menuTitle">
+            <div class="products__head">
+              <h2 class="card__title" id="menuTitle">Your products <span class="muted small" id="menuCount"></span></h2>
+              <div class="fchips products__filter" id="menuFilter" role="group" aria-label="Show products in"></div>
+            </div>
+            <ul class="pgrid" id="menuList"></ul>
+          </section>
         </div>
       </div>
     </main>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" fill="none" stroke="#5630d8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><!-- Sample menu picture: house iced tea (line drawing, brand colour) -->
+<rect width="240" height="150" fill="#f7f5fd" stroke="none"/><path d="M92 30h56l-8 96h-40z"/><path d="M95 56h50l-6 70h-38z" fill="#5630d8" fill-opacity=".12"/>
+<rect x="104" y="66" width="12" height="12" rx="2" stroke-opacity=".6"/><rect x="122" y="82" width="12" height="12" rx="2" stroke-opacity=".6"/>
+<circle cx="146" cy="50" r="11"/><path d="M146 41v18M137 50h18" stroke-opacity=".5"/><path d="M126 16l-6 110"/>
+</svg>
