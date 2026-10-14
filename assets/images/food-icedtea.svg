@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160"><!-- Sample menu picture: iced tea -->
+<rect width="240" height="160" fill="#fff0cc"/><circle cx="36" cy="26" r="38" fill="#fff6df"/>
+<ellipse cx="120" cy="140" rx="44" ry="8" fill="#e8d3a0"/>
+<path d="M86 34h68l-8 104H94z" fill="#fff" opacity=".7" stroke="#e5d6b4" stroke-width="2"/><path d="M90 58h60l-6 78H96z" fill="#c9771f"/>
+<g fill="#fff" opacity=".65"><rect x="98" y="64" width="16" height="16" rx="3" transform="rotate(-10 106 72)"/><rect x="122" y="76" width="16" height="16" rx="3" transform="rotate(12 130 84)"/><rect x="104" y="96" width="14" height="14" rx="3"/></g>
+<circle cx="146" cy="56" r="14" fill="#f2d94c"/><circle cx="146" cy="56" r="10" fill="#f7e98a"/><path d="M146 46v20M136 56h20M139 49l14 14M153 49l-14 14" stroke="#f2d94c" stroke-width="1.5"/>
+<path d="M128 20l-6 120" stroke="#5630d8" stroke-width="6" stroke-linecap="round"/><path d="M98 66c-2 20-2 44 2 64" stroke="#e8a04c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+</svg>

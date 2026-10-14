@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160"><!-- Sample menu picture: lumpia -->
+<rect width="240" height="160" fill="#fbe9c8"/><circle cx="214" cy="140" r="44" fill="#fdf2dc"/>
+<rect x="34" y="40" width="172" height="96" rx="20" fill="#cdb48c"/><rect x="34" y="34" width="172" height="96" rx="20" fill="#fff"/>
+<g transform="rotate(-14 120 82)"><rect x="56" y="58" width="104" height="18" rx="9" fill="#d9952e"/><rect x="62" y="80" width="104" height="18" rx="9" fill="#e3a43a"/><rect x="58" y="102" width="104" height="18" rx="9" fill="#d48a26"/>
+<g stroke="#b56d15" stroke-width="2" stroke-linecap="round"><path d="M80 62l4 10M100 62l4 10M120 62l4 10M86 84l4 10M106 84l4 10M126 84l4 10M82 106l4 10M102 106l4 10M122 106l4 10"/></g>
+<circle cx="160" cy="67" r="7" fill="#e9c27a"/><circle cx="166" cy="89" r="7" fill="#efcd88"/><circle cx="162" cy="111" r="7" fill="#e5b96c"/></g>
+<ellipse cx="178" cy="114" rx="18" ry="11" fill="#fff" stroke="#e8dccb" stroke-width="2"/><ellipse cx="178" cy="114" rx="13" ry="7" fill="#d8452e"/>
+</svg>

@@ -2,7 +2,7 @@
 import {
   merchantHome, setShopOpen, setItemAvailable, updateMerchantOrder, MERCHANT_ACTIONS, ORDER_STEPS, errorMessage,
 } from '../api.js';
-import { storefront } from '../placeholders.js';
+import { storefront, itemPicture } from '../placeholders.js';
 import { $, mountChrome, esc, peso, when, toast } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -104,11 +104,34 @@ function renderWeek() {
       <span class="wchart__plot"><span class="wchart__tip">${peso(v)}</span><span class="wchart__bar"></span></span><span class="wchart__day">${days[i]}</span></div>`).join('');
 }
 
+let section = 'all';
+
+/** The item's variants with their full price (item price + the variant's price), or [] when it has none. */
+const variantsOf = (item) => {
+  const g = (item.options || []).find((o) => o.type === 'one' && o.required);
+  return g ? g.choices.map((c) => ({ name: c.name, price: item.price + (c.price || 0) })) : [];
+};
+
 function renderMenu() {
   renderMenu.count();
-  $('#menuList').innerHTML = home.shop.menu.map((i) => `<li class="row mitem${home.available[i.id] ? '' : ' is-off'}" data-sub="${esc(i.section || '')} · ${peso(i.price)}">
-      <div class="row__main"><span class="row__title">${esc(i.name)}</span><span class="row__sub">${esc(i.section || '')} · ${peso(i.price)}${home.available[i.id] ? '' : ' · Sold out'}</span></div>
-      <button type="button" class="switch" role="switch" aria-checked="${home.available[i.id]}" aria-label="${esc(i.name)} available" data-item="${esc(i.id)}"><span></span></button></li>`).join('');
+  const sections = [...new Set(home.shop.menu.map((i) => i.section).filter(Boolean))];
+  $('#menuFilter').innerHTML = ['all', ...sections].map((sec) =>
+    `<button type="button" class="fchip" data-section="${esc(sec)}" aria-pressed="${sec === section}">${sec === 'all' ? 'All' : esc(sec)}</button>`).join('');
+  const items = home.shop.menu.filter((i) => section === 'all' || i.section === section);
+  $('#menuList').innerHTML = items.map((i, n) => {
+    const on = home.available[i.id];
+    const variants = variantsOf(i);
+    return `<li class="pcard${on ? '' : ' is-off'}" style="--i:${n}">
+      <div class="pcard__img">${i.image ? `<img src="${esc(i.image)}" alt="" loading="lazy">` : itemPicture(i, home.shop.color)}
+        <span class="pcard__section">${esc(i.section || '')}</span><span class="pcard__sold">Sold out</span></div>
+      <div class="pcard__body">
+        <div class="pcard__top"><h3 class="pcard__name">${esc(i.name)}</h3><span class="pcard__price">${variants.length > 1 ? '<small>from</small> ' : ''}${peso(i.price)}</span></div>
+        ${i.note ? `<p class="pcard__desc">${esc(i.note)}</p>` : ''}
+        ${variants.length ? `<ul class="pcard__variants" aria-label="Prices">${variants.map((v) => `<li><span>${esc(v.name)}</span><b>${peso(v.price)}</b></li>`).join('')}</ul>` : ''}
+        <div class="pcard__foot"><span class="pcard__state">${on ? 'Available' : 'Sold out'}</span>
+          <button type="button" class="switch" role="switch" aria-checked="${on}" aria-label="${esc(i.name)} available" data-item="${esc(i.id)}"><span></span></button></div>
+      </div></li>`;
+  }).join('');
 }
 
 renderMenu.count = () => {
@@ -154,7 +177,14 @@ $('#orderList').addEventListener('click', async (e) => {
   b.disabled = true;
   try {
     await updateMerchantOrder(b.dataset.order, b.dataset.action);
-    await reload();
+    await $('#menuFilter').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-section]');
+  if (!b) return;
+  section = b.dataset.section;
+  renderMenu();
+});
+
+reload();
   } catch (err) { toast(err.status === 409 ? err.message : errorMessage(err)); b.disabled = false; }
 });
 
@@ -176,12 +206,19 @@ $('#menuList').addEventListener('click', async (e) => {
   try {
     await setItemAvailable(id, next);
     home.available[id] = next;
-    b.setAttribute('aria-checked', String(next)); // switch slides; the row dims when sold out
+    b.setAttribute('aria-checked', String(next)); // switch slides; the card dims and shows "Sold out"
     renderMenu.count();
-    const row = b.closest('.mitem');
-    row.classList.toggle('is-off', !next);
-    $('.row__sub', row).textContent = `${row.dataset.sub}${next ? '' : ' · Sold out'}`;
+    const card = b.closest('.pcard');
+    card.classList.toggle('is-off', !next);
+    $('.pcard__state', card).textContent = next ? 'Available' : 'Sold out';
   } catch (err) { toast(errorMessage(err)); }
+});
+
+$('#menuFilter').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-section]');
+  if (!b) return;
+  section = b.dataset.section;
+  renderMenu();
 });
 
 reload();
