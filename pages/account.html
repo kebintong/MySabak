@@ -29,38 +29,67 @@
     <main class="content">
       <div class="content__inner">
 
-        <!-- Placeholder: sign-in (phone number + one-time code) is a backend feature. -->
-        <header class="page-head">
-          <h1 class="page-title">Your account</h1>
-          <p class="lede">Sign in with your mobile number to keep everything in one place.</p>
-        </header>
+        <!-- Signed out: customer sign in. Drivers and merchants switch to their own form above it. -->
+        <div class="auth" id="signedOut" hidden>
+          <section class="card auth-card" aria-labelledby="signinTitle">
+            <nav class="role-switch" aria-label="Sign in as">
+              <a class="role-switch__btn" href="/pages/account.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg>Customer</a>
+              <a class="role-switch__btn" href="/pages/drive.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg>Driver</a>
+              <a class="role-switch__btn" href="/pages/merchant.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg>Merchant</a>
+            </nav>
+            <div class="auth-card__head">
+              <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg></span>
+              <h1 class="auth-card__title" id="signinTitle">Customer sign in</h1>
+              <p class="lede">Sign in to book rides, order from shops and keep your receipts in one place.</p>
+            </div>
 
-        <section class="card" aria-labelledby="soonTitle">
-          <h2 class="card__title card__title--row" id="soonTitle">Sign in <span class="badge badge--wait">Coming soon</span></h2>
-          <ul class="list">
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-home"/></svg></span><div class="row__main"><span class="row__title">Saved places</span><span class="row__sub">Home and Work, one tap away</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></span><div class="row__main"><span class="row__title">Trips and orders</span><span class="row__sub">Receipts for every Ride, Express and Shop order</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-card"/></svg></span><div class="row__main"><span class="row__title">Payment methods</span><span class="row__sub">GCash, Maya or card</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg></span><div class="row__main"><span class="row__title">Your tips</span><span class="row__sub">Everything you’ve tipped mysabak</span></div></li>
-          </ul>
-        </section>
+            <form class="form" id="signinForm" novalidate>
+              <label class="field"><span class="field__label">Mobile number or email</span>
+                <input class="input" name="login" type="text" required placeholder="09XX XXX XXXX or name@email.com"
+                       autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+              <div class="field"><label class="field__label" for="password">Password</label>
+              <div class="input-wrap"><input class="input" id="password" name="password" type="password" required minlength="8" autocomplete="current-password">
+              <button type="button" class="input-wrap__btn" data-reveal="password" aria-label="Show password">Show</button></div></div>
+              <div class="auth-row">
+                <label class="check"><input type="checkbox" name="remember" checked><span>Keep me signed in</span></label>
+                <a href="#" class="auth-link" id="forgot">Forgot password?</a>
+              </div>
+              <p class="field__error" id="signinError" role="alert" hidden></p>
+              <button type="submit" class="button button--block" id="signinBtn">Sign in</button>
+              <p class="auth-legal">By signing in, you agree to mysabak’s <a href="#" data-soon="Terms of Service">Terms of Service</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</p>
+            </form>
 
-        <section class="card" aria-labelledby="partnerTitle">
-          <h2 class="card__title" id="partnerTitle">For partners</h2>
-          <ul class="list">
-            <li><a class="row row--link" href="/pages/drive.html"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg></span><div class="row__main"><span class="row__title">Driver sign in</span><span class="row__sub">Go online and keep 100% of every fare</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
-            <li><a class="row row--link" href="/pages/merchant.html"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg></span><div class="row__main"><span class="row__title">Merchant sign in</span><span class="row__sub">Take orders and manage your shop</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
-          </ul>
-        </section>
+            <div class="auth-alt">
+              <span>New to mysabak?</span>
+              <a class="auth-link auth-link--strong" href="#" id="signupLink">Create an account</a>
+            </div>
+          </section>
+        </div>
 
-        <section class="card" aria-labelledby="nowTitle">
-          <h2 class="card__title" id="nowTitle">On this device</h2>
-          <ul class="list">
-            <li><a class="row row--link" href="/pages/support.html#mineTitle"><div class="row__main"><span class="row__title">Your tips</span><span class="row__sub">Saved in this browser for the demo</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
-            <li><a class="row row--link" href="/pages/shops.html#ordersTitle"><div class="row__main"><span class="row__title">Your shop orders</span><span class="row__sub">Saved in this browser for the demo</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
-            <li><a class="row row--link" href="/pages/driver.html"><div class="row__main"><span class="row__title">Driver home</span><span class="row__sub">If you signed up to drive</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
-          </ul>
-        </section>
+        <!-- Signed in as a customer -->
+        <div class="stack" id="signedIn" hidden>
+          <header class="page-head">
+            <h1 class="page-title">Hi, <span id="firstName">there</span></h1>
+            <p class="lede" id="whoLine">Your mysabak account</p>
+          </header>
+
+          <section class="card" aria-labelledby="soonTitle">
+            <h2 class="card__title card__title--row" id="soonTitle">Your account <span class="badge badge--wait">Coming soon</span></h2>
+            <ul class="list">
+              <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-home"/></svg></span><div class="row__main"><span class="row__title">Saved places</span><span class="row__sub">Home and Work, one tap away</span></div></li>
+              <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></span><div class="row__main"><span class="row__title">Trips and orders</span><span class="row__sub">Receipts for every Ride, Express and Shop order</span></div></li>
+              <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-card"/></svg></span><div class="row__main"><span class="row__title">Payment methods</span><span class="row__sub">GCash, Maya or card</span></div></li>
+            </ul>
+          </section>
+
+          <section class="card" aria-labelledby="nowTitle">
+            <h2 class="card__title" id="nowTitle">On this device</h2>
+            <ul class="list">
+              <li><a class="row row--link" href="/pages/support.html#mineTitle"><div class="row__main"><span class="row__title">Your tips</span><span class="row__sub">Saved in this browser for the demo</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+              <li><a class="row row--link" href="/pages/shops.html#ordersTitle"><div class="row__main"><span class="row__title">Your shop orders</span><span class="row__sub">Saved in this browser for the demo</span></div><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+            </ul>
+          </section>
+        </div>
       </div>
     </main>
 

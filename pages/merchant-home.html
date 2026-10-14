@@ -29,43 +29,50 @@
     <main class="content">
       <div class="content__inner content__inner--wide">
 
-        <div id="merchantHome" class="stack" hidden>
-          <header class="page-head page-head--row merchant-head">
-            <div class="merchant-head__shop">
-              <span class="merchant-head__ava" id="shopAva" aria-hidden="true"></span>
-              <div>
-                <h1 class="page-title" id="shopName">Your shop</h1>
-                <p class="lede"><span id="shopArea"></span> · <span class="badge" id="openBadge">Open</span></p>
+        <div id="merchantHome" class="stack mdash" hidden>
+          <!-- Hero: shop, greeting, open / closed -->
+          <header class="mhero">
+            <div class="mhero__shop">
+              <span class="mhero__ava" id="shopAva" aria-hidden="true"></span>
+              <div class="mhero__text">
+                <p class="mhero__hello" id="greeting">Good day</p>
+                <h1 class="mhero__title" id="shopName">Your shop</h1>
+                <p class="mhero__meta"><span id="shopArea"></span> · <span id="shopHours"></span></p>
               </div>
             </div>
-            <button type="button" class="button button--ghost" id="signOutBtn">Sign out</button>
+            <div class="mhero__open">
+              <span class="live" id="openBadge"><span class="live__dot" aria-hidden="true"></span><span id="openLabel">Open</span></span>
+              <div class="mhero__switch">
+                <span id="openHint">Accepting orders</span>
+                <button type="button" class="switch switch--light" id="openSwitch" role="switch" aria-checked="true" aria-label="Accepting orders"><span></span></button>
+              </div>
+            </div>
           </header>
+
+          <!-- Today at a glance -->
+          <section class="kpis" aria-label="Today">
+            <div class="kpi" style="--i:0"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-receipt"/></svg></span><span class="kpi__value" id="todayOrders">0</span><span class="kpi__label">Orders today</span></div>
+            <div class="kpi" style="--i:1"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-wallet"/></svg></span><span class="kpi__value" id="todaySales">0</span><span class="kpi__label">Sales today</span></div>
+            <div class="kpi" style="--i:2"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-clock"/></svg></span><span class="kpi__value" id="waitingOrders">0</span><span class="kpi__label">Waiting for you</span></div>
+            <div class="kpi" style="--i:3"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-star"/></svg></span><span class="kpi__value" id="avgOrder">0</span><span class="kpi__label">Average order</span></div>
+          </section>
 
           <div class="merchant-grid">
             <section class="card" aria-labelledby="ordersTitle">
               <h2 class="card__title card__title--row" id="ordersTitle">Orders <span class="muted small">Newest first</span></h2>
               <div class="seg" role="tablist" aria-label="Order status" id="orderTabs"></div>
-              <ul class="list" id="orderList" aria-live="polite"></ul>
+              <ul class="mlist" id="orderList" aria-live="polite"></ul>
             </section>
 
             <div class="stack">
-              <section class="card" aria-labelledby="openTitle">
-                <div class="open-row">
-                  <div>
-                    <h2 class="card__title" id="openTitle">Accepting orders</h2>
-                    <p class="muted small" id="openHint">Customers can order now.</p>
-                  </div>
-                  <button type="button" class="switch" id="openSwitch" role="switch" aria-checked="true" aria-labelledby="openTitle"><span></span></button>
-                </div>
-                <div class="stats">
-                  <div class="stat"><span class="stat__value" id="todayOrders">0</span><span class="stat__label">Orders today</span></div>
-                  <div class="stat"><span class="stat__value" id="todaySales">₱0</span><span class="stat__label">Sales today</span></div>
-                </div>
+              <section class="card" aria-labelledby="weekTitle">
+                <h2 class="card__title card__title--row" id="weekTitle">Sales this week <span class="badge" id="weekTotal">₱0</span></h2>
+                <div class="wchart" id="weekChart" role="img"></div>
                 <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
               </section>
 
               <section class="card" aria-labelledby="menuTitle">
-                <h2 class="card__title card__title--row" id="menuTitle">Menu <span class="muted small">Turn off what’s sold out</span></h2>
+                <h2 class="card__title card__title--row" id="menuTitle">Menu <span class="muted small" id="menuCount"></span></h2>
                 <ul class="list" id="menuList"></ul>
               </section>
             </div>
@@ -75,7 +82,7 @@
     </main>
 
     <div class="bottom">
-      <nav class="dock tabs" data-tabs="account" aria-label="Main"></nav>
+      <nav class="dock tabs" data-tabs="merchant" aria-label="Main"></nav>
     </div>
   </div>
 </body>

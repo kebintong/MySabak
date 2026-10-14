@@ -74,7 +74,7 @@
         <button type="button" class="btn btn--ghost btn--install" data-install hidden>
           <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-download"/></svg><span class="mobile-only">Install</span><span class="desktop-only">Install app</span>
         </button>
-        <a class="btn btn--dark" href="#/auth">Sign in</a>
+        <a class="btn btn--dark" href="pages/account.html" data-account>Sign in</a>
       </div>
     </header>
 
@@ -217,11 +217,11 @@
       <!-- Dock: tabs (+ search on desktop) -->
       <div class="dock">
         <nav class="tabs" aria-label="Main">
-          <a class="tab is-active" href="./" aria-current="page"><span class="tab__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg></span><span class="tab__label">Ride</span><span class="tab__dot desktop-only"></span></a>
-          <a class="tab" href="pages/drive.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-wheel"/></svg></span><span class="tab__label">Drive</span><span class="tab__dot desktop-only"></span></a>
-          <a class="tab" href="pages/shops.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-bag"/></svg></span><span class="tab__label">Shops</span><span class="tab__dot desktop-only"></span></a>
-          <a class="tab" href="pages/support.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-heart"/></svg></span><span class="tab__label">Support</span><span class="tab__dot desktop-only"></span></a>
-          <a class="tab mobile-only" href="pages/account.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-user"/></svg></span><span class="tab__label">Account</span></a>
+          <a data-tab="ride" class="tab is-active" href="./" aria-current="page"><span class="tab__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg></span><span class="tab__label">Ride</span><span class="tab__dot desktop-only"></span></a>
+          <a data-tab="drive" class="tab" href="pages/drive.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-wheel"/></svg></span><span class="tab__label">Drive</span><span class="tab__dot desktop-only"></span></a>
+          <a data-tab="shops" class="tab" href="pages/shops.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-bag"/></svg></span><span class="tab__label">Shops</span><span class="tab__dot desktop-only"></span></a>
+          <a data-tab="support" class="tab" href="pages/support.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-heart"/></svg></span><span class="tab__label">Support</span><span class="tab__dot desktop-only"></span></a>
+          <a data-tab="account" class="tab mobile-only" href="pages/account.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-user"/></svg></span><span class="tab__label">Account</span></a>
         </nav>
 
         <span class="dock__sep desktop-only" aria-hidden="true"></span>

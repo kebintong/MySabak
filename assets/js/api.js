@@ -17,7 +17,9 @@
    ========================================================= */
 import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
-import { SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS, DEMO_PLACES, DEMO_RIDERS } from './demo-data.js';
+import {
+  SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS, DEMO_PLACES, DEMO_RIDERS, DEMO_MERCHANT_ORDERS, DEMO_MERCHANT_WEEK,
+} from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
 /** Base of the TomTom proxy. map.js uses it for the map style and tiles. */
@@ -431,6 +433,63 @@ export async function supportStats() {
 }
 
 /* =========================================================
+   Accounts: one person is signed in on a device at a time, as a customer, a driver or a merchant.
+   Each has its own sign-in form (pages/account.html, pages/drive.html, pages/merchant.html).
+   ========================================================= */
+
+/**
+ * Who is signed in on this device, or null.
+ * Backend: one "who am I" call on your session (e.g. GET /api/me).
+ * @returns {Promise<null|{role:'client'|'driver'|'merchant', name:string, email:string|null}>}
+ */
+export async function currentUser() {
+  const client = demo.get('clientSession', null);
+  if (client) return { role: 'client', name: client.name, email: client.email || null };
+  const merchant = demo.get('merchantSession', null);
+  if (merchant) return { role: 'merchant', name: DEMO_ACCOUNTS.merchant.name, email: DEMO_ACCOUNTS.merchant.email, shop: DEMO_ACCOUNTS.merchant.shop.name };
+  const d = await driverStatus();
+  if (d.signedIn) return { role: 'driver', name: d.name, email: d.email || null };
+  return null;
+}
+
+/** Signing in as one role signs the device out of the others. */
+function endSessions(keep) {
+  if (keep !== 'client') demo.set('clientSession', null);
+  if (keep !== 'merchant') demo.set('merchantSession', null);
+  if (keep !== 'driver' && demo.get('driverSession', null)) {
+    const d = demo.get('driver', null);
+    if (d) demo.set('driver', { ...d, online: false });
+    demo.set('driverSession', null);
+  }
+}
+
+/** Sign out whoever is signed in (the profile menu's Sign out). */
+export async function signOut() {
+  endSessions(null);
+}
+
+/**
+ * Customer sign-in with a mobile number OR an email, plus password.
+ * DEMO: only the demo customer (demo-data.js → DEMO_ACCOUNTS.client) exists; customer sign-up isn't built.
+ * @returns {Promise<{name:string}>}  throws { status: 401 } when they don't match
+ */
+export async function clientSignIn({ login, password }) {
+  if (!login || !password) throw Object.assign(new Error('Enter your mobile number or email, and your password.'), { status: 400 });
+  await wait(700);
+  const c = DEMO_ACCOUNTS.client;
+  const isLogin = login.includes('@') ? sameEmail(c.email, login) : samePhone(c.phone, login);
+  if (!isLogin) throw Object.assign(new Error('No customer account uses that mobile number or email.'), { status: 401 });
+  if (password !== c.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+  endSessions('client');
+  demo.set('clientSession', { name: c.name, email: c.email, phone: c.phone, at: Date.now() });
+  return { name: c.name };
+}
+
+export async function clientSignOut() {
+  demo.set('clientSession', null);
+}
+
+/* =========================================================
    Drive (driver side)
    ========================================================= */
 
@@ -459,6 +518,7 @@ export async function driverSignIn({ login, password }) {
     const { password: _, ...profile } = demoDriver; // eslint-disable-line no-unused-vars
     const prev = demo.get('driver', null);
     demo.set('driver', { ...profile, method: 'demo', online: prev && prev.method === 'demo' ? prev.online : false });
+    endSessions('driver');
     demo.set('driverSession', { phone: demoDriver.phone, at: Date.now() });
     return { status: demoDriver.status };
   }
@@ -467,6 +527,7 @@ export async function driverSignIn({ login, password }) {
   if (!matches) {
     throw Object.assign(new Error('No driver account uses that mobile number or email. Check it, or sign up.'), { status: 401 });
   }
+  endSessions('driver');
   demo.set('driverSession', { phone: d.phone, at: Date.now() });
   return { status: d.status };
 }
@@ -658,6 +719,7 @@ export async function merchantSignIn({ login, password }) {
   const isLogin = login.includes('@') ? sameEmail(m.email, login) : samePhone(m.phone, login);
   if (!isLogin) throw Object.assign(new Error('No merchant account uses that mobile number or email.'), { status: 401 });
   if (password !== m.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+  endSessions('merchant');
   demo.set('merchantSession', { shopId: m.shop.id, at: Date.now() });
   return { shopId: m.shop.id };
 }
@@ -675,27 +737,49 @@ export const MERCHANT_ACTIONS = {
 
 /**
  * Everything the merchant dashboard shows. 401 if not signed in.
- * DEMO: the shop's open/closed switch and item availability are kept in this browser; orders are the ones
- * placed for this shop in this browser (none, as the shop isn't listed publicly).
+ * DEMO: the shop's open/closed switch and item availability are kept in this browser; orders are a few SAMPLE
+ * orders (demo-data.js → DEMO_MERCHANT_ORDERS, `demo: true`) plus any placed for this shop in this browser.
+ * `week` is sales per day for the last 7 days, oldest first, ending with today (SAMPLE except today).
  * @returns {Promise<{name:string, shop:object, open:boolean, available:Object<string, boolean>,
- *   orders:Array<Order>, today:{orders:number, sales:number}}>}
+ *   orders:Array<Order & {customer?:string}>, today:{orders:number, sales:number}, week:number[]}>}
  */
 export async function merchantHome() {
   const session = demo.get('merchantSession', null);
   if (!session) throw Object.assign(new Error('Sign in first'), { status: 401 });
   const m = DEMO_ACCOUNTS.merchant;
   const settings = demo.get('merchant', { open: true, available: {} });
-  const orders = demo.get('orders', []).filter((o) => o.shop.id === m.shop.id);
+  const orders = [...demo.get('orders', []).filter((o) => o.shop.id === m.shop.id), ...sampleMerchantOrders()]
+    .sort((a, b) => b.placedAt - a.placedAt);
   const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
   const todays = orders.filter((o) => o.placedAt >= midnight.getTime() && o.status !== 'cancelled');
+  const sales = todays.reduce((n, o) => n + o.subtotal, 0);
   return {
     name: m.name,
     shop: m.shop,
     open: settings.open !== false,
     available: Object.fromEntries(m.shop.menu.map((i) => [i.id, settings.available[i.id] !== false])),
     orders,
-    today: { orders: todays.length, sales: todays.reduce((n, o) => n + o.subtotal, 0) },
+    today: { orders: todays.length, sales },
+    week: DEMO_MERCHANT_WEEK.map((n, i, all) => (i === all.length - 1 ? sales : n)),
   };
+}
+
+/** DEMO: Demo Kitchen's sample orders, made once per browser and then kept (so Accept etc. stick). */
+function sampleMerchantOrders() {
+  let saved = demo.get('merchantOrders', null);
+  if (!saved) {
+    const now = Date.now();
+    saved = DEMO_MERCHANT_ORDERS.map(({ minutesAgo, lines, ...o }) => ({
+      ...o,
+      shop: { id: DEMO_ACCOUNTS.merchant.shop.id, name: DEMO_ACCOUNTS.merchant.shop.name },
+      lines: lines.map((l) => ({ ...l, options: [], note: '' })),
+      subtotal: lines.reduce((n, l) => n + l.price * l.qty, 0),
+      placedAt: now - minutesAgo * 60000,
+      demo: true,
+    }));
+    demo.set('merchantOrders', saved);
+  }
+  return saved;
 }
 
 /** Open or close the shop for orders. */
@@ -717,13 +801,14 @@ export async function setItemAvailable(itemId, available) {
 /** Move an order along (Accept, Decline, Start preparing, Ready for pickup). */
 export async function updateMerchantOrder(orderId, actionId) {
   if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
-  const orders = demo.get('orders', []);
+  const key = sampleMerchantOrders().some((o) => o.id === orderId) ? 'merchantOrders' : 'orders';
+  const orders = demo.get(key, []);
   const order = orders.find((o) => o.id === orderId);
   if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });
   const action = (MERCHANT_ACTIONS[order.status] || []).find((a) => a.id === actionId);
   if (!action) throw Object.assign(new Error('That step isn’t possible now.'), { status: 409 });
   order.status = action.to;
-  demo.set('orders', orders);
+  demo.set(key, orders);
   return { status: order.status };
 }
 

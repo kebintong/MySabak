@@ -39,8 +39,9 @@ PANELS.md           money rules, every panel, and the data shapes (backend contr
 
 | Side | Sign in at | Login | Password |
 |---|---|---|---|
+| Customer | Account → Customer (`/pages/account.html`) | `client@mysabak.demo` or 0917 000 0003 | `mysabak-demo` |
 | Driver | Drive tab (`/pages/drive.html`) | `driver@mysabak.demo` or 0917 000 0001 | `mysabak-demo` |
-| Merchant | Account → Merchant sign in (`/pages/merchant.html`) | `merchant@mysabak.demo` or 0917 000 0002 | `mysabak-demo` |
+| Merchant | Account → Merchant (`/pages/merchant.html`) | `merchant@mysabak.demo` or 0917 000 0002 | `mysabak-demo` |
 
 ## Running it on your computer
 

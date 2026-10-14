@@ -5,7 +5,7 @@ import { cartTotals } from '../money.js';
 import { getCart, setLineQty, clearCart } from '../cart.js';
 import { $, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast } from '../ui.js';
 
-mountChrome();
+mountChrome({ roles: ['client'] });
 
 let shop = null;
 let address = null; // { label, lng, lat }

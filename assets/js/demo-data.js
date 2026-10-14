@@ -27,6 +27,10 @@ export const DEMO_DRIVERS = {
 /* Demo accounts, so the company can try the driver and merchant sides.
    SAMPLE logins: delete with this file when real accounts exist (passwords are checked on the server). */
 export const DEMO_ACCOUNTS = {
+  client: {
+    phone: '09170000003', email: 'client@mysabak.demo', password: 'mysabak-demo',
+    name: 'Demo Customer', city: 'Cebu City',
+  },
   driver: {
     phone: '09170000001', email: 'driver@mysabak.demo', password: 'mysabak-demo',
     name: 'Demo Driver', city: 'Cebu City', vehicle: 'sedan', plate: 'DMO 1234', model: 'Toyota Vios', year: 2021, status: 'approved',
@@ -50,6 +54,23 @@ export const DEMO_ACCOUNTS = {
     },
   },
 };
+
+/* Merchant demo: a few SAMPLE orders for Demo Kitchen (placed `minutesAgo` before the merchant first opens the
+   dashboard) and last week's sales, so the dashboard isn't empty. Tagged "Sample" on screen. */
+export const DEMO_MERCHANT_ORDERS = [
+  { id: 'DK-1042', customer: 'Ana', minutesAgo: 2, status: 'placed', notes: 'Please add extra sauce.',
+    lines: [{ name: 'Chicken adobo + rice', qty: 2, price: 120 }, { name: 'Leche flan', qty: 1, price: 60 }] },
+  { id: 'DK-1041', customer: 'Paolo', minutesAgo: 6, status: 'placed', notes: '',
+    lines: [{ name: 'Pork sinigang', qty: 1, price: 150 }, { name: 'Extra rice', qty: 2, price: 20 }] },
+  { id: 'DK-1040', customer: 'Kim', minutesAgo: 14, status: 'preparing', notes: '',
+    lines: [{ name: 'Lumpia (6 pcs)', qty: 2, price: 85 }] },
+  { id: 'DK-1039', customer: 'Rhea', minutesAgo: 25, status: 'ready', notes: 'No utensils.',
+    lines: [{ name: 'Chicken adobo + rice', qty: 1, price: 120 }, { name: 'Lumpia (6 pcs)', qty: 1, price: 85 }] },
+  { id: 'DK-1038', customer: 'Jomar', minutesAgo: 70, status: 'delivered', notes: '',
+    lines: [{ name: 'Pork sinigang', qty: 2, price: 150 }, { name: 'Extra rice', qty: 2, price: 20 }] },
+];
+/* Sales per day for the last 7 days, oldest first (the last one is today, before the sample orders). */
+export const DEMO_MERCHANT_WEEK = [1840, 2210, 1675, 2490, 3120, 3560, 0];
 
 /* Driver demo: SAMPLE job requests are made from these Cebu places (approximate positions),
    so the demo driver has Ride, Express and Shop delivery requests to try. Tagged "Demo" on screen. */

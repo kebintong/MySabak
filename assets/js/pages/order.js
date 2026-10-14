@@ -3,7 +3,7 @@ import { CONFIG } from '../config.js';
 import { orderStatus, myTips, ORDER_STEPS } from '../api.js';
 import { $, mountChrome, esc, peso, pesoOr, params, when, openTipSheet } from '../ui.js';
 
-mountChrome();
+mountChrome({ roles: ['client'] });
 
 const TIP_WINDOW_MS = 24 * 60 * 60 * 1000; // tip from the receipt for 24 hours
 

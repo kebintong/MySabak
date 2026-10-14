@@ -7,7 +7,7 @@ import { storefront } from '../placeholders.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
 import { $, mountChrome, esc, when, peso, toast, icon } from '../ui.js';
 
-mountChrome();
+mountChrome({ signIn: false, roles: ['client'] }); // no Sign in button here: customers sign in from Ride or Account
 
 const DESKTOP = window.matchMedia('(min-width: 900px)');
 let near = { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };

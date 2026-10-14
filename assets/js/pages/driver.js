@@ -4,14 +4,14 @@
    Job requests come from onJobRequest(); the demo sends SAMPLE ones (tagged "Demo"). */
 import { CONFIG } from '../config.js';
 import {
-  driverStatus, setOnline, onJobRequest, acceptJob, activeJob, updateJob, cancelJob, driverEarnings, driverSignOut,
+  driverStatus, setOnline, onJobRequest, acceptJob, activeJob, updateJob, cancelJob, driverEarnings,
   routeBetween, straightLine, errorMessage,
 } from '../api.js';
 import { haversineKm } from '../money.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
 import { $, $$, mountChrome, toast, peso, esc, when, icon } from '../ui.js';
 
-mountChrome();
+mountChrome({ roles: ['driver'] });
 
 const DESKTOP = window.matchMedia('(min-width: 900px)');
 const KIND = {
@@ -432,11 +432,6 @@ async function start() {
   loadEarnings();
   $('#onlineBtn').addEventListener('click', toggleOnline);
   $('#payoutBtn').addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.'));
-  $$('[data-signout]').forEach((b) => b.addEventListener('click', async () => {
-    stopJobs();
-    await driverSignOut();
-    location.href = '/pages/drive.html';
-  }));
 }
 
 start();

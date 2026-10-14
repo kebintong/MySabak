@@ -41,7 +41,7 @@ missing.
 |---|---|---|
 | Logo | none | `assets/images/logo.svg` (favicon + app icons: `favicon.svg`, `icons/`) |
 | Install / Install app | none | on every page, every screen size (hidden once installed). Uses the browser's install prompt where there is one (Chrome, Edge, Brave, Android); otherwise opens step-by-step instructions for iPhone/iPad (Share → Add to Home Screen), Mac Safari (File → Add to Dock), Samsung Internet, Firefox. `setupInstall()` in `ui.js` |
-| Sign in | user session | not built: goes to `pages/account.html` |
+| Sign in / profile | `currentUser()` | Signed out: **Sign in** (goes to `pages/account.html`). Signed in: a **profile** button whose dropdown holds the account's home and **Sign out** (the only place to sign out). See Accounts below |
 
 ### Ride | Express switch
 Switches the whole screen between passenger rides and parcel delivery. Express changes the wording
@@ -138,7 +138,7 @@ Built by `showTripDone(order)` in `app.js`.
 |---|---|---|
 | `pages/drive.html` | **Driver sign in**: "Mobile number or email", password (show/hide), keep me signed in, forgot password, Sign in, Terms of Service + Privacy Policy, then "Wanna work as a driver? Sign up". Signed-in drivers go straight to the driver home | `driverStatus()`, `driverSignIn({ login, password })` |
 | `pages/drive-signup.html` | First **choose how to apply**: <br>• **Walk in** (`#walk-in`): office on a small map, address, hours, phone, what to bring, "Get directions" (from `CONFIG.driverOffice`, sample data for now) <br>• **Apply online** (`#online`): About you (name, mobile, **email required**, city, password) → Vehicle → Documents + consent → **"Application sent"**: updates go to their email | `driverApply(application)` → `{ status: 'review', email }` |
-| `pages/driver.html` | **Map first, like Shops.** Needs sign-in (otherwise back to `drive.html`). Full-screen map with the driver's dot and **one pin per request** (purple Ride, orange Express, green Shop delivery). The panel (left on desktop, a pull-up sheet on phones) has: Hi + vehicle/plate + status, Sign out; the **online bar** (Go online / offline); filter chips All · Ride · Express · Shop with counts; **request cards** (kind, fare, pickup + distance from you, drop-off + trip km, payment, rider, time left, Skip / Accept), tapping a card or pin shows its route and drop-off; then Earnings (today, this week, latest trips) and Payout method. **Under review**: the online bar is locked and the list says updates go to their email | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
+| `pages/driver.html` | **Map first, like Shops.** Needs sign-in (otherwise back to `drive.html`). Full-screen map with the driver's dot and **one pin per request** (purple Ride, orange Express, green Shop delivery). The panel (left on desktop, a pull-up sheet on phones) has: Hi + vehicle/plate + status (Sign out is in the profile menu); the **online bar** (Go online / offline); filter chips All · Ride · Express · Shop with counts; **request cards** (kind, fare, pickup + distance from you, drop-off + trip km, payment, rider, time left, Skip / Accept), tapping a card or pin shows its route and drop-off; then Earnings (today, this week, latest trips) and Payout method. **Under review**: the online bar is locked and the list says updates go to their email | `driverStatus()`, `setOnline()`, `onJobRequest()`, `acceptJob()`, `driverEarnings()`, `driverSignOut()` |
 | Hide (⌄, phones) | the list and filter chips fold into a slim bar above the tab bar ("3 requests near you · Nearest: Ride ₱65 · 0.3 km away", or the current job step) with **Show**; tapping a pin also brings the list back | `onJobRequest()`, `activeJob()` |
 | (accepted job) | the list turns into the **job card**: title per step (Go to pickup → Waiting for Ana / Pick up the parcel / Collect the order → Drive to drop-off), 4-step progress, rider + how they pay ("Collect ₱80 in cash" or "Paid by GCash"), Call, pickup/drop-off, **Navigate** (Google Maps), the next-step button (I've arrived → Start trip / Parcel picked up / Order picked up → Complete trip / Parcel delivered / Order delivered), Cancel job (before pickup). The map shows the route to the pickup, then pickup → drop-off. Completing adds the fare to earnings | `activeJob()`, `updateJob(id, status)`, `cancelJob(id)` |
 
@@ -178,24 +178,41 @@ Bundles (`bundle: true`) are fixed combos with no options. A cart is for one sho
 | Page | What it does | Source |
 |---|---|---|
 | `pages/merchant.html` | **Merchant sign in**: mobile number or email + password, then the dashboard | `merchantSignIn({ login, password })`, `merchantHome()` |
-| `pages/merchant-home.html` | shop name + Open/Closed; **Orders** in tabs New · Preparing · Ready · Done with Accept / Decline / Start preparing / Ready for pickup; **Accepting orders** switch; orders and sales today; **Menu** with an Available switch per item (sold out); Sign out | `merchantHome()`, `updateMerchantOrder()`, `setShopOpen()`, `setItemAvailable()`, `merchantSignOut()` |
+| `pages/merchant-home.html` | **Hero**: greeting, shop name, area, hours, live Open/Closed dot and the **Accepting orders** switch; **Today**: orders, sales, waiting for you, average order (numbers count up); **Orders** in tabs New · Preparing · Ready · Done, one card per order (customer, time, items, total, note) with Accept / Decline / Start preparing / Ready for pickup; **Sales this week** (7 bars, today highlighted); **Menu** with an Available switch per item (sold out). Sign out is in the profile menu | `merchantHome()`, `updateMerchantOrder()`, `setShopOpen()`, `setItemAvailable()`, `merchantSignOut()` |
 
 Order status gains `ready` (ready for the rider): placed → accepted → preparing → ready → picked_up → delivered.
 Backend: `shopMenu()` should leave out (or mark) items the merchant switched off, and a closed shop can't take orders.
 
 ## Demo accounts
-Given logins so the company can try both partner sides (`DEMO_ACCOUNTS` in `assets/js/demo-data.js`; delete with that file):
+Given logins so the company can try every side (`DEMO_ACCOUNTS` in `assets/js/demo-data.js`; delete with that file):
 
 | Account | Sign in at | Mobile number | Email | Password |
 |---|---|---|---|---|
 | Driver (approved, can go online) | `pages/drive.html` | 0917 000 0001 | driver@mysabak.demo | `mysabak-demo` |
 | Merchant ("Demo Kitchen", not listed on Shops) | `pages/merchant.html` | 0917 000 0002 | merchant@mysabak.demo | `mysabak-demo` |
+| Customer | `pages/account.html` | 0917 000 0003 | client@mysabak.demo | `mysabak-demo` |
 
-The demo driver gets sample job requests when online; the merchant gets no orders (no public shops).
+The demo driver gets sample job requests when online; the merchant sees a few sample orders and last week's sales
+(`DEMO_MERCHANT_ORDERS`, `DEMO_MERCHANT_WEEK`, tagged "Sample").
+
+## Accounts (customer, driver, merchant)
+One account is signed in on a device at a time; signing in as one role signs the others out. Each role has its own
+sign-in form, with a **Customer · Driver · Merchant** switch at the top of each:
+
+| Role | Sign in at | After sign in | Tabs it sees |
+|---|---|---|---|
+| Customer | `pages/account.html` (`clientSignIn`) | Ride (`/`) | Ride · Shops · Support |
+| Driver | `pages/drive.html` (`driverSignIn`) | `pages/driver.html` | Drive · Support |
+| Merchant | `pages/merchant.html` (`merchantSignIn`) | `pages/merchant-home.html` | My shop · Support |
+
+Signed out, everyone sees Ride · Drive · Shops · Support (+ Account on phones). Signed in, the profile menu (top right)
+replaces Sign in and the Account tab. Drivers and merchants who open a customer page (Ride, Shops, a shop, checkout, an
+order) are sent to their own home. Shops has no Sign in button and no merchant sign-in link. `ROLES` in `ui.js` holds
+the tabs and homes per role.
 
 ## Account (`pages/account.html`)
-Placeholder until sign-in (mobile number + one-time code) exists. "For partners" links to Driver sign in and
-Merchant sign in; "On this device" links to this browser's demo tips, orders and driver home.
+Signed out: **Customer sign in** (mobile number or email + password; customer sign-up is not built yet). Signed in as a
+customer: "Your account" (saved places, trips, payments: coming soon) and this browser's demo tips and orders.
 
 ---
 
@@ -223,7 +240,9 @@ Merchant sign in; "On this device" links to this browser's demo tips, orders and
 | `driverEarnings()` | `Earnings` | driver home |
 | `listShops({ near, category, q })` / `shopMenu(id)` | `{ categories, shops }` / `Shop` | Shop pages |
 | `merchantSignIn({ login, password })` / `merchantSignOut()` | `{ shopId }` (401 if no match) / nothing | merchant sign in |
-| `merchantHome()` | `{ name, shop, open, available: { itemId: bool }, orders, today: { orders, sales } }` (401 if signed out) | merchant dashboard |
+| `merchantHome()` | `{ name, shop, open, available: { itemId: bool }, orders, today: { orders, sales }, week: number[7] }` (401 if signed out; `week` = sales per day, oldest first, ending today) | merchant dashboard |
+| `currentUser()` / `signOut()` | `{ role: 'client'\|'driver'\|'merchant', name, email }` or `null` / nothing | top bar profile menu, every page |
+| `clientSignIn({ login, password })` / `clientSignOut()` | `{ name }` (401 if no match) / nothing | customer sign in |
 | `setShopOpen(open)` / `setItemAvailable(itemId, available)` | `{ open }` / `{ ok }` | merchant dashboard |
 | `updateMerchantOrder(orderId, action)` | `{ status }` (409 if the step isn't possible) | merchant dashboard; actions in `MERCHANT_ACTIONS` |
 | `deliveryQuote(shopId, address)` | `{ km, fee \| null }` | checkout |
