@@ -31,6 +31,11 @@
 
         <div class="auth">
           <section class="card auth-card" aria-labelledby="signinTitle">
+            <nav class="role-switch" aria-label="Sign in as">
+              <a class="role-switch__btn" href="/pages/account.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg>Customer</a>
+              <a class="role-switch__btn" href="/pages/drive.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg>Driver</a>
+              <a class="role-switch__btn" href="/pages/merchant.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg>Merchant</a>
+            </nav>
             <div class="auth-card__head">
               <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
               <h1 class="auth-card__title" id="signinTitle">Driver sign in</h1>

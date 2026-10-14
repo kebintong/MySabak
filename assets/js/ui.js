@@ -3,7 +3,7 @@
    Top bar + tab bar, toast, place search, tip picker and tip sheet.
    ========================================================= */
 import { CONFIG } from './config.js';
-import { searchPlaces, placeLocation, sendTip, errorMessage } from './api.js';
+import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut } from './api.js';
 import { peso as formatPeso, cleanTip } from './money.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -22,35 +22,170 @@ export const icon = (id, cls = '') => `<svg class="icon ${cls}" aria-hidden="tru
 export const TABS = [
   { id: 'ride', label: 'Ride', icon: 'i-car', href: '/' },
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
+  { id: 'merchant', label: 'My shop', icon: 'i-store', href: '/pages/merchant-home.html' },
   { id: 'shops', label: 'Shops', icon: 'i-bag', href: '/pages/shops.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
   { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html', mobileOnly: true },
 ];
 
-/** Fill <header data-topbar> and <nav data-tabs="shops"> on a page, and start offline support. */
-export function mountChrome() {
+/* What each kind of account sees. Signed out ("guest") = everything, with the Account tab on phones.
+   Signed in, the profile menu (top right) replaces the Account tab. */
+export const ROLES = {
+  guest: { tabs: ['ride', 'drive', 'shops', 'support', 'account'] },
+  client: {
+    label: 'Customer', tabs: ['ride', 'shops', 'support'],
+    home: '/pages/account.html', homeLabel: 'My account', homeIcon: 'i-user', signIn: '/pages/account.html',
+  },
+  driver: {
+    label: 'Driver', tabs: ['drive', 'support'], hrefs: { drive: '/pages/driver.html' },
+    home: '/pages/driver.html', homeLabel: 'Driver home', homeIcon: 'i-wheel', signIn: '/pages/drive.html',
+  },
+  merchant: {
+    label: 'Merchant', tabs: ['merchant', 'support'],
+    home: '/pages/merchant-home.html', homeLabel: 'Shop dashboard', homeIcon: 'i-store', signIn: '/pages/merchant.html',
+  },
+};
+
+/**
+ * Fill <header data-topbar> and <nav data-tabs="shops"> on a page, and start offline support.
+ * @param {{signIn?:boolean, roles?:string[]}} opts  signIn: false hides the Sign in button (the profile still
+ *   shows when signed in). roles: who may use this page ('guest', 'client', 'driver', 'merchant'); anyone else
+ *   is sent to their own home.
+ * @returns {Promise<object|null>} the signed-in user
+ */
+export function mountChrome({ signIn = true, roles = null } = {}) {
   const top = $('[data-topbar]');
   if (top) {
     top.innerHTML = `
       <a class="brand" href="/" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="150" height="35"></a>
       <div class="topbar__actions">
         <button type="button" class="btn btn--ghost btn--install" data-install hidden>${icon('i-download')}<span class="mobile-only">Install</span><span class="desktop-only">Install app</span></button>
-        <a class="btn btn--dark" href="/pages/account.html">Sign in</a>
+        <a class="btn btn--dark" href="/pages/account.html" data-account hidden>Sign in</a>
       </div>`;
     setupInstall($('[data-install]', top));
   }
-  const nav = $('[data-tabs]');
-  if (nav) {
-    const active = nav.dataset.tabs;
-    nav.innerHTML = TABS.map((t) => {
-      const on = t.id === active;
-      return `<a class="tab${on ? ' is-active' : ''}${t.mobileOnly ? ' mobile-only' : ''}" href="${t.href}"${on ? ' aria-current="page"' : ''}>`
-        + `<span class="tab__icon">${icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
-        + `<span class="tab__label">${t.label}</span>${t.mobileOnly ? '' : '<span class="tab__dot desktop-only"></span>'}</a>`;
-    }).join('');
-  }
   if (!$('#toast')) document.body.insertAdjacentHTML('beforeend', '<div class="toast" id="toast" role="status" aria-live="polite"></div>');
   registerServiceWorker();
+  return currentUser().catch(() => null).then((user) => {
+    if (guardRole(user, roles)) return user;
+    if (top) mountAccount($('[data-account]', top), user, { signIn });
+    const nav = $('[data-tabs]');
+    if (nav) {
+      const active = nav.dataset.tabs;
+      const role = ROLES[user ? user.role : 'guest'];
+      nav.innerHTML = role.tabs.map((id) => {
+        const t = TABS.find((x) => x.id === id);
+        const href = (role.hrefs && role.hrefs[id]) || t.href;
+        const on = t.id === active;
+        return `<a class="tab${on ? ' is-active' : ''}${t.mobileOnly ? ' mobile-only' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
+          + `<span class="tab__icon">${icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
+          + `<span class="tab__label">${t.label}</span>${t.mobileOnly ? '' : '<span class="tab__dot desktop-only"></span>'}</a>`;
+      }).join('');
+    }
+    return user;
+  });
+}
+
+/** Send someone whose role may not use this page to their own home. Returns true when it redirected. */
+export function guardRole(user, roles) {
+  const role = user ? user.role : 'guest';
+  if (!roles || roles.includes(role) || role === 'guest') return false;
+  location.replace(ROLES[role].home);
+  return true;
+}
+
+/** Hide the tabs (in a static tab bar with data-tab="id" links, like index.html) this user doesn't see. */
+export function filterTabs(nav, user) {
+  const role = ROLES[user ? user.role : 'guest'];
+  $$('[data-tab]', nav).forEach((a) => { a.hidden = !role.tabs.includes(a.dataset.tab); });
+}
+
+const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+/**
+ * The top-right account control: "Sign in" when signed out; when signed in, a profile button whose
+ * dropdown holds the account's home and Sign out (Sign out lives only here).
+ */
+export function mountAccount(link, user, { signIn = true } = {}) {
+  if (!link) return;
+  if (!user) { link.hidden = !signIn; return; }
+  const role = ROLES[user.role];
+  const first = String(user.name || role.label).split(/\s+/)[0];
+  const wrap = document.createElement('div');
+  wrap.className = 'profile';
+  wrap.innerHTML = `
+    <button type="button" class="btn btn--ghost profile__btn" aria-haspopup="menu" aria-expanded="false" aria-label="Profile: ${esc(user.name || role.label)}">
+      <span class="profile__ava" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
+      <span class="profile__name desktop-only">${esc(first)}</span>
+      ${icon('i-chevron', 'profile__chev')}
+    </button>
+    <div class="profile__menu" role="menu" hidden>
+      <div class="profile__who">
+        <span class="profile__ava profile__ava--lg" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
+        <div><b>${esc(user.name || role.label)}</b><span>${esc(role.label)}${user.email ? ` · ${esc(user.email)}` : ''}</span></div>
+      </div>
+      <a class="profile__item" role="menuitem" href="${role.home}">${icon(role.homeIcon)}${esc(role.homeLabel)}</a>
+      <button type="button" class="profile__item profile__item--out" role="menuitem" data-signout>${icon('i-power')}Sign out</button>
+    </div>`;
+  link.replaceWith(wrap);
+  const btn = $('.profile__btn', wrap);
+  const menu = $('.profile__menu', wrap);
+  const setOpen = (open) => {
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    wrap.classList.toggle('profile--open', open);
+    if (open) $('.profile__item', menu).focus();
+  };
+  btn.addEventListener('click', () => setOpen(menu.hidden));
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) setOpen(false); });
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
+  });
+  $('[data-signout]', menu).addEventListener('click', async () => {
+    await signOut();
+    location.href = role.signIn;
+  });
+}
+
+/**
+ * Wire a sign-in form (mobile number or email + password, #signinError, #signinBtn) to a sign-in call.
+ * @param {HTMLFormElement} form
+ * @param {(creds:{login:string, password:string}) => Promise<any>} signInFn
+ * @param {string} next  where to go once signed in
+ */
+export function wireSignInForm(form, signInFn, next) {
+  const button = $('[type="submit"]', form);
+  const error = $('.field__error', form);
+  wirePasswordReveal(form);
+  const loginInput = form.elements.login;
+  const PHONE = /^(\+?63|0)9\d{9}$/;
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  /** The login must look like a PH mobile number or an email. */
+  const checkLogin = () => {
+    const v = loginInput.value.trim();
+    const ok = v.includes('@') ? EMAIL.test(v) : PHONE.test(v.replace(/[\s-]/g, ''));
+    loginInput.setCustomValidity(!v || ok ? '' : 'Enter a mobile number (09XX XXX XXXX) or an email address.');
+  };
+  loginInput.addEventListener('input', checkLogin);
+  const showError = (message) => { error.textContent = message; error.hidden = !message; };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showError('');
+    checkLogin();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const data = new FormData(form);
+    button.disabled = true;
+    button.textContent = 'Signing in…';
+    try {
+      const login = data.get('login').trim();
+      await signInFn({ login: login.includes('@') ? login : login.replace(/[\s-]/g, ''), password: data.get('password') });
+      location.href = next;
+    } catch (err) {
+      showError(err.status === 401 || err.status === 400 ? err.message : errorMessage(err));
+      button.disabled = false;
+      button.textContent = 'Sign in';
+    }
+  });
 }
 
 export function registerServiceWorker() {

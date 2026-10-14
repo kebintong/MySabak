@@ -21,10 +21,10 @@
 import { CONFIG } from './config.js';
 import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
-  findDriver, cancelRide, onTripUpdate, rateRide,
+  findDriver, cancelRide, onTripUpdate, rateRide, currentUser,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
-import { openTipSheet, setupInstall } from './ui.js';
+import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole } from './ui.js';
 import { splitPrice, cleanTip } from './money.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -968,9 +968,11 @@ $$('.tab').forEach((tab) => {
   });
 });
 
-$('a[href="#/auth"]').addEventListener('click', (e) => {
-  e.preventDefault();
-  toast('Sign in is coming soon.');
+// Signed in: profile menu instead of Sign in, and only this account's tabs. Drivers and merchants go to their home.
+currentUser().catch(() => null).then((user) => {
+  if (guardRole(user, ['client'])) return;
+  mountAccount($('[data-account]'), user);
+  filterTabs($('.dock .tabs'), user);
 });
 
 let resizeTimer;

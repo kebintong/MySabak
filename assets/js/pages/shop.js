@@ -9,7 +9,7 @@ import { itemPicture, storefront } from '../placeholders.js';
 import { shopMap, knownLocation } from '../shop-map.js';
 import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast } from '../ui.js';
 
-mountChrome();
+mountChrome({ roles: ['client'] });
 
 const WIDE = window.matchMedia('(min-width: 1200px)'); // "Your order" becomes a column
 let shop = null;

@@ -181,7 +181,12 @@ test('demo merchant account: sign in, open/close, sold out items, sign out', asy
   let home = await api.merchantHome();
   assert.equal(home.shop.id, acc.shop.id);
   assert.equal(home.open, true);
-  assert.deepEqual(home.orders, []);
+  assert.ok(home.orders.length > 0 && home.orders.every((o) => o.demo), 'only the sample orders');
+  assert.equal(home.week.length, 7);
+  assert.equal(home.week[6], home.today.sales, 'the last day of the week is today');
+  const placed = home.orders.find((o) => o.status === 'placed');
+  assert.deepEqual(await api.updateMerchantOrder(placed.id, 'accept'), { status: 'accepted' });
+  await assert.rejects(api.updateMerchantOrder(placed.id, 'accept'), { status: 409 });
   await api.setShopOpen(false);
   await api.setItemAvailable('adobo', false);
   home = await api.merchantHome();
@@ -192,4 +197,21 @@ test('demo merchant account: sign in, open/close, sold out items, sign out', asy
   assert.equal(shops.some((s) => s.id === acc.shop.id), false, 'the merchant shop is not listed publicly');
   await api.merchantSignOut();
   await assert.rejects(api.merchantHome(), { status: 401 });
+});
+
+test('one account per device: customer, driver and merchant each have their own sign in', async () => {
+  const { DEMO_ACCOUNTS } = await import('../assets/js/demo-data.js');
+  await api.signOut();
+  assert.equal(await api.currentUser(), null);
+  await assert.rejects(api.clientSignIn({ login: DEMO_ACCOUNTS.merchant.email, password: 'mysabak-demo' }), { status: 401 });
+  await api.clientSignIn({ login: '0917 000 0003'.replace(/\s/g, ''), password: DEMO_ACCOUNTS.client.password });
+  assert.equal((await api.currentUser()).role, 'client');
+  await api.merchantSignIn({ login: DEMO_ACCOUNTS.merchant.email, password: DEMO_ACCOUNTS.merchant.password });
+  assert.equal((await api.currentUser()).role, 'merchant', 'signing in as a merchant signs the customer out');
+  await api.driverSignIn({ login: DEMO_ACCOUNTS.driver.email, password: DEMO_ACCOUNTS.driver.password });
+  assert.equal((await api.currentUser()).role, 'driver');
+  await assert.rejects(api.merchantHome(), { status: 401 });
+  await api.signOut();
+  assert.equal(await api.currentUser(), null);
+  assert.equal((await api.driverStatus()).signedIn, false);
 });
