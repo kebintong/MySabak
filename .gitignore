@@ -1,0 +1,7 @@
+# Local secrets for `npx wrangler dev` (TOMTOM_KEY=...)
+.dev.vars
+.env
+# Cloudflare / Node
+.wrangler/
+node_modules/
+dist/

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sign up to drive · mysabak</title>
+  <meta name="theme-color" content="#6542DA">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/drive-signup.js"></script>
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <div class="auth auth--wide">
+          <section class="card auth-card" aria-labelledby="signupTitle">
+            <div class="auth-card__head">
+              <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
+              <h1 class="auth-card__title" id="signupTitle">Drive with mysabak</h1>
+              <p class="lede">Keep 100% of every fare. No commission, no booking fees.</p>
+            </div>
+
+            <!-- 1 · Choose how to apply -->
+            <div class="view" data-view="choose">
+              <h2 class="view__title">How would you like to apply?</h2>
+              <div class="choices">
+                <a class="choice" href="#online">
+                  <span class="choice__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg></span>
+                  <span class="choice__text"><span class="choice__name">Apply online</span>
+                    <span class="choice__hint">About 5 minutes. Upload your documents and get updates by email.</span></span>
+                  <svg class="icon choice__go" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
+                </a>
+                <a class="choice" href="#walk-in">
+                  <span class="choice__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg></span>
+                  <span class="choice__text"><span class="choice__name">Walk in at our office</span>
+                    <span class="choice__hint">Bring your documents and our team will sign you up on the spot.</span></span>
+                  <svg class="icon choice__go" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- 2a · Walk in -->
+            <div class="view" data-view="walk-in" hidden>
+              <a class="page-head__back" href="#"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Other ways to apply</a>
+              <h2 class="view__title">Walk in at our office</h2>
+              <div class="office-map" role="img" aria-label="Map showing the mysabak Driver Hub">
+                <span class="office-map__pin">
+                  <svg width="32" height="44" viewBox="0 0 32 44" aria-hidden="true"><path d="M16 44C16 44 0 26 0 16a16 16 0 0 1 32 0c0 10-16 28-16 28z" fill="#6542DA"/><circle cx="16" cy="16" r="6" fill="#FFFFFF"/></svg>
+                  <span class="office-map__label" data-office="name">mysabak Driver Hub</span>
+                </span>
+              </div>
+              <ul class="list">
+                <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg></span><div class="row__main"><span class="row__title" data-office="name"></span><span class="row__sub" data-office="address"></span></div></li>
+                <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-clock"/></svg></span><div class="row__main"><span class="row__title">Open</span><span class="row__sub" data-office="hours"></span></div></li>
+                <li class="row"><span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg></span><div class="row__main"><span class="row__title">Call ahead</span><span class="row__sub" data-office="phone"></span></div></li>
+              </ul>
+              <div class="bring">
+                <h3 class="bring__title">What to bring</h3>
+                <ul class="bring__list" data-office="bring"></ul>
+                <p class="field__hint">No appointment needed. Final requirements follow LTFRB rules for your vehicle type.</p>
+              </div>
+              <div class="wizard__nav">
+                <a class="button button--ghost" href="#online">Apply online instead</a>
+                <button type="button" class="button" id="directionsBtn"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Get directions</button>
+              </div>
+            </div>
+
+            <!-- 2b · Apply online -->
+            <div class="view" data-view="online" hidden>
+              <a class="page-head__back" href="#"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Other ways to apply</a>
+
+            <ol class="wizard__steps" aria-label="Sign-up steps">
+              <li class="is-current" data-step-label="1"><span>1</span>About you</li>
+              <li data-step-label="2"><span>2</span>Vehicle</li>
+              <li data-step-label="3"><span>3</span>Documents</li>
+            </ol>
+
+            <form class="form" id="signupForm" novalidate>
+              <fieldset class="wizard__step" data-step="1">
+                <legend class="sr-only">About you</legend>
+                <label class="field"><span class="field__label">Full name (as on your license)</span>
+                  <input class="input" name="name" required autocomplete="name"></label>
+                <div class="form-grid">
+                  <label class="field"><span class="field__label">Mobile number</span>
+                    <input class="input" name="phone" type="tel" inputmode="tel" required pattern="[+0-9 ]{10,16}" placeholder="09XX XXX XXXX" autocomplete="tel"></label>
+                  <label class="field"><span class="field__label">Email <span class="muted">(for updates)</span></span>
+                    <input class="input" name="email" type="email" required autocomplete="email" placeholder="name@email.com"></label>
+                </div>
+                <div class="form-grid">
+                  <label class="field"><span class="field__label">City</span>
+                    <select class="select" name="city" required>
+                      <option value="">Choose your city</option>
+                      <option>Cebu City</option><option>Mandaue City</option><option>Lapu-Lapu City</option><option>Talisay City</option><option>Other</option>
+                    </select></label>
+                  <div class="field"><label class="field__label" for="newPassword">Create a password</label>
+                    <div class="input-wrap"><input class="input" id="newPassword" name="newPassword" type="password" required minlength="8" autocomplete="new-password" aria-describedby="pwHint">
+                    <button type="button" class="input-wrap__btn" data-reveal="newPassword" aria-label="Show password">Show</button></div>
+                    <span class="field__hint" id="pwHint">At least 8 characters.</span></div>
+                </div>
+              </fieldset>
+
+              <fieldset class="wizard__step" data-step="2" hidden>
+                <legend class="field__label">What do you drive?</legend>
+                <div class="pick-row">
+                <label class="pick"><input type="radio" name="vehicle" value="motor" required checked>
+                  <span class="pick__box"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-motor"/></svg><span class="pick__name">Motor</span><span class="pick__hint">Motorcycle</span></span></label>
+                <label class="pick"><input type="radio" name="vehicle" value="sedan" required>
+                  <span class="pick__box"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg><span class="pick__name">Sedan</span><span class="pick__hint">Up to 4 riders</span></span></label>
+                <label class="pick"><input type="radio" name="vehicle" value="suv" required>
+                  <span class="pick__box"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-suv"/></svg><span class="pick__name">SUV</span><span class="pick__hint">Up to 6 riders</span></span></label>
+                </div>
+                <div class="form-grid">
+                  <label class="field"><span class="field__label">Plate number</span>
+                    <input class="input" name="plate" required placeholder="ABC 1234" autocapitalize="characters"></label>
+                  <label class="field"><span class="field__label">Year</span>
+                    <input class="input" name="year" type="number" inputmode="numeric" min="1990" max="2027" required placeholder="2020"></label>
+                </div>
+                <label class="field"><span class="field__label">Make and model</span>
+                  <input class="input" name="model" required placeholder="e.g. Honda Click, Toyota Vios"></label>
+              </fieldset>
+
+              <fieldset class="wizard__step" data-step="3" hidden>
+                <legend class="sr-only">Documents</legend>
+                <label class="field"><span class="field__label">Driver’s license number</span>
+                  <input class="input" name="licenseNumber" required placeholder="X00-00-000000" autocapitalize="characters"></label>
+                <label class="file" data-file>
+                <input type="file" name="license" accept="image/*,application/pdf" required>
+                <span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-upload"/></svg></span>
+                <span class="file__text"><span class="file__name">Driver’s license (front)</span><span class="file__status" data-hint="Photo or PDF">Photo or PDF</span></span>
+              </label>
+                <label class="file" data-file>
+                <input type="file" name="orcr" accept="image/*,application/pdf" required>
+                <span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-upload"/></svg></span>
+                <span class="file__text"><span class="file__name">Vehicle OR/CR</span><span class="file__status" data-hint="Photo or PDF">Photo or PDF</span></span>
+              </label>
+                <label class="file" data-file>
+                <input type="file" name="selfie" accept="image/*,application/pdf" required>
+                <span class="file__icon"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-upload"/></svg></span>
+                <span class="file__text"><span class="file__name">Selfie</span><span class="file__status" data-hint="Face clearly visible, no sunglasses">Face clearly visible, no sunglasses</span></span>
+              </label>
+                <p class="field__hint">Final requirements follow LTFRB rules for your vehicle type.</p>
+                <label class="check"><input type="checkbox" name="agreed" required>
+                  <span>I confirm these details are true and agree to mysabak’s <a href="#" data-soon="Driver Terms">Driver Terms</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</span></label>
+              </fieldset>
+
+              <div class="wizard__nav">
+                <button type="button" class="button button--ghost" id="backBtn" hidden>Back</button>
+                <button type="submit" class="button" id="nextBtn">Next</button>
+              </div>
+            </form>
+            </div>
+
+            <!-- 3 · Application sent -->
+            <div class="view view--done" data-view="done" hidden>
+              <span class="done__icon" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-check"/></svg></span>
+              <h2 class="view__title">Application sent</h2>
+              <p class="lede">Thanks, <span data-bind="doneName">driver</span>! We’ll check your documents and email updates to <strong data-bind="doneEmail">your email</strong>.</p>
+              <ol class="install__steps">
+                <li>We review your documents, usually within a few working days.</li>
+                <li>You get an email when you’re approved, or if we need anything else.</li>
+                <li>Sign in with your mobile number or email and go online.</li>
+              </ol>
+              <a class="button button--block" href="/pages/drive.html">Go to driver sign in</a>
+            </div>
+
+            <div class="auth-alt">
+              <span>Already a driver?</span>
+              <a class="auth-link auth-link--strong" href="/pages/drive.html">Sign in</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

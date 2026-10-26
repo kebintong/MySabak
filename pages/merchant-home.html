@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Merchant · mysabak</title>
+  <meta name="theme-color" content="#6542DA">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/merchant-home.js"></script>
+</head>
+<body class="page page--merchant">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner content__inner--full">
+
+        <div id="merchantHome" class="shop" hidden>
+
+          <!-- 1. Who, open / closed, and the two main jobs -->
+          <section class="fcard mshop">
+            <div class="mshop__who">
+              <span class="mshop__ava" id="shopAva" aria-hidden="true"></span>
+              <div class="mshop__text">
+                <p class="mshop__hello" id="greeting">Good day</p>
+                <h1 class="mshop__name" id="shopName">Your shop</h1>
+                <p class="mshop__meta"><span id="shopArea"></span> · <span id="shopHours"></span></p>
+              </div>
+            </div>
+            <div class="mshop__actions">
+              <button type="button" class="openbtn" id="openSwitch" role="switch" aria-checked="true">
+                <span class="fswitch" aria-hidden="true"><span></span></span>
+                <span class="openbtn__text"><b id="openTitle">Open</b><small id="openSub">Taking orders</small></span>
+              </button>
+              <button type="button" class="fbtn fbtn--ghost" data-add-product>
+                <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-plus"/></svg>Add product
+              </button>
+              <a class="fbtn fbtn--primary" href="/pages/pos.html#counter">
+                <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-register"/></svg>New counter sale
+              </a>
+            </div>
+          </section>
+
+          <!-- 2. Needs you now: at most three, each with one button -->
+          <section class="needs" aria-labelledby="needsTitle">
+            <h2 class="fh2" id="needsTitle">Needs you now</h2>
+            <div class="needs__grid" id="needs" aria-live="polite"></div>
+          </section>
+
+          <!-- 3. Today, in one line -->
+          <section class="fcard today" id="today" aria-label="Today"></section>
+
+          <!-- 4. Online orders and products side by side -->
+          <div class="shop-cols">
+            <section class="fcard orders" id="ordersCard" aria-labelledby="ordersTitle">
+              <div class="fcard__head">
+                <h2 class="fh2" id="ordersTitle">Online orders</h2>
+                <div class="fseg" role="tablist" aria-label="Order status" id="orderTabs"></div>
+              </div>
+              <ul class="olist" id="orderList" aria-live="polite"></ul>
+            </section>
+
+            <section class="fcard prods" id="products" aria-labelledby="menuTitle">
+              <div class="fcard__head">
+                <h2 class="fh2" id="menuTitle">Products</h2>
+                <button type="button" class="fbtn fbtn--ghost fbtn--sm" data-add-product>
+                  <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-plus"/></svg>Add
+                </button>
+              </div>
+              <p class="prods__sum" id="menuCount"></p>
+              <ul class="plist" id="menuList"></ul>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="merchant" aria-label="Main"></nav>
+    </div>
+  </div>
+
+  <!-- Add / edit a product -->
+  <dialog class="sheet psheet" id="productSheet" aria-labelledby="productSheetTitle">
+    <form class="sheet__body" id="productForm" method="dialog" novalidate>
+      <span class="sheet__handle" aria-hidden="true"></span>
+      <div class="psheet__head">
+        <h2 class="sheet__title" id="productSheetTitle">Add product</h2>
+        <button type="button" class="iconbtn" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-close"/></svg></button>
+      </div>
+
+      <div class="photo" id="photoBox">
+        <label class="photo__drop" for="pPhoto" id="photoDrop">
+          <img id="photoPreview" alt="" hidden>
+          <span class="photo__empty" id="photoEmpty">
+            <span class="photo__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-camera"/></svg></span>
+            <b>Add a photo of this product</b>
+            <small>Take one or choose from your phone · drag a photo here on a computer</small>
+          </span>
+        </label>
+        <input type="file" id="pPhoto" accept="image/*" class="sr-only">
+        <div class="photo__actions" id="photoActions" hidden>
+          <label class="button button--ghost button--sm" for="pPhoto"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-camera"/></svg>Change photo</label>
+          <button type="button" class="button button--ghost button--sm" id="photoRemove"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-trash"/></svg>Remove</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Product name</span>
+        <input class="input" name="name" maxlength="60" required placeholder="e.g. Chicken adobo + rice">
+      </label>
+
+      <div class="field">
+        <label class="field__label" for="pSection">Category</label>
+        <input class="input" id="pSection" name="section" maxlength="30" list="sectionList" placeholder="e.g. Mains">
+        <datalist id="sectionList"></datalist>
+        <div class="qchips" id="sectionChips"></div>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Short description <span class="field__count" id="noteCount">0/140</span></span>
+        <textarea class="textarea" name="note" rows="2" maxlength="140" placeholder="What customers get, in one line"></textarea>
+      </label>
+
+      <fieldset class="field pricing">
+        <legend class="field__label">Price</legend>
+        <div class="seg seg--pill seg--sm" role="tablist" id="priceMode">
+          <button type="button" class="seg__btn" role="tab" data-mode="one" aria-selected="true">One price</button>
+          <button type="button" class="seg__btn" role="tab" data-mode="sizes" aria-selected="false">Sizes</button>
+        </div>
+        <div id="priceOne" class="money-input"><span>₱</span><input class="input" name="price" inputmode="decimal" placeholder="0"></div>
+        <div id="priceSizes" hidden>
+          <div class="sizes__label">
+            <span class="field__hint">Called</span>
+            <input class="input input--sm" name="variantLabel" maxlength="20" value="Size" aria-label="What the sizes are called">
+          </div>
+          <ul class="sizes" id="sizeRows"></ul>
+          <button type="button" class="linkbtn" id="addSize"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-plus"/></svg>Add a size</button>
+        </div>
+      </fieldset>
+
+      <div class="psheet__avail">
+        <span><b>Available</b><small>Customers can order it now</small></span>
+        <button type="button" class="switch" id="pAvailable" role="switch" aria-checked="true" aria-label="Available"><span></span></button>
+      </div>
+
+      <p class="field__error" id="productError" role="alert" hidden></p>
+
+      <div class="sheet__actions psheet__actions">
+        <button type="button" class="button button--danger" id="productDelete" hidden><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-trash"/></svg><span class="sr-only">Delete product</span></button>
+        <button type="button" class="button button--ghost" data-close>Cancel</button>
+        <button type="submit" class="button" id="productSave">Save product</button>
+      </div>
+    </form>
+  </dialog>
+
+</body>
+</html>

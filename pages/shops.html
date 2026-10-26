@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shops · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script type="module" src="/assets/js/pages/shops.js"></script>
+</head>
+<body class="page page--map">
+  <div class="app">
+    <!-- Map first: every shop is a pin, in the shop's colour -->
+    <div class="map" id="map" role="region" aria-label="Map of shops near you">
+      <div class="map__canvas" id="mapCanvas"></div>
+    </div>
+
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <section class="finder" aria-labelledby="finderTitle">
+      <div class="finder__top">
+        <h1 class="finder__title" id="finderTitle">Shops near you</h1>
+        <div class="searchbox searchbox--float">
+          <label for="shopSearch" class="sr-only">Search shops or items</label>
+          <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-search"/></svg>
+          <input class="input" id="shopSearch" type="search" placeholder="Search shops or items" autocomplete="off">
+        </div>
+        <div class="fchips" id="categories" role="group" aria-label="Categories"></div>
+      </div>
+
+      <div class="finder__sheet" id="sheet">
+        <button type="button" class="finder__handle" id="sheetHandle" aria-expanded="false" aria-controls="sheet">
+          <span aria-hidden="true"></span><span class="sr-only">Show more of the list</span>
+        </button>
+        <div id="picked" aria-live="polite"></div>
+        <div class="finder__head"><h2 id="shopCount">Shops nearby</h2><span>Closest first</span></div>
+        <div class="finder__scroll" id="sheetScroll">
+          <ul class="srows" id="shopList" aria-labelledby="shopCount"></ul>
+
+          <section class="finder__orders" id="ordersCard" aria-labelledby="ordersTitle" hidden>
+            <h2 class="finder__sub" id="ordersTitle">Your orders</h2>
+            <ul class="list" id="orderList"></ul>
+          </section>
+          <p class="finder__note">Delivered by mysabak riders, who keep 100% of the delivery fee.</p>
+        </div>
+      </div>
+    </section>
+
+    <button type="button" class="map-locate" id="locateBtn" aria-label="Show shops near my location">
+      <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+    </button>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="shops" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

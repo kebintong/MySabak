@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>POS · mysabak</title>
+  <meta name="theme-color" content="#6542DA">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script type="module" src="/assets/js/pages/pos.js"></script>
+</head>
+<body class="page page--merchant page--pos">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner content__inner--full">
+        <div id="pos" class="pos2" hidden>
+
+          <!-- Title + the four POS jobs -->
+          <header class="pos2__head">
+            <div class="pos2__title">
+              <a class="pos2__back" href="/pages/merchant-home.html"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>My shop</a>
+              <h1>POS</h1>
+            </div>
+            <div class="fseg fseg--big" role="tablist" aria-label="POS" id="posTabs">
+              <button type="button" class="fseg__btn" role="tab" data-tab="counter" aria-selected="true"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-register"/></svg>Counter</button>
+              <button type="button" class="fseg__btn" role="tab" data-tab="stock" aria-selected="false"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-box"/></svg>Stock<span class="fseg__n is-warn" id="stockBadge" hidden></span></button>
+              <button type="button" class="fseg__btn" role="tab" data-tab="recipes" aria-selected="false"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-recipe"/></svg>Recipes</button>
+              <button type="button" class="fseg__btn" role="tab" data-tab="history" aria-selected="false"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-history"/></svg>History</button>
+            </div>
+          </header>
+
+          <!-- COUNTER: walk-in sales. Tap a product to add it; change the size in the sale. -->
+          <section class="pospanel" data-panel="counter" role="tabpanel" aria-label="Counter">
+            <div class="counter">
+              <div class="counter__menu">
+                <div class="counter__tools">
+                  <div class="fchips2" id="sellFilter" role="group" aria-label="Category"></div>
+                  <label class="fsearch">
+                    <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-search"/></svg>
+                    <span class="sr-only">Search products</span>
+                    <input type="search" id="sellSearch" placeholder="Search" autocomplete="off">
+                  </label>
+                </div>
+                <ul class="ctiles" id="sellTiles"></ul>
+                <p class="fhint">Tap a product to add it. Change the size in the sale.</p>
+              </div>
+              <aside class="fcard cart2" id="cart" aria-label="Current sale" aria-live="polite"></aside>
+            </div>
+            <button type="button" class="cartbar2" id="cartBar" hidden>
+              <span class="cartbar2__pics" id="cartBarPics"></span>
+              <span class="cartbar2__text"><small id="cartBarCount">0 items</small><b id="cartBarTotal">₱0</b></span>
+              <span class="cartbar2__go">Charge ›</span>
+            </button>
+          </section>
+
+          <!-- STOCK: what you have, quick fixes, restock -->
+          <section class="pospanel" data-panel="stock" role="tabpanel" aria-label="Stock" hidden>
+            <div class="sfilters" id="stockFilters" role="group" aria-label="Show"></div>
+            <div class="stock-tools">
+              <label class="fsearch">
+                <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-search"/></svg>
+                <span class="sr-only">Search ingredients</span>
+                <input type="search" id="invSearch" placeholder="Search ingredients" autocomplete="off">
+              </label>
+              <div class="stock-tools__end">
+                <button type="button" class="fbtn fbtn--ghost fbtn--sm" id="shopListBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-cart"/></svg>Shopping list</button>
+                <button type="button" class="fbtn fbtn--ghost fbtn--sm" id="countBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-clipboard"/></svg>Count stock</button>
+                <button type="button" class="fbtn fbtn--primary fbtn--sm" id="addIngBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-plus"/></svg>Add ingredient</button>
+              </div>
+            </div>
+            <div class="countbar" id="countBar" hidden>
+              <span class="countbar__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-clipboard"/></svg></span>
+              <p><b>Stock count</b> Type what you actually have. Leave a box empty to skip it. <span id="countProgress"></span></p>
+              <div class="countbar__actions">
+                <button type="button" class="fbtn fbtn--ghost fbtn--sm" id="countCancel">Cancel</button>
+                <button type="button" class="fbtn fbtn--primary fbtn--sm" id="countSave">Save count</button>
+              </div>
+            </div>
+            <ul class="fcard slist" id="invList" aria-live="polite"></ul>
+            <p class="fhint">Sales and accepted orders take ingredients out by themselves. Use + and − for small fixes, Restock after buying.</p>
+          </section>
+
+          <!-- RECIPES: what one order uses, food cost, how many you can make -->
+          <section class="pospanel" data-panel="recipes" role="tabpanel" aria-label="Recipes" hidden>
+            <p class="fhint fhint--box"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-recipe"/></svg>Tell mysabak what one order of each product uses. Every sale then takes it out of your stock, and you see your food cost.</p>
+            <ul class="rgrid" id="recList"></ul>
+          </section>
+
+          <!-- HISTORY: every stock change -->
+          <section class="pospanel" data-panel="history" role="tabpanel" aria-label="History" hidden>
+            <div class="fcard">
+              <div class="fcard__head">
+                <div class="fchips2" id="logFilter" role="group" aria-label="Show"></div>
+                <button type="button" class="fbtn fbtn--ghost fbtn--sm" id="exportBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-download"/></svg>Export CSV</button>
+              </div>
+              <p class="logsum" id="logSum"></p>
+              <ol class="hlist" id="logList"></ol>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="pos" aria-label="Main"></nav>
+    </div>
+  </div>
+
+  <!-- Change stock: Restock · Used · Waste · Count -->
+  <dialog class="sheet" id="stockSheet" aria-labelledby="stockTitle">
+    <form class="sheet__body" id="stockForm" method="dialog" novalidate>
+      <span class="sheet__handle" aria-hidden="true"></span>
+      <div class="psheet__head">
+        <div><h2 class="sheet__title" id="stockTitle">Ingredient</h2><p class="sheet__sub" id="stockSub"></p></div>
+        <button type="button" class="iconbtn" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-close"/></svg></button>
+      </div>
+      <div class="stocknow" id="stockNow"></div>
+      <div class="seg seg--pill" role="tablist" aria-label="What happened" id="stockKind">
+        <button type="button" class="seg__btn" role="tab" data-kind="restock" aria-selected="true">Restock</button>
+        <button type="button" class="seg__btn" role="tab" data-kind="use" aria-selected="false">Used</button>
+        <button type="button" class="seg__btn" role="tab" data-kind="waste" aria-selected="false">Waste</button>
+        <button type="button" class="seg__btn" role="tab" data-kind="count" aria-selected="false">Count</button>
+      </div>
+      <label class="field">
+        <span class="field__label" id="stockQtyLabel">How much did you add?</span>
+        <span class="unit-input"><input class="input" id="stockQty" inputmode="decimal" placeholder="0"><span id="stockUnit">kg</span></span>
+      </label>
+      <div class="qchips" id="stockQuick"></div>
+      <label class="field">
+        <span class="field__label">Note <span class="field__count">optional</span></span>
+        <input class="input" id="stockNote" maxlength="120" placeholder="e.g. Carbon Market, spoiled, staff meal">
+      </label>
+      <p class="stockafter" id="stockAfter"></p>
+      <p class="field__error" id="stockError" role="alert" hidden></p>
+      <div class="ihist" id="stockHist"></div>
+      <div class="sheet__actions psheet__actions">
+        <button type="button" class="button button--ghost" id="stockEdit"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pencil"/></svg>Details</button>
+        <button type="submit" class="button" id="stockSave">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add / edit an ingredient -->
+  <dialog class="sheet" id="ingSheet" aria-labelledby="ingTitle">
+    <form class="sheet__body" id="ingForm" method="dialog" novalidate>
+      <span class="sheet__handle" aria-hidden="true"></span>
+      <div class="psheet__head">
+        <h2 class="sheet__title" id="ingTitle">Add ingredient</h2>
+        <button type="button" class="iconbtn" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-close"/></svg></button>
+      </div>
+      <label class="field">
+        <span class="field__label">Name</span>
+        <input class="input" name="name" maxlength="50" placeholder="e.g. Chicken cut-ups">
+      </label>
+      <div class="field">
+        <label class="field__label" for="ingGroup">Group</label>
+        <input class="input" id="ingGroup" name="group" maxlength="30" list="groupList" placeholder="e.g. Meat">
+        <datalist id="groupList"></datalist>
+        <div class="qchips" id="groupChips"></div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="ingUnit">Counted in</label>
+        <input class="input" id="ingUnit" name="unit" maxlength="12" placeholder="kg">
+        <div class="qchips" id="unitChips"></div>
+      </div>
+      <div class="form-grid form-grid--2">
+        <label class="field" id="ingStockField">
+          <span class="field__label">You have now</span>
+          <span class="unit-input"><input class="input" name="stock" inputmode="decimal" placeholder="0"><span data-unit>kg</span></span>
+        </label>
+        <label class="field">
+          <span class="field__label">Warn me at</span>
+          <span class="unit-input"><input class="input" name="low" inputmode="decimal" placeholder="0"><span data-unit>kg</span></span>
+        </label>
+        <label class="field">
+          <span class="field__label">Cost per <span data-unit>kg</span></span>
+          <span class="money-input"><span>₱</span><input class="input" name="cost" inputmode="decimal" placeholder="0"></span>
+        </label>
+      </div>
+      <p class="field__error" id="ingError" role="alert" hidden></p>
+      <div class="sheet__actions psheet__actions">
+        <button type="button" class="button button--danger" id="ingDelete" hidden><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-trash"/></svg><span class="sr-only">Delete ingredient</span></button>
+        <button type="button" class="button button--ghost" data-close>Cancel</button>
+        <button type="submit" class="button" id="ingSave">Add ingredient</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- What a product uses -->
+  <dialog class="sheet" id="recSheet" aria-labelledby="recTitle">
+    <form class="sheet__body" id="recForm" method="dialog" novalidate>
+      <span class="sheet__handle" aria-hidden="true"></span>
+      <div class="psheet__head">
+        <div class="rechead"><span class="rechead__pic" id="recPic"></span><div><h2 class="sheet__title" id="recTitle">Recipe</h2><p class="sheet__sub" id="recSub"></p></div></div>
+        <button type="button" class="iconbtn" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-close"/></svg></button>
+      </div>
+      <p class="field__hint" id="recHint">What one order uses</p>
+      <ul class="reclines" id="recLines"></ul>
+      <button type="button" class="linkbtn" id="recAdd"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-plus"/></svg>Add an ingredient</button>
+      <div class="recscale" id="recScale"></div>
+      <div class="reccost" id="recCost"></div>
+      <div class="sheet__actions psheet__actions">
+        <button type="button" class="button button--ghost" data-close>Cancel</button>
+        <button type="submit" class="button" id="recSave">Save recipe</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Shopping list from what's low -->
+  <dialog class="sheet" id="shopSheet" aria-labelledby="shopTitle">
+    <div class="sheet__body">
+      <span class="sheet__handle" aria-hidden="true"></span>
+      <div class="psheet__head">
+        <div><h2 class="sheet__title" id="shopTitle">Shopping list</h2><p class="sheet__sub">Enough to get back to a comfortable level</p></div>
+        <button type="button" class="iconbtn" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-close"/></svg></button>
+      </div>
+      <ul class="shoplist" id="shopList"></ul>
+      <div class="sheet__actions psheet__actions">
+        <button type="button" class="button button--ghost" id="shopCopy">Copy list</button>
+        <button type="button" class="button" id="shopDone">Restock all</button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>

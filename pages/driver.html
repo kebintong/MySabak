@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Driver home · mysabak</title>
+  <meta name="theme-color" content="#5630d8">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script type="module" src="/assets/js/pages/driver.js"></script>
+</head>
+<body class="page page--map page--driver">
+  <div class="app">
+    <!-- Map first: every job request is a pin; the chosen one shows its route -->
+    <div class="map" id="map" role="region" aria-label="Map of job requests near you">
+      <div class="map__canvas" id="mapCanvas"></div>
+    </div>
+
+    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <section class="finder finder--driver" aria-labelledby="driverTitle" hidden id="driverHome">
+      <div class="finder__top">
+        <div class="dhead desktop-only">
+          <div>
+            <h1 class="dhead__title" id="driverTitle">Hi, <span data-bind="firstName">driver</span></h1>
+            <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+          </div>
+        </div>
+        <button type="button" class="onbar" id="onlineBtn" aria-pressed="false">
+          <span class="onbar__dot" aria-hidden="true"></span>
+          <span class="onbar__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
+          <span class="onbar__go" data-bind="onlineAction">Go online</span>
+        </button>
+        <div class="fchips" id="kinds" role="group" aria-label="Show requests for"></div>
+      </div>
+
+      <div class="finder__sheet" id="sheet">
+        <button type="button" class="finder__handle" id="sheetHandle" aria-expanded="false" aria-controls="sheet">
+          <span aria-hidden="true"></span><span class="sr-only">Show more of the list</span>
+        </button>
+        <div class="dhead mobile-only">
+          <div>
+            <p class="dhead__title">Hi, <span data-bind="firstName">driver</span></p>
+            <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+          </div>
+          <div class="dhead__btns">
+            <button type="button" class="panel__hide dhead__hide" id="hideSheet" aria-label="Hide the list to see the map"><svg class="icon icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button>
+          </div>
+        </div>
+        <div class="finder__head" id="reqHead"><h2 id="reqCount">Requests</h2><span>Nearest first</span></div>
+        <div class="finder__scroll" id="sheetScroll">
+          <div id="activeJob" aria-live="polite"></div>
+          <ul class="jobs" id="jobList" aria-labelledby="reqCount" aria-live="polite"></ul>
+
+          <section class="dearn" aria-labelledby="earnTitle">
+            <h2 class="finder__sub" id="earnTitle">Earnings</h2>
+            <div class="stats">
+              <div class="stat"><span class="stat__value" data-bind="today">₱0</span><span class="stat__label">Today</span></div>
+              <div class="stat"><span class="stat__value" data-bind="week">₱0</span><span class="stat__label">This week</span></div>
+            </div>
+            <ul class="list" id="trips"></ul>
+            <div class="row dearn__payout">
+              <span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
+              <div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
+              <button type="button" class="button button--ghost" id="payoutBtn">Set up</button>
+            </div>
+          </section>
+          <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
+        </div>
+      </div>
+    </section>
+
+    <button type="button" class="map-locate" id="locateBtn" aria-label="Center on my location">
+      <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+    </button>
+
+    <div class="bottom">
+      <!-- Phones: the list hidden to a slim bar, so the map gets the screen -->
+      <button type="button" class="statusbar dbar mobile-only" id="sheetBar" aria-controls="sheet" aria-expanded="true">
+        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
+        <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Requests</span><span class="statusbar__sub" data-bind="barSub"></span></span>
+        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
+      </button>
+      <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>
