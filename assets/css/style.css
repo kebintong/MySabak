@@ -948,7 +948,7 @@ body:not([data-state="request"]) .map-controls { display: none; }
 }
 @media (hover: hover) { .tab[data-tab="food"]:hover .tab__icon { transform: scale(1.06); } }
 .tab[data-tab="food"]:active .tab__icon { transform: scale(.9); }
-@media (min-width: 900px) { /* floating pill: the button sits in a notch on its top edge, as on phones */
+@media (min-width: 900px) { /* floating pill: the button sinks 14px into a notch, mostly inside the bar */
   .dock:has(.tab[data-tab="food"]) {
     position: relative;
     background: none; border-color: transparent; box-shadow: none;
@@ -961,11 +961,12 @@ body:not([data-state="request"]) .map-controls { display: none; }
     border-radius: inherit;
     background: rgba(255, 255, 255, .96);
     border: 1px solid var(--line-brand);
-    -webkit-mask: radial-gradient(circle at 50% 0, transparent 40px, #000 41px);
-    mask: radial-gradient(circle at 50% 0, transparent 40px, #000 41px);
+    -webkit-mask: radial-gradient(circle at 50% 14px, transparent 40px, #000 41px);
+    mask: radial-gradient(circle at 50% 14px, transparent 40px, #000 41px);
   }
   .dock .tab { z-index: 1; }
-  .dock .tab[data-tab="food"] { align-self: flex-start; padding-top: 10px; }
+  .dock .tab[data-tab="food"] { align-self: flex-start; padding-top: 24px; }
+  .dock .tab[data-tab="food"]::after { top: -30px; } /* orbit stays centred on the button */
 }
 
 /* ---- Toast ---- */
@@ -1274,10 +1275,10 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
     url("/assets/images/map-bg.svg") center / cover no-repeat,
     var(--map-ground);
 }
-/* Home's look (night sky over cream) for pages that ask for it: Trips */
+/* Home's look (night sky over cream) for pages that ask for it: Trips, Wallet, Account */
 .page--sky .app { background: url("/assets/images/v3/hero-night-sky.svg") center top / 100% calc(230px + var(--safe-t)) no-repeat, #faf5f3; }
-.page--sky .page-title { color: #fff; }
-.page--sky .lede { color: rgba(255, 255, 255, .8); }
+.page--sky .page-head .page-title { color: #fff; }
+.page--sky .page-head .lede { color: rgba(255, 255, 255, .8); }
 @media (min-width: 900px) { /* same painted sky as the desktop home: the 390px picture smears this wide */
   .page--sky .app {
     background:
