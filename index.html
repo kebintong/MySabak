@@ -30,8 +30,8 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body data-state="request" class="is-home">
-  <!-- Opened on a ride link (#ride, #where, #moto, #parcel): skip the home so it doesn't flash -->
-  <script>if (/^#(ride|where|moto|parcel)$/.test(location.hash)) document.body.className = 'is-ride';</script>
+  <!-- Opened on a ride link (#ride, #where, #moto, #parcel, #rebook): skip the home so it doesn't flash -->
+  <script>if (/^#(ride|where|moto|parcel|rebook)$/.test(location.hash)) document.body.className = 'is-ride';</script>
 
   <div class="app">
 

@@ -3,7 +3,8 @@
    Vanilla JS modules, no build step.
 
    index.html opens on the Home dashboard. Ride links switch to the ride screen without a reload:
-     #ride / #where (search) = Ride, #moto = Ride with Motor picked, #parcel = Express. Back = Home.
+     #ride / #where (search) = Ride, #moto = Ride with Motor picked, #parcel = Express,
+     #rebook = Choose your ride for the latest recent place (Trips → Rebook). Back = Home.
    Two modes: Ride (passengers) and Express (parcels), same screen.
    Steps:
      1. "request" – set a drop-off (search, a recent place, or pick on map)
@@ -966,7 +967,7 @@ currentUser().catch(() => null).then((user) => {
 /* =========================================================
    Home ↔ ride screen (by URL hash, so the phone's Back button works)
    ========================================================= */
-const RIDE_LINKS = ['ride', 'where', 'moto', 'parcel'];
+const RIDE_LINKS = ['ride', 'where', 'moto', 'parcel', 'rebook']; // #rebook: from Trips, the latest recent place
 function route() {
   const link = location.hash.slice(1);
   const ride = RIDE_LINKS.includes(link);
@@ -976,6 +977,11 @@ function route() {
   if (!ride) return;
   setMode(link === 'parcel' ? 'express' : 'ride');
   if (link === 'moto') selectVehicle('motor');
+  if (link === 'rebook') {
+    const r = latestRecent();
+    if (r) goToChoose(r.title, r);
+    history.replaceState(null, '', '#ride'); // a reload shouldn't rebook again
+  }
   requestAnimationFrame(() => {
     frame({ animate: false });
     if (link === 'where' && state.step === 'request') el.dest.focus();

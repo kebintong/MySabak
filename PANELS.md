@@ -145,7 +145,7 @@ Built by `showTripDone(order)` in `app.js`.
 ## Trips (`pages/trips.html`; the "Trips" tab)
 | Panel | Data | Source |
 |---|---|---|
-| Rides and deliveries | each Ride / Express booking: drop-off, vehicle, when, total | `myTrips()` |
+| Rides and deliveries | each Ride / Express booking: drop-off, vehicle, when, total; **Rebook** opens "Choose your ride" for that drop-off (`/#rebook`) | `myTrips()` |
 | Shop orders | each order: shop, when, status, subtotal (links to the order page) | `myOrders()` |
 
 ## Wallet (`pages/wallet.html`; the "Wallet" tab)
