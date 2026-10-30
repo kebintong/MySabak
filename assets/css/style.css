@@ -856,13 +856,16 @@ body:not([data-state="request"]) .map-controls { display: none; }
   display: flex; align-items: center; justify-content: center;
   transition: background-color .15s;
 }
-.tab__label { font-size: 12px; font-weight: 500; }
+.tab__label { font-size: 12px; font-weight: 500; transition: color .15s; }
+.tab .icon { width: 24px; height: 24px; transition: stroke .15s; }
 .tab:hover { color: var(--brand-deep); }
 .tab:hover .tab__icon { background: rgba(242, 233, 250, .6); }
+.tab:hover .icon { stroke: var(--brand-deep); }
 .tab.is-active { color: var(--brand-deep); }
 .tab.is-active .tab__label { font-weight: 600; }
 .tab.is-active .tab__icon { background: var(--tint); animation: pill-in .4s var(--spring); }
-.tab.is-active .icon { stroke: var(--brand-deep); }
+/* active icon goes solid, its inner lines lilac (icons.svg reads these) */
+.tab.is-active .icon { stroke: var(--brand-deep); --icon-fill: var(--brand-deep); --icon-detail: var(--tint); }
 
 /* Phones: Figma "Navbar v3/Notched White", full width, Food as the round middle button */
 @media (max-width: 899.98px) {
@@ -945,7 +948,23 @@ body:not([data-state="request"]) .map-controls { display: none; }
 }
 @media (hover: hover) { .tab[data-tab="food"]:hover .tab__icon { transform: scale(1.06); } }
 .tab[data-tab="food"]:active .tab__icon { transform: scale(.9); }
-@media (min-width: 900px) { /* floating pill: the button sits on its top edge */
+@media (min-width: 900px) { /* floating pill: the button sits in a notch on its top edge, as on phones */
+  .dock:has(.tab[data-tab="food"]) {
+    position: relative;
+    background: none; border-color: transparent; box-shadow: none;
+    filter: drop-shadow(0 10px 20px rgba(36, 25, 87, .18));
+  }
+  .dock:has(.tab[data-tab="food"])::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, .96);
+    border: 1px solid var(--line-brand);
+    -webkit-mask: radial-gradient(circle at 50% 0, transparent 40px, #000 41px);
+    mask: radial-gradient(circle at 50% 0, transparent 40px, #000 41px);
+  }
+  .dock .tab { z-index: 1; }
   .dock .tab[data-tab="food"] { align-self: flex-start; padding-top: 10px; }
 }
 
