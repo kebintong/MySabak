@@ -21,49 +21,47 @@
   <link rel="stylesheet" href="/assets/css/style.css">
   <script type="module" src="/assets/js/pages/account.js"></script>
 </head>
-<body class="page page--sky">
+<body class="page page--sky page--head-sky page--account">
   <div class="app">
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <div class="content__inner">
+      <div class="content__inner content__inner--wide">
 
         <!-- Signed out: customer sign in. Drivers and merchants switch to their own form above it. -->
-        <div class="auth" id="signedOut" hidden>
-          <section class="card auth-card" aria-labelledby="signinTitle">
-            <nav class="role-switch" aria-label="Sign in as">
+        <div class="signin" id="signedOut" hidden>
+          <header class="page-head signin__head">
+            <div>
+              <h1 class="page-title" id="signinTitle">Sign in</h1>
+              <p class="lede">Book rides, order from shops and keep your receipts in one place.</p>
+            </div>
+            <nav class="role-switch role-switch--glass" aria-label="Sign in as">
               <a class="role-switch__btn" href="/pages/account.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg>Customer</a>
               <a class="role-switch__btn" href="/pages/drive.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg>Driver</a>
               <a class="role-switch__btn" href="/pages/merchant.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg>Merchant</a>
             </nav>
-            <div class="auth-card__head">
-              <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg></span>
-              <h1 class="auth-card__title" id="signinTitle">Customer sign in</h1>
-              <p class="lede">Sign in to book rides, order from shops and keep your receipts in one place.</p>
-            </div>
+          </header>
 
-            <form class="form" id="signinForm" novalidate>
-              <label class="field"><span class="field__label">Mobile number or email</span>
-                <input class="input" name="login" type="text" required placeholder="09XX XXX XXXX or name@email.com"
-                       autocomplete="username" autocapitalize="off" spellcheck="false"></label>
-              <div class="field"><label class="field__label" for="password">Password</label>
-              <div class="input-wrap"><input class="input" id="password" name="password" type="password" required minlength="8" autocomplete="current-password">
-              <button type="button" class="input-wrap__btn" data-reveal="password" aria-label="Show password">Show</button></div></div>
-              <div class="auth-row">
-                <label class="check"><input type="checkbox" name="remember" checked><span>Keep me signed in</span></label>
-                <a href="#" class="auth-link" id="forgot">Forgot password?</a>
-              </div>
-              <p class="field__error" id="signinError" role="alert" hidden></p>
-              <button type="submit" class="button button--block" id="signinBtn">Sign in</button>
-              <p class="auth-legal">By signing in, you agree to mysabak’s <a href="#" data-soon="Terms of Service">Terms of Service</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</p>
-            </form>
+          <div class="signin__body">
+              <form class="form" id="signinForm" novalidate>
+                <label class="field"><span class="field__label">Mobile number or email</span>
+                  <input class="input" name="login" type="text" required placeholder="09XX XXX XXXX or name@email.com"
+                         autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+                <div class="field"><label class="field__label" for="password">Password</label>
+                <div class="input-wrap"><input class="input" id="password" name="password" type="password" required minlength="8" autocomplete="current-password">
+                <button type="button" class="input-wrap__btn" data-reveal="password" aria-label="Show password">Show</button></div></div>
+                <div class="auth-row">
+                  <label class="check"><input type="checkbox" name="remember" checked><span>Keep me signed in</span></label>
+                  <a href="#" class="auth-link" id="forgot">Forgot password?</a>
+                </div>
+                <p class="field__error" id="signinError" role="alert" hidden></p>
+                <button type="submit" class="button button--block" id="signinBtn">Sign in</button>
+                <p class="auth-legal">By signing in, you agree to mysabak’s <a href="#" data-soon="Terms of Service">Terms of Service</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</p>
+              </form>
 
-            <div class="auth-alt">
-              <span>New to mysabak?</span>
-              <a class="auth-link auth-link--strong" href="#" id="signupLink">Create an account</a>
-            </div>
-          </section>
+              <p class="signin__new"><span class="signin__ask">New to mysabak?</span> <span class="signin__hint">Make an account to book rides and order from local shops.</span> <a class="auth-link auth-link--strong" href="#" id="signupLink">Create an account</a></p>
+          </div>
         </div>
 
         <!-- Signed in as a customer -->
