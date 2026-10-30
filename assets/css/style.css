@@ -1851,14 +1851,16 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .finder__sheet.is-expanded { height: calc(100% - var(--content-top) - 100px); }
 .finder__sheet.is-collapsed { height: calc(172px + var(--safe-b)); } /* handle and title, clear of the Food button */
 .finder__sheet.is-collapsed #picked, .finder__sheet.is-expanded #picked { display: none; }
-/* The preview card floats, so the list never moves under the finger: above the sheet on phones, over the list's end on desktop */
+/* The preview card floats off the list, so nothing moves under the finger and Menu never lands under it:
+   above the sheet on phones, beside the panel on desktop */
 #picked { position: absolute; left: 0; right: 0; bottom: 100%; z-index: 1; }
 .finder__handle { flex: none; width: 100%; height: 24px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
 .finder__handle > span:first-child { width: 40px; height: 5px; border-radius: 3px; background: #d6d0e6; }
 .finder__head { flex: none; display: flex; justify-content: space-between; align-items: baseline; padding: 2px 16px 6px; }
 .finder__head h2 { margin: 0; font-size: 17px; font-weight: 800; color: var(--navy); }
 .finder__head span { font-size: 12px; color: var(--sub); }
-.finder__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 16px; margin-bottom: calc(92px + var(--safe-b)); } /* ends just above the tab bar */
+.finder__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 16px; margin-bottom: calc(92px + var(--safe-b)); scrollbar-width: none; } /* ends just above the tab bar */
+.finder__scroll::-webkit-scrollbar, .browse::-webkit-scrollbar { display: none; }
 .finder__sub { margin: 18px 6px 4px; font-size: 15px; font-weight: 800; color: var(--navy); }
 .finder__orders .list { padding: 0 6px; }
 .shops-empty { padding: 28px 18px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
@@ -1871,23 +1873,23 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .picked {
   margin: 0 12px 8px; padding: 10px;
   display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 10px; align-items: center;
-  border-radius: 16px; background: var(--navy); color: #fff;
+  border: 1.5px solid var(--line-brand); border-radius: 20px; color: var(--ink);
+  background: var(--tint) url("/assets/images/v3/glow-ride.svg") right -90px top -70px / 300px 240px no-repeat; /* the Ride card's look */
+  box-shadow: var(--shadow-card);
   animation: rise .25s var(--ease-out);
 }
-.picked__img { width: 62px; height: 62px; border-radius: 12px; overflow: hidden; display: block; }
+.picked__img { width: 62px; height: 62px; border-radius: 14px; overflow: hidden; display: block; }
 .picked__body { min-width: 0; display: flex; flex-direction: column; font-size: 12px; }
-.picked__body h3 { margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.picked__body > span { color: rgba(255, 255, 255, .82); }
-.picked .is-open { color: #8fe0aa; }
-.picked .is-closed { color: rgba(255, 255, 255, .7); }
-.picked__go { padding: 10px 16px; border-radius: 12px; background: var(--hot); color: #fff; font-weight: 800; font-size: 14px; text-decoration: none; }
-.picked__go:hover { background: var(--hot-deep); color: #fff; }
+.picked__body h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.picked__body > span { color: #5e4c74; }
+.picked__go { padding: 10px 18px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; transition: background-color .15s; }
+.picked__go:hover { background: var(--accent-deep); color: #fff; }
 
 .srows { list-style: none; margin: 0; padding: 0; }
 .srows > li + li { border-top: 1px solid var(--line); }
 .srow {
   display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 12px; align-items: center;
-  padding: 10px 8px; border-radius: 14px; text-decoration: none; color: inherit;
+  width: 100%; padding: 10px 8px; border: 0; border-radius: 14px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
   transition: background-color .15s;
 }
 .srow:hover { background: #fff; color: inherit; }
@@ -1919,7 +1921,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 .browse-btn .icon { stroke: var(--brand-deep); }
 .browse-btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.browse { position: absolute; inset: 0; z-index: 2; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #faf5f3; padding-bottom: var(--content-bottom); }
+.browse { position: absolute; inset: 0; z-index: 2; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; background: #faf5f3; padding-bottom: var(--content-bottom); }
 .browse__wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; }
 .browse__head { padding: calc(var(--content-top) + 6px) 0 22px; background: radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
 .browse__titlerow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
@@ -2012,9 +2014,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   .fchip { box-shadow: none; border: 1px solid var(--line-brand); }
   .fchip[aria-pressed="true"] { border-color: var(--brand); }
   /* Food, v3: the Home night sky as the panel header, white search pill and glass chips on it */
-  .page--food .finder { background: #faf5f3; }
+  .page--food .finder { background: #faf5f3; overflow: visible; } /* the preview card sits beside the panel */
   .page--food .finder__top {
-    padding: 20px 18px 16px; border: 0;
+    padding: 20px 18px 16px; border: 0; border-radius: 24px 24px 0 0;
     background:
       radial-gradient(60% 90% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%),
       linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
@@ -2028,9 +2030,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   .finder__sheet.is-expanded { height: auto; }
   .finder__handle { display: none; }
   .finder__scroll { padding: 0 10px 16px; margin-bottom: 0; }
-  .finder__sheet { position: relative; }
-  #picked { bottom: 4px; }
-  .finder__sheet:has(.picked) .finder__scroll { padding-bottom: 104px; scroll-padding-bottom: 104px; } /* the last rows stay reachable */
+  .page--food .finder__sheet { position: relative; border-radius: 0 0 24px 24px; }
+  #picked { left: calc(100% + 12px); right: auto; top: 12px; bottom: auto; width: 340px; }
+  .picked { margin: 0; box-shadow: var(--shadow-lg); }
   .map-locate { bottom: var(--content-bottom); }
   .page--map .maplibregl-ctrl-bottom-right { bottom: var(--content-bottom); right: 12px; }
 }
