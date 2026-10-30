@@ -847,7 +847,7 @@ export async function listShops({ near, category = 'all', q = '' } = {}) {
   const text = q.trim().toLowerCase();
   const shops = SHOPS
     .filter((s) => category === 'all' || s.category === category)
-    .filter((s) => !text || [s.name, s.area].some((t) => t.toLowerCase().includes(text)) || s.menu.some((m) => m.name.toLowerCase().includes(text)))
+    .filter((s) => !text || [s.name, s.area, SHOP_CATEGORIES.find((c) => c.id === s.category)?.name || ''].some((t) => t.toLowerCase().includes(text)) || s.menu.some((m) => m.name.toLowerCase().includes(text)))
     .map(({ menu, ...s }) => ({ ...s, items: menu.filter((m) => !m.bundle).length, km: near ? haversineKm(near, s) : null }))
     .sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
   return { categories: SHOP_CATEGORIES, shops };

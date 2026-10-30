@@ -1,5 +1,6 @@
-/* Shops (pages/shops.html), map first: every shop is a pin; the list sits in a pull-up sheet
-   (phones) or a side panel (desktop). Tapping a pin previews that shop; tapping a row opens it. */
+/* Shops (pages/shops.html), map first: the list sits in a pull-up sheet (phones) or a side panel (desktop).
+   The map only pins what the customer asked for: search results, a category, or the shop they tapped.
+   Tapping a row or a pin previews that shop on the map; tapping the previewed row again opens it. */
 import { CONFIG } from '../config.js';
 import { listShops, myOrders, ORDER_STEPS } from '../api.js';
 import { openState } from '../menu.js';
@@ -10,8 +11,9 @@ import { $, mountChrome, esc, when, peso, toast, icon } from '../ui.js';
 mountChrome({ signIn: false, roles: ['client'] }); // no Sign in button here: customers sign in from Ride or Account
 
 const DESKTOP = window.matchMedia('(min-width: 900px)');
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 let near = { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };
-let category = 'all';
+let category = ''; // '' = none picked: every shop is listed, none is pinned
 let shops = [];
 let picked = null; // id of the shop shown in the preview card
 let timer;
@@ -46,7 +48,7 @@ function renderPicked() {
       <a class="picked__go" href="${shopUrl(s)}">Menu</a></article>` : '';
 }
 
-const shopRow = (s, mark = true) => `<li><a class="srow${mark && s.id === picked ? ' is-picked' : ''}" href="${shopUrl(s)}" data-id="${esc(s.id)}">
+const shopRow = (s, mark = true, i = 0) => `<li style="--i:${Math.min(i, 8)}"><a class="srow${mark && s.id === picked ? ' is-picked' : ''}" href="${shopUrl(s)}" data-id="${esc(s.id)}">
     <span class="srow__img">${thumb(s)}</span>
     <span class="srow__body"><span class="srow__name">${esc(s.name)}</span>
       <span class="srow__sub">${esc(s.area)} · ${esc(categoryName(s.category))} · ${s.items} items</span>${openLine(s)}</span>
@@ -56,7 +58,7 @@ function renderList() {
   $('.finder__head span').hidden = !shops.length;
   $('#shopCount').textContent = shops.length ? `${shops.length} shop${shops.length === 1 ? '' : 's'} nearby` : filtered() ? 'No shops found' : 'Shops nearby';
   $('#shopList').innerHTML = shops.length
-    ? shops.map((s) => shopRow(s)).join('')
+    ? shops.map((s, i) => shopRow(s, true, i)).join('')
     : filtered()
       ? '<li class="empty">No shops match that search. Try another word or category.</li>'
       : `<li class="shops-empty">${icon('i-store', 'icon--xl')}<h3>No shops yet</h3>
@@ -64,31 +66,39 @@ function renderList() {
 }
 
 let categories = [];
-const filtered = () => category !== 'all' || $('#shopSearch').value.trim() !== '';
+const filtered = () => category !== '' || $('#shopSearch').value.trim() !== '';
 const categoryName = (id) => (categories.find((c) => c.id === id) || { name: id }).name;
 
-async function load({ fit = false } = {}) {
-  const res = await listShops({ near, category, q: $('#shopSearch').value });
-  categories = res.categories;
-  shops = res.shops;
-  if (!shops.some((s) => s.id === picked)) picked = shops[0] ? shops[0].id : null;
-  $('#categories').innerHTML = categories.map((c) => `<button type="button" class="fchip" data-cat="${c.id}" aria-pressed="${c.id === category}">${esc(c.name)}</button>`).join('');
-  renderList();
-  renderPicked();
-  map.setShops(shops);
+/* Pins only for what the customer asked for: search results, a category, or the shop they tapped */
+function showPins() {
+  map.setShops(filtered() ? shops : shops.filter((s) => s.id === picked));
   map.setActive(picked);
-  if (fit && shops.length) map.fit(shops.map((s) => [s.lng, s.lat]).concat(near.real ? [[near.lng, near.lat]] : []), { animate: true });
 }
 
-/** Preview a shop: big pin, dark card on top of the list. */
+async function load({ fit = false } = {}) {
+  const res = await listShops({ near, category: category || 'all', q: $('#shopSearch').value });
+  categories = res.categories;
+  shops = res.shops;
+  if (!shops.some((s) => s.id === picked)) picked = null;
+  $('#categories').innerHTML = categories.filter((c) => c.id !== 'all')
+    .map((c) => `<button type="button" class="fchip" data-cat="${c.id}" aria-pressed="${c.id === category}">${esc(c.name)}</button>`).join('');
+  renderList();
+  renderPicked();
+  showPins();
+  if (fit && filtered() && shops.length) map.fit(shops.map((s) => [s.lng, s.lat]).concat(near.real ? [[near.lng, near.lat]] : []), { animate: true });
+}
+
+/** Preview a shop: its pin (big), the map moved to it, the dark card on top of the list. */
 function pick(id, { fromMap = false } = {}) {
   picked = id;
   renderPicked();
-  document.querySelectorAll('.srow').forEach((r) => r.classList.toggle('is-picked', r.dataset.id === id));
-  map.setActive(id, { fly: fromMap });
+  document.querySelectorAll('#shopList .srow').forEach((r) => r.classList.toggle('is-picked', r.dataset.id === id));
+  showPins();
+  if (!DESKTOP.matches && level === 2) setLevel(1); // the full sheet would hide the pin
+  map.setActive(id, { fly: true });
   if (fromMap) {
     if (level === 0) setLevel(1); // the preview card lives in the sheet
-    const row = document.querySelector(`.srow[data-id="${CSS.escape(id)}"]`);
+    const row = document.querySelector(`#shopList .srow[data-id="${CSS.escape(id)}"]`);
     if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 }
@@ -109,15 +119,26 @@ function useLocation(point) {
 }
 
 /* ---------- Events ---------- */
+// Tapping the picked chip again clears it
 $('#categories').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cat]');
   if (!b) return;
-  category = b.dataset.cat;
+  category = category === b.dataset.cat ? '' : b.dataset.cat;
   load({ fit: true });
 });
 $('#shopSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load({ fit: true }), 200); });
 
-/* Browse: the categories as tiles, the nearest shops under them. Picking a tile filters the map. */
+// A row shows its shop on the map first; the previewed row (or the card's Menu) opens it
+const plainClick = (e) => !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button);
+$('#shopList').addEventListener('click', (e) => {
+  const row = e.target.closest('.srow');
+  if (!row || !plainClick(e) || row.dataset.id === picked) return;
+  e.preventDefault();
+  pick(row.dataset.id);
+});
+
+/* Browse: the categories as tiles, the nearest shops (or search results) under them.
+   A tile filters the map, a shop is shown on the map, Map goes back with the search kept. */
 const svgArt = (paths) => `<svg class="btile__art" viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
 const TILE_ART = {
   food: '<img class="btile__art btile__art--pic" src="/assets/images/v3/food.svg" alt="">',
@@ -127,33 +148,58 @@ const TILE_ART = {
   essentials: svgArt('<path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>'),
 };
 const browse = $('#browse');
+const browseQuery = $('#browseQuery');
+
+async function renderBrowseList() {
+  const q = browseQuery.value.trim();
+  const res = await listShops({ near, q });
+  const list = q ? res.shops : res.shops.slice(0, 4);
+  $('#browseSub').textContent = !q ? 'Nearest to you' : list.length ? `${list.length} shop${list.length === 1 ? '' : 's'} found` : 'No shops found';
+  $('#browseNear').innerHTML = list.length
+    ? list.map((s, i) => shopRow(s, false, i)).join('')
+    : '<li class="empty">No shops match that search. Try another word or a category.</li>';
+}
 async function openBrowse() {
   const res = await listShops({ near });
   const count = (id) => res.shops.filter((s) => s.category === id).length;
-  $('#browseTiles').innerHTML = res.categories.filter((c) => c.id !== 'all').map((c, i) => `<button type="button" class="btile${i % 2 ? ' btile--lilac' : ''}" data-cat="${esc(c.id)}">
+  $('#browseTiles').innerHTML = res.categories.filter((c) => c.id !== 'all').map((c, i) => `<button type="button" class="btile${i % 2 ? ' btile--lilac' : ''}" data-cat="${esc(c.id)}" style="--i:${i}">
       <span class="btile__name">${esc(c.name)}</span><span class="btile__count">${count(c.id)} shop${count(c.id) === 1 ? '' : 's'}</span>
       ${TILE_ART[c.id] || icon('i-store', 'btile__art')}</button>`).join('');
-  $('#browseNear').innerHTML = res.shops.slice(0, 4).map((s) => shopRow(s, false)).join('');
+  browseQuery.value = $('#shopSearch').value;
+  await renderBrowseList();
+  browse.classList.remove('is-closing');
   browse.hidden = false;
   $('#browseOpen').setAttribute('aria-expanded', 'true');
   browse.scrollTop = 0;
 }
-function closeBrowse() {
-  browse.hidden = true;
+/** Back to the map, keeping the Browse search; optionally with a category or a shop picked. */
+async function leaveBrowse({ cat = null, shopId = null } = {}) {
   $('#browseOpen').setAttribute('aria-expanded', 'false');
+  if (REDUCED_MOTION.matches) browse.hidden = true;
+  else {
+    browse.classList.add('is-closing');
+    setTimeout(() => { browse.hidden = true; browse.classList.remove('is-closing'); }, 200);
+  }
+  $('#shopSearch').value = browseQuery.value;
+  if (cat !== null) category = cat;
+  await load({ fit: !shopId });
+  if (shopId) pick(shopId);
 }
 $('#browseOpen').addEventListener('click', openBrowse);
-$('#browseClose').addEventListener('click', closeBrowse);
-$('#browseSearch').addEventListener('click', () => { closeBrowse(); $('#shopSearch').focus(); });
+$('#browseClose').addEventListener('click', () => leaveBrowse());
+browseQuery.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(renderBrowseList, 200); });
 $('#browseTiles').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cat]');
-  if (!b) return;
-  category = b.dataset.cat;
-  closeBrowse();
-  load({ fit: true });
+  if (b) leaveBrowse({ cat: b.dataset.cat });
+});
+$('#browseNear').addEventListener('click', (e) => {
+  const row = e.target.closest('.srow');
+  if (!row || !plainClick(e)) return;
+  e.preventDefault();
+  leaveBrowse({ cat: '', shopId: row.dataset.id }); // Browse lists every category, so drop the map's
 });
 
-// Desktop: hovering a row lights up its pin
+// Desktop: hovering a row lights up its pin (when it has one)
 $('#shopList').addEventListener('mouseover', (e) => {
   const row = e.target.closest('.srow');
   if (row && DESKTOP.matches) map.setActive(row.dataset.id);
