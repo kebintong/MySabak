@@ -1850,7 +1850,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 .finder__sheet.is-expanded { height: calc(100% - var(--content-top) - 100px); }
 .finder__sheet.is-collapsed { height: calc(172px + var(--safe-b)); } /* handle and title, clear of the Food button */
-.finder__sheet.is-collapsed #picked { display: none; }
+.finder__sheet.is-collapsed #picked, .finder__sheet.is-expanded #picked { display: none; }
+/* The preview card floats, so the list never moves under the finger: above the sheet on phones, over the list's end on desktop */
+#picked { position: absolute; left: 0; right: 0; bottom: 100%; z-index: 1; }
 .finder__handle { flex: none; width: 100%; height: 24px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
 .finder__handle > span:first-child { width: 40px; height: 5px; border-radius: 3px; background: #d6d0e6; }
 .finder__head { flex: none; display: flex; justify-content: space-between; align-items: baseline; padding: 2px 16px 6px; }
@@ -1902,6 +1904,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   transition: opacity .2s, bottom .3s var(--ease-out);
 }
 .finder:has(.is-expanded) + .map-locate { opacity: 0; pointer-events: none; }
+@media (max-width: 899.98px) { .finder:has(.picked) + .map-locate { bottom: calc(48% + 104px); } } /* above the preview card */
 .finder:has(.is-collapsed) + .map-locate { bottom: calc(184px + var(--safe-b)); }
 .page--map:has(.is-collapsed) .maplibregl-ctrl-bottom-right { bottom: calc(172px + var(--safe-b)); }
 
@@ -2025,6 +2028,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   .finder__sheet.is-expanded { height: auto; }
   .finder__handle { display: none; }
   .finder__scroll { padding: 0 10px 16px; margin-bottom: 0; }
+  .finder__sheet { position: relative; }
+  #picked { bottom: 4px; }
+  .finder__sheet:has(.picked) .finder__scroll { padding-bottom: 104px; scroll-padding-bottom: 104px; } /* the last rows stay reachable */
   .map-locate { bottom: var(--content-bottom); }
   .page--map .maplibregl-ctrl-bottom-right { bottom: var(--content-bottom); right: 12px; }
 }

@@ -186,7 +186,7 @@ Design: "Map first". Shops are found on the map; each shop opens on a route map.
 
 | Page | What it does | Source |
 |---|---|---|
-| `pages/shops.html` | full-screen map, one pin per shop in its colour; search + category chips float on top; tap a pin to preview the shop (dark card); list of shops, closest first, in a pull-up sheet (phones) or a side panel (desktop); your orders | `listShops()`, `myOrders()` |
+| `pages/shops.html` | full-screen map, one pin per shop in its colour; search + category chips float on top; tap a pin or a list row to preview the shop on the map (dark card; its **Menu** button is the way into the shop); list of shops, closest first, in a pull-up sheet (phones) or a side panel (desktop); your orders | `listShops()`, `myOrders()` |
 | `pages/shop.html?id=…` | route map from the customer to the shop (when location is allowed), shop card (photo, address, rating, hours, open now, distance, directions, phone), menu section tabs, items in sideways rows (phones) or a grid (desktop), bundles, an options sheet per item, "Your order" (a sheet on phones and tablets, a column on wide screens) | `shopMenu()`, `routeBetween()` |
 | `pages/checkout.html` | items with their options, delivery address (search or "use my location"), notes, payment, summary | `deliveryQuote()`, `placeOrder()` |
 | `pages/order.html?id=…` | status timeline, receipt (items → shop, delivery → rider, tip → mysabak), tip button, details | `orderStatus()`, `myTips()`, `sendTip()` |

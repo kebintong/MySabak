@@ -34,7 +34,7 @@ function mapPadding() {
     return { top: 110, bottom: 140, left: panel.right - app.left + 40, right: 60 };
   }
   const top = $('.finder__top').getBoundingClientRect().bottom - app.top + 30;
-  const bottom = app.bottom - $('#sheet').getBoundingClientRect().top + 24;
+  const bottom = app.bottom - ($('.picked') || $('#sheet')).getBoundingClientRect().top + 24; // the card floats above the sheet
   return { top, bottom: Math.min(bottom, app.height - top - 80), left: 40, right: 40 };
 }
 
@@ -96,11 +96,9 @@ function pick(id, { fromMap = false } = {}) {
   showPins();
   if (!DESKTOP.matches && level === 2) setLevel(1); // the full sheet would hide the pin
   map.setActive(id, { fly: true });
-  if (fromMap) {
-    if (level === 0) setLevel(1); // the preview card lives in the sheet
-    const row = document.querySelector(`#shopList .srow[data-id="${CSS.escape(id)}"]`);
-    if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
+  if (fromMap && level === 0) setLevel(1); // the preview card lives in the sheet
+  const row = document.querySelector(`#shopList .srow[data-id="${CSS.escape(id)}"]`);
+  if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // also clears the card on desktop
 }
 
 async function loadOrders() {
@@ -128,11 +126,12 @@ $('#categories').addEventListener('click', (e) => {
 });
 $('#shopSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load({ fit: true }), 200); });
 
-// A row shows its shop on the map first; the previewed row (or the card's Menu) opens it
+// A row only ever shows its shop on the map (tap again to re-centre); the card's Menu opens it.
+// Ctrl / middle click still follow the link, for a new tab.
 const plainClick = (e) => !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button);
 $('#shopList').addEventListener('click', (e) => {
   const row = e.target.closest('.srow');
-  if (!row || !plainClick(e) || row.dataset.id === picked) return;
+  if (!row || !plainClick(e)) return;
   e.preventDefault();
   pick(row.dataset.id);
 });
