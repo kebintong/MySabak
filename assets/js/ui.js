@@ -77,7 +77,7 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
         const t = TABS.find((x) => x.id === id);
         const href = (role.hrefs && role.hrefs[id]) || t.href;
         const on = t.id === active;
-        return `<a class="tab${on ? ' is-active' : ''}${t.mobileOnly ? ' mobile-only' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
+        return `<a data-tab="${t.id}" class="tab${on ? ' is-active' : ''}${t.mobileOnly ? ' mobile-only' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
           + `<span class="tab__icon">${icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
           + `<span class="tab__label">${t.label}</span>${t.mobileOnly ? '' : '<span class="tab__dot desktop-only"></span>'}</a>`;
       }).join('');
