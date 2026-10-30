@@ -38,17 +38,21 @@ function renderInfo() {
 }
 
 async function startMap() {
-  const hero = shopMap($('#heroMap'), { interactive: false, padding: () => ({ top: 70, bottom: 60, left: 50, right: 50 }) });
+  const hero = shopMap($('#heroMap'), { interactive: false, padding: () => ({ top: 34, bottom: 16, left: 24, right: 24 }) });
+  let frame = () => hero.fit([[shop.lng, shop.lat]], { maxZoom: 15 });
+  // The route map only shows on desktop: size it when the screen gets that wide
+  window.matchMedia('(min-width: 900px)').addEventListener('change', () => { hero.resize(); frame(); });
   hero.setShops([shop]);
   hero.setActive(shop.id);
-  hero.fit([[shop.lng, shop.lat]], { maxZoom: 15 });
+  frame();
   const me = await knownLocation();
   if (!me) return;
   hero.setUser(me);
   let trip;
   try { trip = await routeBetween(me, shop); } catch (_) { trip = straightLine(me, shop); }
   hero.setRoute(trip.coords);
-  hero.fit(trip.coords.concat([[me.lng, me.lat], [shop.lng, shop.lat]]), { maxZoom: 15.5 });
+  frame = () => hero.fit(trip.coords.concat([[me.lng, me.lat], [shop.lng, shop.lat]]), { maxZoom: 15.5 });
+  frame();
   const kmEl = $('#shopKm');
   kmEl.textContent = `${trip.distanceKm.toFixed(1)} km`;
   kmEl.hidden = false;
@@ -87,6 +91,12 @@ function renderMenu() {
       </div></section>`).join('');
   watchSections();
 }
+
+// Tabs are glass on the night sky; once they stick to the top they need a solid look
+const tabsEl = $('#menuTabs');
+$('#content').addEventListener('scroll', () => {
+  tabsEl.classList.toggle('is-stuck', tabsEl.getBoundingClientRect().top <= parseFloat(getComputedStyle(tabsEl).top) + 1);
+}, { passive: true });
 
 // Light up the tab of the section you're looking at
 let observer;

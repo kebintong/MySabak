@@ -9,7 +9,7 @@
 import { CONFIG } from './config.js';
 import { baseMapOptions, addAttribution } from './map.js';
 
-const ROUTE = '#FF6B4A';
+const ROUTE = '#7b3fbf';
 const EMPTY = { type: 'FeatureCollection', features: [] };
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
