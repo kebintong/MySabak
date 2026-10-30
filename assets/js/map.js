@@ -129,6 +129,7 @@ export function initMap(ctx) {
   markers.dest = new maplibregl.Marker({ element: document.getElementById('mkDest'), anchor: 'bottom' }).setLngLat(state.pickup);
   markers.time = new maplibregl.Marker({ element: document.getElementById('mkTime'), anchor: 'bottom', offset: [0, -10] }).setLngLat(state.pickup);
   markers.driver = new maplibregl.Marker({ element: document.getElementById('mkDriver'), anchor: 'center' }).setLngLat(state.pickup);
+  markers.driver.getElement().addEventListener('animationend', (e) => { if (e.animationName === 'mascot-pop') e.currentTarget.classList.remove('is-pop'); });
 
   map.on('move', placeLabels);
 
@@ -398,8 +399,10 @@ export function updateMap() {
 
   // The driver, once one accepted (step "trip"); glides between position updates
   const pos = state.step === 'trip' && state.driver && state.driver.pos;
-  if (pos) moveDriver(pos);
-  else { markers.driver.remove(); driverAnim.to = null; cancelAnimationFrame(driverAnim.raf); }
+  if (pos) {
+    moveDriver(pos);
+    markers.driver.getElement().classList.toggle('is-arrived', state.driver.status === 'arrived');
+  } else { markers.driver.remove(); driverAnim.to = null; cancelAnimationFrame(driverAnim.raf); }
 
   placeLabels();
 
@@ -432,10 +435,14 @@ function moveDriver(pos) {
     driverAnim.from = null;
     driverAnim.to = pos;
     driverAnim.last = now;
+    el.classList.add('is-pop'); // the mascot pops up where the driver accepted
+    el.dataset.motion = 'stop';
     markers.driver.setLngLat([pos.lng, pos.lat]).addTo(map);
     return;
   }
-  if (driverAnim.to.lng === pos.lng && driverAnim.to.lat === pos.lat) return;
+  // The same spot again means the driver is waiting (traffic, or at the pickup)
+  if (driverAnim.to.lng === pos.lng && driverAnim.to.lat === pos.lat) { el.dataset.motion = 'stop'; return; }
+  el.dataset.motion = 'run';
   const from = driverNow(now);
   if (Math.abs(pos.lng - from.lng) > 1e-7) el.classList.toggle('is-west', pos.lng < from.lng);
   Object.assign(driverAnim, { from, to: pos, start: now, dur: Math.min(2000, Math.max(120, now - driverAnim.last)), last: now });

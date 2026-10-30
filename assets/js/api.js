@@ -317,7 +317,7 @@ export async function cancelRide(bookingId) {
  * status: 'arriving' → 'arrived' → 'on_trip' → 'completed' (or 'cancelled').
  * Backend: push these from your realtime channel (WebSocket, SSE, Firebase…).
  * DEMO: the driver drives the real roads to the pickup (TomTom route), waits, then follows the trip route;
- * about 25 seconds in all.
+ * about 25 seconds in all, plus a few random traffic stops.
  * @returns {() => void}  call to stop listening
  */
 export function onTripUpdate(bookingId, onUpdate) {
@@ -330,7 +330,9 @@ export function onTripUpdate(bookingId, onUpdate) {
   let stopped = false;
   let timer = 0;
   let phases = null;
-  let started = 0;
+  let clock = 0;     // ms of the trip played so far; it doesn't run while the driver is stuck in traffic
+  let last = 0;
+  let stuckUntil = 0;
   onUpdate({ status: 'arriving', driver: from, etaMinutes: null });
 
   const begin = (approach) => {
@@ -342,16 +344,23 @@ export function onTripUpdate(bookingId, onUpdate) {
       { status: 'on_trip', path: route, ms: 14000, eta: (b.trip && b.trip.minutes) || null },
       { status: 'completed', path: [route[route.length - 1]], ms: 0, eta: 0 },
     ];
-    started = Date.now();
+    last = Date.now();
     tick();
   };
   const tick = () => {
     if (stopped) return;
-    let t = Date.now() - started;
+    const now = Date.now();
+    if (now >= stuckUntil) clock += now - last;
+    last = now;
+    let t = clock;
     let i = 0;
     while (i < phases.length - 1 && t >= phases[i].ms) { t -= phases[i].ms; i++; }
     const ph = phases[i];
     const f = ph.ms ? t / ph.ms : 1;
+    // DEMO traffic: while driving, now and then the driver stops for 1.5–4 s (about once every 10 s)
+    if (now >= stuckUntil && ph.path.length > 1 && f > 0.05 && f < 0.9 && Math.random() < 0.02) {
+      stuckUntil = now + 1500 + Math.random() * 2500;
+    }
     onUpdate({
       status: ph.status,
       driver: pointAlong(ph.path, f),
