@@ -48,11 +48,11 @@ function renderPicked() {
       <a class="picked__go" href="${shopUrl(s)}">Menu</a></article>` : '';
 }
 
-const shopRow = (s, mark = true, i = 0) => `<li style="--i:${Math.min(i, 8)}"><a class="srow${mark && s.id === picked ? ' is-picked' : ''}" href="${shopUrl(s)}" data-id="${esc(s.id)}">
+const shopRow = (s, mark = true, i = 0) => `<li style="--i:${Math.min(i, 8)}"><button type="button" class="srow${mark && s.id === picked ? ' is-picked' : ''}"${mark ? ` aria-pressed="${s.id === picked}"` : ''} data-id="${esc(s.id)}">
     <span class="srow__img">${thumb(s)}</span>
     <span class="srow__body"><span class="srow__name">${esc(s.name)}</span>
       <span class="srow__sub">${esc(s.area)} · ${esc(categoryName(s.category))} · ${s.items} items</span>${openLine(s)}</span>
-    <span class="srow__km">${km(s)}</span></a></li>`;
+    <span class="srow__km">${km(s)}</span></button></li>`;
 
 function renderList() {
   $('.finder__head span').hidden = !shops.length;
@@ -92,13 +92,13 @@ async function load({ fit = false } = {}) {
 function pick(id, { fromMap = false } = {}) {
   picked = id;
   renderPicked();
-  document.querySelectorAll('#shopList .srow').forEach((r) => r.classList.toggle('is-picked', r.dataset.id === id));
+  document.querySelectorAll('#shopList .srow').forEach((r) => { r.classList.toggle('is-picked', r.dataset.id === id); r.setAttribute('aria-pressed', String(r.dataset.id === id)); });
   showPins();
   if (!DESKTOP.matches && level === 2) setLevel(1); // the full sheet would hide the pin
   map.setActive(id, { fly: true });
   if (fromMap && level === 0) setLevel(1); // the preview card lives in the sheet
   const row = document.querySelector(`#shopList .srow[data-id="${CSS.escape(id)}"]`);
-  if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // also clears the card on desktop
+  if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 async function loadOrders() {
@@ -126,14 +126,10 @@ $('#categories').addEventListener('click', (e) => {
 });
 $('#shopSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load({ fit: true }), 200); });
 
-// A row only ever shows its shop on the map (tap again to re-centre); the card's Menu opens it.
-// Ctrl / middle click still follow the link, for a new tab.
-const plainClick = (e) => !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button);
+// A row only ever shows its shop on the map (tap again to re-centre); the card's Menu opens it
 $('#shopList').addEventListener('click', (e) => {
   const row = e.target.closest('.srow');
-  if (!row || !plainClick(e)) return;
-  e.preventDefault();
-  pick(row.dataset.id);
+  if (row) pick(row.dataset.id);
 });
 
 /* Browse: the categories as tiles, the nearest shops (or search results) under them.
@@ -193,8 +189,7 @@ $('#browseTiles').addEventListener('click', (e) => {
 });
 $('#browseNear').addEventListener('click', (e) => {
   const row = e.target.closest('.srow');
-  if (!row || !plainClick(e)) return;
-  e.preventDefault();
+  if (!row) return;
   leaveBrowse({ cat: '', shopId: row.dataset.id }); // Browse lists every category, so drop the map's
 });
 
