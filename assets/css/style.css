@@ -1929,11 +1929,14 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .browse__map:hover { background: rgba(255, 255, 255, .26); }
 .browse__map .icon { width: 18px; height: 18px; stroke: #fff; }
 .browse__search {
-  width: 100%; height: 50px; padding: 0 18px; display: flex; align-items: center; gap: 10px;
-  border: 0; border-radius: 25px; background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35);
-  font: 500 15px var(--font-body); color: var(--muted); text-align: left; cursor: pointer;
+  height: 50px; padding: 0 18px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;
+  border-radius: 25px; background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35);
+  transition: box-shadow .2s var(--ease-out);
 }
-.browse__search .icon { stroke: var(--accent); }
+.browse__search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .45), 0 8px 20px rgba(20, 5, 36, .35); }
+.browse__search .icon { flex: none; stroke: var(--accent); }
+.browse__search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: none; font: 500 15px var(--font-body); color: var(--ink); }
+.browse__search input::placeholder { color: var(--muted); }
 .browse__tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .btile {
   position: relative; grid-column: span 2; height: 96px; padding: 10px 12px; overflow: hidden;
@@ -1952,6 +1955,26 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 @media (hover: hover) { .btile:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(41, 10, 69, .12); } }
 .btile:active { transform: scale(.97); }
 .browse__sub { margin: 22px 0 4px; font-size: 17px; font-weight: 700; color: var(--navy); }
+/* Motion: Browse slides up in and fades out, its tiles and the shop rows arrive one after another,
+   pins pop up where they land, chips and rows give under a press (all off under reduced motion) */
+.browse:not([hidden]) { animation: browse-in .32s var(--ease-out) both; }
+.browse.is-closing { animation: browse-out .2s ease-in forwards; pointer-events: none; }
+.btile { animation: card-in .4s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 50ms + 80ms); }
+.page--food .srows > li { animation: card-in .3s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
+.page--food .spin svg { animation: pin-pop .45s var(--spring) backwards; }
+.fchip { transition: background-color .2s, color .2s, transform .15s var(--spring); }
+.fchip:active { transform: scale(.94); }
+.fchip[aria-pressed="true"] { animation: chip-pick .35s var(--spring); }
+.page--food .srow { transition: background-color .15s, transform .15s var(--spring); }
+.page--food .srow:active { transform: scale(.985); }
+.browse-btn { transition: background-color .15s, transform .15s var(--spring); }
+@media (hover: hover) { .browse-btn:hover { transform: translateY(-1px); } }
+.browse-btn:active { transform: scale(.94); }
+@keyframes browse-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes browse-out { to { opacity: 0; transform: translateY(10px); } }
+/* `scale` / `translate` (not transform): they stack with the picked pin's enlarged transform */
+@keyframes pin-pop { from { opacity: 0; scale: .3; translate: 0 -12px; } to { opacity: 1; scale: 1; translate: 0 0; } }
+@keyframes chip-pick { 0% { transform: scale(.9); } 60% { transform: scale(1.06); } 100% { transform: none; } }
 @media (min-width: 900px) {
   .page--food .browse-btn { width: auto; height: 50px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 25px; background: rgba(255, 255, 255, .14); box-shadow: none; color: #fff; }
   .page--food .browse-btn:hover { background: rgba(255, 255, 255, .26); }
