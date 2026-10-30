@@ -46,15 +46,17 @@ function renderPicked() {
       <a class="picked__go" href="${shopUrl(s)}">Menu</a></article>` : '';
 }
 
+const shopRow = (s, mark = true) => `<li><a class="srow${mark && s.id === picked ? ' is-picked' : ''}" href="${shopUrl(s)}" data-id="${esc(s.id)}">
+    <span class="srow__img">${thumb(s)}</span>
+    <span class="srow__body"><span class="srow__name">${esc(s.name)}</span>
+      <span class="srow__sub">${esc(s.area)} · ${esc(categoryName(s.category))} · ${s.items} items</span>${openLine(s)}</span>
+    <span class="srow__km">${km(s)}</span></a></li>`;
+
 function renderList() {
   $('.finder__head span').hidden = !shops.length;
   $('#shopCount').textContent = shops.length ? `${shops.length} shop${shops.length === 1 ? '' : 's'} nearby` : filtered() ? 'No shops found' : 'Shops nearby';
   $('#shopList').innerHTML = shops.length
-    ? shops.map((s) => `<li><a class="srow${s.id === picked ? ' is-picked' : ''}" href="${shopUrl(s)}" data-id="${esc(s.id)}">
-        <span class="srow__img">${thumb(s)}</span>
-        <span class="srow__body"><span class="srow__name">${esc(s.name)}</span>
-          <span class="srow__sub">${esc(s.area)} · ${esc(categoryName(s.category))} · ${s.items} items</span>${openLine(s)}</span>
-        <span class="srow__km">${km(s)}</span></a></li>`).join('')
+    ? shops.map((s) => shopRow(s)).join('')
     : filtered()
       ? '<li class="empty">No shops match that search. Try another word or category.</li>'
       : `<li class="shops-empty">${icon('i-store', 'icon--xl')}<h3>No shops yet</h3>
@@ -114,6 +116,42 @@ $('#categories').addEventListener('click', (e) => {
   load({ fit: true });
 });
 $('#shopSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load({ fit: true }), 200); });
+
+/* Browse: the categories as tiles, the nearest shops under them. Picking a tile filters the map. */
+const svgArt = (paths) => `<svg class="btile__art" viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
+const TILE_ART = {
+  food: '<img class="btile__art btile__art--pic" src="/assets/images/v3/food.svg" alt="">',
+  coffee: svgArt('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v3M12 3v3"/>'),
+  bakery: svgArt('<path d="M5 11a4 4 0 0 1 2-7h10a4 4 0 0 1 2 7v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/>'),
+  grocery: svgArt('<path d="M3 10h18l-2 9H5z"/><path d="M8 10l4-6 4 6"/>'),
+  essentials: svgArt('<path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>'),
+};
+const browse = $('#browse');
+async function openBrowse() {
+  const res = await listShops({ near });
+  const count = (id) => res.shops.filter((s) => s.category === id).length;
+  $('#browseTiles').innerHTML = res.categories.filter((c) => c.id !== 'all').map((c, i) => `<button type="button" class="btile${i % 2 ? ' btile--lilac' : ''}" data-cat="${esc(c.id)}">
+      <span class="btile__name">${esc(c.name)}</span><span class="btile__count">${count(c.id)} shop${count(c.id) === 1 ? '' : 's'}</span>
+      ${TILE_ART[c.id] || icon('i-store', 'btile__art')}</button>`).join('');
+  $('#browseNear').innerHTML = res.shops.slice(0, 4).map((s) => shopRow(s, false)).join('');
+  browse.hidden = false;
+  $('#browseOpen').setAttribute('aria-expanded', 'true');
+  browse.scrollTop = 0;
+}
+function closeBrowse() {
+  browse.hidden = true;
+  $('#browseOpen').setAttribute('aria-expanded', 'false');
+}
+$('#browseOpen').addEventListener('click', openBrowse);
+$('#browseClose').addEventListener('click', closeBrowse);
+$('#browseSearch').addEventListener('click', () => { closeBrowse(); $('#shopSearch').focus(); });
+$('#browseTiles').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-cat]');
+  if (!b) return;
+  category = b.dataset.cat;
+  closeBrowse();
+  load({ fit: true });
+});
 
 // Desktop: hovering a row lights up its pin
 $('#shopList').addEventListener('mouseover', (e) => {
