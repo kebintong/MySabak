@@ -371,7 +371,6 @@ function routeMidpoint(coords) {
   return coords[Math.floor(coords.length / 2)];
 }
 
-let lastDest = null;
 /** Sync markers, the driver and the route line with the app's state. Call after every state change. */
 export function updateMap() {
   if (!map) return;
@@ -379,18 +378,9 @@ export function updateMap() {
   markers.origin.setLngLat(state.pickup);
 
   if (state.destPoint) {
-    const isNew = !lastDest || lastDest.lng !== state.destPoint.lng || lastDest.lat !== state.destPoint.lat;
     markers.dest.setLngLat(state.destPoint).addTo(map);
-    if (isNew) {
-      const pin = markers.dest.getElement();
-      pin.classList.remove('is-dropping');
-      void pin.offsetWidth;
-      pin.classList.add('is-dropping');
-    }
-    lastDest = state.destPoint;
   } else {
     markers.dest.remove();
-    lastDest = null;
   }
 
   const mid = routeMidpoint(state.trip.coords);
