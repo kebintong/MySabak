@@ -1321,16 +1321,17 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
 .wtips .list { margin-top: 4px; }
 .wtips .empty { padding: 6px 0 0; text-align: left; }
 .wtips__foot { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
-@media (max-width: 899.98px) {
-  /* the sky is the page head's own background, so it scrolls away with the open sections instead of sitting behind them */
-  .page--wallet .content { top: 0; padding-top: calc(var(--content-top) + 10px); -webkit-mask-image: none; mask-image: none; }
-  .page--wallet .page-head {
-    margin: calc(-10px - var(--content-top)) calc(-1 * var(--gutter)) 0;
-    padding: calc(var(--content-top) + 14px) calc(var(--gutter) + 4px) 30px;
-    background: radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
-  }
+/* Wallet, Account: a flat sky that is the page head's own background, edge to edge, so it scrolls away
+   with the open sections instead of sitting behind them */
+.page--head-sky .app { background: #faf5f3; }
+.page--head-sky .content { top: 0; padding-top: calc(var(--content-top) + 10px); overflow-x: hidden; -webkit-mask-image: none; mask-image: none; }
+.page--head-sky .page-head {
+  margin: calc(-10px - var(--content-top)) calc(50% - 50vw) 0;
+  padding: calc(var(--content-top) + 14px) calc(50vw - 50% + 4px) 30px;
+  background: radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
 }
 @media (min-width: 900px) {
+  .page--wallet .page-head { background: none; } /* desktop Wallet: the whole page is sky */
   .page--wallet .app { background: radial-gradient(40% 50% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
   .page--wallet .content__inner { min-height: 100%; }
   .wallet {
@@ -1353,6 +1354,31 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
   .wtips { flex: 1 1 260px; min-width: 0; padding: 0 0 0 40px; border-top: 0; border-left: 1px solid var(--line-brand); }
   .wtips__head { flex-direction: column; align-items: flex-start; gap: 10px; }
   .wtips__total b { font-size: 40px; line-height: 1; }
+}
+/* Account, signed out: role switch in the sky, the form open on cream (phones);
+   desktop puts the switch beside the title and "New to mysabak?" beside the form */
+.role-switch.role-switch--glass { margin: 10px 0 0; border: 1px solid rgba(255, 255, 255, .22); border-radius: 16px; background: rgba(255, 255, 255, .12); }
+.role-switch--glass .role-switch__btn { border-radius: 12px; color: #fff; }
+.role-switch--glass .role-switch__btn .icon { stroke: #fff; }
+.role-switch--glass .role-switch__btn:hover { background: rgba(255, 255, 255, .14); color: #fff; }
+.role-switch--glass .role-switch__btn[aria-current="page"] { background: #fff; color: var(--brand-deep); box-shadow: none; }
+.role-switch--glass .role-switch__btn[aria-current="page"] .icon { stroke: var(--brand-deep); }
+.signin { display: flex; flex-direction: column; }
+.signin__body { display: flex; flex-direction: column; gap: 16px; padding: 20px 4px 0; }
+.signin .input { background: #fff; border-color: var(--line-brand); }
+.signin__new { margin: 0; padding-top: 14px; border-top: 1px solid var(--line-brand); text-align: center; font-size: 14px; color: var(--sub); }
+.signin__hint { display: none; }
+.signin:not([hidden]) ~ .card { padding: 18px 4px 0; border: 0; border-top: 1px solid var(--line-brand); border-radius: 0; background: none; box-shadow: none; }
+@media (min-width: 900px) {
+  .page-head.signin__head { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
+  .signin__head > div { flex: 1 1 360px; display: flex; flex-direction: column; gap: 6px; }
+  .signin__head .role-switch.role-switch--glass { flex: 0 1 420px; margin: 0; }
+  .signin__body { flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 48px; padding-top: 32px; }
+  .signin__body .form { flex: 1 1 420px; max-width: 480px; }
+  .signin__new { flex: 1 1 260px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 0 0 0 48px; border-top: 0; border-left: 1px solid var(--line-brand); text-align: left; }
+  .signin__ask { font-size: 17px; font-weight: 700; color: var(--navy); }
+  .signin__hint { display: block; line-height: 1.5; }
+  .signin__new .auth-link { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border: 1.5px solid var(--accent); border-radius: 22px; text-decoration: none; }
 }
 .content__inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .content__inner--wide { max-width: 960px; }
