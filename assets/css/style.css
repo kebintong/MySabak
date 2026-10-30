@@ -899,7 +899,7 @@ body:not([data-state="request"]) .map-controls { display: none; }
     width: 64px; height: 64px;
     margin-top: -42px; /* centre sits on the bar edge */
     border-radius: 50%;
-    background: var(--accent);
+    background: linear-gradient(145deg, #1e0638, #5b1c8f 50%, #8e3fc9);
     box-shadow: 0 0 0 2px #fff, 0 6px 16px rgba(41, 10, 69, .3);
     animation: none;
     transition: transform .2s var(--spring);
@@ -917,6 +917,9 @@ body:not([data-state="request"]) .map-controls { display: none; }
   .tab[data-tab="food"] .tab__icon::before {
     inset: -5px;
     background: conic-gradient(#a65fe8, #f2b55c 22%, #fff 38%, #e9a04a 52%, #a65fe8 68%, #e7d6fb 84%, #a65fe8);
+    /* ring only: hover/press transforms lift this above the button fill */
+    -webkit-mask: radial-gradient(closest-side, transparent 33.5px, #000 34px);
+    mask: radial-gradient(closest-side, transparent 33.5px, #000 34px);
     animation: spin 6s linear infinite;
   }
   .tab[data-tab="food"] .tab__icon::after {
@@ -938,7 +941,7 @@ body:not([data-state="request"]) .map-controls { display: none; }
     pointer-events: none;
   }
   @media (hover: hover) { .tab[data-tab="food"]:hover .tab__icon { transform: scale(1.06); } }
-  .tab[data-tab="food"]:active .tab__icon { transform: scale(.94); }
+  .tab[data-tab="food"]:active .tab__icon { transform: scale(.9); }
 }
 
 /* ---- Toast ---- */
@@ -1114,7 +1117,7 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 @keyframes shine     { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(220%) skewX(-20deg); } }
 @keyframes pill-in   { from { transform: scale(.6); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes card-shine { 0%, 70% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-@keyframes fab-pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes fab-pulse { from { transform: scale(1); opacity: .6; } to { transform: scale(1.375); opacity: 0; } }
 @keyframes twinkle   { 0%, 100% { opacity: .3; transform: scale(.7); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
 @keyframes bell-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(12deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(6deg); } }
 @keyframes aurora    { from { transform: translateX(0) scale(1); opacity: .8; } to { transform: translateX(-18px) scale(1.08); opacity: 1; } }
