@@ -34,16 +34,35 @@ missing.
 
 ---
 
-## Ride screen (`index.html`)
+## Home (`index.html`; the "Home" tab)
+Design: Figma "04 · Home v3 · magical". Phones show it like the Figma frame; desktop lays the same cards out wider.
 
-### Top bar
+| Panel | Data | Source |
+|---|---|---|
+| Pickup from `Current location` | pickup label | GPS + `addressFor()` (tap: use my location) |
+| Bell, Schedule, Multi-stop, Vouchers, + (add a place) | none | **not built**: tapping says "coming soon" |
+| "Where are you going?" | none | opens the ride screen with the drop-off box focused (`#where`) |
+| Home / Office chips | the user's saved places | **not built** (needs accounts) |
+| Ride / Moto / Parcel / Food cards | none | Ride screen (`#ride`), Ride with Motor picked (`#moto`), Express (`#parcel`), Shops |
+| Sweet treats promo | none | links to Shops |
+| Recent | last drop-off; Rebook goes straight to "Choose your ride" | this browser only; backend can supply recent trips |
+
+Tab bar (customers): **Home · Trips · Food · Wallet · Account** (Food is the round middle button on phones).
+Drive and Support are linked from the Account page. Drivers and merchants keep their own tabs.
+
+## Ride screen (`index.html#ride`)
+Design: Figma "02 · Book a Ride". Phones: back button + route card (pickup, drop-off) on top, steps in a sheet at
+the bottom. Desktop: the same in one column on the left of the map. Back: Choose your ride → edit the drop-off;
+otherwise → Home.
+
+### Top bar (Home only)
 | Element | Data | Source |
 |---|---|---|
 | Logo | none | `assets/images/logo.svg` (favicon + app icons: `favicon.svg`, `icons/`) |
 | Install / Install app | none | on every page, every screen size (hidden once installed). Uses the browser's install prompt where there is one (Chrome, Edge, Brave, Android); otherwise opens step-by-step instructions for iPhone/iPad (Share → Add to Home Screen), Mac Safari (File → Add to Dock), Samsung Internet, Firefox. `setupInstall()` in `ui.js` |
 | Sign in / profile | `currentUser()` | Signed out: **Sign in** (goes to `pages/account.html`). Signed in: a **profile** button whose dropdown holds the account's home and **Sign out** (the only place to sign out). See Accounts below |
 
-### Ride | Express switch
+### Ride | Parcel switch (Express)
 Switches the whole screen between passenger rides and parcel delivery. Express changes the wording
 ("Saan ipapadala?", "Deliver to?", "Send with Sedan"), shows what each vehicle carries
 (`CONFIG.vehicles[].parcel`) and asks for parcel details before booking.
@@ -59,21 +78,20 @@ Switches the whole screen between passenger rides and parcel delivery. Express c
 The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`. Map credits (© TomTom, © OpenStreetMap) sit behind a
 small ⓘ button that starts closed (`addAttribution()` in `map.js`, used by every map).
 
-### "Saan tayo?" panel (step 1)
+### Route card + "Saan tayo?" panel (step 1)
 | Element | Data | Source |
 |---|---|---|
-| "Where to?" box + suggestions | places matching the text, near the pickup | `searchPlaces(text, near)` → `placeLocation(place)` |
-| From: Current location | pickup label | GPS + `addressFor()` |
-| Home / Work chips | the user's saved places | **not built** (needs accounts) |
+| Pickup row | pickup label | GPS + `addressFor()` (tap: use my location) |
+| Drop-off box + suggestions | places matching the text, near the pickup | `searchPlaces(text, near)` → `placeLocation(place)` |
+| Home / Office chips | the user's saved places | **not built** (needs accounts) |
 | Recent chip | last drop-off | this browser only; backend can supply recent trips |
 | Pick on map | none | map tap |
-| Hide (⌄, phones) | none | shrinks the panel to a slim "Saan tayo?" bar with **Show**, to see the map |
 
-### "Choose a vehicle" panel (step 2)
+### "Choose your ride" panel (step 2)
 | Element | Placeholder | Data | Source |
 |---|---|---|---|
 | Summary line | `[Distance] · [Travel time]` | `trip.distanceKm`, `trip.minutes` | `routeBetween()` |
-| Vehicle cards | none | vehicles | `CONFIG.vehicles` |
+| Ride options | none | vehicles, each with its picture (`art` → `assets/images/v3/<art>.svg`) | `CONFIG.vehicles` |
 | Fare on each card | `₱[FARE]` | `fares[vehicleId].total` | `faresFor(trip)` |
 | Driver ETA | `[ETA]` | `trip.eta[vehicleId]` (minutes) | `routeBetween()`; needs live drivers |
 | Fare note (desktop) | `₱[AMOUNT]` + `₱[AMOUNT]` | `.base`, `.distance` | `faresFor(trip)` |
@@ -124,7 +142,20 @@ Built by `showTripDone(order)` in `app.js`.
 
 ---
 
-## Support (`pages/support.html`; the "Support" tab)
+## Trips (`pages/trips.html`; the "Trips" tab)
+| Panel | Data | Source |
+|---|---|---|
+| Rides and deliveries | each Ride / Express booking: drop-off, vehicle, when, total | `myTrips()` |
+| Shop orders | each order: shop, when, status, subtotal (links to the order page) | `myOrders()` |
+
+## Wallet (`pages/wallet.html`; the "Wallet" tab)
+| Panel | Data | Source |
+|---|---|---|
+| How you can pay | Cash, GCash, Online banking | `CONFIG.ridePayments` |
+| Your tips | the user's tips (total + list) | `myTips()` |
+| Add a card, mysabak balance | "Coming soon" | page |
+
+## Support (`pages/support.html`; linked from Account)
 | Panel | Data | Source |
 |---|---|---|
 | Where your money goes | fixed text: fare 100% driver, delivery fee 100% rider, tips 100% mysabak | page |
@@ -229,6 +260,7 @@ customer: "Your account" (saved places, trips, payments: coming soon) and this b
 | `findDriver(id)` / `cancelRide(id)` | `Driver` (404: nobody free) / `{ ok }` | finding a driver |
 | `onTripUpdate(id, onUpdate)` → `stop()` | calls `onUpdate(TripUpdate)` | trip panel, car on the map, Ride complete |
 | `rateRide(id, stars)` | `{ ok }` | Ride complete |
+| `myTrips()` | `Booking[]` (what `bookRide` was sent, plus `id` and `at`), newest first | Trips page |
 | `sendTip(tip)` / `myTips()` | `{ id, amount }` / `Tip[]` | tip sheet, Support page |
 | `supportStats()` | `SupportStats` | Support page |
 | `driverSignIn({ login, password })` / `driverSignOut()` | `{ status }` (401 if no match; `login` = mobile number or email) / nothing | driver sign in, driver home |

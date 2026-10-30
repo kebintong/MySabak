@@ -29,8 +29,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body data-state="request">
-
+<body data-state="request" class="is-home">
+  <!-- Opened on a ride link (#ride, #where, #moto, #parcel): skip the home so it doesn't flash -->
+  <script>if (/^#(ride|where|moto|parcel)$/.test(location.hash)) document.body.className = 'is-ride';</script>
 
   <div class="app">
 
@@ -65,7 +66,7 @@
       </div>
     </div>
 
-    <!-- ============ Top bar ============ -->
+    <!-- ============ Top bar (home) ============ -->
     <header class="topbar">
       <a class="brand" href="./" aria-label="mysabak home">
         <img src="assets/images/logo.svg" alt="mysabak" width="150" height="35">
@@ -78,7 +79,7 @@
       </div>
     </header>
 
-    <!-- ============ Map controls ============ -->
+    <!-- ============ Map controls (ride) ============ -->
     <div class="map-controls">
       <div class="zoom desktop-only">
         <button type="button" class="ctrl" id="zoomIn" aria-label="Zoom in"><svg class="icon icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
@@ -88,157 +89,215 @@
       <button type="button" class="ctrl ctrl--solo" id="locateBtn" aria-label="Go to my location"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-locate"/></svg></button>
     </div>
 
-    <h1 class="headline desktop-only" data-show="request"><span data-bind="askTitle">Saan tayo?</span> <span data-bind="askHint">Set your drop-off below.</span></h1>
-    <h1 class="sr-only mobile-only" data-show="choose">Choose a vehicle</h1>
-
-    <!-- ============ Bottom area ============ -->
-    <div class="bottom">
-
-      <!-- Step 1 hidden (phones): a slim bar that brings the "Saan tayo?" panel back -->
-      <button type="button" class="statusbar reqbar mobile-only" id="reqBar" data-show="request" aria-controls="requestPanel" aria-expanded="true">
-        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="assets/images/icons.svg#i-pin"/></svg></span>
-        <span class="statusbar__text"><span class="statusbar__title" data-bind="askTitle">Saan tayo?</span><span class="statusbar__sub" data-bind="reqBarSub">Ride · set your drop-off</span></span>
-        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span>
-      </button>
-
-      <!-- Step 1 · Where to? -->
-      <section class="panel panel--request" id="requestPanel" data-show="request" aria-label="Set your trip">
-        <button type="button" class="panel__hide mobile-only" id="hideRequest" aria-label="Hide the search to see the map"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
-        <div class="mode" role="radiogroup" aria-label="What do you need?">
-          <button type="button" class="mode__btn" role="radio" aria-checked="true" data-mode="ride"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg>Ride</button>
-          <button type="button" class="mode__btn" role="radio" aria-checked="false" data-mode="express"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-box"/></svg>Express</button>
-        </div>
-        <h2 class="panel__title mobile-only" data-bind="askTitle">Saan tayo?</h2>
-        <form class="search mobile-only" id="searchMobile" autocomplete="off">
-          <svg class="icon icon--lg" aria-hidden="true"><use href="assets/images/icons.svg#i-pin"/></svg>
-          <label for="destMobile" class="sr-only">Drop-off</label>
-          <input id="destMobile" class="search__input" data-dest type="text" placeholder="Where to?" enterkeyhint="go"
-                 role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggestMobile">
-          <button type="submit" class="search__go" aria-label="See rides"><svg class="icon icon--lg icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></button>
-          <ul class="suggest" id="suggestMobile" role="listbox" aria-label="Suggested places" hidden></ul>
-        </form>
-
-        <div class="chips" role="group" aria-label="Quick places">
-          <button type="button" class="chip chip--origin" aria-pressed="true">
-            <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-origin"/></svg>From: <span data-bind="fromShort">Current location</span>
+    <!-- ============ Ride screen: route card on top, step panels below (phones) or in a left column (desktop) ============ -->
+    <div class="ride" id="ride">
+      <div class="ride__top">
+        <button type="button" class="ride__back" id="rideBack" aria-label="Back"><svg class="icon icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-back"/></svg></button>
+        <form class="route" id="searchForm" autocomplete="off">
+          <h1 class="sr-only" data-bind="askTitle">Saan tayo?</h1>
+          <button type="button" class="route__row route__pickup" data-pickup aria-label="Pickup: use my location">
+            <span class="route__dot" aria-hidden="true"></span>
+            <span class="route__text"><span class="route__label">Pickup</span><span class="route__value" data-bind="from">Current location</span></span>
           </button>
-          <span class="chips__sep desktop-only" aria-hidden="true"></span>
-          <button type="button" class="chip" data-saved="home"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg>Home</button>
-          <button type="button" class="chip" data-saved="work"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>Work</button>
-          <button type="button" class="chip" id="recentChip" hidden><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-clock"/></svg><span class="chip__text" data-bind="recent"></span></button>
-          <button type="button" class="chip" id="pickOnMap" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-hand"/></svg>Pick on map</button>
-        </div>
-      </section>
-
-      <!-- Step 2 · Choose a vehicle -->
-      <section class="panel panel--choose" data-show="choose" aria-labelledby="chooseTitle">
-        <div class="choose__head">
-          <h2 id="chooseTitle" class="choose__title">Choose a vehicle</h2>
-          <p class="choose__summary">
-            <span class="desktop-only"><span data-bind="from">Current location</span> → </span><span class="mobile-only">To </span><span data-bind="dropoff">[Drop-off place]</span>
-            · <span data-bind="distance">[Distance]</span> · <span data-bind="duration">[Travel time]</span>
-          </p>
-          <button type="button" class="btn-soft" id="editTrip">
-            <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-pencil"/></svg>Edit trip
-          </button>
-        </div>
-
-        <div class="vehicles" role="radiogroup" aria-label="Vehicle">
-          <!-- Filled by assets/js/app.js from CONFIG.vehicles (assets/js/config.js) -->
-        </div>
-
-        <div class="choose__foot">
-          <button type="button" class="pay" id="payBtn">
-            <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-cash" data-pay-icon/></svg>
-            <span class="pay__label" data-bind="payment">Cash</span>
-            <span class="pay__change">Change</span>
-          </button>
-          <p class="fare-note desktop-only">Fare: base <span data-bind="base">₱[AMOUNT]</span> + distance <span data-bind="distfare">₱[AMOUNT]</span></p>
-        </div>
-
-        <button type="button" class="book mobile-only" data-book>
-          <span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span></span>
-          <span class="book__idle" data-bind="fare">₱[FARE]</span>
-        </button>
-      </section>
-
-      <!-- Steps 3–4 hidden: a slim bar that brings the status card back -->
-      <button type="button" class="statusbar" id="statusBar" data-show="search trip" aria-controls="searchPanel tripPanel" aria-expanded="false">
-        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
-        <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Finding you a driver</span><span class="statusbar__sub" data-bind="barSub"></span></span>
-        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span>
-      </button>
-
-      <!-- Step 3 · Finding a driver -->
-      <section class="panel panel--search" id="searchPanel" data-show="search" aria-labelledby="searchTitle" aria-live="polite">
-        <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
-        <div class="searching">
-          <span class="searching__icon" aria-hidden="true"><span></span><svg class="icon icon--xl icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
-          <div class="searching__text">
-            <h2 class="searching__title" id="searchTitle" data-bind="searchTitle">Finding you a driver</h2>
-            <p class="searching__sub"><span data-bind="vehicle">Sedan</span> · <span data-bind="priceTotal">₱[FARE]</span> · <span data-bind="payment">Cash</span></p>
+          <span class="route__sep" aria-hidden="true"></span>
+          <div class="route__row route__drop">
+            <span class="route__dot route__dot--drop" aria-hidden="true"></span>
+            <label class="route__text" for="dest"><span class="route__label">Drop-off</span>
+              <input id="dest" class="route__input" data-dest type="text" placeholder="Where to?" enterkeyhint="go"
+                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest"></label>
+            <button type="button" class="route__btn route__btn--clear" id="clearDest" data-show="choose" aria-label="Clear drop-off"><svg class="icon icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-close"/></svg></button>
+            <button type="submit" class="route__btn route__btn--go" data-show="request" aria-label="See rides"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></button>
           </div>
-        </div>
-        <div class="searching__bar" aria-hidden="true"><span></span></div>
-        <button type="button" class="button button--ghost button--block" id="cancelSearch">Cancel</button>
-      </section>
-
-      <!-- Step 4 · Driver on the way / on the trip -->
-      <section class="panel panel--trip" id="tripPanel" data-show="trip" aria-labelledby="tripTitle" aria-live="polite">
-        <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
-        <div class="trip__head">
-          <div>
-            <h2 class="trip__title" id="tripTitle" data-bind="tripTitle">Your driver is on the way</h2>
-            <p class="trip__sub" data-bind="tripSub">Arriving in 3 min</p>
-          </div>
-          <span class="trip__eta" data-bind="tripEta" hidden></span>
-        </div>
-        <ol class="trip__steps" aria-label="Trip progress">
-          <li data-step="arriving"><span data-bind="stepArriving">On the way</span></li>
-          <li data-step="on_trip"><span data-bind="stepTrip">On the trip</span></li>
-          <li data-step="completed"><span data-bind="stepDone">Arrived</span></li>
-        </ol>
-        <div class="driver">
-          <span class="driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
-          <div class="driver__main">
-            <span class="driver__name"><span data-bind="driverName">Driver</span> <span class="badge badge--wait driver__demo" id="driverDemo" hidden>Demo</span></span>
-            <span class="driver__meta">★ <span data-bind="driverRating">4.9</span> · <span data-bind="driverCar">White Toyota Vios</span></span>
-          </div>
-          <span class="driver__plate" data-bind="driverPlate">ABC 1234</span>
-        </div>
-        <div class="trip__actions">
-          <button type="button" class="btn-soft" id="callDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-phone"/></svg>Call</button>
-          <button type="button" class="btn-soft" id="messageDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chat"/></svg>Message</button>
-          <span class="trip__pay"><span data-bind="payment">Cash</span> · <b data-bind="priceTotal">₱[FARE]</b></span>
-          <button type="button" class="trip__cancel" id="cancelTrip">Cancel ride</button>
-        </div>
-      </section>
-
-      <!-- Dock: tabs (+ search on desktop) -->
-      <div class="dock">
-        <nav class="tabs" aria-label="Main">
-          <a data-tab="ride" class="tab is-active" href="./" aria-current="page"><span class="tab__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg></span><span class="tab__label">Ride</span><span class="tab__dot desktop-only"></span></a>
-          <a data-tab="drive" class="tab" href="pages/drive.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-wheel"/></svg></span><span class="tab__label">Drive</span><span class="tab__dot desktop-only"></span></a>
-          <a data-tab="shops" class="tab" href="pages/shops.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-bag"/></svg></span><span class="tab__label">Shops</span><span class="tab__dot desktop-only"></span></a>
-          <a data-tab="support" class="tab" href="pages/support.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-heart"/></svg></span><span class="tab__label">Support</span><span class="tab__dot desktop-only"></span></a>
-          <a data-tab="account" class="tab mobile-only" href="pages/account.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-user"/></svg></span><span class="tab__label">Account</span></a>
-        </nav>
-
-        <span class="dock__sep desktop-only" aria-hidden="true"></span>
-
-        <form class="dock-search desktop-only" id="searchDesktop" autocomplete="off">
-          <div class="dock-search__field">
-            <svg class="icon icon--lg" aria-hidden="true"><use href="assets/images/icons.svg#i-pin"/></svg>
-            <label for="destDesktop" class="sr-only">Drop-off</label>
-            <input id="destDesktop" class="dock-search__input" data-dest type="text" placeholder="Where to?"
-                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggestDesktop">
-            <button type="button" class="dock-search__clear" id="clearDest" data-show="choose" aria-label="Clear drop-off"><svg class="icon icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-close"/></svg></button>
-            <ul class="suggest" id="suggestDesktop" role="listbox" aria-label="Suggested places" hidden></ul>
-          </div>
-          <button type="submit" class="cta" data-show="request"><span data-bind="seeLabel">See rides</span> <svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></button>
-          <button type="button" class="cta" data-show="choose" data-book><span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span> · <span data-bind="fare">₱[FARE]</span></span></button>
+          <ul class="suggest" id="suggest" role="listbox" aria-label="Suggested places" hidden></ul>
         </form>
       </div>
+
+      <div class="bottom">
+
+        <!-- Step 1 · Where to? -->
+        <section class="panel panel--request" data-show="request" aria-label="Set your trip">
+          <div class="mode" role="radiogroup" aria-label="What do you need?">
+            <button type="button" class="mode__btn" role="radio" aria-checked="true" data-mode="ride"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg>Ride</button>
+            <button type="button" class="mode__btn" role="radio" aria-checked="false" data-mode="express"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-box"/></svg>Parcel</button>
+          </div>
+          <p class="panel__hint"><span data-bind="askTitle">Saan tayo?</span> <span data-bind="askHint">Set your drop-off above.</span></p>
+          <div class="chips" role="group" aria-label="Quick places">
+            <button type="button" class="chip" data-saved="home"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg>Home</button>
+            <button type="button" class="chip" data-saved="work"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>Office</button>
+            <button type="button" class="chip" data-recent data-rebook hidden><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-clock"/></svg><span class="chip__text" data-bind="recent"></span></button>
+            <button type="button" class="chip" id="pickOnMap" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-hand"/></svg>Pick on map</button>
+          </div>
+        </section>
+
+        <!-- Step 2 · Choose your ride -->
+        <section class="panel panel--choose" data-show="choose" aria-labelledby="chooseTitle">
+          <div class="choose__head">
+            <div>
+              <h2 id="chooseTitle" class="choose__title">Choose your ride</h2>
+              <p class="choose__summary"><span data-bind="distance">[Distance]</span> · <span data-bind="duration">[Travel time]</span> · fixed fares</p>
+            </div>
+            <img class="choose__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="22" height="22">
+          </div>
+
+          <div class="vehicles" role="radiogroup" aria-label="Vehicle">
+            <!-- Filled by assets/js/app.js from CONFIG.vehicles (assets/js/config.js) -->
+          </div>
+
+          <button type="button" class="pay" id="payBtn">
+            <svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-cash" data-pay-icon/></svg>
+            <span class="pay__label" data-bind="payment">Cash</span>
+            <span class="pay__change">Change</span>
+            <svg class="icon icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg>
+          </button>
+          <p class="fare-note desktop-only">Fare: base <span data-bind="base">₱[AMOUNT]</span> + distance <span data-bind="distfare">₱[AMOUNT]</span></p>
+
+          <button type="button" class="book" data-book>
+            <span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span></span>
+            <span class="book__idle" data-bind="fare">₱[FARE]</span>
+          </button>
+        </section>
+
+        <!-- Steps 3–4 hidden: a slim bar that brings the status card back -->
+        <button type="button" class="statusbar" id="statusBar" data-show="search trip" aria-controls="searchPanel tripPanel" aria-expanded="false">
+          <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
+          <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Finding you a driver</span><span class="statusbar__sub" data-bind="barSub"></span></span>
+          <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span>
+        </button>
+
+        <!-- Step 3 · Finding a driver -->
+        <section class="panel panel--search" id="searchPanel" data-show="search" aria-labelledby="searchTitle" aria-live="polite">
+          <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
+          <div class="searching">
+            <span class="searching__icon" aria-hidden="true"><span></span><svg class="icon icon--xl icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
+            <div class="searching__text">
+              <h2 class="searching__title" id="searchTitle" data-bind="searchTitle">Finding you a driver</h2>
+              <p class="searching__sub"><span data-bind="vehicle">Sedan</span> · <span data-bind="priceTotal">₱[FARE]</span> · <span data-bind="payment">Cash</span></p>
+            </div>
+          </div>
+          <div class="searching__bar" aria-hidden="true"><span></span></div>
+          <button type="button" class="button button--ghost button--block" id="cancelSearch">Cancel</button>
+        </section>
+
+        <!-- Step 4 · Driver on the way / on the trip -->
+        <section class="panel panel--trip" id="tripPanel" data-show="trip" aria-labelledby="tripTitle" aria-live="polite">
+          <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
+          <div class="trip__head">
+            <div>
+              <h2 class="trip__title" id="tripTitle" data-bind="tripTitle">Your driver is on the way</h2>
+              <p class="trip__sub" data-bind="tripSub">Arriving in 3 min</p>
+            </div>
+            <span class="trip__eta" data-bind="tripEta" hidden></span>
+          </div>
+          <ol class="trip__steps" aria-label="Trip progress">
+            <li data-step="arriving"><span data-bind="stepArriving">On the way</span></li>
+            <li data-step="on_trip"><span data-bind="stepTrip">On the trip</span></li>
+            <li data-step="completed"><span data-bind="stepDone">Arrived</span></li>
+          </ol>
+          <div class="driver">
+            <span class="driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
+            <div class="driver__main">
+              <span class="driver__name"><span data-bind="driverName">Driver</span> <span class="badge badge--wait driver__demo" id="driverDemo" hidden>Demo</span></span>
+              <span class="driver__meta">★ <span data-bind="driverRating">4.9</span> · <span data-bind="driverCar">White Toyota Vios</span></span>
+            </div>
+            <span class="driver__plate" data-bind="driverPlate">ABC 1234</span>
+          </div>
+          <div class="trip__actions">
+            <button type="button" class="btn-soft" id="callDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-phone"/></svg>Call</button>
+            <button type="button" class="btn-soft" id="messageDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chat"/></svg>Message</button>
+            <span class="trip__pay"><span data-bind="payment">Cash</span> · <b data-bind="priceTotal">₱[FARE]</b></span>
+            <button type="button" class="trip__cancel" id="cancelTrip">Cancel ride</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ============ Home (Figma "04 · Home v3 · magical") ============ -->
+    <main class="home" id="home">
+      <header class="hero">
+        <img class="twinkle" src="assets/images/v3/twinkle-a.svg" alt="" style="--x:41%;--y:10%;--s:7px">
+        <img class="twinkle" src="assets/images/v3/twinkle-b.svg" alt="" style="--x:58%;--y:12%;--s:14px;--d:.5s">
+        <img class="twinkle" src="assets/images/v3/twinkle-gold.svg" alt="" style="--x:74%;--y:15%;--s:13px;--d:.9s">
+        <img class="twinkle" src="assets/images/v3/twinkle-b.svg" alt="" style="--x:30%;--y:85%;--s:14px;--d:.3s">
+        <img class="twinkle" src="assets/images/v3/twinkle-c.svg" alt="" style="--x:8%;--y:87%;--s:6px;--d:1.1s">
+        <img class="twinkle" src="assets/images/v3/twinkle-d.svg" alt="" style="--x:90%;--y:82%;--s:18px;--d:.7s">
+        <div class="hero__inner">
+          <div class="hero__top">
+            <button type="button" class="pickup" data-pickup>
+              <svg class="icon pickup__pin" aria-hidden="true"><use href="assets/images/icons.svg#i-pin"/></svg>
+              <span class="pickup__text"><span class="pickup__label">Pickup from</span><span class="pickup__value"><span data-bind="from">Current location</span><svg class="icon icon--sm icon--white pickup__chev" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span></span>
+            </button>
+            <button type="button" class="bell" data-soon="Notifications" aria-label="Notifications"></button>
+          </div>
+          <a class="home-search" href="#where"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-search"/></svg>Where are you going?</a>
+          <div class="glass-chips" role="group" aria-label="Saved places">
+            <button type="button" class="glass-chip" data-saved="home"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg>Home</button>
+            <button type="button" class="glass-chip" data-saved="work"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>Office</button>
+            <button type="button" class="glass-chip" data-recent data-rebook hidden><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-bookmark"/></svg><span class="chip__text" data-bind="recent"></span></button>
+            <button type="button" class="glass-chip glass-chip--add" data-soon="Saved places" aria-label="Add a place"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
+          </div>
+        </div>
+      </header>
+
+      <div class="home__grid">
+        <a class="svc svc--ride" href="#ride">
+          <span class="svc__copy"><span class="svc__name">Ride</span><span class="svc__sub">Up to 6 seats</span></span>
+          <img class="svc__art" src="assets/images/v3/car.svg" alt="" width="222" height="139">
+          <img class="svc__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="10" height="10">
+        </a>
+        <a class="svc svc--lilac" href="#moto">
+          <span class="svc__copy"><span class="svc__name">Moto</span><span class="svc__sub">Skip traffic</span></span>
+          <img class="svc__art" src="assets/images/v3/moto.svg" alt="" width="82" height="51">
+          <img class="svc__sparkle" src="assets/images/v3/sparkle-lilac.svg" alt="" width="8" height="8">
+        </a>
+        <a class="svc svc--peach" href="#parcel">
+          <span class="svc__copy"><span class="svc__name">Parcel</span><span class="svc__sub">Door to door</span></span>
+          <img class="svc__art" src="assets/images/v3/parcel.svg" alt="" width="82" height="51">
+          <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
+        </a>
+        <a class="svc svc--peach" href="pages/shops.html">
+          <span class="svc__copy"><span class="svc__name">Food</span><span class="svc__sub">Meals nearby</span></span>
+          <img class="svc__art" src="assets/images/v3/food.svg" alt="" width="82" height="51">
+          <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
+        </a>
+
+        <div class="quick">
+          <button type="button" class="quick__item" data-soon="Scheduled rides"><img src="assets/images/v3/q-schedule.svg" alt="" width="36" height="36">Schedule</button>
+          <button type="button" class="quick__item" data-soon="Multi-stop rides"><img src="assets/images/v3/q-multistop.svg" alt="" width="36" height="36">Multi-stop</button>
+          <button type="button" class="quick__item" data-soon="Vouchers"><img src="assets/images/v3/q-vouchers.svg" alt="" width="36" height="36">Vouchers</button>
+        </div>
+
+        <a class="promo" href="pages/shops.html">
+          <img class="promo__aurora" src="assets/images/v3/promo-aurora.svg" alt="">
+          <img class="promo__stars promo__stars--a" src="assets/images/v3/promo-stars-a.svg" alt="">
+          <img class="promo__stars promo__stars--b" src="assets/images/v3/promo-stars-b.svg" alt="">
+          <img class="promo__art" src="assets/images/v3/halo-halo.svg" alt="" width="80" height="80">
+          <span class="promo__copy">
+            <span class="promo__eyebrow">Sweet treats</span>
+            <span class="promo__title">Halo-halo,<br>delivered cold</span>
+            <span class="promo__link">Order food <svg class="icon icon--sm" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></span>
+          </span>
+        </a>
+
+        <section class="recent" data-recent hidden aria-labelledby="recentTitle">
+          <div class="recent__head"><h2 class="recent__title" id="recentTitle">Recent</h2><a class="recent__all" href="pages/trips.html">See all</a></div>
+          <div class="recent__row">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>
+            <span class="recent__text"><span class="recent__name" data-bind="recent"></span><span class="recent__meta">Recent drop-off</span></span>
+            <button type="button" class="btn-soft" data-rebook><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-rebook"/></svg>Rebook</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Tab bar (home). Signed-in drivers and merchants never get here: app.js sends them to their own home. -->
+    <div class="tabbar">
+      <nav class="dock tabs" aria-label="Main">
+        <a data-tab="home" class="tab is-active" href="./" aria-current="page"><span class="tab__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg></span><span class="tab__label">Home</span></a>
+        <a data-tab="trips" class="tab" href="pages/trips.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-clock"/></svg></span><span class="tab__label">Trips</span></a>
+        <a data-tab="food" class="tab" href="pages/shops.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-food"/></svg></span><span class="tab__label">Food</span></a>
+        <a data-tab="wallet" class="tab" href="pages/wallet.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-wallet"/></svg></span><span class="tab__label">Wallet</span></a>
+        <a data-tab="account" class="tab" href="pages/account.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-user"/></svg></span><span class="tab__label">Account</span></a>
+      </nav>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>

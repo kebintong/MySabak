@@ -11,11 +11,11 @@ export const CONFIG = {
   // Vehicle cards on "Choose a vehicle". Fares: base + perKm × distance (pesos).
   // Left as null, the cards show ₱[FARE] placeholders.
   // Backend: fares can come from the server instead; see faresFor() in api.js and PANELS.md.
-  // `parcel` is what each vehicle carries in Express mode.
+  // `parcel` is what each vehicle carries in Express mode. `art` is the picture on its ride option.
   vehicles: [
-    { id: 'motor', name: 'Motor', capacity: '1 passenger', parcel: 'Small parcels', icon: 'i-motor', base: null, perKm: null },
-    { id: 'sedan', name: 'Sedan', capacity: 'Up to 4',     parcel: 'Boxes',         icon: 'i-car',   base: null, perKm: null },
-    { id: 'suv',   name: 'SUV',   capacity: 'Up to 6',     parcel: 'Large items',   icon: 'i-suv',   base: null, perKm: null },
+    { id: 'motor', name: 'Motor', capacity: '1 passenger', parcel: 'Small parcels', icon: 'i-motor', art: 'moto', base: null, perKm: null },
+    { id: 'sedan', name: 'Sedan', capacity: 'Up to 4',     parcel: 'Boxes',         icon: 'i-car',   art: 'car',  base: null, perKm: null },
+    { id: 'suv',   name: 'SUV',   capacity: 'Up to 6',     parcel: 'Large items',   icon: 'i-suv',   art: 'car',  base: null, perKm: null },
   ],
   defaultVehicle: 'sedan',
 

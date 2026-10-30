@@ -1,7 +1,9 @@
 /* =========================================================
-   mysabak · Ride booking screen (Design A)
+   mysabak · Home + Ride booking screen
    Vanilla JS modules, no build step.
 
+   index.html opens on the Home dashboard. Ride links switch to the ride screen without a reload:
+     #ride / #where (search) = Ride, #moto = Ride with Motor picked, #parcel = Express. Back = Home.
    Two modes: Ride (passengers) and Express (parcels), same screen.
    Steps:
      1. "request" – set a drop-off (search, a recent place, or pick on map)
@@ -60,7 +62,7 @@ let stopTrip = () => {};
 /* Words that change between Ride and Express */
 const MODES = {
   ride: {
-    askTitle: 'Saan tayo?', askHint: 'Set your drop-off below.', placeholder: 'Where to?',
+    askTitle: 'Saan tayo?', askHint: 'Set your drop-off above.', placeholder: 'Where to?',
     bookVerb: 'Book', seeLabel: 'See rides', capacity: (v) => v.capacity,
     payTitle: 'Confirm your ride', searchTitle: 'Finding you a driver',
     steps: ['On the way', 'On the trip', 'Arrived'],
@@ -71,7 +73,7 @@ const MODES = {
     doneTitle: 'You’ve arrived',
   },
   express: {
-    askTitle: 'Saan ipapadala?', askHint: 'Set where the parcel goes.', placeholder: 'Deliver to?',
+    askTitle: 'Saan ipapadala?', askHint: 'Set where it goes above.', placeholder: 'Deliver to?',
     bookVerb: 'Send with', seeLabel: 'See options', capacity: (v) => v.parcel,
     payTitle: 'Confirm your delivery', searchTitle: 'Finding a driver for your parcel',
     steps: ['Picking up', 'Delivering', 'Delivered'],
@@ -191,14 +193,6 @@ function setupPaySheet() {
 }
 
 /* ---------- Booking → finding a driver → trip ---------- */
-/* Phones: hide / show the "Saan tayo?" panel (step "request") to see the map */
-function setRequestHidden(hidden) {
-  el.body.classList.toggle('is-request-hidden', hidden);
-  $('#reqBar').setAttribute('aria-expanded', String(!hidden));
-  requestAnimationFrame(() => frame());
-  (hidden ? $('#reqBar') : $('#hideRequest')).focus();
-}
-
 /* Hide / show the floating status card (steps "search" and "trip") */
 function setStatusHidden(hidden) {
   state.statusHidden = hidden;
@@ -411,12 +405,11 @@ const el = {
   body: document.body,
   app: $('.app'),
   bottom: $('.bottom'),
+  ride: $('#ride'),
   vehicles: $('.vehicles'),
   destInputs: $$('[data-dest]'),
-  destDesktop: $('#destDesktop'),
-  destMobile: $('#destMobile'),
+  dest: $('#dest'),
   pickOnMap: $('#pickOnMap'),
-  recentChip: $('#recentChip'),
   toast: $('#toast'),
 };
 
@@ -519,7 +512,7 @@ const latestRecent = () => store.get(RECENT_KEY, [])[0] || null;
 function buildVehicles() {
   el.vehicles.innerHTML = CONFIG.vehicles.map((v, i) => `
     <button type="button" class="vehicle" role="radio" data-vehicle="${v.id}" aria-checked="false" tabindex="-1" style="--i:${i}">
-      <svg class="icon v-icon" aria-hidden="true"><use href="assets/images/icons.svg#${v.icon}"/></svg>
+      <img class="v-icon" src="assets/images/v3/${v.art}.svg" alt="" width="80" height="50">
       <span class="v-text">
         <span class="v-name">${v.name}</span>
         <span class="v-meta"><span class="v-cap">${v.capacity} · </span><span class="v-eta"></span><span class="v-away"> away</span></span>
@@ -580,7 +573,6 @@ function render() {
   const w = words();
   ['askTitle', 'askHint', 'bookVerb', 'seeLabel', 'payTitle', 'searchTitle'].forEach((k) => setBind(k, w[k]));
   if (state.step === 'search') { setBind('barTitle', `${w.searchTitle}…`); setBind('barSub', `${v.name} · ${pay.name}`); }
-  setBind('reqBarSub', `${state.mode === 'express' ? 'Express' : 'Ride'} · ${state.mode === 'express' ? 'set where it goes' : 'set your drop-off'}`);
   setBind('stepArriving', w.steps[0]);
   setBind('stepTrip', w.steps[1]);
   setBind('stepDone', w.steps[2]);
@@ -589,7 +581,7 @@ function render() {
   $$('.mode__btn').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === state.mode)));
 
   const recent = latestRecent();
-  el.recentChip.hidden = !recent;
+  $$('[data-recent]').forEach((node) => { node.hidden = !recent; });
   if (recent) setBind('recent', recent.title);
 
   $$('.vehicle', el.vehicles).forEach((btn) => {
@@ -603,7 +595,7 @@ function render() {
     btn.setAttribute('aria-label', `${veh.name}, ${w.capacity(veh)}, ${fareFor(veh)}, ${etaFor(veh)} away`);
   });
 
-  el.destDesktop.readOnly = state.step !== 'request';
+  el.dest.readOnly = state.step !== 'request';
   el.destInputs.forEach((input) => {
     if (document.activeElement !== input) input.value = state.dest;
   });
@@ -715,9 +707,8 @@ function goToRequest({ clear = false } = {}) {
   render();
   requestAnimationFrame(() => {
     frame();
-    const input = DESKTOP.matches ? el.destDesktop : el.destMobile;
-    input.focus();
-    input.select();
+    el.dest.focus();
+    el.dest.select();
   });
 }
 
@@ -891,30 +882,30 @@ el.destInputs.forEach((input) => {
   });
 });
 
-$('#searchMobile').addEventListener('submit', (e) => {
+$('#searchForm').addEventListener('submit', (e) => {
   e.preventDefault();
-  submitSearch(el.destMobile);
-});
-$('#searchDesktop').addEventListener('submit', (e) => {
-  e.preventDefault();
-  if (state.step === 'request') submitSearch(el.destDesktop);
+  if (state.step === 'request') submitSearch(el.dest);
 });
 
-el.destDesktop.addEventListener('click', () => {
+el.dest.addEventListener('click', () => {
   if (state.step === 'choose') goToRequest();
 });
 
-el.recentChip.addEventListener('click', () => {
+// Recent place (home chip, home "Rebook", ride chip): straight to Choose your ride
+$$('[data-rebook]').forEach((b) => b.addEventListener('click', () => {
   const r = latestRecent();
-  if (r) goToChoose(r.title, r);
-});
+  if (!r) return;
+  if (!el.body.classList.contains('is-ride')) location.hash = 'ride';
+  goToChoose(r.title, r);
+}));
 $$('[data-saved]').forEach((chip) => {
   chip.addEventListener('click', () => {
-    const name = chip.dataset.saved === 'home' ? 'Home' : 'Work';
+    const name = chip.dataset.saved === 'home' ? 'Home' : 'Office';
     toast(`Sign in to save your ${name} address.`);
   });
 });
-$('.chip--origin').addEventListener('click', () => locateUser());
+$$('[data-soon]').forEach((b) => b.addEventListener('click', () => toast(`${b.dataset.soon}: coming soon.`)));
+$$('[data-pickup]').forEach((b) => b.addEventListener('click', () => locateUser()));
 
 el.pickOnMap.addEventListener('click', () => {
   state.picking = !state.picking;
@@ -922,7 +913,6 @@ el.pickOnMap.addEventListener('click', () => {
   if (state.picking) toast('Tap the map to drop your pin.');
 });
 
-$('#editTrip').addEventListener('click', () => goToRequest());
 $$('.mode__btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
 setupParcelSheet();
 setupPaySheet();
@@ -946,8 +936,6 @@ $$('[data-book]').forEach((btn) => btn.addEventListener('click', book));
 $('#payBtn').addEventListener('click', book);
 $('#cancelSearch').addEventListener('click', () => cancelBooking());
 $$('[data-hide-status]').forEach((b) => b.addEventListener('click', () => setStatusHidden(true)));
-$('#hideRequest').addEventListener('click', () => setRequestHidden(true));
-$('#reqBar').addEventListener('click', () => setRequestHidden(false));
 $('#statusBar').addEventListener('click', () => setStatusHidden(false));
 $('#cancelTrip').addEventListener('click', () => cancelBooking({ ask: true }));
 $('#callDriver').addEventListener('click', () => {
@@ -972,7 +960,33 @@ $$('.tab').forEach((tab) => {
 currentUser().catch(() => null).then((user) => {
   if (guardRole(user, ['client'])) return;
   mountAccount($('[data-account]'), user);
-  filterTabs($('.dock .tabs'), user);
+  filterTabs($('.dock'), user);
+});
+
+/* =========================================================
+   Home ↔ ride screen (by URL hash, so the phone's Back button works)
+   ========================================================= */
+const RIDE_LINKS = ['ride', 'where', 'moto', 'parcel'];
+function route() {
+  const link = location.hash.slice(1);
+  const ride = RIDE_LINKS.includes(link);
+  el.body.classList.toggle('is-ride', ride);
+  el.body.classList.toggle('is-home', !ride);
+  $('#map').inert = !ride; // under the home: keep it out of tab order and screen readers
+  if (!ride) return;
+  setMode(link === 'parcel' ? 'express' : 'ride');
+  if (link === 'moto') selectVehicle('motor');
+  requestAnimationFrame(() => {
+    frame({ animate: false });
+    if (link === 'where' && state.step === 'request') el.dest.focus();
+  });
+}
+window.addEventListener('hashchange', route);
+
+// Back: Choose your ride → edit the drop-off; otherwise → Home
+$('#rideBack').addEventListener('click', () => {
+  if (state.step === 'choose') goToRequest();
+  else location.hash = '';
 });
 
 let resizeTimer;
@@ -1005,6 +1019,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
    ========================================================= */
 buildVehicles();
 render();
+route();
 initMap({
   state,
   el,

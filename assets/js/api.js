@@ -268,12 +268,24 @@ export async function bookRide(booking) {
   const tip = cleanTip(booking.price && booking.price.tip, CONFIG.tips.max);
   await wait(600);
   const id = demo.id(booking.kind === 'express' ? 'EXP' : 'RIDE');
-  demo.set('lastBooking', { id, ...booking, price: { ...booking.price, tip }, at: Date.now() });
+  const record = { id, ...booking, price: { ...booking.price, tip }, at: Date.now() };
+  demo.set('lastBooking', record);
+  demo.set('rides', [record, ...demo.get('rides', [])].slice(0, 20));
   if (tip) {
-    const record = { id: demo.id('TIP'), orderId: id, orderType: booking.kind, amount: tip, method: booking.payment, at: Date.now() };
-    demo.set('tips', [record, ...demo.get('tips', [])].slice(0, 50));
+    const tipRecord = { id: demo.id('TIP'), orderId: id, orderType: booking.kind, amount: tip, method: booking.payment, at: Date.now() };
+    demo.set('tips', [tipRecord, ...demo.get('tips', [])].slice(0, 50));
   }
   return { id, demo: true };
+}
+
+/**
+ * The signed-in user's Ride and Express bookings, newest first (the Trips page).
+ * DEMO: this browser's last 20 bookings.
+ * @returns {Promise<Array<{id, kind:'ride'|'express', vehicle:string, pickup:{label}, dropoff:{label},
+ *   payment:string, price:{fare:number|null, tip:number, total:number|null}, at:number}>>}
+ */
+export async function myTrips() {
+  return demo.get('rides', []);
 }
 
 /**

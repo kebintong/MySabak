@@ -501,11 +501,13 @@ function placeLabels() {
   if (state.destPoint) markers.dest.getElement().classList.toggle('is-flip', xOf(state.destPoint) < W * 0.5);
 }
 
-// Space the panels cover at the bottom of the screen
+// Space the panels cover: phones, the bottom sheet; desktop, the left column (nothing at the bottom)
 function bottomInset() {
+  if (DESKTOP.matches) return 0;
   const appRect = el.app.getBoundingClientRect();
   return Math.max(0, appRect.bottom - el.bottom.getBoundingClientRect().top);
 }
+const leftInset = () => (DESKTOP.matches ? el.ride.getBoundingClientRect().right : 0);
 
 /** Move the camera to fit the current step. */
 export function frame({ animate = true } = {}) {
@@ -513,6 +515,7 @@ export function frame({ animate = true } = {}) {
   const duration = animate ? 700 : 0;
   const desk = DESKTOP.matches;
   const bottom = bottomInset() + 24;
+  const left = leftInset();
 
   if (state.step !== 'request' && state.destPoint) {
     const ends = [[state.pickup.lng, state.pickup.lat], [state.destPoint.lng, state.destPoint.lat]];
@@ -520,17 +523,17 @@ export function frame({ animate = true } = {}) {
     if (d) ends.push([d.lng, d.lat]);
     const pts = (state.trip.coords || []).concat(ends);
     const bounds = pts.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(pts[0], pts[0]));
-    const side = desk ? 170 : 72;
+    const side = desk ? 120 : 72;
     map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
     map.fitBounds(bounds, {
-      padding: { top: desk ? 130 : 140, bottom: Math.min(bottom, window.innerHeight - 200), left: side, right: side },
+      padding: { top: desk ? 100 : 170, bottom: Math.min(bottom, window.innerHeight - 260), left: left + side, right: side },
       maxZoom: 16.5,
       duration,
     });
   } else {
     map.easeTo({
       center: [state.pickup.lng, state.pickup.lat],
-      padding: { top: desk ? 90 : 70, bottom, left: 0, right: 0 },
+      padding: { top: desk ? 40 : 150, bottom, left, right: 0 },
       zoom: Math.max(map.getZoom(), 15),
       duration,
     });

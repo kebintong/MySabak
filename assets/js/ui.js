@@ -20,20 +20,22 @@ export const icon = (id, cls = '') => `<svg class="icon ${cls}" aria-hidden="tru
 
 /* ---------- Top bar + tab bar ---------- */
 export const TABS = [
-  { id: 'ride', label: 'Ride', icon: 'i-car', href: '/' },
+  { id: 'home', label: 'Home', icon: 'i-home', href: '/' },
+  { id: 'trips', label: 'Trips', icon: 'i-clock', href: '/pages/trips.html' },
+  { id: 'food', label: 'Food', icon: 'i-food', href: '/pages/shops.html' }, // the round middle button
+  { id: 'wallet', label: 'Wallet', icon: 'i-wallet', href: '/pages/wallet.html' },
+  { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html' },
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
   { id: 'merchant', label: 'My shop', icon: 'i-store', href: '/pages/merchant-home.html' },
-  { id: 'shops', label: 'Shops', icon: 'i-bag', href: '/pages/shops.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
-  { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html', mobileOnly: true },
 ];
 
-/* What each kind of account sees. Signed out ("guest") = everything, with the Account tab on phones.
-   Signed in, the profile menu (top right) replaces the Account tab. */
+/* What each kind of account sees. Customers (signed in or not) get the Figma bar; Drive and Support
+   live on the Account page for them. */
 export const ROLES = {
-  guest: { tabs: ['ride', 'drive', 'shops', 'support', 'account'] },
+  guest: { tabs: ['home', 'trips', 'food', 'wallet', 'account'] },
   client: {
-    label: 'Customer', tabs: ['ride', 'shops', 'support'],
+    label: 'Customer', tabs: ['home', 'trips', 'food', 'wallet', 'account'],
     home: '/pages/account.html', homeLabel: 'My account', homeIcon: 'i-user', signIn: '/pages/account.html',
   },
   driver: {
@@ -77,9 +79,9 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
         const t = TABS.find((x) => x.id === id);
         const href = (role.hrefs && role.hrefs[id]) || t.href;
         const on = t.id === active;
-        return `<a data-tab="${t.id}" class="tab${on ? ' is-active' : ''}${t.mobileOnly ? ' mobile-only' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
+        return `<a data-tab="${t.id}" class="tab${on ? ' is-active' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
           + `<span class="tab__icon">${icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
-          + `<span class="tab__label">${t.label}</span>${t.mobileOnly ? '' : '<span class="tab__dot desktop-only"></span>'}</a>`;
+          + `<span class="tab__label">${t.label}</span></a>`;
       }).join('');
     }
     return user;

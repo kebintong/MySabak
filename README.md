@@ -6,8 +6,8 @@ Ride booking web app for Cebu: no booking fees, no hidden charges.
 Frontend design demo: plain HTML, CSS and JavaScript modules, no build step.
 
 ```
-index.html          Ride screen: Ride | Express, map, Book → pay (Cash / GCash / Online banking, your price) → driver → Ride complete
-pages/              support · drive · drive-signup · driver · shops · shop · checkout · order · merchant · merchant-home · account
+index.html          Home (Figma "Home v3") → Ride screen (#ride): Ride | Parcel, map, Book → pay (Cash / GCash / Online banking, your price) → driver → Ride complete
+pages/              trips · wallet · account · shops · shop · checkout · order · support · drive · drive-signup · driver · merchant · merchant-home
 assets/
   css/style.css     all styles
   js/config.js      settings: vehicles, fares, tips, parcel sizes, delivery rates
@@ -20,7 +20,7 @@ assets/
   js/menu.js        menu options: prices, rules, shop hours    js/shop-map.js  map + pins on Shop pages
   js/pages/         one script per page in pages/
   js/sw.js          offline cache
-  fonts/  images/   map label font · logo, app icons, icons.svg
+  fonts/  images/   map label font · logo, app icons, icons.svg, v3/ (Figma illustrations)
   dev/              demo hosting only (Cloudflare Worker + config); not part of the website
 tests/              money rules, data layer, demo hosting, "no keys committed"
 serve.py            local test server
