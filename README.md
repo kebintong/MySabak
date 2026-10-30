@@ -43,6 +43,12 @@ PANELS.md           money rules, every panel, and the data shapes (backend contr
 | Driver | Drive tab (`/pages/drive.html`) | `driver@mysabak.demo` or 0917 000 0001 | `mysabak-demo` |
 | Merchant | Account → Merchant (`/pages/merchant.html`) | `merchant@mysabak.demo` or 0917 000 0002 | `mysabak-demo` |
 
+## Claude Code
+
+`.claude/settings.json` adds the [ponytail](https://github.com/DietrichGebert/ponytail) plugin marketplace and
+enables its `ponytail` plugin ("lazy senior dev" mode: smallest change that works). Claude Code asks you to trust
+it the first time you open this folder; `/plugin` shows it. Turn a level on or off with `/ponytail lite|full|ultra|off`.
+
 ## Running it on your computer
 
 Needs Python 3.
