@@ -85,6 +85,7 @@ function pick(id, { fromMap = false } = {}) {
   document.querySelectorAll('.srow').forEach((r) => r.classList.toggle('is-picked', r.dataset.id === id));
   map.setActive(id, { fly: fromMap });
   if (fromMap) {
+    if (level === 0) setLevel(1); // the preview card lives in the sheet
     const row = document.querySelector(`.srow[data-id="${CSS.escape(id)}"]`);
     if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
@@ -121,13 +122,16 @@ $('#shopList').addEventListener('mouseover', (e) => {
 });
 $('#shopList').addEventListener('mouseleave', () => map.setActive(picked));
 
-// Phones: the handle pulls the sheet up over the map, or back down
+// Phones: drag the handle between three heights: hidden (just the handle), half, full
 const sheet = $('#sheet');
 const handle = $('#sheetHandle');
-function setExpanded(open) {
-  sheet.classList.toggle('is-expanded', open);
-  handle.setAttribute('aria-expanded', String(open));
-  handle.querySelector('.sr-only').textContent = open ? 'Show the map' : 'Show more of the list';
+let level = 1; // 0 hidden, 1 half, 2 full
+function setLevel(n) {
+  level = Math.max(0, Math.min(2, n));
+  sheet.classList.toggle('is-expanded', level === 2);
+  sheet.classList.toggle('is-collapsed', level === 0);
+  handle.setAttribute('aria-expanded', String(level === 2));
+  handle.querySelector('.sr-only').textContent = level === 2 ? 'Show the map' : level === 0 ? 'Show the list' : 'Show more of the list';
 }
 let dragY = null;
 let draggedAt = 0;
@@ -136,17 +140,17 @@ window.addEventListener('pointerup', (e) => {
   if (dragY === null) return;
   const dy = e.clientY - dragY;
   dragY = null;
-  if (Math.abs(dy) > 30) { draggedAt = Date.now(); setExpanded(dy < 0); }
+  if (Math.abs(dy) > 30) { draggedAt = Date.now(); setLevel(level + (dy < 0 ? 1 : -1)); }
 });
-handle.addEventListener('click', () => { if (Date.now() - draggedAt > 400) setExpanded(!sheet.classList.contains('is-expanded')); });
+handle.addEventListener('click', () => { if (Date.now() - draggedAt > 400) setLevel(level === 2 ? 1 : level + 1); });
 // Scrolling the list with a finger pulls the sheet up too
-$('#sheetScroll').addEventListener('touchmove', () => { if (!DESKTOP.matches) setExpanded(true); }, { passive: true });
+$('#sheetScroll').addEventListener('touchmove', () => { if (!DESKTOP.matches) setLevel(2); }, { passive: true });
 
 $('#locateBtn').addEventListener('click', async () => {
   try { useLocation(await askLocation()); } catch (_) { toast('Couldn’t get your location. Shops are sorted from Cebu City centre.'); }
 });
 
-DESKTOP.addEventListener('change', () => { setExpanded(false); map.resize(); });
+DESKTOP.addEventListener('change', () => { setLevel(1); map.resize(); });
 
 /* ---------- Start ---------- */
 load({ fit: true });
