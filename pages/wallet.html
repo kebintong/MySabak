@@ -21,37 +21,44 @@
   <link rel="stylesheet" href="/assets/css/style.css">
   <script type="module" src="/assets/js/pages/wallet.js"></script>
 </head>
-<body class="page page--sky">
+<body class="page page--sky page--wallet">
   <div class="app">
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <div class="content__inner">
+      <div class="content__inner content__inner--wide">
 
         <header class="page-head">
           <h1 class="page-title">Wallet</h1>
           <p class="lede">How you pay, and what you’ve tipped. No booking fees, ever.</p>
         </header>
 
-        <section class="card" aria-labelledby="payTitle">
-          <h2 class="card__title" id="payTitle">How you can pay</h2>
-          <ul class="list" id="payList"></ul>
-        </section>
+        <div class="wallet">
+          <div class="wallet__main">
+            <section class="wsec" aria-labelledby="payTitle">
+              <h2 class="wsec__title" id="payTitle">How you can pay</h2>
+              <ul class="wpays" id="payList"></ul>
+            </section>
 
-        <section class="card" aria-labelledby="soonTitle">
-          <h2 class="card__title card__title--row" id="soonTitle">More ways to pay <span class="badge badge--wait">Coming soon</span></h2>
-          <ul class="list">
-            <li class="row"><span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-card"/></svg></span><div class="row__main"><span class="row__title">Add a card</span><span class="row__sub">Pay for rides and orders with Visa or Mastercard</span></div></li>
-            <li class="row"><span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span><div class="row__main"><span class="row__title">mysabak balance</span><span class="row__sub">Top up once, pay in one tap</span></div></li>
-          </ul>
-        </section>
+            <section class="wsec" aria-labelledby="soonTitle">
+              <h2 class="wsec__title" id="soonTitle">More ways to pay <span class="badge badge--wait">Coming soon</span></h2>
+              <ul class="wpays wpays--soon">
+                <li class="wpay"><span class="wpay__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-card"/></svg></span><span class="wpay__text"><span class="wpay__name">Add a card</span><span class="wpay__hint">Pay for rides and orders with Visa or Mastercard</span></span></li>
+                <li class="wpay"><span class="wpay__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span><span class="wpay__text"><span class="wpay__name">mysabak balance</span><span class="wpay__hint">Top up once, pay in one tap</span></span></li>
+              </ul>
+            </section>
+          </div>
 
-        <section class="card" aria-labelledby="tipsTitle">
-          <h2 class="card__title card__title--row" id="tipsTitle">Your tips <span class="badge" id="tipsTotal">₱0</span></h2>
-          <ul class="list" id="tipList"></ul>
-          <p class="card__foot">Tips go 100% to mysabak and keep rides fee-free for drivers.</p>
-        </section>
+          <section class="wsec wtips" aria-labelledby="tipsTitle">
+            <div class="wtips__head">
+              <h2 class="wsec__title" id="tipsTitle">Your tips</h2>
+              <span class="wtips__total"><b id="tipsTotal">₱0</b> so far</span>
+            </div>
+            <ul class="list" id="tipList"></ul>
+            <p class="wtips__foot">Tips go 100% to mysabak and keep rides fee-free for drivers.</p>
+          </section>
+        </div>
       </div>
     </main>
 

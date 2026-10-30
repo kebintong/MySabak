@@ -456,6 +456,13 @@ body:not([data-state="request"]) .map-controls { display: none; }
   scroll-padding: 24px;
 }
 .chips::-webkit-scrollbar { display: none; }
+/* Phones: sideways chip rows fade out at the screen edge instead of being cut off there */
+@media (max-width: 899.98px) {
+  .chips, .glass-chips, .fchips {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 28px), transparent);
+  }
+}
 
 /* Figma "Chip v3/Glass", on a light panel: lilac glass that brightens on hover */
 .chip {
@@ -1030,7 +1037,7 @@ body.is-loading .v-fare,
 body.is-loading [data-bind="fare"] { opacity: 0.55; }
 body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 
-.chip__text { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.chip__text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
 
 /* Short phones: slimmer ride options so the whole sheet fits */
 @media (max-height: 700px) and (max-width: 899.98px) {
@@ -1286,6 +1293,66 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
       linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf) center top / 100% 260px no-repeat,
       #faf5f3;
   }
+}
+/* Wallet. Phones: open sections on cream under a flat sky that scrolls with them.
+   Desktop: the sky fills the page and the sections sit on one cream sheet rising from the bottom. */
+.page--wallet .app { background: #faf5f3; }
+.wallet { display: flex; flex-direction: column; gap: 28px; padding: 6px 4px 0; }
+.wallet__main { display: flex; flex-direction: column; gap: 28px; }
+.wsec__title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 17px; font-weight: 700; color: var(--navy); }
+.wpays { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wpay { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 6px; text-align: center; }
+.wpay + .wpay { border-left: 1px solid var(--line-brand); }
+.wpay__icon { flex: none; width: 48px; height: 48px; border-radius: 16px; background: var(--tint); display: grid; place-items: center; }
+.wpay__icon .icon { width: 22px; height: 22px; stroke: var(--brand-deep); }
+.wpay__text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wpay__name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.wpay__hint { font-size: 12px; line-height: 1.35; color: var(--sub); }
+.wpays--soon { display: flex; flex-direction: column; gap: 8px; }
+.wpays--soon .wpay { flex-direction: row; gap: 12px; padding: 10px 12px; text-align: left; border: 1.5px dashed #d9c6f0; border-radius: 14px; }
+.wpays--soon .wpay__icon { width: auto; height: auto; background: none; }
+.wpays--soon .wpay__icon .icon { width: 20px; height: 20px; stroke: var(--muted); }
+.wpays--soon .wpay__name { font-weight: 600; }
+.wtips { padding-top: 18px; border-top: 1px solid var(--line-brand); }
+.wtips__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.wtips__head .wsec__title { margin: 0; }
+.wtips__total { font-size: 13px; color: var(--sub); white-space: nowrap; }
+.wtips__total b { font-size: 20px; font-weight: 800; color: var(--brand-deep); }
+.wtips .list { margin-top: 4px; }
+.wtips .empty { padding: 6px 0 0; text-align: left; }
+.wtips__foot { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+@media (max-width: 899.98px) {
+  /* the sky is the page head's own background, so it scrolls away with the open sections instead of sitting behind them */
+  .page--wallet .content { top: 0; padding-top: calc(var(--content-top) + 10px); -webkit-mask-image: none; mask-image: none; }
+  .page--wallet .page-head {
+    margin: calc(-10px - var(--content-top)) calc(-1 * var(--gutter)) 0;
+    padding: calc(var(--content-top) + 14px) calc(var(--gutter) + 4px) 30px;
+    background: radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
+  }
+}
+@media (min-width: 900px) {
+  .page--wallet .app { background: radial-gradient(40% 50% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
+  .page--wallet .content__inner { min-height: 100%; }
+  .wallet {
+    flex: 1; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 40px;
+    margin: 12px 0 calc(-1 * var(--content-bottom)); /* runs on under the tab bar to the bottom edge */
+    padding: 32px 32px calc(var(--content-bottom) + 24px);
+    border-radius: 28px 28px 0 0; background: #faf5f3;
+  }
+  .wallet__main { flex: 999 1 480px; min-width: 0; gap: 0; }
+  .wallet__main .wsec + .wsec { margin-top: 14px; padding-top: 20px; border-top: 1px solid var(--line-brand); }
+  .wsec__title { margin-bottom: 4px; }
+  .wpays, .wpays--soon { display: flex; flex-direction: column; gap: 0; }
+  .wpays .wpay, .wpays--soon .wpay { flex-direction: row; gap: 14px; height: 54px; padding: 0; text-align: left; border: 0; border-radius: 0; }
+  .wpays .wpay + .wpay { border-top: 1px solid var(--line); }
+  .wpay__icon { width: auto; height: auto; background: none; }
+  .wpay__text { flex: 1; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .wpay__name { font-size: 15px; font-weight: 600; }
+  .wpay__hint { font-size: 13px; text-align: right; }
+  .wpays--soon .wpay__name, .wpays--soon .wpay__hint { color: var(--sub); }
+  .wtips { flex: 1 1 260px; min-width: 0; padding: 0 0 0 40px; border-top: 0; border-left: 1px solid var(--line-brand); }
+  .wtips__head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .wtips__total b { font-size: 40px; line-height: 1; }
 }
 .content__inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .content__inner--wide { max-width: 960px; }

@@ -7,9 +7,9 @@ mountChrome({ roles: ['client'] });
 
 const KIND = { ride: 'Ride', express: 'Express', shop: 'Shop order', direct: 'Without a ride' };
 
-$('#payList').innerHTML = CONFIG.ridePayments.map((m) => `<li class="row">
-  <span class="file__icon">${icon(m.icon)}</span>
-  <div class="row__main"><span class="row__title">${esc(m.name)}</span><span class="row__sub">${esc(m.hint)}</span></div></li>`).join('');
+$('#payList').innerHTML = CONFIG.ridePayments.map((m) => `<li class="wpay">
+  <span class="wpay__icon">${icon(m.icon)}</span>
+  <span class="wpay__text"><span class="wpay__name">${esc(m.name)}</span><span class="wpay__hint">${esc(m.hint)}</span></span></li>`).join('');
 
 myTips().then((tips) => {
   $('#tipsTotal').textContent = peso(tips.reduce((sum, t) => sum + t.amount, 0));
