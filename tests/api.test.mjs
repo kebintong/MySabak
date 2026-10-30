@@ -13,10 +13,10 @@ before(async () => {
     removeItem: (k) => store.delete(k),
   };
   api = await import('../assets/js/api.js');
-  // The demo ships with no shops; give the shop tests two made-up ones.
+  // The shop tests use their own two made-up shops in place of the demo's sample shops.
   const { SHOPS } = await import('../assets/js/demo-data.js');
   const { TEST_SHOP, TEST_SHOP_2 } = await import('./fixtures.mjs');
-  SHOPS.push(TEST_SHOP, TEST_SHOP_2);
+  SHOPS.splice(0, SHOPS.length, TEST_SHOP, TEST_SHOP_2);
 });
 
 test('tips: an amount is required, capped at ₱500, e-wallet or card only', async () => {

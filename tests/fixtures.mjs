@@ -1,4 +1,4 @@
-// A made-up shop for the tests only (the demo app ships with no shops).
+// Made-up shops for the tests only (they replace the demo's sample shops while the tests run).
 const one = (id, name, choices, more = {}) => ({ id, name, type: 'one', required: true, choices, ...more });
 
 export const TEST_SHOP = {
