@@ -2199,9 +2199,48 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 @keyframes radar { from { transform: scale(.15); opacity: .9; } to { transform: scale(1); opacity: 0; } }
 
 /* Driver on the map */
-.mk--driver { width: 40px; height: 40px; transition: none; border-radius: 50%; background: #fff; border: 3px solid var(--brand); box-shadow: 0 4px 12px rgba(23, 18, 43, .3); display: grid; place-items: center; pointer-events: none; }
-.mk--driver .icon { width: 20px; height: 20px; stroke: var(--brand); transition: transform .3s; }
-.mk--driver.is-west .icon { transform: scaleX(-1); } /* face the way it's going */
+/* Driver on the map: the mascot, for every vehicle. Stages come from map.js:
+   .is-pop (driver accepted), data-motion="run" | "stop" (traffic), .is-arrived (at the pickup) */
+.mk--driver { width: 52px; height: 52px; transition: none; pointer-events: none; }
+.mk__mascot { display: block; width: 100%; height: 100%; transform-origin: 50% 85%; filter: drop-shadow(0 4px 5px rgba(23, 18, 43, .35)); }
+.mk--driver.is-west .mk__mascot { scale: -1 1; } /* face the way it's going; `scale` stacks with the animations' transform */
+.mk--driver::before, .mk--driver::after { content: ""; position: absolute; pointer-events: none; opacity: 0; transition: opacity .2s; }
+/* Running: bobs and leans forward, speed lines behind */
+.mk--driver[data-motion="run"] .mk__mascot { animation: mascot-run .36s ease-in-out infinite; }
+.mk--driver[data-motion="run"]:not(.is-arrived)::before {
+  left: -14px; top: 18px; width: 14px; height: 13px; opacity: 1;
+  background:
+    linear-gradient(var(--brand), var(--brand)) 2px 0 / 12px 2.5px no-repeat,
+    linear-gradient(var(--brand), var(--brand)) 0 5px / 9px 2.5px no-repeat,
+    linear-gradient(var(--brand), var(--brand)) 4px 10px / 10px 2.5px no-repeat;
+  border-radius: 2px;
+  animation: speed-lines .36s linear infinite;
+}
+.mk--driver.is-west[data-motion="run"]:not(.is-arrived)::before { left: auto; right: -14px; scale: -1 1; }
+/* Stopped in traffic: settles and breathes, a "…" bubble over it */
+.mk--driver[data-motion="stop"] .mk__mascot { animation: mascot-idle 1.4s ease-in-out infinite; }
+.mk--driver[data-motion="stop"]:not(.is-arrived):not(.is-pop)::after {
+  right: -12px; top: -8px; width: 24px; height: 14px; opacity: 1; border-radius: 8px;
+  background:
+    radial-gradient(circle, var(--brand) 1.6px, transparent 2px) 4px 50% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--brand) 1.6px, transparent 2px) 9px 50% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--brand) 1.6px, transparent 2px) 14px 50% / 6px 6px no-repeat,
+    #fff;
+  box-shadow: 0 2px 6px rgba(23, 18, 43, .25);
+}
+/* Arrived: hops, with a gold ring */
+.mk--driver.is-arrived .mk__mascot { animation: mascot-hop .9s var(--ease-out) infinite; }
+.mk--driver.is-arrived::before { inset: -6px; opacity: 1; border: 3px solid var(--gold); border-radius: 50%; animation: fab-pulse 1.8s var(--ease-out) infinite; }
+/* Pop up when the driver accepts */
+.mk--driver.is-pop .mk__mascot { animation: mascot-pop .55s var(--spring) both; }
+@keyframes mascot-run { 0%, 100% { transform: translateY(0) rotate(7deg); } 50% { transform: translateY(-5px) rotate(3deg); } }
+@keyframes speed-lines { from { transform: translateX(3px); opacity: .9; } to { transform: translateX(-3px); opacity: .3; } }
+@keyframes mascot-idle { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, .95); } }
+@keyframes mascot-hop { 0%, 60%, 100% { transform: translateY(0) scale(1); } 25% { transform: translateY(-10px) scale(.97, 1.04); } 45% { transform: translateY(0) scale(1.06, .93); } }
+@keyframes mascot-pop { 0% { transform: translateY(12px) scale(0); opacity: 0; } 70% { transform: translateY(-4px) scale(1.15); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .mk--driver .mk__mascot, .mk--driver::before { animation: none !important; }
+}
 
 /* Trip */
 .panel--trip { padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 12px; }
