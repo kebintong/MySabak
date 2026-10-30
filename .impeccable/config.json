@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "assets/css/style.css"
+        ],
+        "createdAt": "2026-10-30T08:14:16.785Z",
+        "reason": "user asked to follow the whole Figma design; Figma's 'Card v3/Promo · Sweet Treats' specifies the shimmering gold-foil gradient eyebrow (the only gradient text in this file)"
+      }
+    ]
+  }
+}

@@ -21,6 +21,7 @@
   --gold: #f6c46c;
   --gold-deep: #e3933f;
   --night: linear-gradient(152deg, #1e0638 13%, #4a1680 50%, #7b3fbf 87%);
+  --shadow-card: 0 8px 24px -4px rgba(59, 26, 120, 0.18);
 
   --map-ground: #ece8df;
   --map-park: #cce5c2;
@@ -217,7 +218,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 
 /* Travel time */
 .mk--time { pointer-events: none; width: max-content; }
-.mk-label--time { position: static; display: inline-block; background: var(--navy); color: #fff; }
+.mk-label--time { position: static; display: inline-block; border-radius: 14px; background: #14082a; color: #ffd15c; } /* Figma ETA pill */
 
 /* =========================================================
    Top bar
@@ -307,23 +308,6 @@ body:not([data-state="request"]) .map-controls { display: none; }
 }
 .zoom__sep { height: 1px; background: var(--line); }
 
-.headline {
-  position: absolute;
-  left: 50%; top: 32px;
-  transform: translateX(-50%);
-  margin: 0;
-  padding: 10px 20px;
-  border-radius: 999px;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--navy);
-  white-space: nowrap;
-  z-index: 2;
-}
-
 /* =========================================================
    Bottom area (mobile)
    ========================================================= */
@@ -351,24 +335,90 @@ body:not([data-state="request"]) .map-controls { display: none; }
   to   { opacity: 1; transform: none; }
 }
 
-/* ---- Step 1: Where to? ---- */
-.panel--request {
-  position: relative;
-  padding: 12px;
+/* =========================================================
+   Ride screen (Figma "02 · Book a Ride", in the v3 palette)
+   Phones: back button + route card on top, a full-width sheet at the bottom.
+   Desktop: the same pieces stacked in a floating column on the left (see the desktop section).
+   ========================================================= */
+.ride { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.ride__top {
+  position: absolute;
+  left: 16px; right: 16px;
+  top: calc(12px + var(--safe-t));
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
 }
-.panel__title {
-  margin: 0;
-  padding: 0 4px;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--navy);
+.ride__top > * { pointer-events: auto; }
+.ride__back {
+  width: 46px; height: 46px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: grid; place-items: center;
 }
+.ride__back .icon { width: 24px; height: 24px; }
 
-/* Ride | Express switch */
+/* Route card: pickup (gold) and drop-off (purple) */
+.route {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px 8px 14px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: box-shadow .2s var(--ease-out);
+}
+.route:focus-within { box-shadow: var(--shadow-card), 0 0 0 3px rgba(91, 37, 150, .16); }
+.route__row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 36px; }
+.route__pickup { padding: 0; border: 0; background: none; text-align: left; }
+.route__dot { width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(246, 196, 108, .3); }
+.route__dot--drop { background: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, .18); }
+.route__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.route__label { font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+.route__value { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route__input { width: 100%; height: 22px; padding: 0; border: 0; outline: 0; background: none; font-size: 16px; font-weight: 700; color: var(--ink); text-overflow: ellipsis; } /* 16px: smaller makes iPhones zoom in */
+.route__input[readonly] { cursor: pointer; }
+.route__sep { height: 1px; margin-left: 20px; background: var(--line-brand); }
+.route__btn { width: 36px; height: 36px; flex-shrink: 0; border: 0; border-radius: 50%; display: grid; place-items: center; }
+.route__btn--go { background: var(--night); }
+.route__btn--clear { background: var(--chip-close); }
+.route .suggest { top: calc(100% + 8px); bottom: auto; left: 0; right: 0; }
+
+/* Bottom sheet */
+.ride .bottom { left: 0; right: 0; bottom: 0; gap: 0; }
+.ride .panel {
+  position: relative;
+  padding: 24px 24px calc(20px + var(--safe-b));
+  border: 0;
+  border-radius: 32px 32px 0 0;
+  box-shadow: 0 -6px 30px rgba(20, 8, 41, .18);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ride .panel::before { /* sheet handle */
+  content: "";
+  position: absolute;
+  top: 10px; left: 50%;
+  width: 44px; height: 5px;
+  margin-left: -22px;
+  border-radius: 3px;
+  background: var(--line-brand);
+}
+.ride .statusbar { margin: 0 12px calc(12px + var(--safe-b)); }
+
+.panel__hint { margin: -4px 0 0; font-size: 13px; color: var(--sub); }
+.panel__hint span:first-child { font-weight: 700; color: var(--ink); }
+
+/* Ride | Parcel switch */
 .mode {
   align-self: flex-start;
   display: inline-flex;
@@ -392,47 +442,15 @@ body:not([data-state="request"]) .map-controls { display: none; }
 .mode__btn[aria-checked="true"] { background: var(--surface); color: var(--brand-deep); box-shadow: 0 2px 6px rgba(41, 10, 69, 0.14); animation: pill-in .35s var(--spring); }
 .mode__btn[aria-checked="true"] .icon { stroke: var(--brand); }
 
-/* Figma "Input v3/Search pill": white pill, soft shadow */
-.search {
-  height: 54px;
-  padding: 0 5px 0 18px;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--line-brand);
-  box-shadow: 0 2px 6px rgba(20, 5, 36, 0.12);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.search:focus-within { border-color: var(--brand); }
-.search__input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: none;
-  padding: 0;
-  font-size: 16px;
-  font-weight: 600;
-  background: transparent;
-  outline: none;
-}
-.search__go {
-  width: 44px; height: 44px;
-  border: none;
-  border-radius: 50%;
-  background: var(--night);
-  display: flex; align-items: center; justify-content: center;
-}
-
 .chips {
   display: flex;
   align-items: center;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  margin: 0 -12px;
-  padding: 0 12px;
-  scroll-padding: 12px;
+  margin: 0 -24px;
+  padding: 0 24px;
+  scroll-padding: 24px;
 }
 .chips::-webkit-scrollbar { display: none; }
 
@@ -455,43 +473,14 @@ body:not([data-state="request"]) .map-controls { display: none; }
 .chip:hover { background: var(--surface); border-color: var(--brand); }
 #pickOnMap[aria-pressed="true"] { background: var(--surface); border-color: var(--brand); color: var(--brand-deep); }
 
-/* ---- Step 2: Choose a vehicle ---- */
-.panel--choose {
-  padding: 16px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.choose__head {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    "title edit"
-    "summary summary";
-  align-items: center;
-  column-gap: 12px;
-  row-gap: 4px;
-}
-.choose__title {
-  grid-area: title;
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--navy);
-}
-.choose__summary {
-  grid-area: summary;
-  margin: 0;
-  font-size: 13px;
-  color: var(--sub);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* ---- Choose your ride ---- */
+.choose__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.choose__title { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.2px; color: var(--ink); }
+.choose__summary { margin: 2px 0 0; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.choose__sparkle { flex-shrink: 0; animation: twinkle 2.8s ease-in-out infinite; }
+
 /* Figma "Rebook" chip: lilac pill that fills grape on hover */
 .btn-soft {
-  grid-area: edit;
   height: 34px;
   padding: 0 14px;
   border: none;
@@ -503,37 +492,29 @@ body:not([data-state="request"]) .map-controls { display: none; }
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  flex-shrink: 0;
 }
 .btn-soft:hover { background: var(--brand-deep); color: #fff; }
 .btn-soft:hover .icon { stroke: #fff; }
 
-.vehicles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-/* Figma "Card v3/Service" + "Ride hero": hover lifts with a gold border; picked card is lilac with a shine sweep */
+.vehicles { display: flex; flex-direction: column; gap: 10px; }
+/* Figma "Card/Ride Option": hover tints with a gold edge; the picked one gets the purple ring and a shine sweep */
 .vehicle {
   position: relative;
   overflow: hidden;
-  min-width: 0;
-  padding: 14px 12px;
-  border: 1.5px solid var(--line);
+  min-height: 76px;
+  padding: 0 16px 0 10px;
+  border: 1px solid var(--line-brand);
   border-radius: 20px;
   background: var(--surface);
   text-align: left;
-  display: grid;
-  grid-template-areas: "icon" "name" "fare" "meta";
-  justify-items: start;
-  row-gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   transition: border-color .15s, background-color .15s;
 }
-.vehicle:hover { border-color: var(--gold); }
-.vehicle[aria-checked="true"] {
-  border: 2px solid var(--brand-deep);
-  padding: 13.5px 11.5px;
-  background: var(--tint);
-}
+.vehicle:hover { border-color: var(--gold); background: #fdfaff; }
+.vehicle[aria-checked="true"] { border: 2px solid #7c3aed; padding: 0 15px 0 9px; background: var(--tint); }
 .vehicle[aria-checked="true"]::after {
   content: "";
   position: absolute;
@@ -543,51 +524,288 @@ body:not([data-state="request"]) .map-controls { display: none; }
   animation: card-shine 4s 1s ease-in-out infinite;
   pointer-events: none;
 }
-.v-icon { grid-area: icon; width: 24px; height: 24px; margin-bottom: 8px; transition: transform .2s var(--spring); }
-.v-text { display: contents; }
-.v-name { grid-area: name; font-size: 15px; font-weight: 700; color: var(--ink); }
-.v-fare { grid-area: fare; font-size: 16px; font-weight: 700; color: var(--ink); margin-top: 6px; }
-.v-meta { grid-area: meta; font-size: 12px; color: var(--sub); }
-.v-cap, .v-away { display: none; }
+.v-icon { width: 80px; height: 50px; flex-shrink: 0; object-fit: contain; transition: transform .2s var(--spring); }
+.v-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.v-name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.v-meta { font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v-fare { flex-shrink: 0; font-size: 18px; font-weight: 700; letter-spacing: -.2px; color: var(--ink); }
+.vehicle[aria-checked="true"] .v-fare { color: #5b21b6; }
 
-.choose__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
+/* Payment row */
 .pay {
-  flex: 1;
-  height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  font-size: 14px;
-  font-weight: 600;
+  height: 40px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
   display: flex;
   align-items: center;
   gap: 10px;
   text-align: left;
 }
 .pay__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pay__change { color: var(--brand-deep); font-weight: 700; }
-.fare-note { margin: 0; font-size: 13px; color: var(--sub); white-space: nowrap; }
+.pay__change { font-size: 13px; font-weight: 500; color: var(--muted); }
+.fare-note { margin: -8px 0 0; font-size: 12px; color: var(--muted); }
 
+/* Book: Figma's primary button (purple gradient); hover lightens with a gold glow */
 .book {
   height: 54px;
-  padding: 0 22px;
+  padding: 0 24px;
   border: none;
-  border-radius: 999px;
-  background: var(--night);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #8b55f7, #5b21b6);
   color: #fff;
-  font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 8px 20px rgba(91, 37, 150, 0.3);
+  box-shadow: 0 8px 12px rgba(59, 26, 120, .18);
+}
+
+/* =========================================================
+   Home (Figma "04 · Home v3 · magical")
+   Night-sky header with pickup, search and saved places; service cards; quick actions; promo; recent.
+   Phones: one column like the Figma frame. Desktop: the same pieces in a wider grid (see below).
+   ========================================================= */
+.is-home .ride, .is-home .map-controls { display: none; }
+.is-ride .home, .is-ride .tabbar, .is-ride .topbar { display: none; }
+.is-home .topbar { z-index: 6; } /* above the home on desktop */
+
+.home {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #faf5f3;
+  padding-bottom: calc(130px + var(--safe-b));
+}
+
+.hero {
+  position: relative;
+  min-height: calc(262px + var(--safe-t));
+  padding: calc(8px + var(--safe-t)) 16px 44px;
+  background: url("../images/v3/hero-night-sky.svg") center bottom / 100% 100% no-repeat;
+}
+.hero__inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.hero__top { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.pickup { flex: 1; min-width: 0; padding: 0; border: 0; background: none; display: flex; align-items: center; gap: 10px; text-align: left; color: #fff; }
+.pickup__pin { width: 22px; height: 22px; stroke: var(--gold); }
+.pickup__text { min-width: 0; display: flex; flex-direction: column; }
+.pickup__label { font-size: 12px; color: #e2d0f4; }
+.pickup__value { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 16px; font-weight: 600; }
+.pickup__value > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pickup__chev { transform: rotate(90deg); }
+/* Figma "Button v3/Bell": glass button; hover rings the bell */
+.bell { width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 50%; background: url("../images/v3/bell-button.svg") center / 44px no-repeat; }
+@media (hover: hover) { .bell:hover { animation: bell-ring .6s ease-in-out; } }
+
+/* Figma "Input v3/Search pill" */
+.home-search {
+  height: 50px;
+  padding: 0 18px;
+  border-radius: 25px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(20, 5, 36, .35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.home-search:hover { color: var(--muted); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(20, 5, 36, .35); }
+.home-search .icon { width: 22px; height: 22px; stroke: #7b3fbf; }
+
+/* Figma "Chip v3/Glass": saved places on the purple header; hover brightens the glass */
+.glass-chips { display: flex; align-items: center; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 4px 16px; }
+.glass-chips::-webkit-scrollbar { display: none; }
+.glass-chip {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background-color .15s, border-color .15s, transform .18s var(--ease-out);
+}
+.glass-chip:hover { background: rgba(255, 255, 255, .26); border-color: rgba(255, 255, 255, .4); }
+.glass-chip:active { transform: scale(.95); }
+.glass-chip--add { width: 36px; padding: 0; justify-content: center; border-style: dashed; border-color: rgba(255, 255, 255, .55); background: none; }
+
+/* Figma "Motion/Twinkle": looping stars, staggered with --d */
+.twinkle { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); pointer-events: none; animation: twinkle 2.8s var(--d, 0s) ease-in-out infinite; }
+
+/* ---- Cards ---- */
+.home__grid {
+  position: relative;
+  max-width: 1112px;
+  margin: -22px auto 0; /* the Ride card tucks under the header's slanted edge, as in Figma */
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 11px;
+}
+
+/* Figma "Card v3/Ride hero" + "Card v3/Service": hover lifts (Ride: gold border; services: a ring) and grows the picture */
+.svc {
+  position: relative;
+  overflow: hidden;
+  height: 104px;
+  border-radius: 20px;
+  background: #f2e9fa url("../images/v3/glow-lilac.svg") -4px 12px / 170px 160px no-repeat;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .15s;
+}
+.svc:hover { color: var(--ink); }
+.svc--peach { background: #fcefd9 url("../images/v3/glow-peach.svg") -4px 12px / 170px 160px no-repeat; }
+.svc--ride {
+  grid-column: 1 / -1;
+  border: 1.5px solid #e8daf7;
+  background: #f2e9fa url("../images/v3/glow-ride.svg") right -98px top -72px / 300px 240px no-repeat;
+}
+.svc--ride::after { /* idle shine every ~4s */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(133deg, transparent 37%, rgba(255, 255, 255, .55) 50%, transparent 62%);
+  transform: translateX(-100%);
+  animation: card-shine 4s 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.svc__copy { position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 1px; line-height: 1.25; }
+.svc__name { font-size: 15px; font-weight: 600; }
+.svc__sub { font-size: 12px; color: #5e4c74; }
+.svc--peach .svc__sub { color: #6b5233; }
+.svc--ride .svc__copy { left: 14px; top: 27px; gap: 2px; }
+.svc--ride .svc__name { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+.svc--ride .svc__sub { font-size: 13px; }
+.svc__art { position: absolute; right: -6px; bottom: -2px; width: 82px; height: auto; transform-origin: 50% 100%; transition: transform .25s var(--spring); }
+.svc--ride .svc__art { right: -42px; bottom: -10px; width: 222px; }
+.svc__sparkle { position: absolute; left: 92px; top: 14px; animation: twinkle 2.8s .4s ease-in-out infinite; }
+.svc--ride .svc__sparkle { left: 90px; top: 14px; }
+@media (hover: hover) {
+  .svc:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
+  .svc--ride:hover { border-color: var(--gold); box-shadow: 0 10px 22px rgba(41, 10, 69, .12); }
+  .svc:hover .svc__art { transform: scale(1.08); }
+}
+.svc:active { transform: scale(.98); }
+
+/* Figma "Quick action v3": white bar; hover tints and grows the icon */
+.quick { grid-column: 1 / -1; display: flex; border: 1px solid #eee4ec; border-radius: 20px; background: #fff; overflow: hidden; }
+.quick__item {
+  flex: 1;
+  min-height: 76px;
+  border: 0;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: background-color .15s;
+}
+.quick__item + .quick__item { border-left: 1px solid #f2eaf0; }
+.quick__item img { transition: transform .2s var(--spring); }
+.quick__item:hover { background: #fbf7ff; }
+.quick__item:hover img { transform: scale(1.12); }
+
+/* Figma "Card v3/Promo · Sweet Treats": aurora drifts, foil eyebrow shimmers, halo-halo floats */
+.promo {
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  height: 100px;
+  border-radius: 20px;
+  background: var(--night);
+  color: #fff;
+  text-decoration: none;
+}
+.promo:hover { color: #fff; }
+.promo__aurora { position: absolute; right: 20px; top: -30px; width: 200px; height: 140px; animation: aurora 6s ease-in-out infinite alternate; }
+.promo__stars { position: absolute; }
+.promo__stars--a { right: 4.7%; top: 16.8%; width: 40.9%; height: 66.6%; }
+.promo__stars--b { right: 6.9%; top: 54.7%; width: 33.7%; height: 34.5%; }
+.promo__art { position: absolute; right: 24px; top: 8px; animation: float 3s ease-in-out infinite alternate; }
+.promo__copy { position: absolute; left: 18px; top: 12px; display: flex; flex-direction: column; gap: 5px; }
+.promo__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffe29a, #f6c46c 25%, #fff6d8 50%, #e3933f 75%, #ffe29a) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: foil 3s linear infinite;
+}
+.promo__title { font-size: 18px; font-weight: 700; line-height: 1.15; }
+.promo__link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #ffd66b; }
+.promo__link .icon { stroke: #ffd66b; }
+@media (hover: hover) { .promo:hover .promo__link .icon { transform: translateX(3px); } }
+.promo__link .icon { transition: transform .2s var(--spring); }
+
+/* Figma "List v3/Recent trip": hover fills the Rebook chip */
+.recent { grid-column: 1 / -1; }
+.recent__head { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+.recent__title { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.recent__all { font-size: 13px; font-weight: 500; color: #6a2fb0; text-decoration: none; }
+.recent__row { display: flex; align-items: center; gap: 12px; min-height: 48px; }
+.recent__row > .icon { stroke: #7b3fbf; }
+.recent__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.recent__name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent__meta { font-size: 12px; color: var(--muted); }
+.recent__row:hover .btn-soft { background: var(--brand-deep); color: #fff; }
+.recent__row:hover .btn-soft .icon { stroke: #fff; }
+
+/* Home tab bar: phones, the notched bar along the bottom; desktop, a floating dock */
+.tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; }
+
+@media (max-width: 899.98px) {
+  .is-home .topbar { display: none; } /* phones: the pickup row and the Account tab take its place */
+  .map-controls, .is-ride .maplibregl-ctrl-top-left { top: calc(124px + var(--safe-t)); } /* under the route card */
+}
+
+@media (min-width: 900px) {
+  .hero { /* the Figma sky is a 390px picture; stretched this wide its stars smear, so paint it */
+    min-height: 360px;
+    padding: calc(100px + var(--safe-t)) 24px 80px;
+    background:
+      radial-gradient(40% 70% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%),
+      radial-gradient(30% 50% at 12% 85%, rgba(246, 196, 108, .18), transparent 70%),
+      linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
+    clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%);
+  }
+  .hero__inner { gap: 16px; }
+  .home-search { height: 60px; padding: 0 24px; border-radius: 30px; font-size: 17px; }
+  .glass-chips { margin: 0; padding: 4px 0; flex-wrap: wrap; overflow: visible; }
+  .home__grid { margin-top: -44px; grid-template-columns: 2fr repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .svc { height: 136px; }
+  .svc--ride { grid-column: auto; }
+  .svc--ride .svc__art { width: 250px; }
+  .svc__art { width: 108px; }
+  .quick, .promo { height: 116px; }
+  .quick { grid-column: 1; }
+  .promo { grid-column: 2 / -1; }
+  .promo__copy { left: 24px; top: 20px; }
+  .promo__title { font-size: 22px; }
+  .home { padding-bottom: 140px; }
+  .tabbar { left: 50%; right: auto; bottom: calc(24px + var(--safe-b)); transform: translateX(-50%); }
 }
 
 /* ---- Dock / tabs (mobile: bottom nav) ---- */
@@ -640,12 +858,11 @@ body:not([data-state="request"]) .map-controls { display: none; }
 .tab.is-active .tab__icon { background: var(--tint); animation: pill-in .4s var(--spring); }
 .tab.is-active .icon { stroke: var(--brand-deep); }
 
-/* Phones: Figma "Navbar v3/Notched White", full width, Shops as the round middle button */
+/* Phones: Figma "Navbar v3/Notched White", full width, Food as the round middle button */
 @media (max-width: 899.98px) {
-  .bottom > .dock {
+  .dock {
     position: relative;
     height: calc(70px + var(--safe-b));
-    margin: 26px calc(-1 * var(--gutter)) calc(-16px - var(--safe-b)); /* top: room for the middle button */
     padding: 0 0 var(--safe-b);
     border: none;
     border-radius: 0;
@@ -654,13 +871,14 @@ body:not([data-state="request"]) .map-controls { display: none; }
     filter: drop-shadow(0 -1px 4px rgba(41, 10, 69, .07));
     align-items: stretch;
   }
-  .bottom > .dock::before {
+  .bottom > .dock { margin: 26px calc(-1 * var(--gutter)) calc(-16px - var(--safe-b)); } /* edge to edge; top: room for the middle button */
+  .dock::before {
     content: "";
     position: absolute;
     inset: 0;
     background: var(--surface);
   }
-  .bottom > .dock:has(.tab[data-tab="shops"])::before {
+  .dock:has(.tab[data-tab="food"])::before {
     -webkit-mask: radial-gradient(circle at 50% 0, transparent 40px, #000 41px);
     mask: radial-gradient(circle at 50% 0, transparent 40px, #000 41px);
   }
@@ -668,9 +886,9 @@ body:not([data-state="request"]) .map-controls { display: none; }
   .page .bottom > .dock.tabs { width: auto; } /* width: 100% would undo the edge-to-edge margins */
   .dock .tab { padding-top: 10px; z-index: 1; }
 
-  .tab[data-tab="shops"] .tab__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .tab[data-tab="shops"]::before { display: none; }
-  .tab[data-tab="shops"] .tab__icon {
+  .tab[data-tab="food"] .tab__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tab[data-tab="food"]::before { display: none; }
+  .tab[data-tab="food"] .tab__icon {
     position: relative;
     width: 64px; height: 64px;
     margin-top: -42px; /* centre sits on the bar edge */
@@ -680,28 +898,28 @@ body:not([data-state="request"]) .map-controls { display: none; }
     animation: none;
     transition: transform .2s var(--spring);
   }
-  .tab[data-tab="shops"] .tab__icon .icon { width: 28px; height: 28px; stroke: #fff; }
+  .tab[data-tab="food"] .tab__icon .icon { width: 28px; height: 28px; stroke: #fff; }
   /* Halo ring (rotates) and pulse ring (expands), behind the white gap */
-  .tab[data-tab="shops"] .tab__icon::before,
-  .tab[data-tab="shops"] .tab__icon::after {
+  .tab[data-tab="food"] .tab__icon::before,
+  .tab[data-tab="food"] .tab__icon::after {
     content: "";
     position: absolute;
     border-radius: 50%;
     z-index: -1;
     pointer-events: none;
   }
-  .tab[data-tab="shops"] .tab__icon::before {
+  .tab[data-tab="food"] .tab__icon::before {
     inset: -5px;
     background: conic-gradient(#a65fe8, #f2b55c 22%, #fff 38%, #e9a04a 52%, #a65fe8 68%, #e7d6fb 84%, #a65fe8);
     animation: spin 6s linear infinite;
   }
-  .tab[data-tab="shops"] .tab__icon::after {
+  .tab[data-tab="food"] .tab__icon::after {
     inset: 0;
     border: 3px solid rgba(197, 154, 240, .5);
     animation: fab-pulse 2.4s var(--ease-out) infinite;
   }
   /* Orbiting stars */
-  .tab[data-tab="shops"]::after {
+  .tab[data-tab="food"]::after {
     content: "";
     position: absolute;
     left: 50%; top: -44px;
@@ -713,8 +931,8 @@ body:not([data-state="request"]) .map-controls { display: none; }
     animation: spin 9s linear infinite;
     pointer-events: none;
   }
-  @media (hover: hover) { .tab[data-tab="shops"]:hover .tab__icon { transform: scale(1.06); } }
-  .tab[data-tab="shops"]:active .tab__icon { transform: scale(.94); }
+  @media (hover: hover) { .tab[data-tab="food"]:hover .tab__icon { transform: scale(1.06); } }
+  .tab[data-tab="food"]:active .tab__icon { transform: scale(.94); }
 }
 
 /* ---- Toast ---- */
@@ -740,7 +958,6 @@ body:not([data-state="request"]) .map-controls { display: none; }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---- Search suggestions (open upward, over the map) ---- */
-.search, .dock-search__field { position: relative; }
 .suggest {
   position: absolute;
   left: -1px; right: -1px;
@@ -781,15 +998,15 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 
 .chip__text { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 
-/* Short phones */
+/* Short phones: slimmer ride options so the whole sheet fits */
 @media (max-height: 700px) and (max-width: 899.98px) {
-  .vehicle { padding: 10px; }
-  .vehicle[aria-checked="true"] { padding: 9px; }
-  .v-icon { margin-bottom: 4px; }
+  .vehicle { min-height: 62px; }
+  .v-icon { width: 64px; height: 40px; }
+  .ride .panel { gap: 10px; }
 }
 
 /* =========================================================
-   Desktop · dock bar layout
+   Desktop
    ========================================================= */
 @media (min-width: 900px) {
   :root { --gutter: 24px; }
@@ -799,10 +1016,11 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
   .btn { height: 48px; font-size: 14px; }
   .btn--dark { padding: 0 20px; }
 
-  .map-controls { top: calc(96px + var(--safe-t)); }
+  .map-controls { top: calc(24px + var(--safe-t)); }
   body:not([data-state="request"]) .map-controls { display: flex; }
 
   .maplibregl-ctrl-top-left { top: calc(96px + var(--safe-t)); }
+  .is-ride .maplibregl-ctrl-top-left { top: auto; bottom: 16px; left: 440px; }
   .mk--pickup { width: 72px; height: 72px; }
   .mk--pickup .dot { width: 24px; height: 24px; }
   .mk-label--pickup { left: 66px; top: -30px; padding: 10px 14px; border-radius: 12px; max-width: 320px; }
@@ -814,6 +1032,7 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 
   .toast { top: 96px; }
 
+  /* Content pages: tab bar centred at the bottom */
   .bottom {
     left: 50%;
     right: auto;
@@ -825,70 +1044,31 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
   }
   .panel { width: 100%; }
 
-  /* Step 1: chips bar */
-  .panel--request {
-    padding: 10px 12px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 12px 30px rgba(36, 25, 87, 0.14);
-  }
-  .chips { margin: 0; padding: 0; }
-  .panel--request { flex-direction: row; align-items: center; gap: 12px; }
-  .panel--request .mode { align-self: center; flex-shrink: 0; }
-  .panel--request .chips { flex: 1; min-width: 0; }
-  .chip--origin {
-    border: none;
-    border-radius: 12px;
-    background: var(--tint);
-    color: var(--navy);
-    font-weight: 700;
-    gap: 8px;
-  }
-  .chips__sep { width: 1px; height: 24px; background: var(--line-brand); margin: 0 4px; flex-shrink: 0; }
-
-  /* Step 2: vehicle card */
-  .panel--choose {
-    padding: 20px;
-    border-radius: 24px;
-    background: var(--surface);
-    box-shadow: var(--shadow-lg);
-    gap: 14px;
-  }
-  .choose__head {
+  /* Ride: one floating column on the left, the map takes the rest */
+  .ride {
+    left: 24px; right: auto;
+    top: calc(24px + var(--safe-t)); bottom: 24px;
+    width: 400px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 12px;
   }
-  .choose__title { font-size: 22px; flex-shrink: 0; }
-  .choose__summary { flex: 1; min-width: 0; }
-  .btn-soft { margin-left: auto; flex-shrink: 0; }
-
-  .vehicles { gap: 12px; }
-  .vehicle {
-    height: 76px;
-    padding: 0 16px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
+  .ride__top { position: static; }
+  .ride .bottom {
+    position: static;
+    transform: none;
+    width: auto;
+    min-height: 0;
+    align-items: stretch;
     gap: 12px;
   }
-  .vehicle[aria-checked="true"] { padding: 0 15px; }
-  .v-icon { width: 28px; height: 28px; margin: 0; }
-  .v-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-  .v-meta { line-height: 1.35; }
-  .v-cap, .v-away { display: inline; }
-  .v-fare { margin: 0; flex-shrink: 0; }
+  /* each card scrolls itself on short screens (a scrolling wrapper would clip the shadows) */
+  .ride .panel { max-height: calc(100vh - 170px); overflow-y: auto; padding: 20px; border-radius: 24px; box-shadow: var(--shadow-lg); }
+  .ride .panel::before { display: none; }
+  .ride .statusbar { margin: 0; width: auto; }
+  .chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
 
-  .pay {
-    flex: 0 1 auto;
-    height: 40px;
-    padding: 0 12px;
-    font-size: 13px;
-    gap: 8px;
-  }
-  .pay__label { flex: 0 1 auto; }
-
-  /* Dock bar */
+  /* Tab bar: a floating dock */
   .dock {
     height: 84px;
     padding: 0 12px 0 10px;
@@ -902,69 +1082,6 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
   .tab { flex: 0 0 64px; gap: 3px; align-self: stretch; justify-content: center; } /* full height: gold indicator sits on the dock edge */
   .tab__icon { width: 52px; height: 40px; border-radius: 20px; }
   .tab__icon .icon { width: 24px; height: 24px; }
-  .tab__dot { display: none; }
-
-  .dock__sep { width: 1px; height: 48px; background: var(--line-brand); margin: 0 10px; }
-
-  .dock-search { display: flex; align-items: center; gap: 8px; }
-  .dock-search__field {
-    width: clamp(220px, 28vw, 380px);
-    height: 58px;
-    padding: 0 12px 0 18px;
-    border-radius: 999px;
-    background: var(--surface);
-    border: 1px solid var(--line-brand);
-    box-shadow: 0 2px 6px rgba(20, 5, 36, 0.12);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .dock-search__field:focus-within { border-color: var(--brand); }
-  .dock-search__field .suggest { left: -1px; right: auto; width: max(100%, 440px); }
-  .dock-search__input {
-    flex: 1;
-    min-width: 0;
-    height: 100%;
-    border: none;
-    padding: 0;
-    font-size: 16px;
-    font-weight: 600;
-    background: transparent;
-    outline: none;
-    text-overflow: ellipsis;
-  }
-  body:not([data-state="request"]) .dock-search__input { font-weight: 700; }
-  body[data-state="choose"] .dock-search__input { cursor: pointer; }
-  .dock-search__clear {
-    width: 32px; height: 32px;
-    border: none;
-    border-radius: 50%;
-    background: var(--chip-close);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .cta {
-    height: 58px;
-    padding: 0 24px;
-    border: none;
-    border-radius: 999px;
-    background: var(--night);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    box-shadow: 0 8px 20px rgba(91, 37, 150, 0.3);
-  }
-  .cta .icon { width: 18px; height: 18px; }
-}
-
-/* Mid-size desktops: drop the headline under the brand row */
-@media (min-width: 900px) and (max-width: 1180px) {
-  .headline { top: 92px; font-size: 18px; }
-  .fare-note { display: none; }
 }
 
 /* =========================================================
@@ -991,12 +1108,16 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 @keyframes pill-in   { from { transform: scale(.6); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes card-shine { 0%, 70% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 @keyframes fab-pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes twinkle   { 0%, 100% { opacity: .3; transform: scale(.7); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
+@keyframes bell-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(12deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(6deg); } }
+@keyframes aurora    { from { transform: translateX(0) scale(1); opacity: .8; } to { transform: translateX(-18px) scale(1.08); opacity: 1; } }
+@keyframes float     { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-5px) rotate(2deg); } }
+@keyframes foil      { from { background-position: 0 0; } to { background-position: -200% 0; } }
 
 /* Page load: top bar and controls drop in, dock rises */
 .brand            { animation: drop-in .5s var(--ease-out) backwards; }
 .topbar__actions  { animation: drop-in .5s .08s var(--ease-out) backwards; }
 .map-controls     { animation: drop-in .5s .16s var(--ease-out) backwards; }
-.headline         { animation: drop-in-x .5s .12s var(--ease-out) backwards; }
 .dock             { animation: rise .45s .1s var(--ease-out) backwards; }
 
 /* Chips and vehicle cards arrive one after another */
@@ -1009,19 +1130,20 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 .vehicle { animation: card-in .4s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 70ms + 60ms); }
 
 /* Press / hover feedback */
-.chip, .btn, .ctrl, .cta, .book, .search__go, .btn-soft, .pay, .vehicle {
+.chip, .btn, .ctrl, .book, .route__btn, .ride__back, .btn-soft, .pay, .vehicle {
   transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), background-color .15s, border-color .15s;
 }
 @media (hover: hover) {
   .chip:hover, .btn:hover, .btn-soft:hover, .pay:hover { transform: translateY(-1px); }
-  .cta:hover, .book:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(91, 37, 150, 0.38); }
+  .book:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 10px 24px rgba(246, 196, 108, .45); } /* Figma: lightens + gold glow */
+  .ride__back:hover { background: var(--tint); }
   .vehicle:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(41, 10, 69, 0.1); }
   .vehicle:hover .v-icon { transform: scale(1.12); }
   .ctrl:hover .icon { transform: scale(1.12); }
 }
 .ctrl .icon { transition: transform .18s var(--spring); }
-.chip:active, .btn:active, .ctrl:active, .search__go:active, .btn-soft:active, .pay:active { transform: scale(.95); }
-.cta:active, .book:active { transform: scale(.97); }
+.chip:active, .btn:active, .ctrl:active, .route__btn:active, .ride__back:active, .btn-soft:active, .pay:active { transform: scale(.95); }
+.book:active { transform: scale(.97); filter: brightness(.92); }
 .vehicle:active { transform: scale(.97); }
 
 /* Selecting a vehicle: icon pops, Book button nudges */
@@ -1031,8 +1153,8 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
 .tab__icon .icon { transition: transform .2s var(--spring); }
 
 /* Shine sweep across the main buttons */
-.cta, .book { position: relative; overflow: hidden; }
-.cta::after, .book::after {
+.book { position: relative; overflow: hidden; }
+.book::after {
   content: "";
   position: absolute;
   top: 0; bottom: 0; left: 0;
@@ -1042,7 +1164,7 @@ body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
   pointer-events: none;
 }
 @media (hover: hover) {
-  .cta:hover::after, .book:hover::after { animation: shine .8s var(--ease-out); }
+  .book:hover::after { animation: shine .8s var(--ease-out); }
 }
 
 /* Booking: "Finding a driver…" */
@@ -1071,8 +1193,6 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
-.search, .dock-search__field { transition: border-color .15s, box-shadow .2s var(--ease-out); }
-.search:focus-within, .dock-search__field:focus-within { box-shadow: 0 0 0 4px rgba(91, 37, 150, 0.12); }
 
 /* Map pins */
 .mk--dest.is-dropping svg { animation: pin-drop .6s var(--spring) both; transform-origin: 50% 100%; }
@@ -2040,12 +2160,6 @@ body.is-status-hidden .statusbar { display: flex; }
 body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { display: none; }
 @media (min-width: 900px) {
   .statusbar { width: min(560px, 100%); }
-}
-/* Phones: the "Saan tayo?" panel can be hidden to a slim bar too */
-body:not(.is-request-hidden) .statusbar.reqbar { display: none; }
-body.is-request-hidden .statusbar.reqbar { display: flex; }
-@media (max-width: 899.98px) {
-  body.is-request-hidden .panel--request { display: none; }
 }
 
 /* =========================================================
