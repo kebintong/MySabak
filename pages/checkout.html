@@ -21,55 +21,79 @@
   <link rel="stylesheet" href="/assets/css/style.css">
   <script type="module" src="/assets/js/pages/checkout.js"></script>
 </head>
-<body class="page">
+<body class="page page--shop page--checkout">
   <div class="app">
     <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <div class="content__inner">
+      <header class="shop-sky">
+        <div class="shop-sky__inner">
+          <a class="shop-back" id="backToShop" href="/pages/shops.html" aria-label="Back to shop"><svg class="icon icon--lg icon--white" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg></a>
+          <div class="shop-info__title">
+            <h1 class="shop-info__name">Checkout</h1>
+            <p class="shop-info__addr" id="shopName"></p>
+          </div>
+        </div>
+      </header>
 
-        <header class="page-head">
-          <a class="page-head__back" id="backToShop" href="/pages/shops.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Back to shop</a>
-          <h1 class="page-title">Checkout</h1>
-        </header>
-
+      <div class="check-layout">
         <div id="emptyCart" class="card" hidden>
           <p class="empty">Your cart is empty.</p>
           <a class="button button--block" href="/pages/shops.html">Browse shops</a>
         </div>
 
-        <form id="checkoutForm" class="form" autocomplete="off" hidden>
-          <section class="card" aria-labelledby="itemsTitle">
-            <h2 class="card__title" id="itemsTitle">Your order from <span id="shopName">the shop</span></h2>
-            <ul class="list" id="lines"></ul>
-          </section>
+        <!-- Draft C: three steps, one open at a time, each showing its choice when closed -->
+        <form id="checkoutForm" class="check-form" autocomplete="off" hidden>
+          <div class="steps">
+            <section class="step" data-panel="order">
+              <h2 class="step__h"><button type="button" class="step__head" aria-expanded="false" aria-controls="stepOrder">
+                <span class="step__num" aria-hidden="true">1</span>
+                <span class="step__text"><span class="step__title">Your order</span><span class="step__peek"><span id="peekOrder"></span></span></span>
+                <span class="step__action" aria-hidden="true">Edit</span>
+              </button></h2>
+              <div class="step__body" id="stepOrder"><div class="step__clip"><div class="step__inner">
+                <ul class="list" id="lines"></ul>
+              </div></div></div>
+            </section>
 
-          <section class="card form" aria-labelledby="addrTitle">
-            <h2 class="card__title" id="addrTitle">Deliver to</h2>
-            <div class="field">
-              <label for="address" class="field__label">Address or place</label>
-              <input class="input" id="address" type="text" placeholder="Search a street, building or landmark" required
-                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addressList">
-              <ul class="suggest" id="addressList" role="listbox" aria-label="Suggested places" hidden></ul>
-            </div>
-            <button type="button" class="button button--ghost" id="useLocation"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>Use my location</button>
-            <label class="field"><span class="field__label">Notes for the rider <span class="muted">(optional)</span></span>
-              <textarea class="textarea" name="notes" placeholder="Unit number, gate, landmark…"></textarea></label>
-          </section>
+            <section class="step is-open is-settled" data-panel="deliver">
+              <h2 class="step__h"><button type="button" class="step__head" aria-expanded="true" aria-controls="stepDeliver">
+                <span class="step__num" aria-hidden="true">2</span>
+                <span class="step__text"><span class="step__title">Deliver to</span><span class="step__peek"><span id="peekDeliver"></span></span></span>
+                <span class="step__action" aria-hidden="true">Edit</span>
+              </button></h2>
+              <div class="step__body" id="stepDeliver"><div class="step__clip"><div class="step__inner form">
+                <div class="field">
+                  <label for="address" class="field__label">Address or place</label>
+                  <input class="input" id="address" type="text" placeholder="Search a street, building or landmark" required
+                         role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addressList">
+                  <ul class="suggest" id="addressList" role="listbox" aria-label="Suggested places" hidden></ul>
+                </div>
+                <button type="button" class="button button--ghost" id="useLocation"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>Use my location</button>
+                <label class="field"><span class="field__label">Notes for the rider <span class="muted">(optional)</span></span>
+                  <textarea class="textarea" name="notes" placeholder="Unit number, gate, landmark…"></textarea></label>
+              </div></div></div>
+            </section>
 
-          <section class="card form" aria-labelledby="payTitle">
-            <h2 class="card__title" id="payTitle">Pay with</h2>
-            <fieldset class="pills" id="payMethods"><legend class="sr-only">Payment method</legend></fieldset>
-          </section>
+            <section class="step" data-panel="pay">
+              <h2 class="step__h"><button type="button" class="step__head" aria-expanded="false" aria-controls="stepPay">
+                <span class="step__num" aria-hidden="true">3</span>
+                <span class="step__text"><span class="step__title">Pay with</span><span class="step__peek"><span id="peekPay"></span></span></span>
+                <span class="step__action" aria-hidden="true">Change</span>
+              </button></h2>
+              <div class="step__body" id="stepPay"><div class="step__clip"><div class="step__inner">
+                <fieldset class="pills" id="payMethods"><legend class="sr-only">Payment method</legend></fieldset>
+              </div></div></div>
+            </section>
+          </div>
 
-          <section class="card" aria-labelledby="sumTitle">
-            <h2 class="card__title" id="sumTitle">Summary</h2>
+          <section class="check-sum" aria-labelledby="sumTitle">
+            <h2 class="check-sum__title" id="sumTitle">Summary</h2>
             <dl class="receipt" id="summary"></dl>
+            <button type="submit" class="button button--block" id="placeBtn">Place order</button>
             <p class="card__foot">No service fee. You can tip mysabak after delivery if you like.</p>
           </section>
-
-          <button type="submit" class="button button--block" id="placeBtn">Place order</button>
         </form>
       </div>
     </main>
