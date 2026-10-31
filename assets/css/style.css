@@ -2057,17 +2057,16 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .shop-sky {
   position: relative;
   margin: 0 calc(-1 * var(--gutter));
-  padding: calc(16px + var(--safe-t)) 16px 112px;
+  padding: calc(16px + var(--safe-t)) 16px 72px;
   color: #fff;
   background:
     radial-gradient(circle at 12% 30%, #fff 0 1px, transparent 2px), radial-gradient(circle at 34% 12%, #fff 0 1.5px, transparent 2.5px),
     radial-gradient(circle at 57% 24%, #fff 0 1px, transparent 2px), radial-gradient(circle at 66% 62%, #fff 0 1.5px, transparent 2.5px),
     radial-gradient(circle at 92% 40%, #fff 0 1px, transparent 2px), radial-gradient(circle at 44% 70%, #fff 0 1px, transparent 2px),
     var(--night);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 44px), 0 100%);
 }
 .shop-sky::after { /* a star that twinkles, like the Home header */
-  content: ""; position: absolute; right: 12%; bottom: 72px; width: 18px; height: 18px;
+  content: ""; position: absolute; right: 12%; bottom: 76px; width: 18px; height: 18px;
   background: url("/assets/images/v3/twinkle-d.svg") center / contain no-repeat;
   animation: twinkle 2.8s ease-in-out infinite; pointer-events: none;
 }
@@ -2107,7 +2106,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .menu-tabs {
   position: sticky; top: 0; z-index: 3;
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: -104px calc(-1 * var(--gutter)) 40px; padding: 8px var(--gutter);
+  margin: -68px calc(-1 * var(--gutter)) 20px; padding: 8px var(--gutter);
 }
 .menu-tabs.is-stuck { background: var(--shop-bg); }
 .menu-tabs::-webkit-scrollbar { display: none; }
@@ -2182,8 +2181,15 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   box-shadow: var(--shadow-lg); overflow: hidden;
 }
 .cart-panel[open] { display: flex; flex-direction: column; }
-.cart-panel:modal { animation: rise .3s var(--ease-out); }
-.cart-panel::backdrop { background: rgba(23, 18, 43, .45); }
+.cart-panel:modal { animation: sheet-in .3s var(--ease-out); }
+.cart-panel.is-closing { animation: sheet-out .2s var(--ease-out) forwards; }
+.cart-panel::backdrop { background: rgba(23, 18, 43, .45); animation: fade-in .3s var(--ease-out); }
+.cart-panel.is-closing::backdrop { animation: fade-out .2s var(--ease-out) forwards; }
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes sheet-out { to { transform: translateY(100%); } }
+@keyframes dialog-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes dialog-out { to { opacity: 0; transform: scale(.97); } }
+@keyframes fade-out { to { opacity: 0; } }
 .cart-panel__head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 8px; }
 .cart-panel__head h2 { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--navy); }
 .cart-panel__body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px calc(18px + var(--safe-b)); display: flex; flex-direction: column; gap: 12px; }
@@ -2200,8 +2206,11 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 /* Options sheet (dialog) */
 /* An item's options, open inside its card */
 .msec__row { grid-auto-flow: dense; } /* the cards after an open one fill the gap it leaves */
-.mcard--open { grid-column: 1 / -1; min-height: 0; gap: 8px; border: 2px solid var(--accent); cursor: default; scroll-margin: 70px 0 110px; }
+.mcard--open { grid-column: 1 / -1; min-height: 0; gap: 8px; border: 2px solid var(--accent); cursor: default; scroll-margin: 70px 0 110px; z-index: 1; }
 .mcard--open:hover, .mcard--open:active { transform: none; box-shadow: none; }
+.mcard--open > :not(.mopen__head) { animation: rise .24s var(--ease-out) 60ms backwards; } /* options follow the card as it grows */
+.mcard--open > .mopen__foot { animation-delay: 110ms; }
+.ochip.is-picked[aria-pressed="true"] { animation: chip-pick .22s var(--ease-out); }
 .mcard--open:hover .mcard__img { transform: none; }
 .mopen__head { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 12px; align-items: center; }
 .mopen__head .mcard__img { margin: 0; }
@@ -2238,8 +2247,8 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 
 @media (min-width: 900px) {
   /* Night sky header: picture, name and chips in a row, the route map on the right */
-  .shop-sky { padding: calc(96px + var(--safe-t)) 24px 128px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 60px), 0 100%); }
-  .shop-sky::after { bottom: 110px; }
+  .shop-sky { padding: calc(96px + var(--safe-t)) 24px 88px; }
+  .shop-sky::after { bottom: 92px; }
   .shop-sky__inner { grid-template-columns: 44px 88px minmax(0, 1fr) 260px; gap: 12px 16px; align-items: start; }
   .shop-back { grid-column: auto; }
   .shop-info__ava { width: 88px; height: 88px; border-radius: 22px; }
@@ -2253,13 +2262,14 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 
   .shop-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
   /* Stuck tabs sit under the logo; the strip covers what scrolls past above them */
-  .menu-tabs { top: 84px; margin: -116px 0 52px; padding: 8px 0; overflow: visible; flex-wrap: wrap; }
+  .menu-tabs { top: 84px; margin: -76px 0 36px; padding: 8px 0; overflow: visible; flex-wrap: wrap; }
   .menu-tabs.is-stuck::before { content: ""; position: absolute; inset: -84px -8px 0; background: var(--shop-bg); z-index: -1; }
   .msec { scroll-margin-top: 150px; }
   .msec__row { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; padding: 2px 0 14px; }
   .mcard { padding: 14px; }
   .msec__row--bundles { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-  .cart-panel:modal { margin: auto; border-radius: 24px; }
+  .cart-panel:modal { margin: auto; border-radius: 24px; animation: dialog-in .22s var(--ease-out); }
+  .cart-panel.is-closing { animation: dialog-out .15s var(--ease-out) forwards; }
   .mcard--open { grid-column: span 2; scroll-margin: 150px 0 130px; }
 }
 /* =========================================================
