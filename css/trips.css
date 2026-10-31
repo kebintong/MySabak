@@ -1,0 +1,4 @@
+/* mysabak · trips styles. Loaded after base.css. */
+
+/* Trips: the same rows, in a card */
+.trips-empty { padding: 4px 0 2px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 14px; color: var(--sub); }

@@ -1,0 +1,58 @@
+/* mysabak · checkout styles. Loaded after base.css. */
+
+/* ---------- Checkout: night sky, three steps with one open, summary ---------- */
+.page--checkout .shop-sky { padding-bottom: 64px; }
+.page--checkout .shop-sky::after { bottom: 58px; }
+.page--checkout .shop-sky__inner { grid-template-columns: 44px minmax(0, 1fr); }
+.page--checkout .shop-back { grid-column: auto; }
+.check-layout { position: relative; max-width: 1120px; margin: -46px auto 0; }
+.check-form { display: flex; flex-direction: column; gap: 8px; }
+.step__h { margin: 0; }
+.step__head {
+  width: 100%; min-height: 68px; padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+  border: 0; border-radius: inherit; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.step__num {
+  flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--tint); color: var(--brand-deep); font-size: 13px; font-weight: 700;
+  transition: background-color .2s, color .2s, transform .12s;
+}
+.step.is-open .step__num { background: var(--accent); color: #fff; }
+.step__head:active .step__num { transform: scale(.9); }
+.step__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.step__title { font-size: 16px; font-weight: 700; }
+.step__peek { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .26s var(--ease-out), opacity .2s; }
+.step.is-open .step__peek { grid-template-rows: 0fr; opacity: 0; }
+.step__action { flex: none; font-size: 14px; font-weight: 700; color: var(--brand-deep); transition: opacity .2s, transform .2s var(--ease-out); }
+.step.is-open .step__action { opacity: 0; transform: translateX(6px); }
+@media (hover: hover) and (pointer: fine) {
+.step:not(.is-open) .step__head:hover .step__action { transform: translateX(-3px); }
+}
+
+/* Closed steps leave the tab order too. Open ones stop clipping once grown, so suggestions can overflow. */
+.step__body { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .26s var(--ease-out), visibility .26s; }
+.step.is-open .step__body { grid-template-rows: 1fr; visibility: visible; }
+.step__clip { min-height: 0; overflow: hidden; }
+.step.is-settled .step__clip { overflow: visible; }
+.step__inner { padding: 0 16px 16px; }
+.step.is-open .step__inner { animation: rise .24s var(--ease-out) 40ms backwards; }
+.page--checkout .pill-radio span { min-height: 44px; padding: 0 16px; transition: background-color .15s, border-color .15s, color .15s; }
+.page--checkout .pill-radio input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
+.check-sum { padding: 8px 4px 0; display: flex; flex-direction: column; gap: 10px; animation: rise .3s var(--ease-out) 150ms backwards; }
+.check-sum__title { display: none; margin: 0; font-size: 20px; font-weight: 700; color: var(--navy); }
+.check-sum .receipt { padding: 0; background: none; }
+.check-sum .card__foot { margin: 0; text-align: center; }
+.check-sum .button { min-height: 54px; font-size: 16px; }
+@media (min-width: 900px) {
+.page--checkout .shop-sky { padding-bottom: 96px; }
+.page--checkout .shop-sky::after { bottom: 104px; }
+.page--checkout .shop-sky__inner { grid-template-columns: 44px minmax(0, 1fr); }
+.check-layout { margin-top: -72px; }
+.check-form { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
+.step__head { min-height: 76px; padding: 12px 22px; gap: 14px; }
+.step__num { width: 32px; height: 32px; font-size: 14px; }
+.step__title { font-size: 17px; }
+.step__inner { padding: 0 22px 22px; }
+.check-sum { padding: 24px; border: 1px solid var(--line-brand); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow-card); }
+.check-sum__title { display: block; }
+}

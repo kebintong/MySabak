@@ -1,10 +1,10 @@
-// Tests for the demo server (assets/dev/worker.js) and a guard against committed keys.
+// Tests for the demo server (dev/worker.js) and a guard against committed keys.
 // Run: node --test "tests/*.test.mjs"   TomTom is faked, so these run offline and never use a real key.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import worker from '../assets/dev/worker.js';
+import worker from '../dev/worker.js';
 
 const KEY = 'TEST_KEY_123';
 const SITE = 'https://mysabak.example.workers.dev';
@@ -96,12 +96,6 @@ test('a missing TOMTOM_KEY secret gives a clear 503', async () => {
   assert.match((await res.json()).error, /TOMTOM_KEY/);
 });
 
-test('the service worker may look after the whole site', async () => {
-  const res = await call('/assets/js/sw.js');
-  assert.equal(res.headers.get('service-worker-allowed'), '/');
-  assert.equal(await res.text(), 'asset:/assets/js/sw.js');
-});
-
 test('old /html/ links go to the home page', async () => {
   const res = await call('/html/index.html');
   assert.equal(res.status, 301);
@@ -158,7 +152,7 @@ test('local secret files are not committed', () => {
   assert.deepEqual(tracked().filter((f) => /(^|\/)(\.dev\.vars|\.env)(\..*)?$/.test(f)), []);
 });
 
-test('server code and config stay in assets/dev/ (the folder CI leaves out of the website)', () => {
-  const misplaced = tracked().filter((f) => /(^|\/)(worker\.js|wrangler\.(jsonc|toml|json))$/.test(f) && !f.startsWith('assets/dev/'));
+test('server code and config stay in dev/ (which build.mjs leaves out of the website)', () => {
+  const misplaced = tracked().filter((f) => /(^|\/)(worker\.js|wrangler\.(jsonc|toml|json))$/.test(f) && !f.startsWith('dev/'));
   assert.deepEqual(misplaced, []);
 });

@@ -1,6 +1,6 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "mysabak", "runtimeExecutable": "python", "runtimeArgs": ["serve.py", "--port", "8010"], "port": 8010 }
+    { "name": "mysabak", "runtimeExecutable": "npx", "runtimeArgs": ["--yes", "wrangler@4.149.0", "dev", "--config", "dev/wrangler.jsonc", "--port", "8010"], "port": 8010 }
   ]
 }

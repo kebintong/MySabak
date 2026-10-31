@@ -1,4 +1,4 @@
-// Tests for the demo data layer (assets/js/api.js): the rules the backend must keep too.
+// Tests for the demo data layer (js/api.js): the rules the backend must keep too.
 // Run: node --test "tests/*.test.mjs"   (browser globals are stubbed; nothing leaves this process)
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,9 +12,9 @@ before(async () => {
     setItem: (k, v) => store.set(k, String(v)),
     removeItem: (k) => store.delete(k),
   };
-  api = await import('../assets/js/api.js');
+  api = await import('../js/api.js');
   // The shop tests use their own two made-up shops in place of the demo's sample shops.
-  const { SHOPS } = await import('../assets/js/demo-data.js');
+  const { SHOPS } = await import('../js/demo-data.js');
   const { TEST_SHOP, TEST_SHOP_2 } = await import('./fixtures.mjs');
   SHOPS.splice(0, SHOPS.length, TEST_SHOP, TEST_SHOP_2);
 });
@@ -161,7 +161,7 @@ test('ride booking: a demo driver accepts, the trip reports where the driver is,
 });
 
 test('demo driver account: signs in with its password only, is approved and can go online', async () => {
-  const { DEMO_ACCOUNTS } = await import('../assets/js/demo-data.js');
+  const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
   const acc = DEMO_ACCOUNTS.driver;
   await assert.rejects(api.driverSignIn({ login: acc.email, password: 'wrong-password' }), { status: 401 });
   assert.deepEqual(await api.driverSignIn({ login: acc.phone, password: acc.password }), { status: 'approved' });
@@ -173,7 +173,7 @@ test('demo driver account: signs in with its password only, is approved and can 
 });
 
 test('demo merchant account: sign in, open/close, sold out items, sign out', async () => {
-  const { DEMO_ACCOUNTS } = await import('../assets/js/demo-data.js');
+  const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
   const acc = DEMO_ACCOUNTS.merchant;
   await assert.rejects(api.merchantHome(), { status: 401 });
   await assert.rejects(api.merchantSignIn({ login: acc.email, password: 'nope-nope' }), { status: 401 });
@@ -200,7 +200,7 @@ test('demo merchant account: sign in, open/close, sold out items, sign out', asy
 });
 
 test('one account per device: customer, driver and merchant each have their own sign in', async () => {
-  const { DEMO_ACCOUNTS } = await import('../assets/js/demo-data.js');
+  const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
   await api.signOut();
   assert.equal(await api.currentUser(), null);
   await assert.rejects(api.clientSignIn({ login: DEMO_ACCOUNTS.merchant.email, password: 'mysabak-demo' }), { status: 401 });

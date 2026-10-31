@@ -1,0 +1,41 @@
+/* mysabak · wallet styles. Loaded after base.css. */
+
+.wallet__main { display: flex; flex-direction: column; gap: 28px; }
+.wsec__title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 17px; font-weight: 700; color: var(--navy); }
+.wpays { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wpay { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 6px; text-align: center; }
+.wpay + .wpay { border-left: 1px solid var(--line-brand); }
+.wpay__icon { flex: none; width: 48px; height: 48px; border-radius: 16px; background: var(--tint); display: grid; place-items: center; }
+.wpay__text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wpay__name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.wpay__hint { font-size: 12px; line-height: 1.35; color: var(--sub); }
+.wpays--soon { display: flex; flex-direction: column; gap: 8px; }
+.wpays--soon .wpay { flex-direction: row; gap: 12px; padding: 10px 12px; text-align: left; border: 1.5px dashed #d9c6f0; border-radius: 14px; }
+.wpays--soon .wpay__icon { width: auto; height: auto; background: none; }
+.wpays--soon .wpay__icon .icon { width: 20px; height: 20px; stroke: var(--muted); }
+.wpays--soon .wpay__name { font-weight: 600; }
+.wtips { padding-top: 18px; border-top: 1px solid var(--line-brand); }
+.wtips__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.wtips__head .wsec__title { margin: 0; }
+.wtips__total { font-size: 13px; color: var(--sub); white-space: nowrap; }
+.wtips .empty { padding: 6px 0 0; text-align: left; }
+.wtips__foot { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+@media (min-width: 900px) {
+.page--wallet .page-head { background: none; }
+/* desktop Wallet: the whole page is sky */
+.page--wallet .app { background: radial-gradient(40% 50% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
+.page--wallet .content__inner { min-height: 100%; }
+.wallet__main { flex: 999 1 480px; min-width: 0; gap: 0; }
+.wallet__main .wsec + .wsec { margin-top: 14px; padding-top: 20px; border-top: 1px solid var(--line-brand); }
+.wsec__title { margin-bottom: 4px; }
+.wpays, .wpays--soon { display: flex; flex-direction: column; gap: 0; }
+.wpays .wpay, .wpays--soon .wpay { flex-direction: row; gap: 14px; height: 54px; padding: 0; text-align: left; border: 0; border-radius: 0; }
+.wpays .wpay + .wpay { border-top: 1px solid var(--line); }
+.wpay__icon { width: auto; height: auto; background: none; }
+.wpay__text { flex: 1; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.wpay__name { font-size: 15px; font-weight: 600; }
+.wpay__hint { font-size: 13px; text-align: right; }
+.wpays--soon .wpay__name, .wpays--soon .wpay__hint { color: var(--sub); }
+.wtips { flex: 1 1 260px; min-width: 0; padding: 0 0 0 40px; border-top: 0; border-left: 1px solid var(--line-brand); }
+.wtips__head { flex-direction: column; align-items: flex-start; gap: 10px; }
+}

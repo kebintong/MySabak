@@ -1,0 +1,87 @@
+/* mysabak · drive-signup styles. Loaded after base.css. */
+
+.file__text { display: flex; flex-direction: column; min-width: 0; }
+.file__name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.file__status { font-size: 12px; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file.is-done .file__status { color: #2f7a3f; }
+/* Driver sign-in / sign-up: centred card over the map background */
+.auth {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: calc(100dvh - var(--content-top) - var(--content-bottom) - 10px);
+  display: flex; flex-direction: column; justify-content: center;
+}
+.auth--wide { max-width: 600px; }
+.auth-card {
+  padding: 28px 22px 22px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 24px 60px rgba(36, 25, 87, 0.18);
+  display: flex; flex-direction: column; gap: 18px;
+}
+@media (min-width: 640px) {
+.auth-card { padding: 32px 32px 26px; }
+}
+
+.auth-card__head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.auth-card__badge { width: 52px; height: 52px; border-radius: 16px; background: var(--tint); display: flex; align-items: center; justify-content: center; }
+.auth-card__title { margin: 4px 0 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--navy); }
+.auth-alt {
+  display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 14px; color: var(--muted);
+}
+.view__title { margin: 0; font-size: 18px; font-weight: 700; color: var(--navy); }
+.choice__icon { width: 52px; height: 52px; border-radius: 16px; background: var(--tint); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.choice__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.choice__name { font-size: 16px; font-weight: 700; color: var(--ink); }
+.choice__hint { font-size: 13.5px; line-height: 1.4; color: var(--sub); }
+.choice__go { stroke: var(--muted); flex-shrink: 0; }
+.office-map {
+  position: relative;
+  height: 180px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line-brand);
+  background: url("/assets/images/map-bg.svg") 42% 46% / 900px auto no-repeat, var(--map-ground);
+}
+.office-map__pin { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; }
+.office-map__pin svg { filter: drop-shadow(0 6px 10px rgba(36, 25, 87, 0.3)); }
+.office-map__label {
+  position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%);
+  padding: 6px 10px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+  font-size: 12.5px; font-weight: 700; color: var(--navy); white-space: nowrap;
+}
+.bring__title { margin: 0; font-size: 14px; font-weight: 700; color: var(--navy); }
+.bring__list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.wizard__nav .button { text-decoration: none; }
+.view--done { align-items: flex-start; }
+.done__icon { width: 56px; height: 56px; border-radius: 50%; background: #e6f5e9; display: flex; align-items: center; justify-content: center; }
+/* Sign-up steps */
+.wizard__steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wizard__steps li.is-current { color: var(--navy); }
+.wizard__steps li.is-current::before, .wizard__steps li.is-done::before { background: var(--brand); }
+.wizard__steps li.is-done { color: var(--brand-deep); }
+.wizard__step { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.wizard__step[hidden] { display: none; }
+.wizard__nav { display: flex; gap: 10px; }
+.wizard__nav .button { flex: 1; }
+/* Vehicle picker */
+.pick-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pick__box {
+  height: 100%;
+  padding: 14px 10px;
+  border: 1.5px solid var(--line-brand);
+  border-radius: 16px;
+  background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  transition: border-color .15s, background-color .15s;
+}
+.pick__name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.pick__hint { font-size: 12px; color: var(--sub); }
+.pick input:checked + .pick__box { border-color: var(--brand); background: var(--tint); }
+.pick input:checked + .pick__box .icon { stroke: var(--brand); }
+.pick input:focus-visible + .pick__box { outline: 3px solid rgba(91, 37, 150, 0.45); outline-offset: 2px; }

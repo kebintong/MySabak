@@ -5,8 +5,7 @@
    and the shapes they return (documented above each one, and in PANELS.md);
    nothing else in the app talks to a server.
 
-   Today the demo calls TomTom through /api/tomtom/… (assets/dev/worker.js on
-   Cloudflare, or serve.py locally), which adds the API key server-side.
+   Today the demo calls TomTom through /api/tomtom/… (dev/worker.js), which adds the API key server-side.
      Search:  Places Search API · Suggest + Details
               (falls back to the classic Search API if Places can't be reached)
      Address: Reverse Geocoding API (pickup street + barangay)

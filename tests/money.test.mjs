@@ -1,7 +1,7 @@
-// Tests for the pure money helpers (assets/js/money.js). Run: node --test "tests/*.test.mjs"
+// Tests for the pure money helpers (js/money.js). Run: node --test "tests/*.test.mjs"
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanTip, rateFor, cartTotals, haversineKm, peso, splitPrice } from '../assets/js/money.js';
+import { cleanTip, rateFor, cartTotals, haversineKm, peso, splitPrice } from '../js/money.js';
 
 test('tips: whole pesos, capped, anything else means no tip', () => {
   assert.equal(cleanTip(20, 500), 20);

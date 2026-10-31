@@ -1,24 +1,23 @@
 /* mysabak service worker — caches the app shell so it opens offline.
    Bump CACHE when you change any of the files below.
-   It lives in assets/js/ but looks after the whole site: app.js registers it with
-   scope '/', which the server allows with a Service-Worker-Allowed: / header
-   (assets/dev/worker.js on Cloudflare, serve.py locally). */
-const CACHE = 'mysabak-v42';
+   It sits at the top of the site so it can look after every page. */
+const CACHE = 'mysabak-v43';
 const SHELL = [
   '/',
-  '/assets/css/style.css',
-  '/assets/js/config.js',
-  '/assets/js/api.js',
-  '/assets/js/map.js',
-  '/assets/js/app.js',
-  '/assets/js/ui.js',
-  '/assets/js/money.js',
-  '/assets/js/cart.js',
-  '/assets/js/demo-data.js',
-  '/assets/js/menu.js',
-  '/assets/js/placeholders.js',
-  '/assets/js/shop-map.js',
-  '/assets/manifest.webmanifest',
+  '/css/base.css',
+  '/css/index.css',
+  '/js/config.js',
+  '/js/api.js',
+  '/js/map.js',
+  '/js/app.js',
+  '/js/ui.js',
+  '/js/money.js',
+  '/js/cart.js',
+  '/js/demo-data.js',
+  '/js/menu.js',
+  '/js/placeholders.js',
+  '/js/shop-map.js',
+  '/manifest.webmanifest',
   '/assets/images/logo.svg',
   '/assets/images/favicon.svg',
   '/assets/images/map-bg.svg',

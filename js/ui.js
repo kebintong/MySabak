@@ -198,10 +198,9 @@ export function wireSignInForm(form, signInFn, next) {
 export function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
   window.addEventListener('load', () => {
-    // Lives in assets/js/ but looks after the whole site (the server allows scope '/').
-    const worker = new URL('/assets/js/sw.js', location.origin).href;
+    const worker = new URL('/sw.js', location.origin).href;
     navigator.serviceWorker.register(worker, { scope: '/' }).catch(() => { /* offline support is optional */ });
-    // Older versions installed sw.js elsewhere (/sw.js, /html/sw.js); remove those.
+    // Older versions installed sw.js elsewhere (/assets/js/sw.js, /html/sw.js); remove those.
     navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => {
       const w = r.active || r.waiting || r.installing;
       if (w && w.scriptURL !== worker) r.unregister();

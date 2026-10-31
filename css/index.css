@@ -1,0 +1,478 @@
+/* mysabak · Home and Ride styles. Loaded after base.css. */
+
+/* Pickup (step 1) — draggable */
+.mk--pickup { width: 60px; height: 60px; cursor: grab; touch-action: none; }
+.mk--pickup:active { cursor: grabbing; }
+.pulse {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: rgba(91, 37, 150, 0.16);
+  display: flex; align-items: center; justify-content: center;
+}
+.mk-label--pickup {
+  left: 54px; top: -28px;
+  max-width: min(240px, calc(50vw - 58px));
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 10px;
+}
+.mk-label__kicker { font-size: 11px; font-weight: 600; color: var(--sub); }
+.mk-label__title { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: #fff;
+  border: 6px solid var(--brand);
+  box-shadow: 0 2px 8px rgba(23, 18, 43, 0.3);
+}
+.mk-label--origin { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.mk--origin.is-flip .mk-label--origin { left: auto; right: calc(100% + 8px); }
+.mk--pickup.is-flip .mk-label--pickup { left: auto; right: 54px; }
+.mk-label--dest { right: calc(100% + 6px); top: 2px; line-height: normal; }
+.mk--dest.is-flip .mk-label--dest { right: auto; left: calc(100% + 6px); }
+.mk-label--time { position: static; display: inline-block; border-radius: 14px; background: #14082a; color: #ffd15c; }
+/* Map controls */
+.map-controls {
+  position: absolute;
+  right: var(--gutter);
+  top: calc(64px + var(--safe-t));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 2;
+}
+body:not([data-state="request"]) .map-controls { display: none; }
+.ctrl--solo { border-radius: 50%; box-shadow: var(--shadow-sm); }
+.zoom__sep { height: 1px; background: var(--line); }
+.ride__top {
+  position: absolute;
+  left: 16px; right: 16px;
+  top: calc(12px + var(--safe-t));
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ride__back {
+  width: 46px; height: 46px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: grid; place-items: center;
+}
+.route__row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 36px; }
+.route__pickup { padding: 0; border: 0; background: none; text-align: left; }
+.route__dot { width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(246, 196, 108, .3); }
+.route__dot--drop { background: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, .18); }
+.route__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.route__label { font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+.route__value { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route__input { width: 100%; height: 22px; padding: 0; border: 0; outline: 0; background: none; font-size: 16px; font-weight: 700; color: var(--ink); text-overflow: ellipsis; }
+/* 16px: smaller makes iPhones zoom in */
+.route__input[readonly] { cursor: pointer; }
+.route__sep { height: 1px; margin-left: 20px; background: var(--line-brand); }
+.route__btn { width: 36px; height: 36px; flex-shrink: 0; border: 0; border-radius: 50%; display: grid; place-items: center; }
+.route__btn--go { background: var(--accent); }
+.route__btn--go:hover { background: var(--accent-deep); }
+.route__btn--clear { background: var(--chip-close); }
+.panel__hint { margin: -4px 0 0; font-size: 13px; color: var(--sub); }
+.mode__btn {
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  transition: background-color .15s, color .15s, box-shadow .15s;
+}
+.mode__btn[aria-checked="true"] { background: var(--surface); color: var(--brand-deep); box-shadow: 0 2px 6px rgba(41, 10, 69, 0.14); animation: pill-in .35s var(--spring); }
+#pickOnMap[aria-pressed="true"] { background: var(--surface); border-color: var(--brand); color: var(--brand-deep); }
+/* ---- Choose your ride ---- */
+.choose__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.choose__title { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.2px; color: var(--ink); }
+.choose__summary { margin: 2px 0 0; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.choose__sparkle { flex-shrink: 0; animation: twinkle 2.8s ease-in-out infinite; }
+.v-icon { width: 80px; height: 50px; flex-shrink: 0; object-fit: contain; transition: transform .2s var(--spring); }
+.v-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.v-name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.v-meta { font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v-fare { flex-shrink: 0; font-size: 18px; font-weight: 700; letter-spacing: -.2px; color: var(--ink); }
+.vehicle[aria-checked="true"] .v-fare { color: #5b21b6; }
+.pay__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pay__change { font-size: 13px; font-weight: 500; color: var(--muted); }
+.fare-note { margin: -8px 0 0; font-size: 12px; color: var(--muted); }
+
+/* =========================================================
+   Home (Figma "04 · Home v3 · magical")
+   Night-sky header with pickup, search and saved places; service cards; quick actions; promo; recent.
+   Phones: one column like the Figma frame. Desktop: the same pieces in a wider grid (see below).
+   ========================================================= */
+.is-home .ride, .is-home .map-controls { display: none; }
+.is-ride .home, .is-ride .tabbar, .is-ride .topbar { display: none; }
+.hero__inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.hero__top { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.pickup__pin { width: 22px; height: 22px; stroke: var(--gold); }
+.pickup__text { min-width: 0; display: flex; flex-direction: column; }
+.pickup__label { font-size: 12px; color: #e2d0f4; }
+.pickup__value { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 16px; font-weight: 600; }
+.pickup__chev { transform: rotate(90deg); }
+/* Figma "Button v3/Bell": glass button; hover rings the bell */
+.bell { width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 50%; background: url("/assets/images/v3/bell-button.svg") center / 44px no-repeat; }
+@media (hover: hover) {
+.bell:hover { animation: bell-ring .6s ease-in-out; }
+}
+
+/* Figma "Input v3/Search pill" */
+.home-search {
+  height: 50px;
+  padding: 0 18px;
+  border-radius: 25px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(20, 5, 36, .35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.home-search:hover { color: var(--muted); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(20, 5, 36, .35); }
+/* Figma "Chip v3/Glass": saved places on the purple header; hover brightens the glass */
+.glass-chips { display: flex; align-items: center; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 4px 16px; }
+.glass-chip {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background-color .15s, border-color .15s, transform .18s var(--ease-out);
+}
+.glass-chip:hover { background: rgba(255, 255, 255, .26); border-color: rgba(255, 255, 255, .4); }
+.glass-chip:active { transform: scale(.95); }
+.glass-chip--add { width: 36px; padding: 0; justify-content: center; border-style: dashed; border-color: rgba(255, 255, 255, .55); background: none; }
+/* Figma "Motion/Twinkle": looping stars, staggered with --d */
+.twinkle { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); pointer-events: none; animation: twinkle 2.8s var(--d, 0s) ease-in-out infinite; }
+/* ---- Cards ---- */
+.home__grid {
+  position: relative;
+  max-width: 1112px;
+  margin: -22px auto 0; /* the Ride card tucks under the header's slanted edge, as in Figma */
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 11px;
+}
+/* Figma "Card v3/Ride hero" + "Card v3/Service": hover lifts (Ride: gold border; services: a ring) and grows the picture */
+.svc {
+  position: relative;
+  overflow: hidden;
+  height: 104px;
+  border-radius: 20px;
+  background: #f2e9fa url("/assets/images/v3/glow-lilac.svg") -4px 12px / 170px 160px no-repeat;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .15s;
+}
+.svc:hover { color: var(--ink); }
+.svc--peach { background: #fcefd9 url("/assets/images/v3/glow-peach.svg") -4px 12px / 170px 160px no-repeat; }
+.svc--ride {
+  grid-column: 1 / -1;
+  border: 1.5px solid #e8daf7;
+  background: #f2e9fa url("/assets/images/v3/glow-ride.svg") right -98px top -72px / 300px 240px no-repeat;
+}
+.svc__copy { position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 1px; line-height: 1.25; }
+.svc__name { font-size: 15px; font-weight: 600; }
+.svc__sub { font-size: 12px; color: #5e4c74; }
+.svc--peach .svc__sub { color: #6b5233; }
+.svc--ride .svc__copy { left: 14px; top: 27px; gap: 2px; }
+.svc--ride .svc__name { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+.svc--ride .svc__sub { font-size: 13px; }
+.svc__art { position: absolute; right: -6px; bottom: -2px; width: 82px; height: auto; transform-origin: 50% 100%; transition: transform .25s var(--spring); }
+.svc--ride .svc__art { right: -42px; bottom: -10px; width: 222px; }
+.svc__sparkle { position: absolute; left: 92px; top: 14px; animation: twinkle 2.8s .4s ease-in-out infinite; }
+.svc--ride .svc__sparkle { left: 90px; top: 14px; }
+@media (hover: hover) {
+.svc:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
+.svc--ride:hover { border-color: var(--gold); box-shadow: 0 10px 22px rgba(41, 10, 69, .12); }
+.svc:hover .svc__art { transform: scale(1.08); }
+}
+
+.svc:active { transform: scale(.98); }
+.quick__item {
+  flex: 1;
+  min-height: 76px;
+  border: 0;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: background-color .15s;
+}
+.quick__item + .quick__item { border-left: 1px solid #f2eaf0; }
+.quick__item:hover { background: #fbf7ff; }
+.promo:hover { color: #fff; }
+.promo__aurora { position: absolute; right: 20px; top: -30px; width: 200px; height: 140px; animation: aurora 6s ease-in-out infinite alternate; }
+.promo__stars { position: absolute; }
+.promo__stars--a { right: 4.7%; top: 16.8%; width: 40.9%; height: 66.6%; }
+.promo__stars--b { right: 6.9%; top: 54.7%; width: 33.7%; height: 34.5%; }
+.promo__art { position: absolute; right: 24px; top: 8px; animation: float 3s ease-in-out infinite alternate; }
+.promo__copy { position: absolute; left: 18px; top: 12px; display: flex; flex-direction: column; gap: 5px; }
+.promo__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffe29a, #f6c46c 25%, #fff6d8 50%, #e3933f 75%, #ffe29a) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: foil 3s linear infinite;
+}
+.promo__title { font-size: 18px; font-weight: 700; line-height: 1.15; }
+.promo__link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #ffd66b; }
+@media (hover: hover) {
+.promo:hover .promo__link .icon { transform: translateX(3px); }
+}
+
+.recent__head { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+.recent__title { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.recent__all { font-size: 13px; font-weight: 500; color: #6a2fb0; text-decoration: none; }
+/* Home tab bar: phones, the notched bar along the bottom; desktop, a floating dock */
+.tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; }
+@media (max-width: 899.98px) {
+.is-home .topbar { display: none; }
+/* phones: the pickup row and the Account tab take its place */
+.map-controls, .is-ride .maplibregl-ctrl-top-left { top: calc(124px + var(--safe-t)); }
+}
+
+@media (min-width: 900px) {
+.hero__inner { gap: 16px; }
+.home-search { height: 60px; padding: 0 24px; border-radius: 30px; font-size: 17px; }
+.glass-chips { margin: 0; padding: 4px 0; flex-wrap: wrap; overflow: visible; }
+.home__grid { margin-top: -44px; grid-template-columns: 2fr repeat(3, minmax(0, 1fr)); gap: 16px; }
+.svc { height: 136px; }
+.svc--ride { grid-column: auto; }
+.svc--ride .svc__art { width: 250px; }
+.svc__art { width: 108px; }
+.promo { grid-column: 2 / -1; }
+.promo__copy { left: 24px; top: 20px; }
+.promo__title { font-size: 22px; }
+.tabbar { left: 50%; right: auto; bottom: calc(24px + var(--safe-b)); transform: translateX(-50%); }
+}
+
+.suggest__km { margin-left: auto; padding-left: 8px; flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--sub); }
+/* Loading state while the route is fetched */
+body.is-loading .v-fare,
+body.is-loading [data-bind="fare"] { opacity: 0.55; }
+body.is-loading [data-book] { cursor: progress; opacity: 0.85; }
+.chip__text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+@media (max-height: 700px) and (max-width: 899.98px) {
+.v-icon { width: 64px; height: 40px; }
+}
+
+@media (min-width: 900px) {
+.map-controls { top: calc(24px + var(--safe-t)); }
+body:not([data-state="request"]) .map-controls { display: flex; }
+.mk--pickup { width: 72px; height: 72px; }
+.mk--pickup .dot { width: 24px; height: 24px; }
+.mk-label--pickup { left: 66px; top: -30px; padding: 10px 14px; border-radius: 12px; max-width: 320px; }
+.mk--pickup.is-flip .mk-label--pickup { left: auto; right: 66px; }
+.mk-label--pickup .mk-label__kicker { font-size: 12px; }
+.mk-label--pickup .mk-label__title { font-size: 14px; }
+.mk--origin { width: 28px; height: 28px; }
+.mk-label { max-width: 320px; }
+.ride__top { position: static; }
+}
+
+.map-controls { animation: drop-in .5s .16s var(--ease-out) backwards; }
+/* Chips and vehicle cards arrive one after another */
+.panel--request .chip { animation: card-in .35s var(--ease-out) backwards; }
+.panel--request .chip:nth-of-type(1) { animation-delay: .05s; }
+.panel--request .chip:nth-of-type(2) { animation-delay: .09s; }
+.panel--request .chip:nth-of-type(3) { animation-delay: .13s; }
+.panel--request .chip:nth-of-type(4) { animation-delay: .17s; }
+.panel--request .chip:nth-of-type(5) { animation-delay: .21s; }
+@media (hover: hover) {
+/* Figma: lightens + gold glow */
+.ride__back:hover { background: var(--tint); }
+.vehicle:hover .v-icon { transform: scale(1.12); }
+}
+
+/* Selecting a vehicle: icon pops, Book button nudges */
+.vehicle.is-popped .v-icon { animation: icon-pop .45s var(--spring); }
+[data-book].is-bumped { animation: bump .35s var(--spring); }
+.tab__icon.is-bouncing { animation: tab-bounce .45s var(--spring); }
+/* Loading the route: fares and distance breathe */
+body.is-loading .v-fare,
+body.is-loading .v-meta,
+body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite alternate; }
+.suggest.is-loading .suggest__msg::before {
+  content: "";
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border: 2px solid var(--line-brand);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+/* Map pins */
+.ring { animation: pop-in .4s var(--spring) both; }
+.mk-label--origin { animation: fade-in .3s .2s both; }
+.mk-label--time { animation: pop-in .35s .45s var(--spring) both; transform-origin: 50% 100%; }
+.mk-label--pickup { animation: fade-in .3s .1s both; }
+.mk--pickup.is-dragging .dot { transform: translateY(-10px) scale(1.15); box-shadow: 0 12px 18px rgba(23, 18, 43, 0.28); }
+.mk--pickup.is-dragging .pulse::after { animation-play-state: paused; opacity: 0; }
+
+/* =========================================================
+   Ride · pay sheet, finding a driver, trip, ride complete
+   ========================================================= */
+/* Pay sheet */
+.paysheet .sheet__body { gap: 16px; }
+.paysheet__label { margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--navy); }
+.paymethods { margin: 0; padding: 0; border: 0; min-width: 0; }
+.paymethods__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.paymethod { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 10px; border: 1.5px solid var(--line-brand); border-radius: 16px; background: #fff; cursor: pointer; transition: border-color .15s, background-color .15s; }
+.paymethod__text { display: flex; flex-direction: column; }
+.paymethod__name { font-size: 14px; font-weight: 800; color: var(--ink); }
+.paymethod:hover { border-color: var(--brand); }
+.paymethod:has(input:checked) { border-color: var(--brand); background: var(--tint); box-shadow: 0 0 0 1px var(--brand); }
+.paymethod:has(input:checked) .icon { stroke: var(--brand); }
+.paymethod:has(input:focus-visible) { outline: 3px solid rgba(91, 37, 150, .45); outline-offset: 2px; }
+.yourprice { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 18px; background: var(--field); }
+.yourprice__head { display: flex; flex-direction: column; gap: 2px; }
+.yourprice__head .paysheet__label { margin: 0; }
+.yourprice__hint { font-size: 12.5px; color: var(--sub); }
+.yourprice__ctrl { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px; border-radius: 16px; background: #fff; border: 1px solid var(--line); }
+.yourprice__step { width: 48px; height: 48px; border: 0; border-radius: 12px; background: var(--tint); display: grid; place-items: center; cursor: pointer; }
+.yourprice__step:hover { background: #e8daf7; }
+.yourprice__step:disabled { opacity: .4; cursor: not-allowed; }
+.yourprice__value { min-width: 0; font-family: var(--font-display); font-size: clamp(20px, 6.4vw, 30px); white-space: nowrap; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; text-align: center; }
+.yourprice__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.yourprice__chips .chip[data-custom] { border-style: dashed; }
+.yourprice__chips .chip[aria-pressed="true"] { border-style: solid;  background: var(--navy); border-color: var(--navy); color: #fff; }
+.yourprice__custom[hidden] { display: none; }
+.yourprice__custom { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--sub); }
+.yourprice__input { position: relative; width: 130px; flex-shrink: 0; }
+.yourprice__input .input { padding-left: 26px; background: #fff; font-weight: 700; }
+.yourprice .receipt { background: #fff; }
+/* Finding a driver */
+.panel--search { padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 14px; }
+.searching__icon { position: relative; width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; background: var(--brand); display: grid; place-items: center; }
+.searching__title { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--navy); }
+.searching__sub { margin: 2px 0 0; font-size: 13px; color: var(--sub); }
+.searching__bar { height: 4px; border-radius: 999px; background: var(--tint); overflow: hidden; }
+/* Radar around the pickup while searching */
+.radar { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.radar i:nth-child(2) { animation-delay: .8s; }
+.radar i:nth-child(3) { animation-delay: 1.6s; }
+/* Driver on the map */
+/* Driver on the map: the mascot, for every vehicle. Stages come from map.js:
+   .is-pop (driver accepted), data-motion="run" | "stop" (traffic), .is-arrived (at the pickup) */
+.mk--driver { width: 52px; height: 52px; transition: none; pointer-events: none; }
+.mk__mascot { display: block; width: 100%; height: 100%; transform-origin: 50% 85%; filter: drop-shadow(0 4px 5px rgba(23, 18, 43, .35)); }
+.mk--driver.is-west .mk__mascot { scale: -1 1; }
+/* Running: bobs and leans forward, speed lines behind */
+.mk--driver[data-motion="run"] .mk__mascot { animation: mascot-run .36s ease-in-out infinite; }
+.mk--driver[data-motion="run"]:not(.is-arrived)::before {
+  left: -14px; top: 18px; width: 14px; height: 13px; opacity: 1;
+  background:
+    linear-gradient(var(--brand), var(--brand)) 2px 0 / 12px 2.5px no-repeat,
+    linear-gradient(var(--brand), var(--brand)) 0 5px / 9px 2.5px no-repeat,
+    linear-gradient(var(--brand), var(--brand)) 4px 10px / 10px 2.5px no-repeat;
+  border-radius: 2px;
+  animation: speed-lines .36s linear infinite;
+}
+.mk--driver.is-west[data-motion="run"]:not(.is-arrived)::before { left: auto; right: -14px; scale: -1 1; }
+/* Stopped in traffic: settles and breathes, a "…" bubble over it */
+.mk--driver[data-motion="stop"] .mk__mascot { animation: mascot-idle 1.4s ease-in-out infinite; }
+.mk--driver[data-motion="stop"]:not(.is-arrived):not(.is-pop)::after {
+  right: -12px; top: -8px; width: 24px; height: 14px; opacity: 1; border-radius: 8px;
+  background:
+    radial-gradient(circle, var(--brand) 1.6px, transparent 2px) 4px 50% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--brand) 1.6px, transparent 2px) 9px 50% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--brand) 1.6px, transparent 2px) 14px 50% / 6px 6px no-repeat,
+    #fff;
+  box-shadow: 0 2px 6px rgba(23, 18, 43, .25);
+}
+/* Arrived: hops, with a gold ring */
+.mk--driver.is-arrived .mk__mascot { animation: mascot-hop .9s var(--ease-out) infinite; }
+.mk--driver.is-arrived::before { inset: -6px; opacity: 1; border: 3px solid var(--gold); border-radius: 50%; animation: fab-pulse 1.8s var(--ease-out) infinite; }
+/* Pop up when the driver accepts */
+.mk--driver.is-pop .mk__mascot { animation: mascot-pop .55s var(--spring) both; }
+/* Trip */
+.panel--trip { padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 12px; }
+.trip__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.trip__title { margin: 0; font-family: var(--font-display); font-size: 19px; line-height: 1.2; font-weight: 700; color: var(--navy); }
+.trip__sub { margin: 3px 0 0; font-size: 13.5px; font-weight: 600; color: var(--sub); }
+.driver__demo[hidden] { display: none; }
+.driver__plate { flex-shrink: 0; padding: 5px 9px; border-radius: 8px; border: 1.5px solid var(--navy); background: #fff; font-size: 13px; font-weight: 800; letter-spacing: .04em; color: var(--navy); }
+.trip__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trip__actions .btn-soft { grid-area: auto; margin-left: 0; }
+.trip__pay { margin-left: auto; font-size: 13px; color: var(--sub); }
+.done__card {
+  width: 100%; max-width: 480px; max-height: calc(100% - 12px - var(--safe-t));
+  display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 24px 24px 0 0; background: var(--surface); box-shadow: var(--shadow-lg);
+  animation: rise .3s var(--ease-out);
+}
+.done__hero {
+  flex: none; padding: 26px 20px 22px; text-align: center; color: #fff;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, .14) 0 40px, transparent 41px),
+    radial-gradient(circle at 88% 70%, rgba(255, 255, 255, .1) 0 60px, transparent 61px),
+    linear-gradient(160deg, var(--brand) 0%, var(--navy) 100%);
+}
+.done__check { width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(23, 18, 43, .3); animation: pop-in .45s var(--spring) both; }
+.done__title { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+.done__sub { margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, .85); }
+.done__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 20px 8px; display: flex; flex-direction: column; gap: 14px; }
+.done__foot { flex: none; display: flex; gap: 10px; padding: 12px 20px calc(16px + var(--safe-b)); border-top: 1px solid var(--line); background: #fff; }
+.done__foot .button { flex: 1; }
+@media (max-height: 760px) {
+.done__hero { padding: 16px 20px 14px; }
+.done__check { width: 48px; height: 48px; margin-bottom: 6px; }
+.done__title { font-size: 22px; }
+}
+
+.done__route { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.done__meta { margin: -4px 0 0 26px; font-size: 12.5px; color: var(--sub); }
+.done__driver { display: flex; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.done__rate { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.done__rate-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+.star { width: 38px; height: 38px; border: 0; border-radius: 10px; background: var(--field); display: grid; place-items: center; cursor: pointer; transition: transform .12s var(--spring), background-color .12s; }
+.star:hover { background: var(--tint); }
+.star.is-on { background: #fff4d6; }
+.star.is-on .icon { stroke: #e0a100; fill: #ffc629; }
+.star:active { transform: scale(.9); }
+@media (min-width: 900px) {
+.panel--search, .panel--trip { width: min(560px, 100%) !important; padding: 20px; border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-lg); }
+.done__card { max-height: calc(100% - 48px); border-radius: 24px; }
+}
+
+@media (max-width: 380px) {
+.paymethods__list { grid-template-columns: 1fr; }
+.paymethod { flex-direction: row; align-items: center; }
+}
+
+/* Hide / show the floating status card */
+.panel--search, .panel--trip { position: relative; }
+.panel--search .searching, .trip__head { padding-right: 40px; }
+body.is-status-hidden .statusbar { display: flex; }
+body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { display: none; }

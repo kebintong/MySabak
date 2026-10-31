@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#5b2596">
 
   <!-- PWA -->
-  <link rel="manifest" href="assets/manifest.webmanifest">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="assets/images/icons/apple-touch-icon.png">
@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="mysabak">
-  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
   <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
 
   <!-- Fonts -->
@@ -27,7 +27,8 @@
   <!-- Map: MapLibre GL JS draws TomTom's map style -->
   <link rel="preconnect" href="https://api.tomtom.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/index.css">
 </head>
 <body data-state="request" class="is-home">
   <!-- Opened on a ride link (#ride, #where, #moto, #parcel, #rebook): skip the home so it doesn't flash -->
@@ -40,7 +41,7 @@
       <div class="map__canvas" id="mapCanvas"></div>
     </div>
 
-    <!-- Marker elements: assets/js/map.js hands these to MapLibre, which moves them onto the map -->
+    <!-- Marker elements: js/map.js hands these to MapLibre, which moves them onto the map -->
     <div id="markerStore" hidden>
       <div class="mk mk--pickup" id="mkPickup" data-show="request" title="Drag to adjust your pickup">
         <span class="pulse"><span class="dot"></span></span>
@@ -140,7 +141,7 @@
           </div>
 
           <div class="vehicles" role="radiogroup" aria-label="Vehicle">
-            <!-- Filled by assets/js/app.js from CONFIG.vehicles (assets/js/config.js) -->
+            <!-- Filled by js/app.js from CONFIG.vehicles (js/config.js) -->
           </div>
 
           <button type="button" class="pay" id="payBtn">
@@ -365,7 +366,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <!-- App: assets/js/app.js loads config.js, api.js (server calls) and map.js -->
-  <script type="module" src="assets/js/app.js"></script>
+  <!-- App: js/app.js loads config.js, api.js (server calls) and map.js -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
