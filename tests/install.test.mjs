@@ -7,7 +7,7 @@ let installPlatform;
 before(async () => {
   globalThis.location = { origin: 'https://mysabak.test' };
   globalThis.window = { addEventListener() {}, matchMedia: () => ({ matches: false }) };
-  ({ installPlatform } = await import('../assets/js/ui.js'));
+  ({ installPlatform } = await import('../js/ui.js'));
 });
 
 const UA = {

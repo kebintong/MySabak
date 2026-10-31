@@ -1,0 +1,16 @@
+/* mysabak · support styles. Loaded after base.css. */
+
+.bar__top { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.bar__track { height: 8px; margin-top: 6px; border-radius: 999px; background: var(--chip-close); overflow: hidden; }
+.bar__fill { height: 100%; width: var(--w, 0%); border-radius: inherit; background: var(--brand); }
+.bar--unknown .bar__fill { width: 100%; background: repeating-linear-gradient(90deg, var(--line-brand) 0 8px, transparent 8px 14px); }
+.split__item { padding: 12px 10px; border-radius: 16px; border: 1px solid var(--line-brand); background: var(--surface); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.split__who { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-deep); }
+.split__what { font-size: 13px; font-weight: 700; line-height: 1.3; color: var(--ink); }
+.split__pct { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--navy); }
+@media (min-width: 640px) {
+.split__item { padding: 14px; gap: 6px; }
+.split__who { font-size: 12px; }
+.split__what { font-size: 15px; }
+.split__pct { font-size: 22px; }
+}

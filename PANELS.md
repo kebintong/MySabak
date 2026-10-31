@@ -3,7 +3,7 @@
 This is the hand-off contract between the frontend demo and the backend.
 Every screen panel is listed with the data it shows and where that data comes from.
 
-**All data goes through one file: `assets/js/api.js`.** Replace the bodies of its functions with calls to
+**All data goes through one file: `js/api.js`.** Replace the bodies of its functions with calls to
 your API, keep the names and return shapes below, and the screens keep working. Nothing else in the
 frontend talks to a server. Search `api.js` for `DEMO` to find what's still fake (saved in the browser).
 
@@ -75,7 +75,7 @@ Switches the whole screen between passenger rides and parcel delivery. Express c
 | Route line | `trip.coords` | `routeBetween(from, to)` |
 | Time bubble `[Travel time]` | `trip.minutes` | `routeBetween()` |
 
-The map itself (tiles, style, labels) comes from TomTom via `assets/js/map.js`. Map credits (© TomTom, © OpenStreetMap) sit behind a
+The map itself (tiles, style, labels) comes from TomTom via `js/map.js`. Map credits (© TomTom, © OpenStreetMap) sit behind a
 small ⓘ button that starts closed (`addAttribution()` in `map.js`, used by every map).
 
 ### Route card + "Saan tayo?" panel (step 1)
@@ -174,7 +174,7 @@ Built by `showTripDone(order)` in `app.js`.
 | (accepted job) | the list turns into the **job card**: title per step (Go to pickup → Waiting for Ana / Pick up the parcel / Collect the order → Drive to drop-off), 4-step progress, rider + how they pay ("Collect ₱80 in cash" or "Paid by GCash"), Call, pickup/drop-off, **Navigate** (Google Maps), the next-step button (I've arrived → Start trip / Parcel picked up / Order picked up → Complete trip / Parcel delivered / Order delivered), Cancel job (before pickup). The map shows the route to the pickup, then pickup → drop-off. Completing adds the fare to earnings | `activeJob()`, `updateJob(id, status)`, `cancelJob(id)` |
 
 Backend: send the application emails (received, approved, need more info) and flip `status` to `approved`.
-Walk-in applicants are added by office staff; put the real office in `CONFIG.driverOffice` (`assets/js/config.js`).
+Walk-in applicants are added by office staff; put the real office in `CONFIG.driverOffice` (`js/config.js`).
 
 **Job requests:** the driver home listens with `onJobRequest(onJob)` while online and shows each request with
 Skip / Accept. **The demo sends SAMPLE requests** (tagged "Demo"; places from `DEMO_PLACES` in `demo-data.js`):
@@ -194,13 +194,13 @@ Design: "Map first". Shops are found on the map; each shop opens on a route map.
 **Item options.** Each menu item can have option groups (size, make it a meal, drink, rice, add-ons…).
 A group is single choice (`one`, defaults to its first choice) or multiple choice (`many`, up to `max`).
 `showIf` hides a group until another group has a certain pick (the drink only shows once a meal is picked).
-The price of one item is its `price` plus every picked choice. `assets/js/menu.js` has the rules and
+The price of one item is its `price` plus every picked choice. `js/menu.js` has the rules and
 `tests/menu.test.mjs` tests them; **the server must price orders the same way** and ignore prices sent by the browser.
 Bundles (`bundle: true`) are fixed combos with no options. A cart is for one shop and lives in the browser
-(`assets/js/cart.js`).
+(`js/cart.js`).
 
 **Pictures.** Shops and items have `image` (a photo URL). While it is `null`, the page shows a plain placeholder
-(`assets/js/placeholders.js`: a drawn storefront in the shop's colour, or the item's first letter).
+(`js/placeholders.js`: a drawn storefront in the shop's colour, or the item's first letter).
 
 **The demo has no shops** (`SHOPS = []` in `demo-data.js`), so Shops shows its "No shops yet" state until
 `listShops()` / `shopMenu()` return real shops. The tests use a made-up shop in `tests/fixtures.mjs`.
@@ -215,7 +215,7 @@ Order status gains `ready` (ready for the rider): placed → accepted → prepar
 Backend: `shopMenu()` should leave out (or mark) items the merchant switched off, and a closed shop can't take orders.
 
 ## Demo accounts
-Given logins so the company can try every side (`DEMO_ACCOUNTS` in `assets/js/demo-data.js`; delete with that file):
+Given logins so the company can try every side (`DEMO_ACCOUNTS` in `js/demo-data.js`; delete with that file):
 
 | Account | Sign in at | Mobile number | Email | Password |
 |---|---|---|---|---|
@@ -247,7 +247,7 @@ customer: "Your account" (saved places, trips, payments: coming soon) and this b
 
 ---
 
-## `assets/js/api.js` functions
+## `js/api.js` functions
 
 | Function | Returns | Used by |
 |---|---|---|

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Trips · mysabak</title>
   <meta name="theme-color" content="#5b2596">
-  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
@@ -13,17 +13,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="mysabak">
-  <!-- Catch the browser's install prompt early; assets/js/ui.js (setupInstall) uses it -->
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
   <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/style.css">
-  <script type="module" src="/assets/js/pages/trips.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/trips.css">
+  <script type="module" src="/js/pages/trips.js"></script>
 </head>
 <body class="page page--sky">
   <div class="app">
-    <!-- Top bar and tab bar are filled in by assets/js/ui.js (mountChrome) -->
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">

@@ -1,8 +1,8 @@
-// Tests for menu item options and shop hours (assets/js/menu.js). The server must price orders the same way.
+// Tests for menu item options and shop hours (js/menu.js). The server must price orders the same way.
 // Run: node --test "tests/*.test.mjs"
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { visibleGroups, defaultPicks, cleanPicks, unitPrice, pickLabels, lineKey, openState } from '../assets/js/menu.js';
+import { visibleGroups, defaultPicks, cleanPicks, unitPrice, pickLabels, lineKey, openState } from '../js/menu.js';
 import { TEST_SHOP } from './fixtures.mjs';
 
 const adobo = TEST_SHOP.menu.find((m) => m.id === 'adobo');
