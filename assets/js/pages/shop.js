@@ -1,5 +1,5 @@
-/* One shop (pages/shop.html?id=…): route map and shop card, menu sections, an options sheet
-   for each item, and "Your order" (side column on wide screens, a sheet on phones).
+/* One shop (pages/shop.html?id=…): route map and shop card, menu sections, options that open inside
+   each item's card, and "Your order" (a sheet the round Food button opens once it has items).
    One shop per cart. Prices always come from the menu (money.js → cartTotals). */
 import { shopMenu, routeBetween, straightLine, errorMessage } from '../api.js';
 import { cartTotals } from '../money.js';
@@ -9,10 +9,9 @@ import { itemPicture, storefront } from '../placeholders.js';
 import { shopMap, knownLocation } from '../shop-map.js';
 import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast } from '../ui.js';
 
-mountChrome({ roles: ['client'] });
-
-const WIDE = window.matchMedia('(min-width: 1200px)'); // "Your order" becomes a column
 let shop = null;
+// The tab bar is drawn after sign-in is checked: show the order on it either way round
+mountChrome({ roles: ['client'] }).then(() => { if (shop) renderCart(); });
 
 const pic = (item) => (item.image ? `<img src="${esc(item.image)}" alt="">` : itemPicture(item, shop && shop.color));
 const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -73,6 +72,12 @@ function sections() {
   return out;
 }
 
+const itemCard = (m) => `<button type="button" class="mcard" data-item="${esc(m.id)}">
+          <span class="mcard__img">${pic(m)}</span>${m.tag ? `<em class="mcard__tag">${esc(m.tag)}</em>` : ''}
+          <span class="mcard__name">${esc(m.name)}</span>${m.note ? `<span class="mcard__note">${esc(m.note)}</span>` : ''}
+          <span class="mcard__foot"><span>${peso(m.price)}</span><i aria-hidden="true">${icon('i-plus', 'icon--sm icon--white')}</i></span>
+          <span class="sr-only">Choose options</span></button>`;
+
 function renderMenu() {
   const secs = sections();
   $('#menuTabs').innerHTML = secs.map((s, i) => `<a class="menu-tab${i === 0 ? ' is-active' : ''}" href="#${s.id}" data-sec="${s.id}">${esc(s.name)}</a>`).join('');
@@ -83,11 +88,7 @@ function renderMenu() {
     ? `<article class="bund"><span class="bund__img">${pic(m)}</span>
           <div class="bund__body"><h3>${esc(m.name)}</h3><p>${esc(m.note || '')}</p>
           <div class="bund__foot"><b>${peso(m.price)}</b><button type="button" class="bund__add" data-add="${esc(m.id)}" aria-label="Add ${esc(m.name)}">Add</button></div></div></article>`
-    : `<button type="button" class="mcard" data-item="${esc(m.id)}">
-          <span class="mcard__img">${pic(m)}</span>${m.tag ? `<em class="mcard__tag">${esc(m.tag)}</em>` : ''}
-          <span class="mcard__name">${esc(m.name)}</span>${m.note ? `<span class="mcard__note">${esc(m.note)}</span>` : ''}
-          <span class="mcard__foot"><span>${peso(m.price)}</span><i aria-hidden="true">${icon('i-plus', 'icon--sm icon--white')}</i></span>
-          <span class="sr-only">Choose options</span></button>`)).join('')}
+    : itemCard(m))).join('')}
       </div></section>`).join('');
   watchSections();
 }
@@ -139,37 +140,36 @@ function addItem(item, { qty, picks, note }) {
   return true;
 }
 
-/* ---------- Options sheet ---------- */
-function openItem(item, opener) {
+/* ---------- Options: the tapped card opens in place, one at a time ---------- */
+let closeOpenItem = null;
+function openItem(item, card) {
+  if (closeOpenItem) closeOpenItem({ focus: false });
   let picks = defaultPicks(item);
   let qty = 1;
-  const dlg = document.createElement('dialog');
-  dlg.className = 'sheet opt-sheet';
-  dlg.setAttribute('aria-labelledby', 'optTitle');
-  dlg.innerHTML = `
-    <div class="opt-sheet__scroll">
-      <div class="opt-sheet__hero">${pic(item)}</div>
-      <div class="opt-sheet__body">
-        <h2 class="opt-sheet__title" id="optTitle">${esc(item.name)}</h2>
-        ${item.note ? `<p class="opt-sheet__note">${esc(item.note)}</p>` : ''}
-        <span class="opt-sheet__from">from ${peso(item.price)}</span>
-        <div data-groups></div>
-        <label class="ogroup ogroup--note"><span class="ogroup__head"><span class="ogroup__name">Notes for the shop</span><span class="ogroup__rule">Optional</span></span>
-          <textarea class="textarea" data-note maxlength="200" placeholder="e.g. no onions, sauce on the side"></textarea></label>
-      </div>
+  const el = document.createElement('article');
+  el.className = 'mcard mcard--open';
+  el.setAttribute('aria-label', item.name);
+  el.innerHTML = `
+    <div class="mopen__head">
+      <span class="mcard__img">${pic(item)}</span>
+      <div class="mopen__title"><h3 class="mcard__name">${esc(item.name)}</h3>${item.note ? `<p class="mcard__note">${esc(item.note)}</p>` : ''}</div>
+      <button type="button" class="mopen__x" data-close aria-label="Close ${esc(item.name)}">${icon('i-close', 'icon--lg icon--ink')}</button>
     </div>
-    <div class="opt-sheet__foot">
+    <div data-groups></div>
+    <button type="button" class="mopen__note-btn" data-note-open>+ Add a note for the shop</button>
+    <label class="mopen__note" data-note-wrap hidden><span class="ogroup__name">Notes for the shop</span>
+      <textarea class="textarea" data-note maxlength="200" placeholder="Anything the shop should know"></textarea></label>
+    <div class="mopen__foot">
       <div class="stepper" role="group" aria-label="How many">
         <button type="button" data-qty="-1" aria-label="One less">${icon('i-minus', 'icon--sm')}</button>
         <span data-count aria-live="polite">1</span>
         <button type="button" data-qty="1" aria-label="One more">${icon('i-plus', 'icon--sm')}</button>
       </div>
       <button type="button" class="hot-btn" data-addbtn>Add</button>
-    </div>
-    <button type="button" class="opt-sheet__x" data-close aria-label="Close">${icon('i-close', 'icon--lg icon--ink')}</button>`;
-  document.body.appendChild(dlg);
+    </div>`;
+  card.replaceWith(el);
 
-  const groupsEl = $('[data-groups]', dlg);
+  const groupsEl = $('[data-groups]', el);
   function render() {
     picks = cleanPicks(item, picks);
     groupsEl.innerHTML = visibleGroups(item, picks).map((g) => {
@@ -181,12 +181,17 @@ function openItem(item, opener) {
     return `<button type="button" class="ochip" aria-pressed="${on}" data-g="${esc(g.id)}" data-v="${esc(c.name)}">${esc(c.name)}${c.price ? `<small>+${peso(c.price)}</small>` : ''}${c.hint ? `<span class="sr-only">, ${esc(c.hint)}</span>` : ''}</button>`;
   }).join('')}</div>${g.choices.some((c) => c.hint) && !many ? `<p class="ogroup__hint">${esc(g.choices.find((c) => c.name === picks[g.id])?.hint || '')}</p>` : ''}</div>`;
     }).join('');
-    $('[data-count]', dlg).textContent = qty;
-    $('[data-addbtn]', dlg).textContent = `Add ${qty} · ${peso(unitPrice(item, picks) * qty)}`;
+    $('[data-count]', el).textContent = qty;
+    $('[data-addbtn]', el).textContent = `Add ${qty} · ${peso(unitPrice(item, picks) * qty)}`;
   }
   render();
 
-  const close = () => { dlg.close(); dlg.remove(); if (opener) opener.focus(); };
+  const close = ({ focus = true } = {}) => {
+    el.replaceWith(card);
+    closeOpenItem = null;
+    if (focus) card.focus();
+  };
+  closeOpenItem = close;
   groupsEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-g]');
     if (!b) return;
@@ -205,16 +210,23 @@ function openItem(item, opener) {
     const again = groupsEl.querySelector(`[data-g="${CSS.escape(b.dataset.g)}"][data-v="${CSS.escape(b.dataset.v)}"]`);
     if (again) again.focus();
   });
-  dlg.addEventListener('click', (e) => {
-    if (e.target === dlg || e.target.closest('[data-close]')) close();
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close]')) { close(); return; }
+    if (e.target.closest('[data-note-open]')) {
+      e.target.closest('[data-note-open]').hidden = true;
+      $('[data-note-wrap]', el).hidden = false;
+      $('[data-note]', el).focus();
+      return;
+    }
     const q = e.target.closest('[data-qty]');
     if (q) { qty = Math.min(99, Math.max(1, qty + Number(q.dataset.qty))); render(); }
   });
-  $('[data-addbtn]', dlg).addEventListener('click', () => {
-    if (addItem(item, { qty, picks, note: $('[data-note]', dlg).value })) close();
+  $('[data-addbtn]', el).addEventListener('click', () => {
+    if (addItem(item, { qty, picks, note: $('[data-note]', el).value })) close();
   });
-  dlg.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
-  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  el.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  el.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  ($('.ochip', el) || $('[data-addbtn]', el)).focus({ preventScroll: true });
 }
 
 /* ---------- Your order ---------- */
@@ -238,11 +250,21 @@ function renderCart() {
         <a class="hot-btn hot-btn--block" href="/pages/checkout.html">Checkout · ${peso(t.subtotal)}</a>
         <p class="cart-panel__foot">No service fee. You can tip mysabak after delivery if you like.</p>`
     : `<div class="cart-empty">${icon('i-bag', 'icon--xl')}<p>Your order is empty.</p><span>Tap an item to choose options and add it.</span></div>`;
-  $('#cartCount').textContent = `${t.count} item${t.count === 1 ? '' : 's'}`;
-  $('#cartPillTotal').textContent = `View order · ${peso(t.subtotal)}`;
-  $('#cartPill').hidden = !t.count;
-  document.body.classList.toggle('has-cart', Boolean(t.count));
-  if (!t.count && !WIDE.matches) setCartOpen(false);
+  showOrderOnFood(t);
+  if (!t.count && panel.open) panel.close();
+}
+
+/* With items in this shop's order, the round Food button shows the total and count, and opens the order */
+function showOrderOnFood(t) {
+  const tab = $('.tab[data-tab="food"]');
+  if (!tab) return;
+  tab.classList.toggle('has-order', Boolean(t.count));
+  const iconBox = $('.tab__icon', tab);
+  $$('.tab__total, .tab__count', iconBox).forEach((n) => n.remove());
+  if (!t.count) { tab.removeAttribute('aria-label'); return; }
+  const items = `${t.count} item${t.count === 1 ? '' : 's'}`;
+  tab.setAttribute('aria-label', `View order: ${items}, ${peso(t.subtotal)}`);
+  iconBox.insertAdjacentHTML('beforeend', `<b class="tab__total">${peso(t.subtotal)}</b><span class="tab__count">${t.count}</span>`);
 }
 
 $('#cartBody').addEventListener('click', (e) => {
@@ -253,27 +275,15 @@ $('#cartBody').addEventListener('click', (e) => {
   renderCart();
 });
 
-// Wide screens: "Your order" is always open as a column. Narrower: a sheet the pill opens.
 const panel = $('#cartPanel');
-function layoutCart() {
-  if (panel.open) panel.close();
-  if (WIDE.matches) panel.show();
-  $('#cartPill').setAttribute('aria-expanded', 'false');
-}
-function setCartOpen(open) {
-  if (WIDE.matches) return;
-  if (open && !panel.open) { panel.showModal(); $('#cartPill').setAttribute('aria-expanded', 'true'); }
-  if (!open && panel.open) { panel.close(); }
-}
-panel.addEventListener('close', () => {
-  $('#cartPill').setAttribute('aria-expanded', 'false');
-  if (!WIDE.matches && !$('#cartPill').hidden) $('#cartPill').focus();
+$('[data-tabs]').addEventListener('click', (e) => {
+  if (!e.target.closest('.tab[data-tab="food"].has-order')) return;
+  e.preventDefault();
+  panel.showModal();
 });
-panel.addEventListener('click', (e) => { if (e.target === panel && !WIDE.matches) setCartOpen(false); }); // tap outside
-$('#cartPill').addEventListener('click', () => setCartOpen(true));
-$('#cartClose').addEventListener('click', () => setCartOpen(false));
-WIDE.addEventListener('change', layoutCart);
-layoutCart();
+panel.addEventListener('close', () => { const food = $('.tab[data-tab="food"].has-order'); if (food) food.focus(); });
+panel.addEventListener('click', (e) => { if (e.target === panel) panel.close(); }); // tap outside
+$('#cartClose').addEventListener('click', () => panel.close());
 
 /* ---------- Start ---------- */
 async function start() {
