@@ -16,6 +16,28 @@ mountChrome({ roles: ['client'] }).then(() => { if (shop) renderCart(); });
 const pic = (item) => (item.image ? `<img src="${esc(item.image)}" alt="">` : itemPicture(item, shop && shop.color));
 const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
+/* ---------- Motion ---------- */
+const MOVE = { duration: 260, easing: 'cubic-bezier(.2, .8, .2, 1)' }; // same curve as --ease-out
+const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Glide the menu to its new layout after `change`, instead of letting the cards jump
+function reflow(change) {
+  const was = new Map($$('.mcard, .bund, .msec__title', $('#menu')).map((n) => [n, n.getBoundingClientRect()]));
+  change();
+  if (calm()) return;
+  was.forEach((r, n) => {
+    if (!n.isConnected) return;
+    const now = n.getBoundingClientRect();
+    const dx = r.left - now.left;
+    const dy = r.top - now.top;
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) n.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], MOVE);
+  });
+}
+
+const pop = (n, from = 1.25) => {
+  if (n && !calm()) n.animate([{ transform: `scale(${from})` }, { transform: 'none' }], { ...MOVE, duration: 200 });
+};
+
 /* ---------- Shop card + map ---------- */
 function renderInfo() {
   document.title = `${shop.name} · mysabak`;
@@ -118,7 +140,7 @@ $('#menuTabs').addEventListener('click', (e) => {
   const a = e.target.closest('[data-sec]');
   if (!a) return;
   e.preventDefault();
-  $(`#${a.dataset.sec}`).scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  $(`#${a.dataset.sec}`).scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
 });
 
 $('#menu').addEventListener('click', (e) => {
@@ -167,7 +189,19 @@ function openItem(item, card) {
       </div>
       <button type="button" class="hot-btn" data-addbtn>Add</button>
     </div>`;
-  card.replaceWith(el);
+  const from = card.getBoundingClientRect();
+  reflow(() => card.replaceWith(el));
+  // Before the animation starts: scrolling to a card that's still offset would slide the page sideways
+  el.scrollIntoView({ block: 'nearest', behavior: calm() ? 'auto' : 'smooth' });
+
+  // The open card grows out of the tile that was tapped
+  const to = el.getBoundingClientRect();
+  if (!calm()) {
+    el.animate([
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, clipPath: `inset(0 ${Math.max(0, to.width - from.width)}px ${Math.max(0, to.height - from.height)}px 0 round 20px)` },
+      { transform: 'none', clipPath: 'inset(0 0 0 0 round 20px)' },
+    ], MOVE);
+  }
 
   const groupsEl = $('[data-groups]', el);
   function render() {
@@ -187,7 +221,15 @@ function openItem(item, card) {
   render();
 
   const close = ({ focus = true } = {}) => {
-    el.replaceWith(card);
+    const open = el.getBoundingClientRect();
+    reflow(() => el.replaceWith(card));
+    if (!calm()) {
+      const now = card.getBoundingClientRect();
+      card.animate([
+        { transform: `translate(${open.left - now.left}px, ${open.top - now.top}px) scale(.97)`, opacity: 0 },
+        { transform: 'none', opacity: 1 },
+      ], MOVE);
+    }
     closeOpenItem = null;
     if (focus) card.focus();
   };
@@ -206,26 +248,30 @@ function openItem(item, card) {
         return;
       } else picks[g.id] = [...list, b.dataset.v];
     } else picks[g.id] = b.dataset.v;
-    render();
+    reflow(render); // a pick can show or hide other groups
     const again = groupsEl.querySelector(`[data-g="${CSS.escape(b.dataset.g)}"][data-v="${CSS.escape(b.dataset.v)}"]`);
-    if (again) again.focus();
+    if (again) { again.focus(); again.classList.add('is-picked'); }
   });
   el.addEventListener('click', (e) => {
     if (e.target.closest('[data-close]')) { close(); return; }
     if (e.target.closest('[data-note-open]')) {
-      e.target.closest('[data-note-open]').hidden = true;
-      $('[data-note-wrap]', el).hidden = false;
+      reflow(() => {
+        e.target.closest('[data-note-open]').hidden = true;
+        $('[data-note-wrap]', el).hidden = false;
+      });
       $('[data-note]', el).focus();
       return;
     }
     const q = e.target.closest('[data-qty]');
-    if (q) { qty = Math.min(99, Math.max(1, qty + Number(q.dataset.qty))); render(); }
+    if (q) {
+      const next = Math.min(99, Math.max(1, qty + Number(q.dataset.qty)));
+      if (next !== qty) { qty = next; render(); pop($('[data-count]', el)); }
+    }
   });
   $('[data-addbtn]', el).addEventListener('click', () => {
     if (addItem(item, { qty, picks, note: $('[data-note]', el).value })) close();
   });
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-  el.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   ($('.ochip', el) || $('[data-addbtn]', el)).focus({ preventScroll: true });
 }
 
@@ -251,13 +297,16 @@ function renderCart() {
         <p class="cart-panel__foot">No service fee. You can tip mysabak after delivery if you like.</p>`
     : `<div class="cart-empty">${icon('i-bag', 'icon--xl')}<p>Your order is empty.</p><span>Tap an item to choose options and add it.</span></div>`;
   showOrderOnFood(t);
-  if (!t.count && panel.open) panel.close();
+  if (!t.count) closePanel();
 }
 
 /* With items in this shop's order, the round Food button shows the total and count, and opens the order */
+let shownCount = null;
 function showOrderOnFood(t) {
   const tab = $('.tab[data-tab="food"]');
   if (!tab) return;
+  const changed = shownCount !== null && shownCount !== t.count;
+  shownCount = t.count;
   tab.classList.toggle('has-order', Boolean(t.count));
   const iconBox = $('.tab__icon', tab);
   $$('.tab__total, .tab__count', iconBox).forEach((n) => n.remove());
@@ -265,6 +314,7 @@ function showOrderOnFood(t) {
   const items = `${t.count} item${t.count === 1 ? '' : 's'}`;
   tab.setAttribute('aria-label', `View order: ${items}, ${peso(t.subtotal)}`);
   iconBox.insertAdjacentHTML('beforeend', `<b class="tab__total">${peso(t.subtotal)}</b><span class="tab__count">${t.count}</span>`);
+  if (changed) { pop(iconBox, 1.12); pop($('.tab__count', iconBox), 0.6); }
 }
 
 $('#cartBody').addEventListener('click', (e) => {
@@ -273,6 +323,8 @@ $('#cartBody').addEventListener('click', (e) => {
   const line = getCart().lines.find((l) => l.key === b.dataset.line);
   if (line) setLineQty(line.key, line.qty + Number(b.dataset.step));
   renderCart();
+  const same = $(`[data-line="${CSS.escape(b.dataset.line)}"]`, $('#cartBody'));
+  if (same) pop(same.parentElement.querySelector('span'));
 });
 
 const panel = $('#cartPanel');
@@ -280,10 +332,27 @@ $('[data-tabs]').addEventListener('click', (e) => {
   if (!e.target.closest('.tab[data-tab="food"].has-order')) return;
   e.preventDefault();
   panel.showModal();
+  if (calm()) return;
+  // The order settles in just after the panel, top to bottom
+  $$('.cline, .receipt, .hot-btn', panel).forEach((n, i) => n.animate(
+    [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+    { ...MOVE, delay: 60 + Math.min(i, 6) * 40, fill: 'backwards' },
+  ));
 });
+
+// Plays the exit, then really closes. A dialog vanishes the moment close() is called.
+function closePanel() {
+  if (!panel.open || panel.classList.contains('is-closing')) return;
+  panel.classList.add('is-closing');
+  Promise.allSettled(panel.getAnimations().map((a) => a.finished)).then(() => {
+    panel.close();
+    panel.classList.remove('is-closing');
+  });
+}
+panel.addEventListener('cancel', (e) => { e.preventDefault(); closePanel(); }); // Esc
 panel.addEventListener('close', () => { const food = $('.tab[data-tab="food"].has-order'); if (food) food.focus(); });
-panel.addEventListener('click', (e) => { if (e.target === panel) panel.close(); }); // tap outside
-$('#cartClose').addEventListener('click', () => panel.close());
+panel.addEventListener('click', (e) => { if (e.target === panel) closePanel(); }); // tap outside
+$('#cartClose').addEventListener('click', closePanel);
 
 /* ---------- Start ---------- */
 async function start() {
