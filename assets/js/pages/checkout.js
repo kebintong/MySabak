@@ -3,13 +3,41 @@ import { CONFIG } from '../config.js';
 import { shopMenu, deliveryQuote, placeOrder, addressFor, errorMessage } from '../api.js';
 import { cartTotals } from '../money.js';
 import { getCart, setLineQty, clearCart } from '../cart.js';
-import { $, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast, calm, pop } from '../ui.js';
 
 mountChrome({ roles: ['client'] });
 
 let shop = null;
 let address = null; // { label, lng, lat }
 let quote = null;   // { km, fee }
+
+/* ---------- Steps: one open at a time ---------- */
+let settling;
+function openStep(name) {
+  clearTimeout(settling);
+  $$('.step').forEach((s) => {
+    const on = s.dataset.panel === name;
+    s.classList.toggle('is-open', on);
+    s.classList.remove('is-settled');
+    $('.step__head', s).setAttribute('aria-expanded', on);
+  });
+  // Once it has finished growing: address suggestions may overflow it, and it should be in view
+  settling = setTimeout(() => {
+    const open = $('.step.is-open');
+    if (!open) return;
+    open.classList.add('is-settled');
+    open.scrollIntoView({ block: 'nearest', behavior: calm() ? 'auto' : 'smooth' });
+  }, 280);
+}
+
+// What a closed step shows; a new value slides in
+function setPeek(id, text) {
+  const el = $(id);
+  if (el.textContent === text) return;
+  const first = !el.textContent;
+  el.textContent = text;
+  if (!first && !calm()) el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+}
 
 function renderLines() {
   const t = cartTotals(getCart(), shop.menu);
@@ -32,11 +60,18 @@ function renderSummary() {
   const fee = quote ? quote.fee : null;
   const deliveryText = !address ? 'Add an address' : pesoOr(fee);
   const total = typeof fee === 'number' ? peso(t.subtotal + fee) : `${peso(t.subtotal)} + delivery`;
+  const was = $$('#summary dd').map((d) => d.textContent);
   $('#summary').innerHTML = `
     <div class="receipt__row"><dt>Items<span>to ${esc(shop.name)}</span></dt><dd>${peso(t.subtotal)}</dd></div>
     <div class="receipt__row"><dt>Delivery fee<span>100% to your rider${quote ? ` · ${quote.km.toFixed(1)} km` : ''}</span></dt><dd>${deliveryText}</dd></div>
     <div class="receipt__row receipt__row--total"><dt>Total</dt><dd>${total}</dd></div>`;
-  $('#placeBtn').disabled = !address || !t.count;
+  $$('#summary dd').forEach((d, i) => { if (was.length && was[i] !== d.textContent) pop(d, 1.08); });
+  const btn = $('#placeBtn');
+  const ready = Boolean(address && t.count);
+  if (ready && btn.disabled) pop(btn, 0.96);
+  btn.disabled = !ready;
+  setPeek('#peekOrder', `${t.count} item${t.count === 1 ? '' : 's'} · ${peso(t.subtotal)}`);
+  setPeek('#peekDeliver', address ? address.label : 'Add an address');
 }
 
 function showEmpty() {
@@ -62,6 +97,18 @@ async function start() {
     `<label class="pill-radio"><input type="radio" name="payment" value="${m.id}"${i === 0 ? ' checked' : ''}><span>${esc(m.name)}</span></label>`).join(''));
   renderLines();
   renderSummary();
+  const payName = () => $('#payMethods input:checked + span').textContent;
+  setPeek('#peekPay', payName());
+  $('#payMethods').addEventListener('change', (e) => {
+    setPeek('#peekPay', payName());
+    pop(e.target.nextElementSibling, 0.92);
+  });
+  $('.steps').addEventListener('click', (e) => {
+    const head = e.target.closest('.step__head');
+    if (!head) return;
+    const step = head.closest('.step');
+    openStep(step.classList.contains('is-open') ? null : step.dataset.panel);
+  });
 
   placeSearch({
     input: $('#address'),
@@ -86,12 +133,15 @@ async function start() {
     if (!b) return;
     const line = getCart().lines.find((l) => l.key === b.dataset.line);
     if (line) setLineQty(line.key, line.qty + Number(b.dataset.step));
-    if (renderLines().count) renderSummary();
+    if (!renderLines().count) return;
+    renderSummary();
+    const same = $(`[data-line="${CSS.escape(b.dataset.line)}"]`, $('#lines'));
+    if (same) pop(same.parentElement.querySelector('span'));
   });
 
   $('#checkoutForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!address) { toast('Add a delivery address first.'); $('#address').focus(); return; }
+    if (!address) { toast('Add a delivery address first.'); openStep('deliver'); $('#address').focus(); return; }
     const data = new FormData(e.target);
     const btn = $('#placeBtn');
     btn.disabled = true;

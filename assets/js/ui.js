@@ -12,6 +12,11 @@ export const peso = (n) => formatPeso(n, CONFIG.currency);
 export const pesoOr = (n, placeholder = '[AMOUNT]') => (typeof n === 'number' ? peso(n) : `${CONFIG.currency}${placeholder}`);
 
 /** Escape text for HTML strings. */
+export const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// A small "that changed" pop, for values and buttons
+export const pop = (n, from = 1.25) => {
+  if (n && !calm()) n.animate([{ transform: `scale(${from})` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+};
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const ICONS = '/assets/images/icons.svg';

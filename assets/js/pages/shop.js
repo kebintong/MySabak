@@ -7,7 +7,7 @@ import { visibleGroups, defaultPicks, cleanPicks, unitPrice, openState } from '.
 import { getCart, addToCart, setLineQty, hasOtherShop } from '../cart.js';
 import { itemPicture, storefront } from '../placeholders.js';
 import { shopMap, knownLocation } from '../shop-map.js';
-import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast, calm, pop } from '../ui.js';
 
 let shop = null;
 // The tab bar is drawn after sign-in is checked: show the order on it either way round
@@ -18,7 +18,6 @@ const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 /* ---------- Motion ---------- */
 const MOVE = { duration: 260, easing: 'cubic-bezier(.2, .8, .2, 1)' }; // same curve as --ease-out
-const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Glide the menu to its new layout after `change`, instead of letting the cards jump
 function reflow(change) {
@@ -33,10 +32,6 @@ function reflow(change) {
     if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) n.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], MOVE);
   });
 }
-
-const pop = (n, from = 1.25) => {
-  if (n && !calm()) n.animate([{ transform: `scale(${from})` }, { transform: 'none' }], { ...MOVE, duration: 200 });
-};
 
 /* ---------- Shop card + map ---------- */
 function renderInfo() {
