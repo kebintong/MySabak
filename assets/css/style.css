@@ -956,6 +956,14 @@ body:not([data-state="request"]) .map-controls { display: none; }
 }
 @media (hover: hover) { .tab[data-tab="food"]:hover .tab__icon { transform: scale(1.06); } }
 .tab[data-tab="food"]:active .tab__icon { transform: scale(.9); }
+/* Shop page, items in the order: the button shows the total and a gold count, and opens the order */
+.tab[data-tab="food"].has-order .tab__icon > .icon { display: none; }
+.tab__total { position: relative; color: #fff; font-size: 13px; font-weight: 700; }
+.tab__count {
+  position: absolute; right: -6px; top: -6px; z-index: 1;
+  min-width: 26px; height: 26px; padding: 0 5px; box-sizing: border-box; display: grid; place-items: center;
+  border: 2px solid #fff; border-radius: 13px; background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800;
+}
 @media (min-width: 900px) { /* floating pill: the button sinks 14px into a notch, mostly inside the bar */
   .dock:has(.tab[data-tab="food"]) {
     position: relative;
@@ -1790,7 +1798,7 @@ body.is-loading .choose__summary { animation: breathe .7s ease-in-out infinite a
   --shop-bg: #faf5f3;
 }
 .pic { display: block; width: 100%; height: 100%; }
-img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img, .bund__img img, .opt-sheet__hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img, .bund__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .is-open { color: var(--ok); font-weight: 700; }
 .is-closed { color: var(--sub); font-weight: 600; }
 
@@ -2092,7 +2100,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .shop-hero__canvas { position: absolute; inset: 0; }
 .shop-hero__eta { display: block; padding: 7px 12px; border-radius: 14px; background: #14082a; color: #ffd15c; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .shop-hero__eta[hidden] { display: none; }
-.is-missing .shop-main, .is-missing .cart-panel[open], .is-missing .shop-info__actions, .is-missing .shop-info__ava, .is-missing .shop-hero { display: none; }
+.is-missing .shop-main, .is-missing .shop-info__actions, .is-missing .shop-info__ava, .is-missing .shop-hero { display: none; }
 
 .shop-layout { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; }
 
@@ -2166,23 +2174,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .icon-btn { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--field); display: grid; place-items: center; cursor: pointer; }
 .icon-btn:hover { background: var(--tint); }
 
-/* Cart pill (phones, tablets) */
-.cart-pill {
-  position: absolute; left: 50%; bottom: calc(96px + var(--safe-b)); z-index: 4;
-  transform: translateX(-50%);
-  padding: 14px 22px; display: flex; align-items: center; gap: 14px;
-  border: 0; border-radius: 999px; background: var(--hot); color: #fff;
-  font: 800 15px var(--font-body); font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer;
-  box-shadow: 0 14px 26px -10px rgba(91, 37, 150, .7);
-  animation: pill-in .3s var(--ease-out);
-}
-.cart-pill:hover { background: var(--hot-deep); }
-.cart-pill > span { font-weight: 600; padding-right: 14px; border-right: 1px solid rgba(255, 255, 255, .35); }
-.cart-pill[hidden] { display: none; }
-@keyframes pill-in { from { opacity: 0; transform: translate(-50%, 12px); } }
-.has-cart .content { padding-bottom: calc(var(--content-bottom) + 72px); }
-
-/* Your order: sheet (dialog) on phones and tablets */
+/* Your order: a sheet on phones, a centred dialog on desktop (the Food button opens it) */
 .cart-panel {
   width: 100%; max-width: 520px; max-height: 85dvh;
   margin: auto auto 0; padding: 0; border: 0;
@@ -2206,18 +2198,25 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .cart-empty p { margin: 4px 0 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 
 /* Options sheet (dialog) */
-.opt-sheet { max-width: 560px; overflow: hidden; }
-.opt-sheet[open] { display: flex; flex-direction: column; }
-.opt-sheet__scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.opt-sheet__hero { height: 180px; padding: 12px; display: grid; place-items: center; background: var(--tint); }
-.opt-sheet__hero > * { width: 156px; height: 156px; }
-.opt-sheet__body { padding: 16px 18px 8px; }
-.opt-sheet__title { margin: 0; font-family: var(--font-display); font-size: 23px; line-height: 1.2; font-weight: 700; color: var(--navy); }
-.opt-sheet__note { margin: 4px 0 0; font-size: 14px; color: var(--sub); }
-.opt-sheet__from { display: inline-block; margin: 6px 0 4px; font-weight: 800; color: var(--brand-deep); }
-.opt-sheet__foot { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px calc(14px + var(--safe-b)); border-top: 1px solid var(--line); background: #fff; }
-.opt-sheet__foot .hot-btn { flex: 1; }
-.opt-sheet__x { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(23, 18, 43, .18); cursor: pointer; }
+/* An item's options, open inside its card */
+.msec__row { grid-auto-flow: dense; } /* the cards after an open one fill the gap it leaves */
+.mcard--open { grid-column: 1 / -1; min-height: 0; gap: 8px; border: 2px solid var(--accent); cursor: default; scroll-margin: 70px 0 110px; }
+.mcard--open:hover, .mcard--open:active { transform: none; box-shadow: none; }
+.mcard--open:hover .mcard__img { transform: none; }
+.mopen__head { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 12px; align-items: center; }
+.mopen__head .mcard__img { margin: 0; }
+.mopen__title h3, .mopen__title p { margin: 0; }
+.mopen__title p { margin-top: 2px; }
+.mopen__x { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #fff; display: grid; place-items: center; cursor: pointer; }
+.mcard--open .ogroup { padding: 10px 0 2px; border-top: 0; }
+.mopen__note-btn { align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--brand-deep); font: 600 14px var(--font-body); cursor: pointer; }
+.mopen__note { display: flex; flex-direction: column; gap: 6px; }
+.mopen__note[hidden], .mopen__note-btn[hidden] { display: none; }
+.mopen__note .textarea { width: 100%; min-height: 64px; background: #fff; }
+.mopen__foot { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.mopen__foot .hot-btn { flex: 1; min-width: 0; min-height: 50px; }
+.mopen__foot .stepper { flex: none; border-radius: 25px; background: #fff; }
+.mopen__foot .stepper button { width: 44px; height: 44px; border-radius: 50%; background: var(--tint); }
 .ogroup { padding: 14px 0; border-top: 1px solid var(--line); }
 .ogroup__head { margin-bottom: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .ogroup__name { font-size: 15px; font-weight: 800; color: var(--ink); }
@@ -2234,7 +2233,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 .ochip:hover { border-color: var(--brand); }
 .ochip small { font-size: 12px; font-weight: 600; color: var(--sub); }
-.ochip[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+.ochip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .ochip[aria-pressed="true"] small { color: rgba(255, 255, 255, .8); }
 
 @media (min-width: 900px) {
@@ -2260,23 +2259,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   .msec__row { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; padding: 2px 0 14px; }
   .mcard { padding: 14px; }
   .msec__row--bundles { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-  .cart-pill { bottom: calc(118px + var(--safe-b)); }
   .cart-panel:modal { margin: auto; border-radius: 24px; }
-  .opt-sheet__hero { height: 210px; }
-  .opt-sheet__hero > * { width: 180px; height: 180px; }
+  .mcard--open { grid-column: span 2; scroll-margin: 150px 0 130px; }
 }
-@media (min-width: 1200px) {
-  .shop-layout { grid-template-columns: minmax(0, 1fr) 360px; }
-  .cart-panel:not(:modal) { /* overlaps the night sky, then sticks under the top bar */
-    position: sticky; inset: auto; top: 84px; z-index: 4;
-    width: auto; max-width: none; max-height: calc(100dvh - 84px - var(--content-bottom));
-    margin: -96px 0 0; border: 1px solid var(--line-brand); border-radius: 24px; box-shadow: var(--shadow-card);
-  }
-  .cart-panel__close { display: none; }
-  .cart-pill { display: none !important; }
-  .has-cart .content { padding-bottom: var(--content-bottom); }
-}
-
 /* =========================================================
    Ride · pay sheet, finding a driver, trip, ride complete
    ========================================================= */
