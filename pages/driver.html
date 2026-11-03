@@ -24,79 +24,65 @@
   <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/js/pages/driver.js"></script>
 </head>
-<body class="page page--map page--driver">
+<body class="page page--driver">
   <div class="app">
-    <!-- Map first: every job request is a pin; the chosen one shows its route -->
-    <div class="map" id="map" role="region" aria-label="Map of job requests near you">
-      <div class="map__canvas" id="mapCanvas"></div>
-    </div>
-
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
-    <section class="finder finder--driver" aria-labelledby="driverTitle" hidden id="driverHome">
-      <div class="finder__top">
-        <div class="dhead desktop-only">
-          <div>
-            <h1 class="dhead__title" id="driverTitle">Hi, <span data-bind="firstName">driver</span></h1>
-            <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+    <main class="content">
+      <!-- Draft C: earnings first, requests as a list, the live map in a card that opens full screen -->
+      <div class="content__inner content__inner--full dhome" id="driverHome" hidden>
+        <section class="dhero" aria-labelledby="driverTitle">
+          <div class="dhero__money">
+            <h1 class="dhero__hi" id="driverTitle">Hi, <span data-bind="firstName">driver</span>. You’ve earned today</h1>
+            <p class="dhero__today" data-bind="today">₱0</p>
+            <p class="dhero__meta"><b data-bind="todayTrips">0 trips</b> today · <b data-bind="week">₱0</b> this week
+              <span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
           </div>
-        </div>
-        <button type="button" class="onbar" id="onlineBtn" aria-pressed="false">
-          <span class="onbar__dot" aria-hidden="true"></span>
-          <span class="onbar__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
-          <span class="onbar__go" data-bind="onlineAction">Go online</span>
-        </button>
-        <div class="fchips" id="kinds" role="group" aria-label="Show requests for"></div>
-      </div>
+          <button type="button" class="onbar" id="onlineBtn" aria-pressed="false">
+            <span class="onbar__dot" aria-hidden="true"></span>
+            <span class="onbar__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
+            <span class="onbar__go" data-bind="onlineAction">Go online</span>
+          </button>
+        </section>
 
-      <div class="finder__sheet" id="sheet">
-        <button type="button" class="finder__handle" id="sheetHandle" aria-expanded="false" aria-controls="sheet">
-          <span aria-hidden="true"></span><span class="sr-only">Show more of the list</span>
-        </button>
-        <div class="dhead mobile-only">
-          <div>
-            <p class="dhead__title">Hi, <span data-bind="firstName">driver</span></p>
-            <p class="dhead__meta"><span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
-          </div>
-          <div class="dhead__btns">
-            <button type="button" class="panel__hide dhead__hide" id="hideSheet" aria-label="Hide the list to see the map"><svg class="icon icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button>
-          </div>
-        </div>
-        <div class="finder__head" id="reqHead"><h2 id="reqCount">Requests</h2><span>Nearest first</span></div>
-        <div class="finder__scroll" id="sheetScroll">
-          <div id="activeJob" aria-live="polite"></div>
-          <ul class="jobs" id="jobList" aria-labelledby="reqCount" aria-live="polite"></ul>
-
-          <section class="dearn" aria-labelledby="earnTitle">
-            <h2 class="finder__sub" id="earnTitle">Earnings</h2>
-            <div class="stats">
-              <div class="stat"><span class="stat__value" data-bind="today">₱0</span><span class="stat__label">Today</span></div>
-              <div class="stat"><span class="stat__value" data-bind="week">₱0</span><span class="stat__label">This week</span></div>
+        <div class="dgrid">
+          <section class="card dreq" aria-labelledby="reqCount">
+            <div class="dreq__head" id="reqHead">
+              <h2 id="reqCount">Requests</h2>
+              <div class="fchips" id="kinds" role="group" aria-label="Show requests for"></div>
             </div>
-            <ul class="list" id="trips"></ul>
-            <div class="row dearn__payout">
-              <span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
-              <div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
-              <button type="button" class="button button--ghost" id="payoutBtn">Set up</button>
-            </div>
+            <div id="activeJob" aria-live="polite"></div>
+            <ul class="jobs" id="jobList" aria-labelledby="reqCount" aria-live="polite"></ul>
           </section>
-          <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
-        </div>
-      </div>
-    </section>
 
-    <button type="button" class="map-locate" id="locateBtn" aria-label="Center on my location">
-      <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
-    </button>
+          <!-- Every request is a pin; the picked one (or the accepted job) shows its route -->
+          <section class="dmap" id="mapCard" aria-label="Map of job requests near you">
+            <div class="map__canvas" id="mapCanvas"></div>
+            <button type="button" class="dmap__btn" id="mapToggle" aria-expanded="false">
+              <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg><span>Full map</span>
+            </button>
+            <button type="button" class="dmap__locate" id="locateBtn" aria-label="Center on my location">
+              <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+            </button>
+          </section>
+
+          <section class="card dtrips" aria-labelledby="earnTitle">
+            <h2 class="card__title" id="earnTitle">Latest trips</h2>
+            <ul class="list" id="trips"></ul>
+          </section>
+
+          <div class="card row dpayout">
+            <span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
+            <div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
+            <button type="button" class="button button--ghost" id="payoutBtn">Set up</button>
+          </div>
+        </div>
+        <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
+      </div>
+    </main>
 
     <div class="bottom">
-      <!-- Phones: the list hidden to a slim bar, so the map gets the screen -->
-      <button type="button" class="statusbar dbar mobile-only" id="sheetBar" aria-controls="sheet" aria-expanded="true">
-        <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
-        <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Requests</span><span class="statusbar__sub" data-bind="barSub"></span></span>
-        <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
-      </button>
       <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>
     </div>
   </div>

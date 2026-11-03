@@ -1642,15 +1642,6 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .dest-flag path { fill: var(--navy); stroke: #fff; stroke-width: 2.2; }
 .dest-flag rect { fill: #fff; }
 .dest-flag .spin__label { opacity: 1; }
-.page--driver .maplibregl-ctrl-bottom-right { bottom: calc(52% + 2px); }
-@media (min-width: 900px) {
-.page--driver .maplibregl-ctrl-bottom-right { bottom: var(--content-bottom); }
-}
-
-@media (max-width: 899.98px) {
-body.is-sheet-hidden.page--driver .maplibregl-ctrl-bottom-right { bottom: calc(176px + var(--safe-b)); }
-}
-
 .timeline li { position: relative; padding: 0 0 18px 34px; font-size: 15px; color: var(--sub); }
 .timeline li::before {
   content: ""; position: absolute; left: 0; top: 1px;

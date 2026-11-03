@@ -1,74 +1,130 @@
-/* mysabak · driver styles. Loaded after base.css. */
+/* mysabak · driver styles. Loaded after base.css.
+   Draft C: earnings first on cream, requests as a list, the live map in a card that opens full screen. */
+
+.page--driver .app { background: #faf5f3; }
+.page--driver .content__inner--full { max-width: 1240px; }
+@media (min-width: 900px) {
+.page--driver .content { padding-left: 28px; padding-right: 28px; }
+}
+
+/* ---------- Earnings hero + online switch ---------- */
+.dhome { gap: 22px; }
+.dhero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px 28px; padding: 6px 4px 0; }
+.dhero__money { min-width: 0; }
+.dhero__hi { margin: 0; font: 500 16px var(--font-body); color: var(--muted); }
+.dhero__today {
+  margin: 2px 0 0; font: 800 58px/1 var(--font-display); letter-spacing: -.035em; color: var(--ink);
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.dhero__meta { margin: 10px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 15px; color: var(--sub); }
+.dhero__meta b { color: var(--ink); }
+.dhero__meta .badge:first-of-type { margin-left: 6px; }
+@media (min-width: 900px) {
+.dhero__today { font-size: 88px; }
+}
 
 .online__pulse { position: relative; width: 12px; height: 12px; border-radius: 50%; background: #2f9e55; flex-shrink: 0; }
-.dhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.dhead__title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--navy); }
-.dhead__meta { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.finder__sheet > .dhead { padding: 0 16px 10px; }
-.finder__sheet > .dhead .dhead__title { font-size: 18px; }
 .onbar {
-  width: 100%; min-height: 60px; padding: 10px 10px 10px 14px; display: flex; align-items: center; gap: 12px;
-  border: 0; border-radius: 16px; background: #fff; color: inherit; font: inherit; text-align: left; cursor: pointer;
-  box-shadow: 0 6px 16px -6px rgba(36, 25, 87, .35);
+  flex: 0 1 420px; min-height: 64px; padding: 10px 10px 10px 16px; display: flex; align-items: center; gap: 12px;
+  border: 0; border-radius: 20px; background: #fff; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  box-shadow: var(--shadow-card); transition: background-color .2s;
 }
 .onbar__dot { width: 12px; height: 12px; flex-shrink: 0; border-radius: 50%; background: #b9b3c9; position: relative; }
+.onbar.is-on { background: #e3f4e8; box-shadow: none; }
 .onbar.is-on .onbar__dot { background: #2f9e55; }
 .onbar.is-on .onbar__dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #2f9e55; animation: ping 1.6s var(--ease-out) infinite; }
 .onbar__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.onbar__go { flex-shrink: 0; padding: 10px 14px; border-radius: 12px; background: #2f9e55; color: #fff; font-size: 14px; font-weight: 800; }
-.onbar.is-on .onbar__go { background: var(--field); color: var(--navy); }
+.onbar.is-on .onbar__text b { color: #1f6b3a; }
+.onbar.is-on .onbar__text small { color: #2c5a3c; }
+.onbar__go { flex-shrink: 0; padding: 12px 16px; border-radius: 999px; background: #2f9e55; color: #fff; font-size: 14px; font-weight: 800; }
+.onbar.is-on .onbar__go { background: #1f6b3a; }
 .onbar:disabled { cursor: default; }
 .onbar:disabled .onbar__go { background: var(--field); color: var(--sub); }
+@media (max-width: 899.98px) {
+.onbar { flex-basis: 100%; }
+}
+
+/* ---------- Layout: requests left; map, trips and payout right (phones: map first) ---------- */
+.dgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; grid-template-areas: "map" "req" "trips" "pay"; }
+.dreq { grid-area: req; }
+.dmap { grid-area: map; }
+.dtrips { grid-area: trips; }
+.dpayout { grid-area: pay; }
+@media (min-width: 900px) {
+.dgrid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr); gap: 20px; align-items: start;
+    grid-template-areas: "req map" "req trips" "req pay" "req .";
+  }
+}
+.page--driver .card { border: 0; border-radius: 24px; box-shadow: var(--shadow-card); }
+.page--driver .card__title { font-size: 18px; font-weight: 800; color: var(--ink); }
+
+.dreq__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.dreq__head[hidden] { display: none; }
+.dreq__head h2 { margin: 0; font: 800 20px var(--font-display); color: var(--ink); }
+.dreq .fchips { margin: 0; padding: 0; flex-wrap: wrap; overflow: visible; }
+.dreq .fchip { height: 36px; box-shadow: none; border: 0; background: var(--tint); color: var(--sub); font-weight: 700; }
+.dreq .fchip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.page--driver.has-job #kinds { display: none; }
+
+/* ---------- The live map card ---------- */
+.dmap {
+  position: relative; height: 240px; border-radius: 24px; overflow: hidden; background: var(--map-ground);
+  box-shadow: var(--shadow-card);
+}
+.dmap .map__canvas { position: absolute; inset: 0; }
+.dmap .maplibregl-ctrl-top-left { top: 8px; left: 8px; }
+.dmap__btn {
+  position: absolute; left: 12px; bottom: 12px; z-index: 2; height: 40px; padding: 0 14px;
+  display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; background: #fff;
+  font: 700 14px var(--font-body); color: var(--brand-deep); box-shadow: var(--shadow-md); cursor: pointer;
+}
+.dmap__locate {
+  position: absolute; right: 12px; top: 12px; z-index: 2; width: 40px; height: 40px; border: 0; border-radius: 12px;
+  background: #fff; display: grid; place-items: center; box-shadow: var(--shadow-md); cursor: pointer;
+}
+.dmap__locate .icon { stroke: var(--brand-deep); }
+@media (min-width: 900px) {
+.dmap { height: 300px; }
+}
+/* Full screen: over everything, above the tab bar, with the same button to close it.
+   The card lives in .content (its own layer under the top bar), so that layer comes forward too. */
+body.is-map-full .content { z-index: 60; -webkit-mask-image: none; mask-image: none; }
+.dmap.is-full { position: fixed; inset: 0; z-index: 50; height: auto; border-radius: 0; box-shadow: none; animation: fade-in .2s var(--ease-out); }
+.dmap.is-full .dmap__btn { bottom: auto; left: auto; top: calc(14px + var(--safe-t)); right: 14px; height: 44px; }
+.dmap.is-full .dmap__locate { top: auto; bottom: calc(24px + var(--safe-b)); right: 14px; width: 48px; height: 48px; }
+.dmap.is-full .maplibregl-ctrl-top-left { top: calc(14px + var(--safe-t)); left: 14px; }
+@media (prefers-reduced-motion: reduce) {
+.dmap.is-full { animation: none; }
+}
+
+/* ---------- Request cards and the accepted job ---------- */
 .jobs-wait { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: #eef8f1; color: #2f7a3f; font-size: 14px; font-weight: 600; }
 .jobcard, .activejob {
-  padding: 12px; border-radius: 16px; background: #fff; border: 1.5px solid transparent;
-  box-shadow: 0 1px 0 var(--line), 0 8px 18px -12px rgba(36, 25, 87, .35); cursor: pointer;
-  border-left: 4px solid var(--kind, var(--brand));
+  padding: 14px; border-radius: 18px; background: #fff; border: 1.5px solid var(--line);
+  cursor: pointer; transition: border-color .15s, background-color .15s;
 }
-.activejob { cursor: default; margin: 0 0 12px; display: flex; flex-direction: column; gap: 10px; }
-.jobcard:hover { border-color: var(--line-brand); border-left-color: var(--kind); }
-.jobcard.is-picked { border-color: var(--brand); border-left-color: var(--kind); background: var(--tint); }
+.activejob { cursor: default; margin: 0 0 12px; display: flex; flex-direction: column; gap: 10px; border-color: var(--line-brand); background: #fbf8fe; }
+.jobcard:hover { border-color: var(--line-brand); }
+.jobcard.is-picked { border-color: var(--brand); background: #fbf8fe; }
 .jobcard:focus-visible { outline: 3px solid rgba(91, 37, 150, .45); outline-offset: 2px; }
 .jobcard__top { display: flex; align-items: center; gap: 8px; }
-.jobcard__kind { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--kind); }
-.jobcard__fare { margin-left: auto; font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--navy); }
-.jobcard__route { list-style: none; margin: 8px 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.jobcard__kind { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--kind) 12%, #fff); font-size: 13px; font-weight: 800; color: var(--kind); }
+.jobcard__fare { margin-left: auto; font: 800 24px var(--font-display); letter-spacing: -.02em; color: var(--ink); }
+.jobcard__route { list-style: none; margin: 10px 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .jobcard__route li + li::before { background: var(--kind, var(--brand)); border-radius: 3px; }
-.jobcard__meta { font-size: 12.5px; color: var(--sub); }
+.jobcard__meta { font-size: 13px; color: var(--sub); }
 .jobcard__actions, .activejob__actions { display: flex; gap: 8px; margin-top: 10px; }
-.jobcard__actions .button, .activejob__actions .button { flex: 1; min-height: 44px; font-size: 14px; }
-.jobcard__actions .button--ghost { flex: 0 0 auto; padding: 0 16px; }
-.activejob__title { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--navy); }
-.activejob__sub { margin: -6px 0 0; font-size: 13.5px; color: var(--sub); }
+.jobcard__actions .button, .activejob__actions .button { flex: 1; min-height: 46px; font-size: 14.5px; }
+.jobcard__actions .button--ghost { flex: 0 0 auto; padding: 0 18px; }
+.activejob__title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--ink); }
+.activejob__sub { margin: -6px 0 0; font-size: 14px; color: var(--sub); }
 .activejob .trip__steps { grid-template-columns: repeat(4, 1fr); }
 .activejob .driver .btn-soft { grid-area: auto; margin-left: 0; }
 .activejob .trip__cancel { flex-basis: auto; }
-.dearn { margin-top: 6px; }
-.dearn .stats { margin: 4px 6px 6px; }
-.dearn .list { padding: 0 6px; }
-.dearn__payout { padding: 10px 6px; }
-.dearn__payout .button { min-height: 38px; padding: 0 14px; font-size: 13px; }
-.page--driver .finder__sheet { height: 52%; }
-.page--driver .finder__sheet.is-expanded { height: calc(100% - var(--content-top) - 124px); }
-.page--driver.has-job #kinds { display: none; }
-.page--driver .map-locate { bottom: calc(52% + 14px); }
-@media (min-width: 900px) {
-.page--driver .finder__top { display: flex; flex-direction: column; gap: 12px; }
-.page--driver .onbar { box-shadow: none; background: var(--field); border: 1px solid var(--line); }
-.page--driver .finder__sheet, .page--driver .finder__sheet.is-expanded { height: auto; }
-.page--driver .map-locate { bottom: var(--content-bottom); }
-}
 
-/* Driver page, phones: the list can be hidden to a slim bar (like the Ride panel) */
-.dhead__btns { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.dhead__hide { position: static; }
-body:not(.is-sheet-hidden) .statusbar.dbar { display: none; }
-@media (max-width: 899.98px) {
-body.is-sheet-hidden .statusbar.dbar { display: flex; }
-body.is-sheet-hidden.page--driver .finder__sheet,
-  body.is-sheet-hidden.page--driver #kinds,
-  body.is-sheet-hidden.page--driver .onbar__text small { display: none; }
-body.is-sheet-hidden.page--driver .map-locate { bottom: calc(176px + var(--safe-b)); }
-}
+.dtrips .list { margin: -4px 0 0; }
+.dpayout { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.dpayout .button { min-height: 40px; padding: 0 16px; font-size: 13.5px; }
 
 .badge--ok { background: #e6f5e9; color: #2f7a3f; }
