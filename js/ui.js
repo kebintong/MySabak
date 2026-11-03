@@ -110,6 +110,7 @@ export const TABS = [
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
   { id: 'merchant', label: 'My shop', icon: 'i-store', href: '/pages/merchant-home.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
+  { id: 'admin', label: 'Admin', icon: 'i-shield', href: '/pages/admin.html' },
 ];
 
 /* What each kind of account sees. Customers (signed in or not) get the Figma bar; Drive and Support
@@ -127,6 +128,11 @@ export const ROLES = {
   merchant: {
     label: 'Merchant', tabs: ['merchant', 'support'],
     home: '/pages/merchant-home.html', homeLabel: 'Shop dashboard', homeIcon: 'i-store', signIn: '/pages/merchant.html',
+  },
+  // Signs in on the customer form; not shown on any sign-in switch.
+  admin: {
+    label: 'Admin', tabs: ['admin', 'support'],
+    home: '/pages/admin.html', homeLabel: 'Admin', homeIcon: 'i-shield', signIn: '/pages/account.html',
   },
 };
 
@@ -236,7 +242,7 @@ export function mountAccount(link, user, { signIn = true } = {}) {
  * Wire a sign-in form (mobile number or email + password, #signinError, #signinBtn) to a sign-in call.
  * @param {HTMLFormElement} form
  * @param {(creds:{login:string, password:string}) => Promise<any>} signInFn
- * @param {string} next  where to go once signed in
+ * @param {string|((result:any) => string)} next  where to go once signed in (or a function of the sign-in result)
  */
 export function wireSignInForm(form, signInFn, next) {
   const button = $('[type="submit"]', form);
@@ -263,8 +269,8 @@ export function wireSignInForm(form, signInFn, next) {
     button.textContent = 'Signing in…';
     try {
       const login = data.get('login').trim();
-      await signInFn({ login: login.includes('@') ? login : login.replace(/[\s-]/g, ''), password: data.get('password') });
-      location.href = next;
+      const res = await signInFn({ login: login.includes('@') ? login : login.replace(/[\s-]/g, ''), password: data.get('password') });
+      location.href = typeof next === 'function' ? next(res) : next;
     } catch (err) {
       showError(err.status === 401 || err.status === 400 ? err.message : errorMessage(err));
       button.disabled = false;
