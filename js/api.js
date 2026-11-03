@@ -242,7 +242,7 @@ const demo = {
     try { return JSON.parse(localStorage.getItem(`mysabak.demo.${key}`)) ?? fallback; } catch (_) { return fallback; }
   },
   set(key, value) {
-    try { localStorage.setItem(`mysabak.demo.${key}`, JSON.stringify(value)); } catch (_) { /* storage off */ }
+    try { localStorage.setItem(`mysabak.demo.${key}`, JSON.stringify(value)); return true; } catch (_) { return false; /* storage off or full */ }
   },
   id: (prefix) => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
 };
@@ -768,6 +768,8 @@ export async function merchantHome() {
   if (!session) throw Object.assign(new Error('Sign in first'), { status: 401 });
   const m = DEMO_ACCOUNTS.merchant;
   const settings = demo.get('merchant', { open: true, available: {} });
+  const edits = demo.get('merchantEdits', { shop: {}, items: {} });
+  const shop = { ...m.shop, ...edits.shop, menu: m.shop.menu.map((i) => ({ ...i, ...edits.items[i.id] })) };
   const orders = [...demo.get('orders', []).filter((o) => o.shop.id === m.shop.id), ...sampleMerchantOrders()]
     .sort((a, b) => b.placedAt - a.placedAt);
   const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
@@ -775,7 +777,7 @@ export async function merchantHome() {
   const sales = todays.reduce((n, o) => n + o.subtotal, 0);
   return {
     name: m.name,
-    shop: m.shop,
+    shop,
     open: settings.open !== false,
     available: Object.fromEntries(m.shop.menu.map((i) => [i.id, settings.available[i.id] !== false])),
     orders,
@@ -816,6 +818,66 @@ export async function setItemAvailable(itemId, available) {
   const settings = demo.get('merchant', { open: true, available: {} });
   demo.set('merchant', { ...settings, available: { ...settings.available, [itemId]: Boolean(available) } });
   return { ok: true };
+}
+
+const bad = (msg) => Object.assign(new Error(msg), { status: 400 });
+/** A photo is a URL (http(s) or this site) or, before it is uploaded, a JPEG/PNG/WebP data URL. */
+const isPhoto = (s) => /^(https:\/\/|\/(?!\/)|data:image\/(jpeg|png|webp);base64,)/.test(String(s));
+const cleanText = (s, max, label, required) => {
+  const t = String(s ?? '').trim();
+  if (required && !t) throw bad(`Enter a ${label}.`);
+  if (t.length > max) throw bad(`Keep the ${label} under ${max} characters.`);
+  return t;
+};
+/** DEMO: keep the merchant's edits; a full browser storage (big photos) is an error, not a silent loss. */
+function saveEdits(edits) {
+  if (!demo.set('merchantEdits', edits)) throw Object.assign(new Error('Couldn’t save. Try a smaller photo.'), { status: 413 });
+}
+
+/**
+ * Change the shop's photo, name or short description (`about`). Only the fields given change.
+ * DEMO: kept in this browser. BACKEND: upload the photo (a data URL here) and store its URL in `image`.
+ * @returns {Promise<object>} the shop as `merchantHome().shop` shows it
+ */
+export async function updateShop({ name, about, image } = {}) {
+  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  const edits = demo.get('merchantEdits', { shop: {}, items: {} });
+  const next = { ...edits.shop };
+  if (name !== undefined) next.name = cleanText(name, 60, 'shop name', true);
+  if (about !== undefined) next.about = cleanText(about, 200, 'description');
+  if (image !== undefined) {
+    if (!isPhoto(image)) throw bad('That photo can’t be used. Pick a JPEG, PNG or WebP picture.');
+    next.image = image;
+  }
+  saveEdits({ ...edits, shop: next });
+  return (await merchantHome()).shop;
+}
+
+/**
+ * Change a menu item's photo, name, description (`note`), price or section. Only the fields given change.
+ * `price` is the base price in whole pesos; variant prices stay added on top of it.
+ * DEMO: kept in this browser. BACKEND: upload the photo and store its URL in `image`.
+ * @returns {Promise<object>} the item as `merchantHome().shop.menu` shows it
+ */
+export async function updateItem(itemId, { name, note, price, section, image } = {}) {
+  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  if (!DEMO_ACCOUNTS.merchant.shop.menu.some((i) => i.id === itemId)) throw Object.assign(new Error('Item not found'), { status: 404 });
+  const edits = demo.get('merchantEdits', { shop: {}, items: {} });
+  const next = { ...edits.items[itemId] };
+  if (name !== undefined) next.name = cleanText(name, 60, 'name', true);
+  if (note !== undefined) next.note = cleanText(note, 200, 'description');
+  if (section !== undefined) next.section = cleanText(section, 30, 'section', true);
+  if (price !== undefined) {
+    const p = Number(price);
+    if (!Number.isInteger(p) || p < 1 || p > 100000) throw bad('Enter a price in whole pesos, from ₱1.');
+    next.price = p;
+  }
+  if (image !== undefined) {
+    if (!isPhoto(image)) throw bad('That photo can’t be used. Pick a JPEG, PNG or WebP picture.');
+    next.image = image;
+  }
+  saveEdits({ ...edits, items: { ...edits.items, [itemId]: next } });
+  return (await merchantHome()).shop.menu.find((i) => i.id === itemId);
 }
 
 /** Move an order along (Accept, Decline, Start preparing, Ready for pickup). */

@@ -209,7 +209,7 @@ Bundles (`bundle: true`) are fixed combos with no options. A cart is for one sho
 | Page | What it does | Source |
 |---|---|---|
 | `pages/merchant.html` | **Merchant sign in**: mobile number or email + password, then the dashboard | `merchantSignIn({ login, password })`, `merchantHome()` |
-| `pages/merchant-home.html` | **Hero**: greeting, shop name, area, hours, live Open/Closed dot and the **Accepting orders** switch; **Today**: orders, sales, waiting for you, average order (numbers count up); **Orders** in tabs New · Preparing · Ready · Done, one card per order (customer, time, items, total, note) with Accept / Decline / Start preparing / Ready for pickup; **Sales this week** (7 bars, today highlighted); **Your products**: a card per item with its picture (`image`), short description (`note`), price and the full price of each variant (the first required single-choice option, e.g. Solo ₱120 · Sharing ₱230), a filter by section and an Available switch (sold out). Full screen, no map behind it. Sign out is in the profile menu | `merchantHome()`, `updateMerchantOrder()`, `setShopOpen()`, `setItemAvailable()`, `merchantSignOut()` |
+| `pages/merchant-home.html` | **Night sky header**: greeting, shop photo and name, area, hours, live Open/Closed dot and the **Accepting orders** switch, and today's numbers in gold (orders, sales, waiting for you, average order; they count up); **Orders** in three columns New · Preparing · Ready (tabs on phones), one card per order (customer, time, items, note, total) with Accept / Decline / Start preparing / Ready for pickup, and finished ones folded under **Done today**; **Sales this week** (7 bars, today highlighted); **Your shop**: photo, name and description with **Edit shop** (photo, name, about); **Your products**: a card per item with its picture (`image`), short description (`note`), price and the full price of each variant (the first required single-choice option, e.g. Solo ₱120 · Sharing ₱230), a filter by section, **Edit** (photo, name, description, price, section) and an Available switch (sold out). Edits open in a sheet; a picked photo is shrunk to 1000 px and sent as a JPEG data URL. Sign out is in the profile menu | `merchantHome()`, `updateMerchantOrder()`, `setShopOpen()`, `setItemAvailable()`, `updateShop()`, `updateItem()`, `merchantSignOut()` |
 
 Order status gains `ready` (ready for the rider): placed → accepted → preparing → ready → picked_up → delivered.
 Backend: `shopMenu()` should leave out (or mark) items the merchant switched off, and a closed shop can't take orders.
@@ -276,6 +276,7 @@ customer: "Your account" (saved places, trips, payments: coming soon) and this b
 | `currentUser()` / `signOut()` | `{ role: 'client'\|'driver'\|'merchant', name, email }` or `null` / nothing | top bar profile menu, every page |
 | `clientSignIn({ login, password })` / `clientSignOut()` | `{ name }` (401 if no match) / nothing | customer sign in |
 | `setShopOpen(open)` / `setItemAvailable(itemId, available)` | `{ open }` / `{ ok }` | merchant dashboard |
+| `updateShop({ name?, about?, image? })` / `updateItem(itemId, { name?, note?, price?, section?, image? })` | the shop / the item, as `merchantHome()` shows it (400 with a plain reason for bad input, 413 if the photo can't be stored). `image` arrives as a JPEG data URL: upload it and store its URL. Names up to 60 characters, descriptions up to 200, `price` a whole peso amount from 1 | merchant dashboard |
 | `updateMerchantOrder(orderId, action)` | `{ status }` (409 if the step isn't possible) | merchant dashboard; actions in `MERCHANT_ACTIONS` |
 | `deliveryQuote(shopId, address)` | `{ km, fee \| null }` | checkout |
 | `placeOrder(order)` / `orderStatus(id)` / `myOrders()` | `{ id }` / `Order` / `Order[]` | checkout, order page |
@@ -386,7 +387,7 @@ Any design works as long as `api.js` returns the shapes above. One option:
 | `WS /api/drivers/me/jobs` · `POST /api/jobs/:id/accept` · `POST /api/jobs/:id/status` | job requests |
 | `GET /api/drivers/me/earnings` | earnings |
 | `GET /api/shops` · `GET /api/shops/:id` · `POST /api/shops/:id/quote` | Shop |
-| `POST /api/merchants/session` · `GET /api/merchants/me` · `PUT /api/merchants/me/open` · `PUT /api/merchants/me/items/:id` · `POST /api/orders/:id/status` | Merchant dashboard |
+| `POST /api/merchants/session` · `GET /api/merchants/me` · `PUT /api/merchants/me/open` · `PUT /api/merchants/me/items/:id` · `PATCH /api/merchants/me/shop` · `PATCH /api/merchants/me/items/:id` · `POST /api/orders/:id/status` | Merchant dashboard |
 | `POST /api/orders` · `GET /api/orders/:id` · `GET /api/me/orders` | orders |
 
 Work fares, fees and tip limits out on the server: anything calculated in the browser can be edited by the user.

@@ -1735,14 +1735,5 @@ body.is-sheet-hidden.page--driver .maplibregl-ctrl-bottom-right { bottom: calc(1
 .profile__item--out .icon { stroke: #b8331d; }
 .profile__item--out:hover, .profile__item--out:focus-visible { background: #fdeeea; color: #9c2a17; }
 @keyframes m-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.live { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 6px; background: var(--m-accent-10); font-size: 12.5px; font-weight: 700; color: var(--m-accent); }
-.live.is-closed { background: var(--m-soft); color: var(--m-muted); }
 @keyframes live-ping { from { transform: scale(1); opacity: .5; } to { transform: scale(2.4); opacity: 0; } }
 @keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-.products .fchips { margin: 0; padding: 0; flex-wrap: wrap; overflow: visible; }
-.products .fchip {
-  height: 32px; padding: 0 12px; border-radius: 8px; box-shadow: none; border: 1px solid var(--m-line);
-  background: #fff; color: var(--m-text); font-weight: 600; transition: background-color .15s, color .15s, border-color .15s;
-}
-.products .fchip:hover { border-color: #d4d4d8; color: var(--m-ink); }
-.products .fchip[aria-pressed="true"] { background: var(--m-accent); border-color: var(--m-accent); color: #fff; }
