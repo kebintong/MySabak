@@ -5,7 +5,7 @@ import {
   errorMessage,
 } from '../api.js';
 import { itemPicture, storefront } from '../placeholders.js';
-import { $, mountChrome, esc, peso, when, toast } from '../ui.js';
+import { $, mountChrome, esc, peso, when, toast, edgeGlow } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
 
@@ -295,6 +295,7 @@ $('#merchantHome').addEventListener('click', async (e) => {
   b.disabled = true;
   try {
     await updateMerchantOrder(b.dataset.order, b.dataset.action);
+    if (b.dataset.action === 'accept') edgeGlow('reward', b);
     await reload();
   } catch (err) { toast(err.status === 409 ? err.message : errorMessage(err)); b.disabled = false; }
 });

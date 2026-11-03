@@ -136,7 +136,7 @@ $('#shopList').addEventListener('click', (e) => {
    A tile filters the map, a shop is shown on the map, Map goes back with the search kept. */
 const svgArt = (paths) => `<svg class="btile__art" viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
 const TILE_ART = {
-  food: '<img class="btile__art btile__art--pic" src="/assets/images/v3/food.svg" alt="">',
+  food: '<img class="btile__art btile__art--pic" src="/assets/images/3d/food.webp" alt="">',
   coffee: svgArt('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v3M12 3v3"/>'),
   bakery: svgArt('<path d="M5 11a4 4 0 0 1 2-7h10a4 4 0 0 1 2 7v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/>'),
   grocery: svgArt('<path d="M3 10h18l-2 9H5z"/><path d="M8 10l4-6 4 6"/>'),

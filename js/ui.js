@@ -23,6 +23,83 @@ const ICONS = '/assets/images/icons.svg';
 /** <svg> for an icon in assets/images/icons.svg */
 export const icon = (id, cls = '') => `<svg class="icon ${cls}" aria-hidden="true"><use href="${ICONS}#${id}"/></svg>`;
 
+/* ---------- Midnight magic glow (Figma "H-v3 · Mascot · Midnight") ---------- */
+const STAR = 'M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z';
+// [x%, y%, r] white dots, then gold ones; [x%, y%, px, gold?, delay s] four-point twinkles
+const SKY_DOTS = [[6, 8, 1.2], [18, 15, 1.6], [31, 6, 1], [48, 17, 1.4], [67, 7, 1.2], [85, 11, 1.6], [95, 21, 1],
+  [64, 37, 1], [97, 63, 1.4], [15, 86, 1.2], [46, 86, 1.4], [77, 81, 1.1]];
+const SKY_GOLD = [[38, 13, 1.3], [90, 40, 1.2], [59, 91, 1.3]];
+const SKY_TWINKLES = [[41, 9, 8, 0, 1.9], [58, 11, 9, 0, 0.2], [74, 15, 15, 1, 1.1], [30, 85, 9, 0, 2.2], [8, 87, 7, 1, 1.4], [90, 82, 11, 1, 0.7]];
+
+/** Fill an element with the night-sky effects: drifting aurora, sparkle dust, blinking dots, twinkling stars. */
+export function paintSky(el) {
+  if (!el || el.dataset.painted) return;
+  el.dataset.painted = '1';
+  const dots = (list, fill) => list.map(([x, y, r], i) => `<circle class="sky-dot" cx="${x}%" cy="${y}%" r="${r}" fill="${fill}" style="animation-delay:-${(i * 0.7) % 3}s"/>`).join('');
+  el.innerHTML = '<span class="sky-aurora"></span><span class="sky-aurora sky-aurora--gold"></span>'
+    + '<svg class="sky-dust" viewBox="0 0 390 262" preserveAspectRatio="none" aria-hidden="true">'
+    + '<path d="M-10 236 C90 210 150 228 230 176 C290 138 330 90 400 70" stroke="#FFE29A" stroke-opacity=".45" stroke-width="2" stroke-dasharray="1 9"/>'
+    + '<path d="M-10 244 C96 222 160 238 236 188 C296 150 336 104 400 84" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="1 13" style="animation-duration:10s"/></svg>'
+    + `<svg class="sky-dots" aria-hidden="true">${dots(SKY_DOTS, '#fff')}${dots(SKY_GOLD, '#FFE29A')}</svg>`
+    + SKY_TWINKLES.map(([x, y, s, gold, d]) => `<svg class="sky-tw" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-delay:${d}s" viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}" fill="${gold ? '#FFE29A' : '#fff'}"/></svg>`).join('');
+}
+
+/**
+ * The edge glow: a light that sweeps around the screen's edge, starting from where you tapped.
+ * kind 'arrive' (lilac: you moved somewhere) or 'reward' (gold: you booked, claimed, ordered, tipped…).
+ * from: the element tapped, or an angle in degrees (0 = top centre, clockwise).
+ */
+export function edgeGlow(kind = 'arrive', from = null) {
+  let angle = typeof from === 'number' ? from : 180;
+  if (from && typeof from === 'object' && from.getBoundingClientRect) {
+    const r = from.getBoundingClientRect();
+    const x = r.left + r.width / 2 - innerWidth / 2;
+    const y = r.top + r.height / 2 - innerHeight / 2;
+    angle = (Math.atan2(x, -y) * 180) / Math.PI;
+  }
+  document.querySelectorAll('.edgeglow').forEach((n) => n.remove());
+  const glow = document.createElement('div');
+  glow.className = `edgeglow edgeglow--${kind === 'reward' ? 'reward' : 'arrive'}`;
+  glow.setAttribute('aria-hidden', 'true');
+  glow.style.setProperty('--o', `${angle}deg`);
+  glow.innerHTML = '<span class="edgeglow__rim edgeglow__rim--soft"></span><span class="edgeglow__rim"></span>';
+  document.body.append(glow);
+  document.body.classList.add('is-glowing');
+  setTimeout(() => { glow.remove(); document.body.classList.remove('is-glowing'); }, 1800);
+}
+
+// Tabs (and a few buttons) load a new page, so the glow plays on arrival: it is remembered for the next page
+const GLOW_KEY = 'mysabak.glow';
+const angleOf = (el) => {
+  const r = el.getBoundingClientRect();
+  return Math.round((Math.atan2(r.left + r.width / 2 - innerWidth / 2, -(r.top + r.height / 2 - innerHeight / 2)) * 180) / Math.PI);
+};
+/** Play the edge glow on the next page this tab opens (e.g. after placing an order). */
+export function glowNext(kind = 'arrive', from = null) {
+  try { sessionStorage.setItem(GLOW_KEY, JSON.stringify({ kind, angle: from ? angleOf(from) : 180 })); } catch (_) { /* storage off: no glow */ }
+}
+function armTabGlow() {
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab');
+    if (tab && !tab.classList.contains('is-active') && !e.defaultPrevented) glowNext('arrive', tab);
+  });
+  let next = null;
+  try { next = JSON.parse(sessionStorage.getItem(GLOW_KEY)); sessionStorage.removeItem(GLOW_KEY); } catch (_) { /* storage off */ }
+  if (next) requestAnimationFrame(() => edgeGlow(next.kind, Number(next.angle)));
+}
+
+/** Night-sky effects on every sky on the page, and the arrival glow. Called once per page. */
+export function mountMagic() {
+  if (document.body.dataset.magic) return;
+  document.body.dataset.magic = '1';
+  // the sky headers of the content pages get the same effects as Home's
+  $$('.page--head-sky .page-head, .page--sky:not(.page--head-sky) .app, [data-sky]').forEach((host) => {
+    if (!$(':scope > .skyfx', host)) host.insertAdjacentHTML('afterbegin', '<div class="skyfx" aria-hidden="true"></div>');
+  });
+  $$('.skyfx').forEach(paintSky);
+  armTabGlow();
+}
+
 /* ---------- Top bar + tab bar ---------- */
 export const TABS = [
   { id: 'home', label: 'Home', icon: 'i-home', href: '/' },
@@ -73,6 +150,7 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
   }
   if (!$('#toast')) document.body.insertAdjacentHTML('beforeend', '<div class="toast" id="toast" role="status" aria-live="polite"></div>');
   registerServiceWorker();
+  mountMagic();
   return currentUser().catch(() => null).then((user) => {
     if (guardRole(user, roles)) return user;
     if (top) mountAccount($('[data-account]', top), user, { signIn });
@@ -485,6 +563,7 @@ export function openTipSheet({ orderId, orderType, title, subtitle = '', lines =
       send.textContent = 'Sending…';
       try {
         await sendTip({ orderId, orderType, amount, method: picker.method() });
+        edgeGlow('reward', send);
         toast(`Thank you! Your ${peso(amount)} tip keeps mysabak fee-free for drivers.`);
         done({ amount });
       } catch (err) {

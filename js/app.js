@@ -24,10 +24,10 @@
 import { CONFIG } from './config.js';
 import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
-  findDriver, cancelRide, onTripUpdate, rateRide, currentUser,
+  findDriver, cancelRide, onTripUpdate, rateRide, currentUser, myTrips,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
-import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole } from './ui.js';
+import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr } from './ui.js';
 import { splitPrice, cleanTip } from './money.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -231,6 +231,7 @@ async function startBooking() {
     state.driver = { ...driver, status: 'arriving', pos: null, eta: null };
     state.step = 'trip';
     render();
+    edgeGlow('reward', $('#payBtn')); // a driver accepted
     stopTrip = onTripUpdate(res.id, onTrip);
   } catch (err) {
     if (token !== bookingToken || err.status === 499) return;
@@ -513,7 +514,7 @@ const latestRecent = () => store.get(RECENT_KEY, [])[0] || null;
 function buildVehicles() {
   el.vehicles.innerHTML = CONFIG.vehicles.map((v, i) => `
     <button type="button" class="vehicle" role="radio" data-vehicle="${v.id}" aria-checked="false" tabindex="-1" style="--i:${i}">
-      <img class="v-icon" src="assets/images/v3/${v.art}.svg" alt="" width="80" height="50">
+      <img class="v-icon" src="assets/images/3d/${v.art}.webp" alt="" width="80" height="50">
       <span class="v-text">
         <span class="v-name">${v.name}</span>
         <span class="v-meta"><span class="v-cap">${v.capacity} · </span><span class="v-eta"></span><span class="v-away"> away</span></span>
@@ -965,6 +966,68 @@ currentUser().catch(() => null).then((user) => {
 });
 
 /* =========================================================
+   Home: Magic pick, Recent and the Magic Rides offer
+   ========================================================= */
+// "Today", "Yesterday", "Mon", or "Oct 28", like the design's Recent list
+const dayOf = (ts) => {
+  const d = new Date(ts); const today = new Date();
+  const days = Math.round((new Date(today.toDateString()) - new Date(d.toDateString())) / 864e5);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return d.toLocaleDateString('en-PH', { weekday: 'short' });
+  return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+};
+const vehicleNameOf = (id) => (CONFIG.vehicles.find((v) => v.id === id) || { name: 'Ride' }).name;
+let homeTrips = [];
+// Book again: the drop-off goes first in the recent places, then "Choose your ride" opens for it
+function rebookTrip(trip, from) {
+  const d = trip && trip.dropoff;
+  if (!d) return;
+  rememberPlace(d.label, d);
+  edgeGlow('reward', from);
+  location.hash = 'ride';
+  goToChoose(d.label || 'Pinned location', d);
+}
+async function renderHomeTrips() {
+  homeTrips = (await myTrips().catch(() => [])).filter((t) => t.dropoff && t.dropoff.label);
+  const last = homeTrips[0];
+  $('#magicPick').hidden = !last;
+  if (last) {
+    setBind('pickPlace', last.dropoff.label);
+    setBind('pickMeta', `${vehicleNameOf(last.vehicle)} · Last trip ${dayOf(last.at)} · ${pesoOr(last.price && last.price.fare, '[FARE]')}`);
+  }
+  const recent = homeTrips.slice(0, 2);
+  $('[data-recent-list]').hidden = !recent.length;
+  $('#recentList').innerHTML = recent.map((t, i) => `<li class="recent__row">
+      ${icon(t.kind === 'express' ? 'i-box' : 'i-car', 'icon--lg')}
+      <span class="recent__text"><span class="recent__name">${esc(t.dropoff.label)}</span>
+        <span class="recent__meta">${t.kind === 'express' ? 'Parcel' : esc(vehicleNameOf(t.vehicle))} · ${esc(dayOf(t.at))} · ${pesoOr(t.price && t.price.total, '[FARE]')}</span></span>
+      <button type="button" class="btn-soft cta" data-trip="${i}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`).join('');
+}
+$('#pickBook').addEventListener('click', (e) => rebookTrip(homeTrips[0], e.currentTarget));
+$('#recentList').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-trip]');
+  if (b) rebookTrip(homeTrips[Number(b.dataset.trip)], b);
+});
+
+// DEMO: claiming is remembered in this browser only; no discount is applied until vouchers exist
+const CLAIM_KEY = 'mysabak.magicRides';
+function renderClaim() {
+  const claimed = store.get(CLAIM_KEY, false);
+  const btn = $('#claimOffer');
+  btn.setAttribute('aria-pressed', String(claimed));
+  setBind('claimLabel', claimed ? 'Offer claimed' : 'Claim offer');
+  $('[data-claim-arrow]', btn).style.display = claimed ? 'none' : '';
+}
+$('#claimOffer').addEventListener('click', (e) => {
+  if (store.get(CLAIM_KEY, false)) return;
+  store.set(CLAIM_KEY, true);
+  renderClaim();
+  edgeGlow('reward', e.currentTarget);
+  toast('Offer claimed. (Demo: discounts arrive with vouchers.)');
+});
+
+/* =========================================================
    Home ↔ ride screen (by URL hash, so the phone's Back button works)
    ========================================================= */
 const RIDE_LINKS = ['ride', 'where', 'moto', 'parcel', 'rebook']; // #rebook: from Trips, the latest recent place
@@ -974,7 +1037,7 @@ function route() {
   el.body.classList.toggle('is-ride', ride);
   el.body.classList.toggle('is-home', !ride);
   $('#map').inert = !ride; // under the home: keep it out of tab order and screen readers
-  if (!ride) return;
+  if (!ride) { renderHomeTrips(); return; }
   setMode(link === 'parcel' ? 'express' : 'ride');
   if (link === 'moto') selectVehicle('motor');
   if (link === 'rebook') {
@@ -1024,6 +1087,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
    ========================================================= */
 buildVehicles();
 render();
+mountMagic();
+renderClaim();
 route();
 initMap({
   state,

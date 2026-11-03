@@ -501,7 +501,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .recent__row:hover .btn-soft { background: var(--brand-deep); color: #fff; }
 .recent__row:hover .btn-soft .icon { stroke: #fff; }
 .list > .recent__row { min-height: 60px; }
-.trips-empty img { width: 160px; height: auto; }
+.trips-empty img { width: 200px; height: auto; }
 @media (min-width: 900px) {
 .hero { /* the Figma sky is a 390px picture; stretched this wide its stars smear, so paint it */
     min-height: 360px;
@@ -1728,3 +1728,113 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 @keyframes m-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes live-ping { from { transform: scale(1); opacity: .5; } to { transform: scale(2.4); opacity: 0; } }
 @keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* =========================================================
+   Midnight · magic glow (Figma "H-v3 · Mascot · Midnight")
+   Shared by every page: night sky effects, glow borders with breathing glows, gradient buttons,
+   the light sweep, springy presses and the edge glow. Most loops run 2–3 times and then rest.
+   ========================================================= */
+:root {
+  --grape: linear-gradient(145deg, #3e1270 0%, #6e30b4 60%, #8e3fc9 100%); /* buttons and the Magic pick star */
+  --sky: linear-gradient(155deg, #1e0638 0%, #3e1270 36%, #6e30b4 72%, #9246c2 100%);
+  --glow-border: linear-gradient(120deg, #c59af0 0%, #f6c46c 50%, #b98af0 100%);
+  --gold-button: linear-gradient(135deg, #ffe29a 0%, #f6c46c 50%, #e3933f 100%);
+  --lilac-glow: rgba(185, 138, 240, .55);
+  --gold-glow: rgba(246, 196, 108, .5);
+}
+@property --s { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+/* Night sky: drifting aurora, sparkle dust, blinking dots and twinkles (filled in by paintSky() in ui.js) */
+.skyfx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.sky-aurora {
+  position: absolute; left: 44%; top: -40px; width: 260px; height: 150px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(211, 91, 224, .45), rgba(211, 91, 224, 0) 70%);
+  animation: sky-drift 9s ease-in-out 2 alternate;
+}
+.sky-aurora--gold {
+  left: -60px; top: auto; bottom: 0; width: 240px; height: 120px;
+  background: radial-gradient(ellipse at center, rgba(246, 196, 108, .28), rgba(246, 196, 108, 0) 70%);
+  animation-delay: -4s;
+}
+.sky-dust { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sky-dust path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; animation: sky-dust 7s linear 1; }
+.sky-dots { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sky-dot { opacity: .6; animation: sky-blink 3.4s ease-in-out 2; }
+.sky-tw { position: absolute; transform-origin: 50% 50%; animation: sky-twinkle 2.8s ease-in-out 3; }
+.page-head:has(> .skyfx) { position: relative; isolation: isolate; }
+.page-head:has(> .skyfx) > :not(.skyfx) { position: relative; z-index: 1; }
+.page--sky .app > .skyfx { bottom: auto; height: calc(230px + var(--safe-t)); }
+[data-sky] { position: relative; isolation: isolate; }
+
+/* Glow cards: a lilac → gold border, with a lilac glow breathing on the left and a gold one on the right */
+.glowwrap { position: relative; display: block; text-decoration: none; color: inherit; }
+.glowwrap__blobs { position: absolute; inset: 18% 0; pointer-events: none; }
+.glowwrap__blobs > span {
+  position: absolute; top: 0; bottom: 0; left: -6px; width: 46%; border-radius: 50%;
+  background: var(--lilac-glow); filter: blur(14px); opacity: .7;
+  animation: glow-breathe 4.4s cubic-bezier(.45, 0, .55, 1) 3;
+}
+.glowwrap__blobs > span + span { left: auto; right: -6px; background: var(--gold-glow); animation-delay: 1.8s; }
+.glowwrap__blobs--big { inset: 10% 0 6%; }
+.glowwrap__blobs--big > span { left: -10px; filter: blur(20px); background: rgba(185, 138, 240, .75); }
+.glowwrap__blobs--big > span + span { right: -10px; background: rgba(246, 196, 108, .6); }
+.glow-border {
+  position: relative;
+  border: 1.5px solid transparent !important;
+  background: linear-gradient(var(--gb-fill, #fff), var(--gb-fill, #fff)) padding-box, var(--glow-border) border-box !important;
+}
+/* the light sweep across a card */
+.sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.sheen::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, .55) 50%, rgba(255, 255, 255, 0) 65%);
+  transform: translateX(-120%);
+  animation: sheen 5.5s ease-in-out 1;
+}
+/* springy press for call-to-action buttons */
+.cta { transition: transform 280ms cubic-bezier(.34, 1.56, .64, 1); }
+.cta:active { transform: scale(.94); transition-duration: 120ms; }
+
+/* Buttons take the grape gradient; hover deepens it */
+.button:not(.button--ghost) { background: var(--grape); background-size: 140% 100%; background-position: 0 0; transition: background-position .3s, transform 280ms cubic-bezier(.34, 1.56, .64, 1), box-shadow .18s; }
+.button:not(.button--ghost):hover { background: var(--grape); background-size: 140% 100%; background-position: 100% 0; }
+.button:active { transform: scale(.95); transition-duration: 120ms; }
+
+/* Edge glow (edgeGlow() in ui.js): a rim of light sweeps both ways around the screen from --o */
+.edgeglow {
+  position: fixed; inset: 0; z-index: 1000; pointer-events: none; opacity: 0;
+  --gi: .75;
+  -webkit-mask: conic-gradient(from calc(var(--o) - var(--s)), transparent 0deg, #000 10deg, #000 calc(var(--s) * 2), transparent calc(var(--s) * 2 + 10deg));
+  mask: conic-gradient(from calc(var(--o) - var(--s)), transparent 0deg, #000 10deg, #000 calc(var(--s) * 2), transparent calc(var(--s) * 2 + 10deg));
+  animation: glow-in 1.7s cubic-bezier(.33, 0, .2, 1) 1 forwards, glow-sweep 1s cubic-bezier(.16, 1, .3, 1) 1 forwards;
+}
+.edgeglow--reward { --gi: 1; }
+.edgeglow__rim {
+  position: absolute; inset: -4px; padding: 7px; border-radius: 0; opacity: var(--gi); filter: blur(3px);
+  background: linear-gradient(160deg, #6e30b4 0%, #b57bff 35%, #8e3fc9 65%, #c59af0 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.edgeglow__rim--soft { padding: 12px; filter: blur(14px); opacity: calc(.55 * var(--gi)); }
+.edgeglow--reward .edgeglow__rim { background: linear-gradient(160deg, #7b3fbf 0%, #ffc94d 28%, #e3933f 48%, #b57bff 72%, #ffd66b 100%); }
+/* while it plays, the breathing glows dim so the rim stands out */
+.is-glowing .glowwrap__blobs > span { animation: glow-dim 1.7s ease 1; }
+
+@keyframes sky-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-28px, 14px) scale(1.12); } }
+@keyframes sky-dust { to { stroke-dashoffset: -160; } }
+@keyframes sky-blink { 0%, 100% { opacity: .2; } 50% { opacity: .9; } }
+@keyframes sky-twinkle { 0%, 100% { opacity: .25; transform: scale(.55) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
+@keyframes glow-breathe { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .9; transform: scale(1.05); } }
+@keyframes glow-dim { 0%, 100% { opacity: .7; } 18%, 70% { opacity: .18; } }
+@keyframes sheen { 0% { transform: translateX(-120%); } 55%, 100% { transform: translateX(160%); } }
+@keyframes glow-in { 0% { opacity: 0; } 12% { opacity: 1; } 58% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes glow-sweep { from { --s: 0deg; } to { --s: 190deg; } }
+@keyframes ring-pulse { 0% { box-shadow: 0 0 0 0 rgba(197, 154, 240, .55); } 70%, 100% { box-shadow: 0 0 0 14px rgba(197, 154, 240, 0); } }
+@media (prefers-reduced-motion: reduce) {
+.edgeglow { --s: 190deg; animation: glow-in 1.4s ease 1 forwards !important; animation-duration: 1.4s !important; }
+.sky-tw { opacity: .85; }
+.sheen { display: none; }
+}
+[data-sky] > :not(.skyfx) { position: relative; z-index: 1; }
+.page--sky .page-head__back { color: #e2d0f4; } .page--sky .page-head__back .icon { stroke: #e2d0f4; }

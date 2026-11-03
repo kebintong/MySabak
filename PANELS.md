@@ -35,7 +35,7 @@ missing.
 ---
 
 ## Home (`index.html`; the "Home" tab)
-Design: Figma "04 · Home v3 · magical". Phones show it like the Figma frame; desktop lays the same cards out wider.
+Design: Figma "H-v3 · Mascot · Midnight magic glow". Phones show it like the Figma frame; desktop lays the same cards out wider.
 
 | Panel | Data | Source |
 |---|---|---|
@@ -44,8 +44,14 @@ Design: Figma "04 · Home v3 · magical". Phones show it like the Figma frame; d
 | "Where are you going?" | none | opens the ride screen with the drop-off box focused (`#where`) |
 | Home / Office chips | the user's saved places | **not built** (needs accounts) |
 | Ride / Moto / Parcel / Food cards | none | Ride screen (`#ride`), Ride with Motor picked (`#moto`), Express (`#parcel`), Shops |
-| Sweet treats promo | none | links to Shops |
-| Recent | last drop-off; Rebook goes straight to "Choose your ride" | this browser only; backend can supply recent trips |
+| Magic pick ("Heading to Ayala Center Cebu?" · Book) | the latest trip: drop-off, vehicle, day, fare | `myTrips()[0]`; hidden when there is none. Book opens "Choose your ride" for that drop-off. Backend: a real prediction (time of day, saved places) can replace it |
+| Magic Rides promo ("Save ₱[50] on 3 trips" · Claim offer) | the offer | **DEMO**: claiming is remembered in this browser only and **no discount is applied**. Needs a vouchers API, and a decision on who pays the discount (drivers keep 100% of the fare) |
+| Recent | the last two trips: drop-off, vehicle, day, total; Rebook | `myTrips()` |
+
+**Look (every page):** the Midnight magic glow: night-sky headers with drifting aurora, sparkle dust and twinkles
+(`paintSky()` in `ui.js`), lilac → gold glow borders with breathing glows (`.glowwrap`, `.glow-border`), grape gradient
+buttons, 3D pictures in `assets/images/3d/`, and the **edge glow** (`edgeGlow()` in `ui.js`): lilac when you move to
+another tab, gold ("reward") when you book, claim, order, tip, accept a job or send an application.
 
 Tab bar (customers): **Home · Trips · Food · Wallet · Account** (Food is the round middle button on phones).
 Drive and Support are linked from the Account page. Drivers and merchants keep their own tabs.

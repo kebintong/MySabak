@@ -1,6 +1,6 @@
 /* Support page (pages/support.html): how money moves, tip totals, give without a ride, your tips. */
 import { supportStats, myTips, sendTip, errorMessage } from '../api.js';
-import { $, mountChrome, tipPicker, toast, peso, pesoOr, esc, when } from '../ui.js';
+import { $, mountChrome, tipPicker, toast, peso, pesoOr, esc, when, edgeGlow } from '../ui.js';
 
 mountChrome();
 
@@ -40,6 +40,7 @@ give.addEventListener('click', async () => {
   give.textContent = 'Sending…';
   try {
     await sendTip({ orderId: null, orderType: 'direct', amount, method: picker.method() });
+    edgeGlow('reward', give);
     toast(`Thank you! ${peso(amount)} keeps mysabak fee-free for drivers.`);
     picker.reset();
     loadMine();

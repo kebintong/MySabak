@@ -212,80 +212,93 @@
       </div>
     </div>
 
-    <!-- ============ Home (Figma "04 · Home v3 · magical") ============ -->
+    <!-- ============ Home (Figma "H-v3 · Mascot · Midnight magic glow") ============ -->
     <main class="home" id="home">
       <header class="hero">
-        <img class="twinkle" src="assets/images/v3/twinkle-a.svg" alt="" style="--x:41%;--y:10%;--s:7px">
-        <img class="twinkle" src="assets/images/v3/twinkle-b.svg" alt="" style="--x:58%;--y:12%;--s:14px;--d:.5s">
-        <img class="twinkle" src="assets/images/v3/twinkle-gold.svg" alt="" style="--x:74%;--y:15%;--s:13px;--d:.9s">
-        <img class="twinkle" src="assets/images/v3/twinkle-b.svg" alt="" style="--x:30%;--y:85%;--s:14px;--d:.3s">
-        <img class="twinkle" src="assets/images/v3/twinkle-c.svg" alt="" style="--x:8%;--y:87%;--s:6px;--d:1.1s">
-        <img class="twinkle" src="assets/images/v3/twinkle-d.svg" alt="" style="--x:90%;--y:82%;--s:18px;--d:.7s">
+        <div class="skyfx" aria-hidden="true"></div>
         <div class="hero__inner">
           <div class="hero__top">
             <button type="button" class="pickup" data-pickup>
               <svg class="icon pickup__pin" aria-hidden="true"><use href="assets/images/icons.svg#i-pin"/></svg>
               <span class="pickup__text"><span class="pickup__label">Pickup from</span><span class="pickup__value"><span data-bind="from">Current location</span><svg class="icon icon--sm icon--white pickup__chev" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span></span>
             </button>
-            <button type="button" class="bell" data-soon="Notifications" aria-label="Notifications"></button>
+            <button type="button" class="bell" data-soon="Notifications" aria-label="Notifications"><span class="bell__dot" aria-hidden="true"></span></button>
           </div>
           <a class="home-search" href="#where"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-search"/></svg>Where are you going?</a>
           <div class="glass-chips" role="group" aria-label="Saved places">
             <button type="button" class="glass-chip" data-saved="home"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg>Home</button>
             <button type="button" class="glass-chip" data-saved="work"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>Office</button>
             <button type="button" class="glass-chip" data-recent data-rebook hidden><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-bookmark"/></svg><span class="chip__text" data-bind="recent"></span></button>
-            <button type="button" class="glass-chip glass-chip--add" data-soon="Saved places" aria-label="Add a place"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
+            <button type="button" class="glass-chip glass-chip--add" data-soon="Saved places" aria-label="Add a saved place"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
           </div>
         </div>
       </header>
 
       <div class="home__grid">
-        <a class="svc svc--ride" href="#ride">
-          <span class="svc__copy"><span class="svc__name">Ride</span><span class="svc__sub">Up to 6 seats</span></span>
-          <img class="svc__art" src="assets/images/v3/car.svg" alt="" width="222" height="139">
-          <img class="svc__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="10" height="10">
+        <!-- Magic pick: the last trip in this browser, booked again in one tap (hidden until there is one) -->
+        <div class="glowwrap pick-wrap" id="magicPick" hidden>
+          <span class="glowwrap__blobs" aria-hidden="true"><span></span><span></span></span>
+          <div class="pick glow-border">
+            <span class="pick__star" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z" fill="#FFE29A"/></svg></span>
+            <span class="pick__text">
+              <span class="pick__eyebrow">Magic pick</span>
+              <span class="pick__title">Heading to <span data-bind="pickPlace"></span>?</span>
+              <span class="pick__meta" data-bind="pickMeta"></span>
+            </span>
+            <button type="button" class="pick__book cta" id="pickBook"><span>Book</span></button>
+          </div>
+        </div>
+
+        <a class="glowwrap svc-wrap" href="#ride">
+          <span class="glowwrap__blobs" aria-hidden="true"><span></span><span></span></span>
+          <span class="svc svc--ride glow-border">
+            <span class="svc__copy"><span class="svc__name">Ride</span><span class="svc__sub">Up to 6 seats</span></span>
+            <img class="svc__art" src="assets/images/3d/car.webp" alt="" width="240" height="82">
+            <img class="svc__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="10" height="10">
+            <span class="sheen" aria-hidden="true"></span>
+          </span>
         </a>
         <a class="svc svc--lilac" href="#moto">
           <span class="svc__copy"><span class="svc__name">Moto</span><span class="svc__sub">Skip traffic</span></span>
-          <img class="svc__art" src="assets/images/v3/moto.svg" alt="" width="82" height="51">
+          <img class="svc__art" src="assets/images/3d/moto.webp" alt="" width="80" height="59">
           <img class="svc__sparkle" src="assets/images/v3/sparkle-lilac.svg" alt="" width="8" height="8">
         </a>
         <a class="svc svc--peach" href="#parcel">
           <span class="svc__copy"><span class="svc__name">Parcel</span><span class="svc__sub">Door to door</span></span>
-          <img class="svc__art" src="assets/images/v3/parcel.svg" alt="" width="82" height="51">
+          <img class="svc__art" src="assets/images/3d/parcel.webp" alt="" width="80" height="78">
           <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
         </a>
         <a class="svc svc--peach" href="pages/shops.html">
           <span class="svc__copy"><span class="svc__name">Food</span><span class="svc__sub">Meals nearby</span></span>
-          <img class="svc__art" src="assets/images/v3/food.svg" alt="" width="82" height="51">
+          <img class="svc__art" src="assets/images/3d/food.webp" alt="" width="80" height="71">
           <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
         </a>
 
         <div class="quick">
-          <button type="button" class="quick__item" data-soon="Scheduled rides"><img src="assets/images/v3/q-schedule.svg" alt="" width="36" height="36">Schedule</button>
-          <button type="button" class="quick__item" data-soon="Multi-stop rides"><img src="assets/images/v3/q-multistop.svg" alt="" width="36" height="36">Multi-stop</button>
-          <button type="button" class="quick__item" data-soon="Vouchers"><img src="assets/images/v3/q-vouchers.svg" alt="" width="36" height="36">Vouchers</button>
+          <button type="button" class="quick__item" data-soon="Scheduled rides"><img src="assets/images/3d/schedule.webp" alt="" width="36" height="36">Schedule</button>
+          <button type="button" class="quick__item" data-soon="Multi-stop rides"><img src="assets/images/3d/multistop.webp" alt="" width="36" height="36">Multi-stop</button>
+          <button type="button" class="quick__item" data-soon="Vouchers"><img src="assets/images/3d/vouchers.webp" alt="" width="36" height="36">Vouchers</button>
         </div>
 
-        <a class="promo" href="pages/shops.html">
-          <img class="promo__aurora" src="assets/images/v3/promo-aurora.svg" alt="">
-          <img class="promo__stars promo__stars--a" src="assets/images/v3/promo-stars-a.svg" alt="">
-          <img class="promo__stars promo__stars--b" src="assets/images/v3/promo-stars-b.svg" alt="">
-          <img class="promo__art" src="assets/images/v3/halo-halo.svg" alt="" width="80" height="80">
-          <span class="promo__copy">
-            <span class="promo__eyebrow">Sweet treats</span>
-            <span class="promo__title">Halo-halo,<br>delivered cold</span>
-            <span class="promo__link">Order food <svg class="icon icon--sm" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></span>
-          </span>
-        </a>
-
-        <section class="recent" data-recent hidden aria-labelledby="recentTitle">
-          <div class="recent__head"><h2 class="recent__title" id="recentTitle">Recent</h2><a class="recent__all" href="pages/trips.html">See all</a></div>
-          <div class="recent__row">
-            <svg class="icon icon--lg" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>
-            <span class="recent__text"><span class="recent__name" data-bind="recent"></span><span class="recent__meta">Recent drop-off</span></span>
-            <button type="button" class="btn-soft" data-rebook><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-rebook"/></svg>Rebook</button>
+        <!-- Magic Rides promo (Midnight). DEMO: "Claim offer" is remembered in this browser; no discount is applied yet -->
+        <section class="glowwrap promo-wrap" aria-label="New rider offer">
+          <span class="glowwrap__blobs glowwrap__blobs--big" aria-hidden="true"><span></span><span></span></span>
+          <div class="promo promo--magic">
+            <span class="promo__aurora" aria-hidden="true"></span>
+            <span class="promo__shadow" aria-hidden="true"></span>
+            <img class="promo__mascot" src="assets/images/3d/mascot.webp" alt="" width="160" height="244">
+            <div class="promo__copy">
+              <span class="promo__eyebrow">Magic rides</span>
+              <h2 class="promo__title">A little magic on your first rides</h2>
+              <span class="promo__sub">Save ₱[50] on 3 trips</span>
+              <button type="button" class="promo__claim cta" id="claimOffer"><span><span data-bind="claimLabel">Claim offer</span><svg class="icon icon--sm" aria-hidden="true" data-claim-arrow><use href="assets/images/icons.svg#i-arrow"/></svg></span></button>
+            </div>
           </div>
+        </section>
+
+        <section class="recent" data-recent-list hidden aria-labelledby="recentTitle">
+          <div class="recent__head"><h2 class="recent__title" id="recentTitle">Recent</h2><a class="recent__all" href="pages/trips.html">See all</a></div>
+          <ul class="recent__list" id="recentList"></ul>
         </section>
       </div>
     </main>
