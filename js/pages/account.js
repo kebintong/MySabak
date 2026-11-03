@@ -1,7 +1,7 @@
 /* Account (pages/account.html): customer sign in when signed out; the customer's account when signed in.
    Drivers and merchants have their own sign-in forms (the switch at the top of the card). */
 import { clientSignIn } from '../api.js';
-import { $, $$, mountChrome, toast, wireSignInForm } from '../ui.js';
+import { $, $$, mountChrome, toast, wireSignInForm, ROLES } from '../ui.js';
 
 mountChrome({ signIn: false, roles: ['client'] }).then((user) => {
   if (user && user.role !== 'client') return; // being sent to their own home
@@ -11,7 +11,8 @@ mountChrome({ signIn: false, roles: ['client'] }).then((user) => {
   $('#signedIn').hidden = false;
 });
 
-wireSignInForm($('#signinForm'), clientSignIn, '/');
+// Admins sign in here too (not advertised); their account's role sends them to the admin page.
+wireSignInForm($('#signinForm'), clientSignIn, (res) => (res.role === 'admin' ? ROLES.admin.home : '/'));
 
 $('#forgot').addEventListener('click', (e) => { e.preventDefault(); toast('Password reset by text message is coming soon.'); });
 $('#signupLink').addEventListener('click', (e) => { e.preventDefault(); toast('Customer sign-up is coming soon.'); });
