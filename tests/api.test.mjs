@@ -195,7 +195,30 @@ test('demo merchant account: sign in, open/close, sold out items, sign out', asy
   assert.equal(home.available.lumpia, true);
   const { shops } = await api.listShops({});
   assert.equal(shops.some((s) => s.id === acc.shop.id), false, 'the merchant shop is not listed publicly');
+
+  // Editing the shop and its items: only the fields given change, bad input is refused
+  const photo = 'data:image/jpeg;base64,AAAA';
+  const shop = await api.updateShop({ name: '  Lola’s Kitchen ', image: photo });
+  assert.equal(shop.name, 'Lola’s Kitchen');
+  assert.equal(shop.image, photo);
+  assert.equal(shop.area, acc.shop.area, 'untouched fields stay');
+  await assert.rejects(api.updateShop({ name: '   ' }), { status: 400 });
+  await assert.rejects(api.updateShop({ image: 'javascript:alert(1)' }), { status: 400 });
+  await assert.rejects(api.updateShop({ image: '//evil.test/x.png' }), { status: 400 });
+  const item = await api.updateItem('adobo', { price: '135', note: 'Now with egg.' });
+  assert.equal(item.price, 135);
+  assert.equal(item.note, 'Now with egg.');
+  assert.equal(item.name, 'Chicken adobo + rice');
+  await assert.rejects(api.updateItem('adobo', { price: 0 }), { status: 400 });
+  await assert.rejects(api.updateItem('adobo', { price: 12.5 }), { status: 400 });
+  await assert.rejects(api.updateItem('nope', { price: 10 }), { status: 404 });
+  home = await api.merchantHome();
+  assert.equal(home.shop.name, 'Lola’s Kitchen');
+  assert.equal(home.shop.menu.find((i) => i.id === 'adobo').price, 135);
+  assert.equal(acc.shop.name, 'Demo Kitchen', 'the demo data itself is not changed');
+
   await api.merchantSignOut();
+  await assert.rejects(api.updateShop({ name: 'x' }), { status: 401 });
   await assert.rejects(api.merchantHome(), { status: 401 });
 });
 

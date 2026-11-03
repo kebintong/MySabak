@@ -22,59 +22,66 @@
   <link rel="stylesheet" href="/css/merchant-home.css">
   <script type="module" src="/js/pages/merchant-home.js"></script>
 </head>
-<body class="page page--merchant">
+<body class="page page--head-sky page--merchant">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
       <div class="content__inner content__inner--full">
-
         <div id="merchantHome" class="stack mdash" hidden>
-          <!-- Hero: shop, greeting, open / closed -->
-          <header class="mhero">
-            <div class="mhero__shop">
-              <span class="mhero__ava" id="shopAva" aria-hidden="true"></span>
-              <div class="mhero__text">
-                <p class="mhero__hello" id="greeting">Good day</p>
-                <h1 class="mhero__title" id="shopName">Your shop</h1>
-                <p class="mhero__meta"><span id="shopArea"></span> · <span id="shopHours"></span></p>
+          <!-- Night sky (draft A): shop, greeting, open / closed, today's numbers in gold -->
+          <header class="page-head mhead">
+            <div class="mhero">
+              <div class="mhero__shop">
+                <span class="mhero__ava" id="shopAva" aria-hidden="true"></span>
+                <div class="mhero__text">
+                  <p class="mhero__hello" id="greeting">Good day</p>
+                  <h1 class="mhero__title" id="shopName">Your shop</h1>
+                  <p class="mhero__meta"><span id="shopArea"></span> · <span id="shopHours"></span></p>
+                </div>
               </div>
-            </div>
-            <div class="mhero__open">
-              <span class="live" id="openBadge"><span class="live__dot" aria-hidden="true"></span><span id="openLabel">Open</span></span>
-              <div class="mhero__switch">
+              <div class="mhero__open">
+                <span class="live" id="openBadge"><span class="live__dot" aria-hidden="true"></span><span id="openLabel">Open</span></span>
                 <span id="openHint">Accepting orders</span>
                 <button type="button" class="switch" id="openSwitch" role="switch" aria-checked="true" aria-label="Accepting orders"><span></span></button>
               </div>
             </div>
+            <section class="kpis" aria-label="Today">
+              <div class="kpi" style="--i:0"><span class="kpi__value" id="todayOrders">0</span><span class="kpi__label">Orders today</span></div>
+              <div class="kpi" style="--i:1"><span class="kpi__value" id="todaySales">0</span><span class="kpi__label">Sales today</span></div>
+              <div class="kpi" style="--i:2"><span class="kpi__value" id="waitingOrders">0</span><span class="kpi__label">Waiting for you</span></div>
+              <div class="kpi" style="--i:3"><span class="kpi__value" id="avgOrder">0</span><span class="kpi__label">Average order</span></div>
+            </section>
           </header>
 
-          <!-- Today at a glance -->
-          <section class="kpis" aria-label="Today">
-            <div class="kpi" style="--i:0"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-receipt"/></svg></span><span class="kpi__value" id="todayOrders">0</span><span class="kpi__label">Orders today</span></div>
-            <div class="kpi" style="--i:1"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-wallet"/></svg></span><span class="kpi__value" id="todaySales">0</span><span class="kpi__label">Sales today</span></div>
-            <div class="kpi" style="--i:2"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-clock"/></svg></span><span class="kpi__value" id="waitingOrders">0</span><span class="kpi__label">Waiting for you</span></div>
-            <div class="kpi" style="--i:3"><span class="kpi__icon" aria-hidden="true"><svg class="icon"><use href="/assets/images/icons.svg#i-star"/></svg></span><span class="kpi__value" id="avgOrder">0</span><span class="kpi__label">Average order</span></div>
+          <!-- Orders: three columns on desktop, tabs on phones; finished ones fold away below -->
+          <section class="card morders" aria-labelledby="ordersTitle">
+            <h2 class="card__title card__title--row" id="ordersTitle">Orders <span class="muted small">Newest first</span></h2>
+            <div class="seg ocols__tabs" role="tablist" aria-label="Order status" id="orderTabs"></div>
+            <div class="ocols" id="orderCols" aria-live="polite"></div>
+            <details class="mdone" id="doneOrders">
+              <summary id="doneTitle">Done today</summary>
+              <ul class="mlist" id="doneList"></ul>
+            </details>
           </section>
 
           <div class="merchant-grid">
-            <section class="card" aria-labelledby="ordersTitle">
-              <h2 class="card__title card__title--row" id="ordersTitle">Orders <span class="muted small">Newest first</span></h2>
-              <div class="seg" role="tablist" aria-label="Order status" id="orderTabs"></div>
-              <ul class="mlist" id="orderList" aria-live="polite"></ul>
+            <section class="card" aria-labelledby="weekTitle">
+              <h2 class="card__title card__title--row" id="weekTitle">Sales this week <span class="badge" id="weekTotal">₱0</span></h2>
+              <div class="wchart" id="weekChart" role="img"></div>
+              <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
             </section>
-
-            <div class="stack">
-              <section class="card" aria-labelledby="weekTitle">
-                <h2 class="card__title card__title--row" id="weekTitle">Sales this week <span class="badge" id="weekTotal">₱0</span></h2>
-                <div class="wchart" id="weekChart" role="img"></div>
-                <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
-              </section>
-            </div>
+            <!-- What customers see: photo, name, description; Edit opens the shop sheet -->
+            <section class="card mshop" aria-labelledby="shopCardTitle">
+              <div class="mshop__head"><h2 class="card__title" id="shopCardTitle">Your shop</h2><button type="button" class="button button--ghost mbtn" id="editShop">Edit shop</button></div>
+              <div class="mshop__photo" id="shopPhoto"></div>
+              <p class="mshop__name" id="shopCardName"></p>
+              <p class="mshop__about" id="shopAbout"></p>
+            </section>
           </div>
 
-          <!-- Products: picture, short description, variant prices, Available switch -->
+          <!-- Products: picture, short description, variant prices, Edit, Available switch -->
           <section class="card products" aria-labelledby="menuTitle">
             <div class="products__head">
               <h2 class="card__title" id="menuTitle">Your products <span class="muted small" id="menuCount"></span></h2>
