@@ -273,26 +273,42 @@ test('one account per device: customer, driver and merchant each have their own 
   assert.equal((await api.driverStatus()).signedIn, false);
 });
 
-test('admins sign in on the customer form; only they can review driver applications', async () => {
+test('admins sign in on the customer form; only they can see and decide registrations', async () => {
   const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
   await api.driverApply({ name: 'Test Driver', phone: '09171234567', email: 'test.driver@example.com', city: 'Cebu City',
     vehicle: 'motor', plate: '123 ABC', model: 'Honda Click', year: 2022, licenseNumber: 'G01-22-000001', password: 'x', agreed: true });
   await api.clientSignIn({ login: DEMO_ACCOUNTS.client.email, password: DEMO_ACCOUNTS.client.password });
-  await assert.rejects(api.adminDriverApplications(), { status: 403 }, 'customers are not admins');
-  await assert.rejects(api.adminDecideDriver({ phone: '09171234567', decision: 'approved' }), { status: 403 });
+  for (const call of [api.adminApplications('drivers'), api.adminOverview(), api.adminAnalytics(),
+    api.adminDecide({ kind: 'drivers', id: 'browser-driver', decision: 'approved' })]) {
+    await assert.rejects(call, { status: 403 }, 'customers are not admins');
+  }
 
   const res = await api.clientSignIn({ login: DEMO_ACCOUNTS.admin.phone, password: DEMO_ACCOUNTS.admin.password });
   assert.equal(res.role, 'admin');
   assert.equal((await api.currentUser()).role, 'admin');
-  const apps = await api.adminDriverApplications();
-  assert.deepEqual(apps.map((a) => a.name), ['Test Driver']);
-  await assert.rejects(api.adminDecideDriver({ phone: '09171234567', decision: 'maybe' }), { status: 400 });
-  await api.adminDecideDriver({ phone: '09171234567', decision: 'approved' });
+  const drivers = await api.adminApplications('drivers');
+  const mine = drivers.find((a) => a.id === 'browser-driver');
+  assert.equal(mine.name, 'Test Driver');
+  assert.equal(mine.status, 'review');
+  assert.ok(drivers.some((a) => a.sample), 'sample applicants are listed too');
+  const before = (await api.adminOverview()).drivers.waiting;
+
+  await assert.rejects(api.adminDecide({ kind: 'drivers', id: 'browser-driver', decision: 'maybe' }), { status: 400 });
+  await assert.rejects(api.adminDecide({ kind: 'drivers', id: 'browser-driver', decision: 'fix' }), { status: 400 }, 'a fix needs a reason');
+  await api.adminDecide({ kind: 'drivers', id: 'browser-driver', decision: 'fix', reason: 'The license is expired' });
+  assert.equal((await api.driverStatus()).status, 'review', 'a fix request keeps the driver in review');
+  assert.equal((await api.adminOverview()).drivers.waiting, before - 1);
+  await api.adminDecide({ kind: 'drivers', id: 'browser-driver', decision: 'approved' });
   assert.equal((await api.driverStatus()).status, 'approved');
-  assert.deepEqual(await api.adminDriverApplications(), []);
-  await assert.rejects(api.adminDecideDriver({ phone: '09171234567', decision: 'rejected' }), { status: 404 }, 'already decided');
+  await assert.rejects(api.adminDecide({ kind: 'drivers', id: 'browser-driver', decision: 'rejected' }), { status: 404 }, 'already decided');
+
+  const shop = (await api.adminApplications('merchants')).find((a) => a.status === 'review');
+  await api.adminDecide({ kind: 'merchants', id: shop.id, decision: 'rejected' });
+  assert.equal((await api.adminApplications('merchants')).find((a) => a.id === shop.id).status, 'rejected');
+  await assert.rejects(api.adminApplications('riders'), { status: 400 });
 
   await api.signOut();
-  await assert.rejects(api.adminDriverApplications(), { status: 403 });
+  await assert.rejects(api.adminApplications('drivers'), { status: 403 });
   localStorage.removeItem('mysabak.demo.driver');
+  localStorage.removeItem('mysabak.demo.adminDecisions');
 });

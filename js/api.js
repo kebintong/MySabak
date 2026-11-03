@@ -18,6 +18,7 @@ import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
 import {
   SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS, DEMO_PLACES, DEMO_RIDERS, DEMO_MERCHANT_ORDERS, DEMO_MERCHANT_WEEK,
+  DEMO_APPLICATIONS, DEMO_ADMIN,
 } from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
@@ -588,40 +589,88 @@ export async function driverApply(application) {
   return { status: 'review', email: data.email };
 }
 
-/* Admin: reviews driver applications. Every call checks the admin session first. */
+/* =========================================================
+   Admin (pages/admin*.html): live counts, driver and shop registrations, analytics.
+   Every call checks the admin session first (403 otherwise). Backend: check the role on the server too.
+   ========================================================= */
 
 const requireAdmin = () => {
   const s = demo.get('clientSession', null);
   if (!s || s.role !== 'admin') throw Object.assign(new Error('Admins only'), { status: 403 });
 };
 
-/**
- * Driver applications waiting for review.
- * DEMO: the one application made in this browser (pages/drive-signup.html), if it's still in review.
- * Backend: e.g. GET /api/admin/drivers?status=review
- * @returns {Promise<Array<{phone, name, email, city, vehicle, plate, model, year, licenseNumber, appliedAt}>>}
- */
-export async function adminDriverApplications() {
-  requireAdmin();
+const BROWSER_DRIVER = 'browser-driver'; // the application made in this browser on pages/drive-signup.html
+
+/** Every application of one kind, with the decisions made in this browser applied. */
+function applications(kind) {
+  const decided = demo.get('adminDecisions', {});
+  const opened = demo.get('adminOpenedAt', null) || (demo.set('adminOpenedAt', Date.now()), Date.now());
+  const list = DEMO_APPLICATIONS[kind].map(({ hoursAgo, ...a }) => ({ ...a, kind, sample: true, appliedAt: opened - hoursAgo * 3600e3 }));
   const d = demo.get('driver', null);
-  if (!d || d.status !== 'review') return [];
-  const { phone, name, email, city, vehicle, plate, model, year, licenseNumber, appliedAt } = d;
-  return [{ phone, name, email, city, vehicle, plate, model, year, licenseNumber, appliedAt }];
+  if (kind === 'drivers' && d && d.method === 'online') {
+    const papers = { license: 'unknown', orcr: 'unknown', selfie: 'unknown' }; // the demo doesn't keep the photos
+    list.unshift({ id: BROWSER_DRIVER, kind, sample: false, name: d.name, phone: d.phone, email: d.email, city: d.city, vehicle: d.vehicle,
+      model: d.model, year: d.year, plate: d.plate, licenseNumber: d.licenseNumber, appliedAt: d.appliedAt, papers, status: d.status, reason: d.fixReason });
+  }
+  return list.map((a) => (decided[a.id] ? { ...a, ...decided[a.id] } : a)).sort((a, b) => b.appliedAt - a.appliedAt);
 }
 
 /**
- * Approve or reject a driver application. The driver sees the result when they sign in.
- * Backend: e.g. POST /api/admin/drivers/:id/decision { decision }, and email the driver.
- * @param {{phone:string, decision:'approved'|'rejected'}} input
- * @returns {Promise<{status:'approved'|'rejected'}>}
+ * Driver or shop applications, newest first.
+ * DEMO: the SAMPLE applicants in demo-data.js (DEMO_APPLICATIONS) plus the driver application made in this
+ * browser. Backend: e.g. GET /api/admin/applications?kind=drivers
+ * @param {'drivers'|'merchants'} kind
+ * @returns {Promise<Array<object>>}  each with id, kind, status ('review'|'fix'|'approved'|'rejected'), reason,
+ *   appliedAt, sample, papers ({ name: 'clear'|'unclear'|'missing'|'unknown' }) and the applicant's details
  */
-export async function adminDecideDriver({ phone, decision }) {
+export async function adminApplications(kind) {
   requireAdmin();
-  if (decision !== 'approved' && decision !== 'rejected') throw Object.assign(new Error('Unknown decision'), { status: 400 });
-  const d = demo.get('driver', null);
-  if (!d || !samePhone(d.phone, phone) || d.status !== 'review') throw Object.assign(new Error('That application is no longer waiting.'), { status: 404 });
-  demo.set('driver', { ...d, status: decision });
+  if (!DEMO_APPLICATIONS[kind]) throw Object.assign(new Error('Unknown kind'), { status: 400 });
+  return applications(kind);
+}
+
+/**
+ * Approve, send back to fix (with the reason the applicant is told), or reject an application that is waiting
+ * or being fixed. The applicant sees it when they sign in (and, with a backend, gets an email).
+ * Backend: e.g. POST /api/admin/applications/:id/decision { decision, reason }
+ * @param {{kind:'drivers'|'merchants', id:string, decision:'approved'|'fix'|'rejected', reason?:string}} input
+ * @returns {Promise<{status:'approved'|'fix'|'rejected'}>}
+ */
+export async function adminDecide({ kind, id, decision, reason = '' }) {
+  requireAdmin();
+  if (!['approved', 'fix', 'rejected'].includes(decision)) throw Object.assign(new Error('Unknown decision'), { status: 400 });
+  if (decision === 'fix' && !String(reason).trim()) throw Object.assign(new Error('Say what needs fixing.'), { status: 400 });
+  const app = DEMO_APPLICATIONS[kind] && applications(kind).find((a) => a.id === id);
+  if (!app || (app.status !== 'review' && app.status !== 'fix')) throw Object.assign(new Error('That application is no longer waiting.'), { status: 404 });
+  const entry = { status: decision, reason: decision === 'fix' ? String(reason).trim() : '' };
+  demo.set('adminDecisions', { ...demo.get('adminDecisions', {}), [id]: entry });
+  if (id === BROWSER_DRIVER) {
+    // the driver pages know review / approved / rejected; a fix request keeps them in review
+    const d = demo.get('driver', null);
+    demo.set('driver', { ...d, status: decision === 'fix' ? 'review' : decision, fixReason: entry.reason || undefined });
+  }
   return { status: decision };
+}
+
+/**
+ * Live counts and today's numbers for the admin overview.
+ * DEMO: SAMPLE numbers (DEMO_ADMIN); the waiting counts come from the applications.
+ * Backend: e.g. GET /api/admin/overview
+ */
+export async function adminOverview() {
+  requireAdmin();
+  const waiting = (kind) => applications(kind).filter((a) => a.status === 'review').length;
+  const { riders, drivers, merchants, today } = DEMO_ADMIN;
+  return { sample: true, riders, drivers: { ...drivers, waiting: waiting('drivers') }, merchants: { ...merchants, waiting: waiting('merchants') }, today };
+}
+
+/**
+ * Numbers for the analytics page. DEMO: SAMPLE numbers (DEMO_ADMIN). Backend: e.g. GET /api/admin/analytics
+ */
+export async function adminAnalytics() {
+  requireAdmin();
+  const { week, tripsPerDay, growth, tipsPerDay, payments, driverFunnel, areas } = DEMO_ADMIN;
+  return { sample: true, week, tripsPerDay, growth, tipsPerDay, payments, driverFunnel, areas };
 }
 
 /**

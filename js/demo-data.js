@@ -238,3 +238,66 @@ export const DEMO_PLACES = [
   { label: 'SM Seaside City Cebu', lng: 123.8790, lat: 10.2820 },
 ];
 export const DEMO_RIDERS = ['Ana', 'Paolo', 'Kim', 'Rhea', 'Jomar', 'Lea'];
+
+/* Admin demo (pages/admin*.html): SAMPLE driver and shop applications to review (applied `hoursAgo` before the
+   admin first opens them) and SAMPLE numbers for the overview and analytics. Tagged "Sample" on screen.
+   Paper states: 'clear', 'unclear' or 'missing'. */
+export const DEMO_APPLICATIONS = {
+  drivers: [
+    { id: 'sd-1', name: 'Jomar Reyes', phone: '09175550141', email: 'jomar.r@example.com', city: 'Mandaue', vehicle: 'motor', model: 'Honda Click 125', year: 2022, plate: '123 ABC', licenseNumber: 'G01-22-004512', hoursAgo: 46, papers: { license: 'clear', orcr: 'clear', selfie: 'unclear' }, status: 'review' },
+    { id: 'sd-2', name: 'Liza Mercado', phone: '09175550188', email: 'liza.m@example.com', city: 'Lapu-Lapu', vehicle: 'suv', model: 'Toyota Innova', year: 2019, plate: 'NBC 5678', licenseNumber: 'G02-19-118230', hoursAgo: 50, papers: { license: 'clear', orcr: 'missing', selfie: 'clear' }, status: 'fix', reason: 'The OR/CR photo is missing or unreadable' },
+    { id: 'sd-3', name: 'Paolo Abella', phone: '09175550102', email: 'paolo.a@example.com', city: 'Cebu City', vehicle: 'sedan', model: 'Toyota Vios', year: 2021, plate: 'ABC 1234', licenseNumber: 'G03-21-990017', hoursAgo: 26, papers: { license: 'clear', orcr: 'clear', selfie: 'clear' }, status: 'review' },
+    { id: 'sd-4', name: 'Kim Dela Cruz', phone: '09175550175', email: 'kim.dc@example.com', city: 'Talamban', vehicle: 'motor', model: 'Yamaha Mio', year: 2020, plate: '456 DEF', licenseNumber: 'G04-20-337781', hoursAgo: 20, papers: { license: 'unclear', orcr: 'clear', selfie: 'clear' }, status: 'review' },
+    { id: 'sd-5', name: 'Ana Navarro', phone: '09175550129', email: 'ana.n@example.com', city: 'Mabolo', vehicle: 'sedan', model: 'Mitsubishi Mirage', year: 2023, plate: 'DMO 4410', licenseNumber: 'G05-23-551094', hoursAgo: 6, papers: { license: 'clear', orcr: 'clear', selfie: 'clear' }, status: 'review' },
+    { id: 'sd-6', name: 'Mark Ramos', phone: '09175550163', email: 'mark.r@example.com', city: 'Banilad', vehicle: 'sedan', model: 'Honda City', year: 2018, plate: 'GHJ 7781', licenseNumber: 'G06-18-204466', hoursAgo: 120, papers: { license: 'clear', orcr: 'clear', selfie: 'clear' }, status: 'approved' },
+  ],
+  merchants: [
+    { id: 'sm-1', shop: 'Lola Nena’s Lechon', category: 'Food', owner: 'Nena Villanueva', address: '42 M.C. Briones St, Carbon, Cebu City', area: 'Cebu City', products: '14 items · Lechon 1 kg ₱780', registeredAs: 'DTI', phone: '09175550210', email: 'lolanena@example.com', hoursAgo: 28, papers: { registration: 'clear', permit: 'clear', ownerId: 'clear', shopPhoto: 'clear' }, status: 'review' },
+    { id: 'sm-2', shop: 'Kape Sugbo', category: 'Coffee', owner: 'Rafael Tan', address: '8 Gorordo Ave, Lahug, Cebu City', area: 'Lahug', products: '22 items · Iced latte ₱140', registeredAs: 'DTI', phone: '09175550233', email: 'kapesugbo@example.com', hoursAgo: 24, papers: { registration: 'clear', permit: 'unclear', ownerId: 'clear', shopPhoto: 'clear' }, status: 'review' },
+    { id: 'sm-3', shop: 'Mabolo Mini Mart', category: 'Groceries', owner: 'Grace Uy', address: '115 Juan Luna Ave, Mabolo, Cebu City', area: 'Mabolo', products: '96 items · Rice 5 kg ₱290', registeredAs: 'DTI', phone: '09175550247', email: 'mabolomart@example.com', hoursAgo: 9, papers: { registration: 'clear', permit: 'clear', ownerId: 'missing', shopPhoto: 'clear' }, status: 'review' },
+    { id: 'sm-4', shop: 'Tita Bing’s Bakeshop', category: 'Bakery', owner: 'Bing Sarmiento', address: '3 Talamban Rd, Talamban, Cebu City', area: 'Talamban', products: '18 items · Ensaymada ₱45', registeredAs: 'DTI', phone: '09175550261', email: 'titabing@example.com', hoursAgo: 4, papers: { registration: 'clear', permit: 'clear', ownerId: 'clear', shopPhoto: 'unclear' }, status: 'review' },
+    { id: 'sm-5', shop: 'Sugbo Pharmacy', category: 'Pharmacy', owner: 'Dennis Ong', address: '201 A.S. Fortuna St, Mandaue', area: 'Mandaue', products: '64 items · Paracetamol ₱6', registeredAs: 'SEC', phone: '09175550274', email: 'sugbopharma@example.com', hoursAgo: 70, papers: { registration: 'clear', permit: 'missing', ownerId: 'clear', shopPhoto: 'clear' }, status: 'fix', reason: 'The business permit is missing or expired' },
+    { id: 'sm-6', shop: 'Isla Pasalubong', category: 'Gifts', owner: 'Joy Abellana', address: '12 M.L. Quezon Hwy, Mactan, Lapu-Lapu', area: 'Lapu-Lapu', products: '40 items · Dried mangoes ₱180', registeredAs: 'DTI', phone: '09175550288', email: 'islapasalubong@example.com', hoursAgo: 150, papers: { registration: 'clear', permit: 'clear', ownerId: 'clear', shopPhoto: 'clear' }, status: 'approved' },
+  ],
+};
+
+/* A steady sample series: `n` values from `from` to `to` with a little day-to-day wobble. */
+const sampleSeries = (n, from, to, wobble, seed) => Array.from({ length: n }, (_, i) => {
+  if (i === n - 1) return to; // ends exactly where the overview's counts are
+  const s = Math.sin((i + 1) * 12.9898 + seed * 78.233) * 43758.5453;
+  return Math.round(from + ((to - from) * i) / (n - 1) + (s - Math.floor(s) - 0.5) * wobble);
+});
+
+export const DEMO_ADMIN = {
+  riders: { online: 1284, registered: 18420, joinedToday: 46 },
+  drivers: { online: 214, approved: 486, onTrip: 83 },
+  merchants: { open: 57, shops: 92 },
+  today: { trips: 830, tips: 8420, avgPickupSec: 220, byService: { ride: 390, express: 110, moto: 220, shop: 110 } },
+  week: {
+    trips: 9100, tripsChange: '▲ 6%', tips: 52400, tipsChange: '▲ 9%', ridersActive: 6830, ridersChange: '▲ 4%',
+    driversActive: 412, driversChange: '▲ 31', avgPickupSec: 220, pickupChange: '▼ 0:20 faster', cancelledPct: 4.6, cancelledChange: '▲ 0.4 pts',
+  },
+  // the last 7 days, oldest first; the last one is today so far
+  tripsPerDay: [
+    { day: 'Wed', ride: 620, express: 180, moto: 290, shop: 140 }, { day: 'Thu', ride: 650, express: 170, moto: 300, shop: 150 },
+    { day: 'Fri', ride: 720, express: 210, moto: 340, shop: 190 }, { day: 'Sat', ride: 780, express: 240, moto: 360, shop: 230 },
+    { day: 'Sun', ride: 700, express: 200, moto: 310, shop: 260 }, { day: 'Mon', ride: 610, express: 190, moto: 280, shop: 150 },
+    { day: 'Today', ride: 390, express: 110, moto: 220, shop: 110 },
+  ],
+  // the last 30 days, oldest first
+  growth: {
+    riders: sampleSeries(30, 16980, 18420, 90, 1),
+    drivers: sampleSeries(30, 402, 486, 5, 2),
+    shops: sampleSeries(30, 79, 92, 1, 3),
+  },
+  tipsPerDay: sampleSeries(29, 6200, 7500, 1500, 4).concat([8420]),
+  payments: [{ name: 'Cash', share: 64 }, { name: 'GCash', share: 28 }, { name: 'Online banking', share: 8 }],
+  driverFunnel: [{ name: 'Applied', count: 186 }, { name: 'Papers checked', count: 142 }, { name: 'Approved', count: 118 }, { name: 'First trip done', count: 97 }],
+  areas: [
+    { name: 'Cebu City · Capitol Site', trips: 1940, avgPickupSec: 160, cancelledPct: 3.1, health: 'good' },
+    { name: 'Lahug · IT Park', trips: 1620, avgPickupSec: 185, cancelledPct: 3.8, health: 'good' },
+    { name: 'Mandaue', trips: 1410, avgPickupSec: 260, cancelledPct: 5.2, health: 'warning' },
+    { name: 'Talamban', trips: 720, avgPickupSec: 370, cancelledPct: 8.9, health: 'critical' },
+    { name: 'Lapu-Lapu · Mactan', trips: 1180, avgPickupSec: 230, cancelledPct: 4.4, health: 'good' },
+  ],
+};

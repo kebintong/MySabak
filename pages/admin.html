@@ -17,23 +17,40 @@
   <link rel="stylesheet" href="/css/admin.css">
   <script type="module" src="/js/pages/admin.js"></script>
 </head>
-<body class="page page--sky">
+<body class="page page--sky page--head-sky page--admin">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
       <!-- Shown only once the signed-in account is an admin (js/pages/admin.js) -->
-      <div class="content__inner stack" id="adminHome" hidden>
+      <div class="content__inner" id="adminHome" hidden>
         <header class="page-head">
-          <h1 class="page-title">Admin</h1>
-          <p class="lede" id="whoLine">Signed in</p>
+          <div class="ahead__row">
+            <div>
+              <p class="lede" id="greeting">Good day</p>
+              <h1 class="page-title">Overview</h1>
+              <p class="lede" id="whoLine">Signed in</p>
+            </div>
+            <span class="sample-chip" id="sampleChip" hidden>Sample numbers</span>
+          </div>
         </header>
 
-        <section class="card" aria-labelledby="driversTitle">
-          <h2 class="card__title card__title--row" id="driversTitle">Driver registrations <span class="badge badge--wait" id="driverCount">0</span></h2>
-          <ul class="list" id="driverApps"></ul>
-        </section>
+        <section class="counts rise" aria-label="Live counts" id="counts"></section>
+
+        <div class="agrid">
+          <section class="card" aria-labelledby="waitTitle">
+            <h2 class="card__title card__title--row" id="waitTitle">Waiting for review <a class="card__link" href="/pages/admin-registrations.html">See all</a></h2>
+            <ul class="list" id="waitList"></ul>
+          </section>
+
+          <section class="card" aria-labelledby="todayTitle">
+            <h2 class="card__title card__title--row" id="todayTitle">Today so far <span class="tag tag--sample" id="todaySample" hidden>Sample</span></h2>
+            <div class="today" id="today"></div>
+            <div class="svcbar" id="svcbar" role="img"></div>
+            <ul class="legend" id="svcLegend"></ul>
+          </section>
+        </div>
       </div>
     </main>
 

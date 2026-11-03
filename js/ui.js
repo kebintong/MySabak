@@ -110,7 +110,9 @@ export const TABS = [
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
   { id: 'merchant', label: 'My shop', icon: 'i-store', href: '/pages/merchant-home.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
-  { id: 'admin', label: 'Admin', icon: 'i-shield', href: '/pages/admin.html' },
+  { id: 'admin', label: 'Overview', icon: 'i-shield', href: '/pages/admin.html' },
+  { id: 'adminReg', label: 'Registrations', icon: 'i-check', href: '/pages/admin-registrations.html' },
+  { id: 'adminStats', label: 'Analytics', icon: 'i-chart', href: '/pages/admin-analytics.html' },
 ];
 
 /* What each kind of account sees. Customers (signed in or not) get the Figma bar; Drive and Support
@@ -131,7 +133,7 @@ export const ROLES = {
   },
   // Signs in on the customer form; not shown on any sign-in switch.
   admin: {
-    label: 'Admin', tabs: ['admin', 'support'],
+    label: 'Admin', tabs: ['admin', 'adminReg', 'adminStats', 'support'],
     home: '/pages/admin.html', homeLabel: 'Admin', homeIcon: 'i-shield', signIn: '/pages/account.html',
   },
 };

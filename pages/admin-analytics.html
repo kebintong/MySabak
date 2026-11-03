@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Analytics · Admin · mysabak</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script type="module" src="/js/pages/admin-analytics.js"></script>
+</head>
+<body class="page page--sky page--head-sky page--admin">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <!-- Shown only once the signed-in account is an admin (js/pages/admin-analytics.js) -->
+      <div class="content__inner" id="statsPage" hidden>
+        <header class="page-head">
+          <div class="ahead__row">
+            <div>
+              <h1 class="page-title">Analytics</h1>
+              <p class="lede">The last 7 days, compared with the week before.</p>
+            </div>
+            <span class="sample-chip" id="sampleChip" hidden>Sample numbers</span>
+          </div>
+        </header>
+
+        <section class="kpis6 rise" aria-label="This week" id="kpis"></section>
+
+        <section class="card" aria-labelledby="growTitle">
+          <h2 class="card__title" id="growTitle">Who’s on mysabak</h2>
+          <p class="lede small">Last 30 days. Each line has its own scale.</p>
+          <div class="multis" id="growth"></div>
+        </section>
+
+        <div class="agrid">
+          <section class="card" aria-labelledby="tripsTitle">
+            <h2 class="card__title card__title--row" id="tripsTitle">Trips per day <span class="muted small" id="tripsTotal"></span></h2>
+            <ul class="legend" id="tripsLegend"></ul>
+            <div class="stack7" id="trips"></div>
+            <div class="stack7__days" id="tripDays"></div>
+            <details class="astable"><summary>Show as a table</summary><div class="tablewrap"><table class="atable" id="tripsTable"></table></div></details>
+          </section>
+
+          <section class="card" aria-labelledby="tipsTitle">
+            <h2 class="card__title card__title--row" id="tipsTitle">Tips to mysabak, per day <span class="muted small" id="tips30"></span></h2>
+            <p class="lede small">Our only income. Drivers keep 100% of fares and shops 100% of item prices.</p>
+            <svg class="line30" id="tipsLine" viewBox="0 0 600 220" preserveAspectRatio="none" role="img"></svg>
+            <div class="axisrow"><span>30 days ago</span><span>Lines at ₱4,000 and ₱8,000</span><b id="tipsToday"></b></div>
+          </section>
+
+          <section class="card" aria-labelledby="payTitle">
+            <h2 class="card__title" id="payTitle">How riders pay</h2>
+            <div class="hbars" id="payments"></div>
+          </section>
+
+          <section class="card" aria-labelledby="funnelTitle">
+            <h2 class="card__title" id="funnelTitle">New drivers, last 30 days</h2>
+            <div class="hbars" id="funnel"></div>
+          </section>
+        </div>
+
+        <section class="card" aria-labelledby="areasTitle">
+          <h2 class="card__title" id="areasTitle">Areas this week</h2>
+          <div class="tablewrap"><table class="atable" id="areas"></table></div>
+        </section>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="adminStats" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>
