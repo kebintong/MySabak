@@ -24,63 +24,73 @@
   <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/js/pages/driver.js"></script>
 </head>
-<body class="page page--driver">
+<body class="page page--head-sky page--driver">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <!-- Draft C: earnings first, requests as a list, the live map in a card that opens full screen -->
+      <!-- Draft Q: the home page's night sky with today's earnings and the online pill; the nearest request
+           as the big lilac card (the others below, tap one to swap); a full-screen map for routes and navigation -->
       <div class="content__inner content__inner--full dhome" id="driverHome" hidden>
-        <section class="dhero" aria-labelledby="driverTitle">
-          <div class="dhero__money">
-            <h1 class="dhero__hi" id="driverTitle">Hi, <span data-bind="firstName">driver</span>. You’ve earned today</h1>
-            <p class="dhero__today" data-bind="today">₱0</p>
-            <p class="dhero__meta"><b data-bind="todayTrips">0 trips</b> today · <b data-bind="week">₱0</b> this week
-              <span class="badge" data-bind="vehicle">Vehicle</span> <span class="badge" data-bind="status">Approved</span></p>
+        <header class="page-head dsky">
+          <div class="dsky__inner">
+            <p class="dsky__who">Driving as <b data-bind="firstName">driver</b> · <span data-bind="vehicle">Vehicle</span>
+              <span class="badge" data-bind="status">Approved</span></p>
+            <h1 class="dsky__today"><span data-bind="today">₱0</span> <small>today</small></h1>
+            <button type="button" class="onpill" id="onlineBtn" aria-pressed="false">
+              <span class="onpill__dot" aria-hidden="true"></span>
+              <span class="onpill__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
+              <span class="onpill__go" data-bind="onlineAction">Go online</span>
+            </button>
+            <p class="dsky__chips"><span data-bind="todayTrips">0 trips</span><span><b data-bind="week">₱0</b> this week</span></p>
           </div>
-          <button type="button" class="onbar" id="onlineBtn" aria-pressed="false">
-            <span class="onbar__dot" aria-hidden="true"></span>
-            <span class="onbar__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
-            <span class="onbar__go" data-bind="onlineAction">Go online</span>
-          </button>
+        </header>
+
+        <section class="dreq" aria-labelledby="reqCount">
+          <h2 class="dreq__title" id="reqCount">Requests</h2>
+          <div id="activeJob" aria-live="polite"></div>
+          <div id="jobList" aria-live="polite"></div>
         </section>
 
-        <div class="dgrid">
-          <section class="card dreq" aria-labelledby="reqCount">
-            <div class="dreq__head" id="reqHead">
-              <h2 id="reqCount">Requests</h2>
-              <div class="fchips" id="kinds" role="group" aria-label="Show requests for"></div>
-            </div>
-            <div id="activeJob" aria-live="polite"></div>
-            <ul class="jobs" id="jobList" aria-labelledby="reqCount" aria-live="polite"></ul>
-          </section>
+        <div class="dmore">
+          <nav class="dtiles" aria-label="Driver shortcuts">
+            <a class="dtile" href="#tripsCard"><span class="dtile__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></span>Trips</a>
+            <button type="button" class="dtile" id="payoutBtn"><span class="dtile__icon dtile__icon--peach"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>Payout</button>
+            <button type="button" class="dtile" id="mapBtn"><span class="dtile__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg></span>Map</button>
+          </nav>
+          <a class="dpromo" href="#tripsCard">
+            <span class="dpromo__kicker">This week</span>
+            <span class="dpromo__value"><span data-bind="week">₱0</span>, all yours</span>
+            <span class="dpromo__link">See your trips →</span>
+          </a>
+        </div>
 
-          <!-- Every request is a pin; the picked one (or the accepted job) shows its route -->
-          <section class="dmap" id="mapCard" aria-label="Map of job requests near you">
-            <div class="map__canvas" id="mapCanvas"></div>
-            <button type="button" class="dmap__btn" id="mapToggle" aria-expanded="false">
-              <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg><span>Full map</span>
-            </button>
-            <button type="button" class="dmap__locate" id="locateBtn" aria-label="Center on my location">
-              <svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
-            </button>
-          </section>
-
-          <section class="card dtrips" aria-labelledby="earnTitle">
-            <h2 class="card__title" id="earnTitle">Latest trips</h2>
-            <ul class="list" id="trips"></ul>
-          </section>
-
-          <div class="card row dpayout">
+        <section class="card dtrips" id="tripsCard" aria-labelledby="earnTitle">
+          <h2 class="card__title" id="earnTitle">Latest trips</h2>
+          <ul class="list" id="trips"></ul>
+          <div class="row dpayout">
             <span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
             <div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
-            <button type="button" class="button button--ghost" id="payoutBtn">Set up</button>
           </div>
-        </div>
+        </section>
         <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
       </div>
     </main>
+
+    <!-- Full-screen live map: every request, a route preview, or turn-by-turn navigation to the next stop -->
+    <section class="dmapview" id="mapView" aria-label="Map" hidden>
+      <div class="map__canvas" id="mapCanvas"></div>
+      <div class="dturn" id="turn" hidden>
+        <span class="dturn__icon" id="turnIcon" aria-hidden="true"></span>
+        <span class="dturn__text"><b id="turnIn"></b><span id="turnText"></span></span>
+      </div>
+      <p class="dturn__then" id="turnThen" hidden></p>
+      <button type="button" class="dmapview__locate" id="locateBtn" aria-label="Center on my location">
+        <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+      </button>
+      <div class="dsheet" id="mapSheet" aria-live="polite"></div>
+    </section>
 
     <div class="bottom">
       <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>

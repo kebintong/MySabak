@@ -185,16 +185,18 @@ export async function addressFor({ lng, lat }) {
 }
 
 /**
- * Driving route between two points.
+ * Driving route between two points. `{ steps: true }` also asks for turn-by-turn directions (driver navigation).
  * @returns {Promise<{coords:Array<[number,number]>, distanceKm:number, minutes:number,
- *   eta:{[vehicleId:string]: number|null}, approx:false}>}
+ *   eta:{[vehicleId:string]: number|null}, steps:Array<{text, maneuver, street, atM}>, approx:false}>}
  *   coords: [lng, lat] pairs for the line on the map. eta: minutes until a driver arrives, per vehicle.
+ *   steps: each turn's words ("Turn right onto Osmeña Boulevard"), TomTom's maneuver code and its distance (m) along the route.
  */
-export async function routeBetween(from, to) {
+export async function routeBetween(from, to, { steps = false } = {}) {
   const url = tomtomUrl(`/routing/1/calculateRoute/${from.lat},${from.lng}:${to.lat},${to.lng}/json`, {
     travelMode: 'car',
     routeType: 'fastest',
     traffic: 'true',
+    ...(steps ? { instructionsType: 'text', language: 'en-GB' } : {}),
   });
   const data = await getJSON(url);
   const r = data.routes && data.routes[0];
@@ -205,6 +207,10 @@ export async function routeBetween(from, to) {
     distanceKm: r.summary.lengthInMeters / 1000,
     minutes: Math.max(1, Math.round(r.summary.travelTimeInSeconds / 60)),
     eta: { motor: null, sedan: null, suv: null }, // needs live driver positions (backend)
+    // Turn-by-turn (only when asked): what to do, and how far along the route (m) it happens
+    steps: ((steps && r.guidance && r.guidance.instructions) || []).map((i) => ({
+      text: i.message || '', maneuver: i.maneuver || '', street: i.street || '', atM: i.routeOffsetInMeters || 0,
+    })),
     approx: false,
   };
 }
@@ -216,6 +222,7 @@ export function straightLine(from, to) {
     distanceKm: haversineKm(from, to),
     minutes: null,
     eta: { motor: null, sedan: null, suv: null },
+    steps: [],
     approx: true,
   };
 }

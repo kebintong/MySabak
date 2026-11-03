@@ -19,6 +19,40 @@ before(async () => {
   SHOPS.splice(0, SHOPS.length, TEST_SHOP, TEST_SHOP_2);
 });
 
+test('routeBetween: turn-by-turn steps only when asked, read from TomTom guidance', async () => {
+  const urls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    urls.push(String(url));
+    return {
+      ok: true,
+      json: async () => ({ routes: [{
+        summary: { lengthInMeters: 2200, travelTimeInSeconds: 420 },
+        legs: [{ points: [{ latitude: 10.31, longitude: 123.89 }, { latitude: 10.32, longitude: 123.9 }] }],
+        guidance: { instructions: [
+          { routeOffsetInMeters: 0, maneuver: 'DEPART', message: 'Leave from Osmeña Boulevard' },
+          { routeOffsetInMeters: 1110, maneuver: 'TURN_RIGHT', message: 'Turn right onto Gorordo Avenue', street: 'Gorordo Avenue' },
+          { routeOffsetInMeters: 2200, maneuver: 'ARRIVE', message: 'You have arrived' },
+        ] },
+      }] }),
+    };
+  };
+  try {
+    const from = { lng: 123.89, lat: 10.31 };
+    const to = { lng: 123.9, lat: 10.32 };
+    const plain = await api.routeBetween(from, to);
+    assert.deepEqual(plain.steps, []);
+    assert.equal(urls[0].includes('instructionsType'), false, 'no directions asked for unless needed');
+    const nav = await api.routeBetween(from, to, { steps: true });
+    assert.ok(urls[1].includes('instructionsType=text'));
+    assert.equal(nav.minutes, 7);
+    assert.deepEqual(nav.steps[1], { text: 'Turn right onto Gorordo Avenue', maneuver: 'TURN_RIGHT', street: 'Gorordo Avenue', atM: 1110 });
+    assert.deepEqual(api.straightLine(from, to).steps, []);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
 test('tips: an amount is required, capped at ₱500, e-wallet or card only', async () => {
   await assert.rejects(api.sendTip({ orderId: 'R1', orderType: 'ride', amount: 0, method: 'gcash' }), { status: 400 });
   await assert.rejects(api.sendTip({ orderId: 'R1', orderType: 'ride', amount: 20, method: 'cash' }), { status: 400 });
