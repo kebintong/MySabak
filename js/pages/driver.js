@@ -1,6 +1,8 @@
-/* Driver home (pages/driver.html), draft C: earnings first, job requests as a list, and the live map in a
-   card that opens full screen. Every request is also a pin on the map. Accept one and follow it:
-   to pickup → arrived → on the trip → completed; Navigate opens Google Maps to the next stop.
+/* Driver home (pages/driver.html), draft Q: Home's night sky with today's earnings and the online pill, the
+   nearest request as the big lilac card (the others below; tap one to swap it in), then shortcuts and the week.
+   The map opens full screen: every request as a pin, a route preview before accepting, or in-app navigation
+   to the next stop (turn by turn from TomTom, following the phone's location). Google Maps stays as a backup.
+   Accept one and follow it: to pickup → arrived → on the trip → completed.
    Job requests come from onJobRequest(); the demo sends SAMPLE ones (tagged "Demo"). */
 import { CONFIG } from '../config.js';
 import {
@@ -8,84 +10,175 @@ import {
   routeBetween, straightLine, errorMessage,
 } from '../api.js';
 import { haversineKm } from '../money.js';
+import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
 import { $, $$, mountChrome, toast, peso, esc, when, icon } from '../ui.js';
 
 mountChrome({ roles: ['driver'] });
 
-const DESKTOP = window.matchMedia('(min-width: 900px)');
 const KIND = {
-  ride: { name: 'Ride', icon: 'i-car', color: '#5630d8' },
-  express: { name: 'Express', icon: 'i-box', color: '#E0782F' },
-  shop: { name: 'Shop delivery', icon: 'i-bag', color: '#1E7A44' },
+  ride: { name: 'Ride', icon: 'i-car', color: '#5630d8', ink: '#5b2596', tone: 'lilac', art: '/assets/images/v3/car.svg' },
+  express: { name: 'Express', icon: 'i-box', color: '#E0782F', ink: '#8a4b0f', tone: 'peach', art: '/assets/images/v3/parcel.svg' },
+  shop: { name: 'Shop delivery', icon: 'i-bag', color: '#1E7A44', ink: '#1f6b3a', tone: 'lilac', art: '/assets/images/v3/food.svg' },
 };
 const PAY = { cash: 'Cash', gcash: 'GCash', bank: 'Online banking' };
-const FILTERS = [{ id: 'all', name: 'All' }, { id: 'ride', name: 'Ride' }, { id: 'express', name: 'Express' }, { id: 'shop', name: 'Shop' }];
 
 let me = { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };
 let online = false;
 let approved = false;
 let jobs = [];        // waiting requests
-let picked = null;    // id of the request shown on the map
+let picked = null;    // id of the request in the big card (null: the nearest)
 let job = null;       // the accepted job
-let filter = 'all';
 let stopJobs = () => {};
+let mapMode = null;   // null (closed) · 'all' · 'preview' · 'nav'
+let trip = null;      // the route on the map (with turn-by-turn steps while navigating)
+let watchId = null;
 
 const bindAll = (name, text) => $$(`[data-bind="${name}"]`).forEach((n) => { n.textContent = text; });
 const kmAway = (p) => haversineKm(me, p);
 const mmss = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 const dirUrl = (p) => `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+const metres = (m) => (m >= 950 ? `${(m / 1000).toFixed(1)} km` : `${Math.max(10, Math.round(m / 10) * 10)} m`);
+const targetOf = (j) => (j.status === 'started' ? j.dropoff : j.pickup);
 
-/* ---------- Map ---------- */
+/* ---------- Map (full screen, drawn only while open) ---------- */
 const map = shopMap($('#mapCanvas'), {
-  onPin: (id) => { if (isMapFull()) setMapFull(false); pick(id, { fromMap: true }); },
-  padding: () => (isMapFull() ? { top: 90, bottom: 60, left: 50, right: 50 } : { top: 36, bottom: 36, left: 36, right: 36 }),
+  onPin: (id) => { if (!job) { picked = id; renderJobs(); openMap('preview'); } },
+  padding: () => ({ top: mapMode === 'nav' ? 170 : 70, bottom: ($('#mapSheet').offsetHeight || 220) + 30, left: 40, right: 40 }),
 });
-const fitAll = () => map.fit([[me.lng, me.lat]].concat(visibleJobs().map((j) => [j.pickup.lng, j.pickup.lat])), { animate: true, maxZoom: 15 });
-
-/* The map card opens full screen (and Esc or the same button closes it) */
-const isMapFull = () => $('#mapCard').classList.contains('is-full');
-function setMapFull(full) {
-  $('#mapCard').classList.toggle('is-full', full);
-  document.body.classList.toggle('is-map-full', full);
-  const btn = $('#mapToggle');
-  btn.setAttribute('aria-expanded', String(full));
-  $('span', btn).textContent = full ? 'Close map' : 'Full map';
-  requestAnimationFrame(() => { map.resize(); if (job) { routeKey = ''; paintMap(); } else if (picked) paintMap(); else fitAll(); });
-}
 const pinOf = (j) => ({ id: j.id, name: `${peso(j.fare)} · ${KIND[j.kind].name}`, area: j.pickup.label, color: KIND[j.kind].color, lng: j.pickup.lng, lat: j.pickup.lat });
+const fitAll = () => map.fit([[me.lng, me.lat]].concat(visibleJobs().map((j) => [j.pickup.lng, j.pickup.lat])), { animate: true, maxZoom: 15 });
 
 let routeToken = 0;
 let routeKey = '';
-async function showRoute(from, to) {
-  const key = `${from.lng},${from.lat}>${to.lng},${to.lat}`;
-  if (key === routeKey) return; // already showing it
+async function showRoute(from, to, { steps = false } = {}) {
+  const key = `${from.lng},${from.lat}>${to.lng},${to.lat}${steps ? '+steps' : ''}`;
+  if (key === routeKey) return;
   routeKey = key;
   const token = ++routeToken;
-  let trip;
-  try { trip = await routeBetween(from, to); } catch (_) { trip = straightLine(from, to); }
+  let t;
+  try { t = await routeBetween(from, to, { steps }); } catch (_) { t = straightLine(from, to); }
   if (token !== routeToken) return;
-  map.setRoute(trip.coords);
-  map.fit(trip.coords.concat([[from.lng, from.lat], [to.lng, to.lat]]), { animate: true });
+  trip = t;
+  map.setRoute(t.coords);
+  map.fit(t.coords.concat([[from.lng, from.lat], [to.lng, to.lat]]), { animate: true });
+  paintNav();
 }
+function clearRoute() { routeToken++; routeKey = ''; trip = null; map.setRoute(null); map.setDest(null); }
 
 function paintMap() {
+  if (!mapMode) return;
   if (job) {
     map.setShops([pinOf(job)]);
     map.setActive(job.id);
-    const leg = job.status === 'started' ? [job.pickup, job.dropoff] : [me, job.pickup];
     map.setDest(job.status === 'started' ? job.dropoff : null);
-    showRoute(...leg);
+    if (mapMode === 'nav') showRoute(me, targetOf(job), { steps: true });
+    else showRoute(...(job.status === 'started' ? [job.pickup, job.dropoff] : [me, job.pickup]));
     return;
   }
   const shown = visibleJobs();
   map.setShops(shown.map(pinOf));
   map.setActive(picked);
-  const p = shown.find((j) => j.id === picked);
-  if (p) { map.setDest(p.dropoff, 'Drop-off'); showRoute(p.pickup, p.dropoff); } else { routeToken++; routeKey = ''; map.setDest(null); map.setRoute(null); }
+  const p = mapMode === 'preview' && shown.find((j) => j.id === picked);
+  if (p) { map.setDest(p.dropoff, 'Drop-off'); showRoute(p.pickup, p.dropoff); } else { clearRoute(); fitAll(); }
 }
 
-/* ---------- Online bar ---------- */
+function openMap(mode) {
+  if (mode === 'nav' && !job) return;
+  mapMode = mode;
+  $('#mapView').hidden = false;
+  document.body.classList.add('is-map-open');
+  paintSheet();
+  paintNav();
+  if (mode === 'nav') watchMe(); else stopWatch();
+  requestAnimationFrame(() => {
+    $('#mapView').style.setProperty('--sheet-h', `${$('#mapSheet').offsetHeight}px`);
+    map.resize();
+    routeKey = '';
+    paintMap();
+  });
+}
+function closeMap() {
+  mapMode = null;
+  stopWatch();
+  $('#mapView').hidden = true;
+  document.body.classList.remove('is-map-open');
+}
+
+/* What the sheet at the bottom of the map says */
+function paintSheet() {
+  const sheet = $('#mapSheet');
+  if (mapMode === 'nav' && job) {
+    const to = targetOf(job);
+    const w = jobWords(job);
+    sheet.innerHTML = `<div class="dsheet__big"><b data-left>…</b><span>to ${esc(to.label)}</span></div>
+      <span class="dsheet__who">${esc(KIND[job.kind].name)} · ${esc(job.rider.name)} · ${peso(job.fare)} ${esc(PAY[job.payment] || job.payment)}</span>
+      <div class="dsheet__actions"><button type="button" class="button button--ghost" data-close>Back</button>
+        <button type="button" class="button" data-next>${esc(w.next)}</button></div>
+      <a class="dsheet__alt" href="${dirUrl(to)}" target="_blank" rel="noopener">Open in Google Maps instead</a>`;
+    return;
+  }
+  const p = mapMode === 'preview' && !job && visibleJobs().find((j) => j.id === picked);
+  if (p) {
+    sheet.innerHTML = `<h2>${esc(KIND[p.kind].name)} · ${peso(p.fare)}</h2>
+      <p>${esc(p.pickup.label)} → ${esc(p.dropoff.label)} · ${p.distanceKm.toFixed(1)} km trip · ${kmAway(p.pickup).toFixed(1)} km from you</p>
+      <div class="dsheet__actions"><button type="button" class="button button--ghost" data-close>Close</button>
+        <button type="button" class="button" data-accept="${esc(p.id)}">Accept ${peso(p.fare)}</button></div>`;
+    return;
+  }
+  const n = visibleJobs().length;
+  sheet.innerHTML = job
+    ? `<h2>${esc(jobWords(job).title)}</h2><p>${esc(jobWords(job).sub)}</p>
+      <div class="dsheet__actions"><button type="button" class="button button--ghost" data-close>Close</button><button type="button" class="button" data-nav>Navigate</button></div>`
+    : `<h2>${online ? `${n} request${n === 1 ? '' : 's'} near you` : 'You’re offline'}</h2>
+      <p>${online ? 'Tap a pin to see its route.' : 'Go online to see requests on the map.'}</p>
+      <div class="dsheet__actions"><button type="button" class="button" data-close>Close map</button></div>`;
+}
+
+/* Navigation: the next turn (from where the phone is along the route) and what's left */
+const TURN = {
+  left: '<svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><path d="M6 20V11a3 3 0 0 1 3-3h9"/><path d="M14 4l4 4-4 4"/></svg>',
+  right: '<svg viewBox="0 0 24 24"><path d="M6 20V11a3 3 0 0 1 3-3h9"/><path d="M14 4l4 4-4 4"/></svg>',
+  ahead: '<svg viewBox="0 0 24 24"><path d="M12 20V5"/><path d="M7 9l5-5 5 5"/></svg>',
+  arrive: '<svg viewBox="0 0 24 24"><path d="M6 21V4"/><path d="M6 4h11l-2 4 2 4H6"/></svg>',
+};
+const turnKind = (m) => (/ARRIVE/.test(m) ? 'arrive' : /LEFT/.test(m) ? 'left' : /RIGHT/.test(m) ? 'right' : 'ahead');
+
+function paintNav() {
+  const on = mapMode === 'nav' && job && trip;
+  const p = on ? routeProgress(trip.coords, me) : null;
+  const next = on && trip.steps.length ? nextStep(trip.steps, p.alongM) : null;
+  $('#turn').hidden = !next;
+  $('#turnThen').hidden = !(next && next.after);
+  if (next) {
+    $('#turnIcon').innerHTML = TURN[turnKind(next.step.maneuver)];
+    $('#turnIn').textContent = metres(next.inM);
+    $('#turnText').textContent = next.step.text;
+    if (next.after) $('#turnThen').textContent = `Then ${next.after.text.charAt(0).toLowerCase()}${next.after.text.slice(1)}`;
+  }
+  const left = $('[data-left]', $('#mapSheet'));
+  if (left && on) {
+    const leftM = Math.max(0, p.totalM - p.alongM);
+    const mins = trip.minutes ? Math.max(1, Math.round((trip.minutes * leftM) / Math.max(p.totalM, 1))) : null;
+    left.textContent = mins ? `${mins} min · ${metres(leftM)}` : metres(leftM);
+  }
+}
+
+/* Follow the phone while navigating; off the route by 60 m or more → a new route */
+function watchMe() {
+  if (watchId !== null || !navigator.geolocation) return;
+  watchId = navigator.geolocation.watchPosition((pos) => {
+    me = { lng: pos.coords.longitude, lat: pos.coords.latitude };
+    map.setUser(me);
+    if (trip && !trip.approx && routeProgress(trip.coords, me).offM >= 60) { routeKey = ''; paintMap(); } else paintNav();
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 5000 });
+}
+function stopWatch() {
+  if (watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
+  watchId = null;
+}
+
+/* ---------- Online pill ---------- */
 function paintOnline() {
   const btn = $('#onlineBtn');
   btn.setAttribute('aria-pressed', String(online));
@@ -103,76 +196,65 @@ function paintOnline() {
   } else {
     btn.disabled = false;
     bindAll('onlineTitle', online ? 'You’re online' : 'You’re offline');
-    bindAll('onlineHint', online ? 'Requests near you show on the map and below.' : 'Go online to get Ride, Express and Shop requests.');
+    bindAll('onlineHint', online ? 'Requests near you show below.' : 'Go online to get Ride, Express and Shop requests.');
     bindAll('onlineAction', online ? 'Go offline' : 'Go online');
   }
   document.body.classList.toggle('is-online', online);
 }
 
-/* ---------- Requests ---------- */
+/* ---------- Requests: the big card and the rest ---------- */
 const visibleJobs = () => jobs
-  .filter((j) => j.expiresAt > Date.now() && (filter === 'all' || j.kind === filter))
+  .filter((j) => j.expiresAt > Date.now())
   .sort((a, b) => kmAway(a.pickup) - kmAway(b.pickup));
+const payLine = (j) => `${esc(PAY[j.payment] || j.payment)}${j.rider ? ` · ${esc(j.rider.name)}` : ''}${j.parcel ? ` · ${esc(j.parcel.item)}` : ''}`;
 
-function renderFilters() {
-  $('#kinds').innerHTML = FILTERS.map((f) => {
-    const n = f.id === 'all' ? jobs.length : jobs.filter((j) => j.kind === f.id).length;
-    return `<button type="button" class="fchip" data-kind="${f.id}" aria-pressed="${f.id === filter}">${esc(f.name)}${online && n ? ` <b>${n}</b>` : ''}</button>`;
-  }).join('');
-}
-
-function jobCard(j) {
+function heroCard(j) {
   const k = KIND[j.kind];
-  return `<li><article class="jobcard${j.id === picked ? ' is-picked' : ''}" data-id="${esc(j.id)}" style="--kind:${k.color}" tabindex="0" aria-label="${esc(`${k.name}, ${peso(j.fare)}, from ${j.pickup.label} to ${j.dropoff.label}`)}">
-      <div class="jobcard__top">
-        <span class="jobcard__kind">${icon(k.icon, 'icon--sm')}${esc(k.name)}</span>
-        ${j.demo ? '<span class="badge badge--wait">Demo</span>' : ''}
-        <b class="jobcard__fare">${peso(j.fare)}</b>
-      </div>
-      <ol class="jobcard__route">
-        <li><span>Pickup · ${kmAway(j.pickup).toFixed(1)} km from you</span>${esc(j.pickup.label)}</li>
-        <li><span>Drop-off · ${j.distanceKm.toFixed(1)} km trip</span>${esc(j.dropoff.label)}</li>
-      </ol>
-      <div class="jobcard__meta">${esc(PAY[j.payment] || j.payment)} · ${esc(j.rider ? j.rider.name : '')}${j.parcel ? ` · ${esc(j.parcel.item)}` : ''} · <span data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</span> left</div>
-      <div class="jobcard__actions">
+  return `<article class="dhero dtone--${k.tone}" style="--kind:${k.ink}" data-id="${esc(j.id)}">
+      <span class="dhero__kind">${esc(k.name)} · ${kmAway(j.pickup).toFixed(1)} km away · <span data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</span> left${j.demo ? ' · Demo' : ''}</span>
+      <h3 class="dhero__from">${esc(j.pickup.label)}</h3>
+      <p class="dhero__to">to ${esc(j.dropoff.label)} · ${j.distanceKm.toFixed(1)} km trip · ${payLine(j)}</p>
+      <p class="dhero__fare">${peso(j.fare)}</p>
+      <img class="dhero__art" src="${k.art}" alt="">
+      <div class="dhero__actions">
+        <button type="button" class="button" data-accept>Accept ${peso(j.fare)}</button>
         <button type="button" class="button button--ghost" data-skip>Skip</button>
-        <button type="button" class="button" data-accept>Accept · ${peso(j.fare)}</button>
+        <button type="button" class="button button--ghost dhero__route" data-route>${icon('i-pin')}See route</button>
       </div>
-    </article></li>`;
+    </article>`;
+}
+function miniCard(j) {
+  const k = KIND[j.kind];
+  return `<button type="button" class="dmini dtone--${k.tone}" style="--kind:${k.ink}" data-pick="${esc(j.id)}" aria-label="${esc(`${k.name}, ${peso(j.fare)}, from ${j.pickup.label}. Show it`)}">
+      <span class="dmini__kind">${esc(k.name)} · ${kmAway(j.pickup).toFixed(1)} km</span>
+      <span class="dmini__from">${esc(j.pickup.label)}</span>
+      <span class="dmini__fare">${peso(j.fare)}</span>
+      <img class="dmini__art" src="${k.art}" alt="">
+    </button>`;
 }
 
 function renderJobs() {
-  renderFilters();
   const shown = visibleJobs();
-  $('#reqHead').hidden = Boolean(job) || !approved;
-  $('#jobList').hidden = Boolean(job);
-  $('#reqCount').textContent = online ? `${shown.length} request${shown.length === 1 ? '' : 's'} near you` : 'Requests';
-  let html;
-  if (!approved) html = '<li class="shops-empty"><h3>Application under review</h3><p>We’ll email you when you’re approved. Then you can go online here.</p></li>';
-  else if (!online) html = `<li class="shops-empty">${icon('i-power', 'icon--xl')}<h3>You’re offline</h3><p>Go online to see Ride, Express and Shop delivery requests near you.</p></li>`;
-  else if (!shown.length) html = '<li class="jobs-wait"><span class="online__pulse" aria-hidden="true"></span>Waiting for requests nearby…</li>';
-  else html = shown.map(jobCard).join('');
-  $('#jobList').innerHTML = html;
   if (!shown.some((j) => j.id === picked)) picked = null;
-}
-
-function pick(id, { fromMap = false } = {}) {
-  if (job) return;
-  picked = id;
-  $$('.jobcard').forEach((c) => c.classList.toggle('is-picked', c.dataset.id === id));
-  paintMap();
-  if (fromMap) {
-    const card = $(`.jobcard[data-id="${CSS.escape(id)}"]`);
-    if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const hero = shown.find((j) => j.id === picked) || shown[0];
+  $('#reqCount').textContent = online && shown.length ? `${shown.length} request${shown.length === 1 ? '' : 's'} near you` : 'Requests';
+  let html;
+  if (job) html = '';
+  else if (!approved) html = '<div class="dempty dtone--lilac"><h3>Application under review</h3><p>We’ll email you when you’re approved. Then you can go online here.</p></div>';
+  else if (!online) html = '<div class="dempty dtone--lilac"><h3>You’re offline</h3><p>Go online to see Ride, Express and Shop delivery requests near you.</p></div>';
+  else if (!shown.length) html = '<div class="dempty dtone--lilac"><p class="jobs-wait"><span class="online__pulse" aria-hidden="true"></span>Waiting for requests nearby…</p><p>They show here, nearest first.</p></div>';
+  else {
+    const rest = shown.filter((j) => j !== hero);
+    html = heroCard(hero) + (rest.length ? `<div class="dminis">${rest.slice(0, 4).map(miniCard).join('')}</div>` : '');
   }
+  $('#jobList').innerHTML = html;
+  if (mapMode && mapMode !== 'nav') { paintSheet(); paintMap(); }
 }
 
 function addJob(j) {
   if (jobs.some((x) => x.id === j.id)) return;
   jobs.push(j);
   renderJobs();
-  paintMap();
-  if (!picked && !job) fitAll();
 }
 
 /* ---------- Accepted job ---------- */
@@ -180,15 +262,15 @@ const STEPS = ['to_pickup', 'arrived', 'started', 'completed'];
 function jobWords(j) {
   const who = j.kind === 'shop' ? (j.shop ? j.shop.name : 'the shop') : j.rider.name;
   return {
-    to_pickup: { title: 'Go to pickup', sub: j.pickup.label, next: 'I’ve arrived' },
+    to_pickup: { title: `Head to ${j.pickup.label}`, sub: `${who} is waiting · ${kmAway(j.pickup).toFixed(1)} km away`, next: 'I’ve arrived' },
     arrived: {
       title: j.kind === 'ride' ? `Waiting for ${who}` : j.kind === 'express' ? 'Pick up the parcel' : `Collect the order at ${who}`,
       sub: j.pickup.label,
       next: j.kind === 'ride' ? 'Start trip' : j.kind === 'express' ? 'Parcel picked up' : 'Order picked up',
     },
     started: {
-      title: 'Drive to drop-off', sub: j.dropoff.label,
-      next: j.kind === 'ride' ? 'Complete trip' : j.kind === 'express' ? 'Parcel delivered' : 'Order delivered',
+      title: `Drive to ${j.dropoff.label}`, sub: `${j.distanceKm.toFixed(1)} km trip`,
+      next: j.kind === 'ride' ? `Complete trip · ${peso(j.fare)}` : j.kind === 'express' ? 'Parcel delivered' : 'Order delivered',
     },
   }[j.status];
 }
@@ -200,13 +282,8 @@ function renderActive() {
   const k = KIND[job.kind];
   const w = jobWords(job);
   const at = STEPS.indexOf(job.status);
-  const target = job.status === 'started' ? job.dropoff : job.pickup;
-  box.innerHTML = `<article class="activejob" style="--kind:${k.color}">
-      <div class="jobcard__top">
-        <span class="jobcard__kind">${icon(k.icon, 'icon--sm')}${esc(k.name)}</span>
-        ${job.demo ? '<span class="badge badge--wait">Demo</span>' : ''}
-        <b class="jobcard__fare">${peso(job.fare)}</b>
-      </div>
+  box.innerHTML = `<article class="activejob dtone--${k.tone}" style="--kind:${k.ink}">
+      <div class="activejob__top">${icon(k.icon, 'icon--sm')}${esc(k.name)}${job.demo ? ' · Demo' : ''}<b>${peso(job.fare)}</b></div>
       <h2 class="activejob__title">${esc(w.title)}</h2>
       <p class="activejob__sub">${esc(w.sub)}</p>
       <ol class="trip__steps" aria-label="Job progress">
@@ -218,13 +295,10 @@ function renderActive() {
           <span class="driver__meta">${job.payment === 'cash' ? `Collect ${peso(job.fare)} in cash` : `Paid by ${esc(PAY[job.payment] || job.payment)} · ${peso(job.fare)}`}</span></div>
         <button type="button" class="btn-soft" data-call>${icon('i-phone', 'icon--sm icon--deep')}Call</button>
       </div>
-      <ol class="jobcard__route">
-        <li><span>Pickup</span>${esc(job.pickup.label)}</li>
-        <li><span>Drop-off · ${job.distanceKm.toFixed(1)} km</span>${esc(job.dropoff.label)}</li>
-      </ol>
       <div class="activejob__actions">
-        <a class="button button--ghost" href="${dirUrl(target)}" target="_blank" rel="noopener">${icon('i-arrow', 'icon--sm icon--deep')}Navigate</a>
-        <button type="button" class="button" data-next>${esc(w.next)}</button>
+        ${job.status === 'arrived' ? '' : `<button type="button" class="button activejob__nav" data-nav>${icon('i-arrow', 'icon--sm icon--white')}Navigate to ${esc(targetOf(job).label)}</button>`}
+        <button type="button" class="button ${job.status === 'arrived' ? '' : 'button--ghost '}activejob__next" data-next>${esc(w.next)}</button>
+        <a class="button button--ghost activejob__gmaps" href="${dirUrl(targetOf(job))}" target="_blank" rel="noopener">Google Maps</a>
       </div>
       ${job.status === 'to_pickup' ? '<button type="button" class="trip__cancel" data-cancel-job>Cancel job</button>' : ''}
     </article>`;
@@ -234,81 +308,90 @@ function paintAll() {
   paintOnline();
   renderActive();
   renderJobs();
-  paintMap();
+  if (mapMode) { paintSheet(); paintMap(); }
 }
 
-/* ---------- Events ---------- */
-$('#kinds').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-kind]');
-  if (!b) return;
-  filter = b.dataset.kind;
-  renderJobs();
-  paintMap();
-});
-
-$('#jobList').addEventListener('click', async (e) => {
-  const card = e.target.closest('.jobcard');
-  if (!card) return;
-  const id = card.dataset.id;
-  if (e.target.closest('[data-skip]')) {
+async function accept(id, btn) {
+  btn.disabled = true;
+  try {
+    ({ job } = await acceptJob(id));
     jobs = jobs.filter((j) => j.id !== id);
-    if (picked === id) picked = null;
-    renderJobs();
-    paintMap();
-    return;
+    picked = null;
+    toast(`Accepted. Head to ${job.pickup.label}.`);
+    paintAll();
+    if (mapMode) openMap('nav');
+  } catch (err) {
+    toast(err.status === 410 || err.status === 409 ? err.message : errorMessage(err));
+    if (err.status === 410) { jobs = jobs.filter((j) => j.id !== id); renderJobs(); }
+    btn.disabled = false;
   }
-  if (e.target.closest('[data-accept]')) {
-    const btn = e.target.closest('[data-accept]');
-    btn.disabled = true;
-    try {
-      ({ job } = await acceptJob(id));
-      jobs = jobs.filter((j) => j.id !== id);
-      picked = null;
-      toast(`Accepted. Head to ${job.pickup.label}.`);
-      paintAll();
-    } catch (err) {
-      toast(err.status === 410 || err.status === 409 ? err.message : errorMessage(err));
-      if (err.status === 410) { jobs = jobs.filter((j) => j.id !== id); renderJobs(); paintMap(); }
-      btn.disabled = false;
-    }
-    return;
-  }
-  pick(id);
-});
-$('#jobList').addEventListener('keydown', (e) => {
-  const card = e.target.closest('.jobcard');
-  if (card && e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(card.dataset.id); }
-});
-$('#jobList').addEventListener('mouseover', (e) => {
-  const card = e.target.closest('.jobcard');
-  if (card && DESKTOP.matches && !job) map.setActive(card.dataset.id);
-});
-$('#jobList').addEventListener('mouseleave', () => { if (!job) map.setActive(picked); });
+}
 
-$('#activeJob').addEventListener('click', async (e) => {
+async function advance(btn) {
   if (!job) return;
-  if (e.target.closest('[data-call]')) { toast('Calling works in the live app.'); return; }
-  if (e.target.closest('[data-cancel-job]')) {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm('Cancel this job? It goes to another driver.')) return;
-    try { await cancelJob(job.id); job = null; toast('Job cancelled.'); paintAll(); } catch (err) { toast(err.message || errorMessage(err)); }
-    return;
-  }
-  const next = e.target.closest('[data-next]');
-  if (!next) return;
-  next.disabled = true;
+  btn.disabled = true;
   const to = STEPS[STEPS.indexOf(job.status) + 1];
   try {
     await updateJob(job.id, to);
     if (to === 'completed') {
       toast(`Done! ${peso(job.fare)} added. You keep 100% of the fare.`);
       job = null;
+      closeMap();
       loadEarnings();
+      if (online) listen(); // free again: new requests come in
     } else {
       job = { ...job, status: to };
+      if (to === 'arrived') closeMap(); // waiting at the pickup: back to the job card
     }
     paintAll();
-  } catch (err) { toast(err.message || errorMessage(err)); next.disabled = false; }
+  } catch (err) { toast(err.message || errorMessage(err)); btn.disabled = false; }
+}
+
+/* ---------- Events ---------- */
+$('#jobList').addEventListener('click', (e) => {
+  const mini = e.target.closest('[data-pick]');
+  if (mini) { picked = mini.dataset.pick; renderJobs(); return; }
+  const card = e.target.closest('.dhero');
+  if (!card) return;
+  const id = card.dataset.id;
+  if (e.target.closest('[data-skip]')) {
+    jobs = jobs.filter((j) => j.id !== id);
+    picked = null;
+    renderJobs();
+  } else if (e.target.closest('[data-accept]')) accept(id, e.target.closest('[data-accept]'));
+  else if (e.target.closest('[data-route]')) { picked = id; openMap('preview'); }
+});
+
+$('#activeJob').addEventListener('click', async (e) => {
+  if (!job) return;
+  if (e.target.closest('[data-nav]')) { openMap('nav'); return; }
+  if (e.target.closest('[data-call]')) { toast('Calling works in the live app.'); return; }
+  if (e.target.closest('[data-cancel-job]')) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Cancel this job? It goes to another driver.')) return;
+    try { await cancelJob(job.id); job = null; closeMap(); if (online) listen(); toast('Job cancelled.'); paintAll(); } catch (err) { toast(err.message || errorMessage(err)); }
+    return;
+  }
+  const next = e.target.closest('[data-next]');
+  if (next) advance(next);
+});
+
+$('#mapSheet').addEventListener('click', (e) => {
+  if (e.target.closest('[data-close]')) closeMap();
+  else if (e.target.closest('[data-nav]')) openMap('nav');
+  else if (e.target.closest('[data-next]')) advance(e.target.closest('[data-next]'));
+  else if (e.target.closest('[data-accept]')) { const b = e.target.closest('[data-accept]'); accept(b.dataset.accept, b); }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mapMode) closeMap(); });
+$('#mapBtn').addEventListener('click', () => openMap(job ? 'nav' : 'all'));
+$('#payoutBtn').addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.'));
+
+$('#locateBtn').addEventListener('click', async () => {
+  try {
+    me = await askLocation();
+    map.setUser(me);
+    if (mapMode === 'nav') { routeKey = ''; paintMap(); } else fitAll();
+  } catch (_) { toast('Couldn’t get your location. Requests are sorted from Cebu City centre.'); }
 });
 
 async function toggleOnline() {
@@ -336,33 +419,22 @@ setInterval(() => {
     n.textContent = mmss(left);
     if (left <= 0) expired = true;
   });
-  if (expired) { jobs = jobs.filter((j) => j.expiresAt > Date.now()); renderJobs(); paintMap(); }
+  if (expired) { jobs = jobs.filter((j) => j.expiresAt > Date.now()); renderJobs(); }
 }, 1000);
 
 async function loadEarnings() {
   const e = await driverEarnings();
   bindAll('today', peso(e.today));
   bindAll('week', peso(e.week));
+  bindAll('payout', e.payout.method || 'Not set up yet');
   const midnight = new Date().setHours(0, 0, 0, 0);
   const n = e.trips.filter((t) => t.at >= midnight).length;
-  bindAll('todayTrips', `${n} trip${n === 1 ? '' : 's'}`);
-  bindAll('payout', e.payout.method || 'Not set up yet');
+  bindAll('todayTrips', `${n} trip${n === 1 ? '' : 's'} today`);
   $('#trips').innerHTML = e.trips.length
     ? e.trips.slice(0, 5).map((t) => `<li class="row"><div class="row__main"><span class="row__title">${esc(KIND[t.kind] ? KIND[t.kind].name : t.kind)}${t.demo ? ' <span class="badge badge--wait">Demo</span>' : ''}</span>
         <span class="row__sub">${esc(when(t.at))} · ${t.distanceKm.toFixed(1)} km</span></div><span class="row__end">${peso(t.fare)}</span></li>`).join('')
     : '<li class="empty">No trips yet. Go online to start earning.</li>';
 }
-
-$('#mapToggle').addEventListener('click', () => setMapFull(!isMapFull()));
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isMapFull()) setMapFull(false); });
-
-$('#locateBtn').addEventListener('click', async () => {
-  try {
-    me = await askLocation();
-    map.setUser(me);
-    fitAll();
-  } catch (_) { toast('Couldn’t get your location. Requests are sorted from Cebu City centre.'); }
-});
 
 /* ---------- Start ---------- */
 async function start() {
@@ -382,12 +454,10 @@ async function start() {
   const here = await knownLocation();
   if (here) me = here;
   map.setUser(me);
-  map.fit([[me.lng, me.lat]], { maxZoom: 14.5 });
   if (online && !job) listen();
   paintAll();
   loadEarnings();
   $('#onlineBtn').addEventListener('click', toggleOnline);
-  $('#payoutBtn').addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.'));
 }
 
 start();
