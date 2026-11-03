@@ -228,6 +228,7 @@ Given logins so the company can try every side (`DEMO_ACCOUNTS` in `js/demo-data
 | Driver (approved, can go online) | `pages/drive.html` | 0917 000 0001 | driver@mysabak.demo | `mysabak-demo` |
 | Merchant ("Demo Kitchen", not listed on Shops) | `pages/merchant.html` | 0917 000 0002 | merchant@mysabak.demo | `mysabak-demo` |
 | Customer | `pages/account.html` | 0917 000 0003 | client@mysabak.demo | `mysabak-demo` |
+| Admin (lands on `pages/admin.html`) | `pages/account.html` | 0917 000 0009 | admin@mysabak.demo | `mysabak-demo` |
 
 The demo driver gets sample job requests when online; the merchant sees a few sample orders and last week's sales
 (`DEMO_MERCHANT_ORDERS`, `DEMO_MERCHANT_WEEK`, tagged "Sample").
@@ -241,11 +242,20 @@ sign-in form, with a **Customer · Driver · Merchant** switch at the top of eac
 | Customer | `pages/account.html` (`clientSignIn`) | Ride (`/`) | Ride · Shops · Support |
 | Driver | `pages/drive.html` (`driverSignIn`) | `pages/driver.html` | Drive · Support |
 | Merchant | `pages/merchant.html` (`merchantSignIn`) | `pages/merchant-home.html` | My shop · Support |
+| Admin | `pages/account.html` (`clientSignIn`; not advertised) | `pages/admin.html` | Admin · Support |
 
 Signed out, everyone sees Ride · Drive · Shops · Support (+ Account on phones). Signed in, the profile menu (top right)
 replaces Sign in and the Account tab. Drivers and merchants who open a customer page (Ride, Shops, a shop, checkout, an
 order) are sent to their own home. Shops has no Sign in button and no merchant sign-in link. `ROLES` in `ui.js` holds
 the tabs and homes per role.
+
+Admins have no sign-in form of their own and no link anywhere on the site: they use the customer form, and the
+account's role (returned by `clientSignIn` and `currentUser`) sends them to `pages/admin.html`. Anyone else who opens
+that page is sent to their own home, or to the sign-in page when signed out. **Backend:** the role must come from the
+user record on the server, and every admin endpoint must check it there; hiding the page is not the protection.
+
+## Admin (`pages/admin.html`)
+Driver registrations waiting for review, with Approve and Reject. The driver sees the result when they sign in.
 
 ## Account (`pages/account.html`)
 Signed out: **Customer sign in** (mobile number or email + password; customer sign-up is not built yet). Signed in as a
@@ -279,8 +289,9 @@ customer: "Your account" (saved places, trips, payments: coming soon) and this b
 | `listShops({ near, category, q })` / `shopMenu(id)` | `{ categories, shops }` / `Shop` | Shop pages |
 | `merchantSignIn({ login, password })` / `merchantSignOut()` | `{ shopId }` (401 if no match) / nothing | merchant sign in |
 | `merchantHome()` | `{ name, shop, open, available: { itemId: bool }, orders, today: { orders, sales }, week: number[7] }` (401 if signed out; `week` = sales per day, oldest first, ending today) | merchant dashboard |
-| `currentUser()` / `signOut()` | `{ role: 'client'\|'driver'\|'merchant', name, email }` or `null` / nothing | top bar profile menu, every page |
-| `clientSignIn({ login, password })` / `clientSignOut()` | `{ name }` (401 if no match) / nothing | customer sign in |
+| `currentUser()` / `signOut()` | `{ role: 'client'\|'admin'\|'driver'\|'merchant', name, email }` or `null` / nothing | top bar profile menu, every page |
+| `clientSignIn({ login, password })` / `clientSignOut()` | `{ name, role: 'client'\|'admin' }` (401 if no match) / nothing | customer sign in (admins too) |
+| `adminDriverApplications()` / `adminDecideDriver({ phone, decision })` | driver applications in review / `{ status: 'approved'\|'rejected' }` (403 unless an admin is signed in, 404 if no longer waiting) | admin page |
 | `setShopOpen(open)` / `setItemAvailable(itemId, available)` | `{ open }` / `{ ok }` | merchant dashboard |
 | `updateShop({ name?, about?, image? })` / `updateItem(itemId, { name?, note?, price?, section?, image? })` | the shop / the item, as `merchantHome()` shows it (400 with a plain reason for bad input, 413 if the photo can't be stored). `image` arrives as a JPEG data URL: upload it and store its URL. Names up to 60 characters, descriptions up to 200, `price` a whole peso amount from 1 | merchant dashboard |
 | `updateMerchantOrder(orderId, action)` | `{ status }` (409 if the step isn't possible) | merchant dashboard; actions in `MERCHANT_ACTIONS` |
@@ -395,6 +406,7 @@ Any design works as long as `api.js` returns the shapes above. One option:
 | `GET /api/shops` · `GET /api/shops/:id` · `POST /api/shops/:id/quote` | Shop |
 | `POST /api/merchants/session` · `GET /api/merchants/me` · `PUT /api/merchants/me/open` · `PUT /api/merchants/me/items/:id` · `PATCH /api/merchants/me/shop` · `PATCH /api/merchants/me/items/:id` · `POST /api/orders/:id/status` | Merchant dashboard |
 | `POST /api/orders` · `GET /api/orders/:id` · `GET /api/me/orders` | orders |
+| `GET /api/admin/drivers?status=review` · `POST /api/admin/drivers/:id/decision` (admin role checked on the server) | admin page |
 
 Work fares, fees and tip limits out on the server: anything calculated in the browser can be edited by the user.
 

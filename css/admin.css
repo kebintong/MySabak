@@ -1,0 +1,4 @@
+/* Admin (pages/admin.html). On phones the Approve / Reject buttons drop under the applicant's details. */
+.app-row { flex-wrap: wrap; }
+.app-row .row__main { flex: 1 1 260px; min-width: 0; }
+.app-row .row__end { display: flex; gap: 8px; }

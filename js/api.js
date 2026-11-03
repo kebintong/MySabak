@@ -462,16 +462,17 @@ export async function supportStats() {
 /* =========================================================
    Accounts: one person is signed in on a device at a time, as a customer, a driver or a merchant.
    Each has its own sign-in form (pages/account.html, pages/drive.html, pages/merchant.html).
+   Admins use the customer form; nothing on the site points them there. Their role comes from the account.
    ========================================================= */
 
 /**
  * Who is signed in on this device, or null.
  * Backend: one "who am I" call on your session (e.g. GET /api/me).
- * @returns {Promise<null|{role:'client'|'driver'|'merchant', name:string, email:string|null}>}
+ * @returns {Promise<null|{role:'client'|'admin'|'driver'|'merchant', name:string, email:string|null}>}
  */
 export async function currentUser() {
   const client = demo.get('clientSession', null);
-  if (client) return { role: 'client', name: client.name, email: client.email || null };
+  if (client) return { role: client.role || 'client', name: client.name, email: client.email || null };
   const merchant = demo.get('merchantSession', null);
   if (merchant) return { role: 'merchant', name: DEMO_ACCOUNTS.merchant.name, email: DEMO_ACCOUNTS.merchant.email, shop: DEMO_ACCOUNTS.merchant.shop.name };
   const d = await driverStatus();
@@ -496,20 +497,23 @@ export async function signOut() {
 }
 
 /**
- * Customer sign-in with a mobile number OR an email, plus password.
- * DEMO: only the demo customer (demo-data.js → DEMO_ACCOUNTS.client) exists; customer sign-up isn't built.
- * @returns {Promise<{name:string}>}  throws { status: 401 } when they don't match
+ * Customer sign-in with a mobile number OR an email, plus password. Admins sign in here too; the account's
+ * role (not the form) decides it, and the pages send an admin on to pages/admin.html.
+ * DEMO: only the demo customer and demo admin (demo-data.js → DEMO_ACCOUNTS.client / .admin) exist;
+ * customer sign-up isn't built.
+ * Backend: the role must come from your user record on the server, and every admin call must check it there.
+ * @returns {Promise<{name:string, role:'client'|'admin'}>}  throws { status: 401 } when they don't match
  */
 export async function clientSignIn({ login, password }) {
   if (!login || !password) throw Object.assign(new Error('Enter your mobile number or email, and your password.'), { status: 400 });
   await wait(700);
-  const c = DEMO_ACCOUNTS.client;
-  const isLogin = login.includes('@') ? sameEmail(c.email, login) : samePhone(c.phone, login);
-  if (!isLogin) throw Object.assign(new Error('No customer account uses that mobile number or email.'), { status: 401 });
+  const c = [DEMO_ACCOUNTS.client, DEMO_ACCOUNTS.admin].find((a) => (login.includes('@') ? sameEmail(a.email, login) : samePhone(a.phone, login)));
+  if (!c) throw Object.assign(new Error('No customer account uses that mobile number or email.'), { status: 401 });
   if (password !== c.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+  const role = c === DEMO_ACCOUNTS.admin ? 'admin' : 'client';
   endSessions('client');
-  demo.set('clientSession', { name: c.name, email: c.email, phone: c.phone, at: Date.now() });
-  return { name: c.name };
+  demo.set('clientSession', { name: c.name, email: c.email, phone: c.phone, role, at: Date.now() });
+  return { name: c.name, role };
 }
 
 export async function clientSignOut() {
@@ -582,6 +586,42 @@ export async function driverApply(application) {
   demo.set('driver', { ...data, method: 'online', status: 'review', online: false, appliedAt: Date.now() });
   demo.set('driverSession', null);
   return { status: 'review', email: data.email };
+}
+
+/* Admin: reviews driver applications. Every call checks the admin session first. */
+
+const requireAdmin = () => {
+  const s = demo.get('clientSession', null);
+  if (!s || s.role !== 'admin') throw Object.assign(new Error('Admins only'), { status: 403 });
+};
+
+/**
+ * Driver applications waiting for review.
+ * DEMO: the one application made in this browser (pages/drive-signup.html), if it's still in review.
+ * Backend: e.g. GET /api/admin/drivers?status=review
+ * @returns {Promise<Array<{phone, name, email, city, vehicle, plate, model, year, licenseNumber, appliedAt}>>}
+ */
+export async function adminDriverApplications() {
+  requireAdmin();
+  const d = demo.get('driver', null);
+  if (!d || d.status !== 'review') return [];
+  const { phone, name, email, city, vehicle, plate, model, year, licenseNumber, appliedAt } = d;
+  return [{ phone, name, email, city, vehicle, plate, model, year, licenseNumber, appliedAt }];
+}
+
+/**
+ * Approve or reject a driver application. The driver sees the result when they sign in.
+ * Backend: e.g. POST /api/admin/drivers/:id/decision { decision }, and email the driver.
+ * @param {{phone:string, decision:'approved'|'rejected'}} input
+ * @returns {Promise<{status:'approved'|'rejected'}>}
+ */
+export async function adminDecideDriver({ phone, decision }) {
+  requireAdmin();
+  if (decision !== 'approved' && decision !== 'rejected') throw Object.assign(new Error('Unknown decision'), { status: 400 });
+  const d = demo.get('driver', null);
+  if (!d || !samePhone(d.phone, phone) || d.status !== 'review') throw Object.assign(new Error('That application is no longer waiting.'), { status: 404 });
+  demo.set('driver', { ...d, status: decision });
+  return { status: decision };
 }
 
 /**

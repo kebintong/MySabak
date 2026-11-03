@@ -160,6 +160,11 @@ export const DEMO_ACCOUNTS = {
     phone: '09170000003', email: 'client@mysabak.demo', password: 'mysabak-demo',
     name: 'Demo Customer', city: 'Cebu City',
   },
+  // Signs in on the customer form (pages/account.html) and lands on pages/admin.html.
+  admin: {
+    phone: '09170000009', email: 'admin@mysabak.demo', password: 'mysabak-demo',
+    name: 'Demo Admin',
+  },
   driver: {
     phone: '09170000001', email: 'driver@mysabak.demo', password: 'mysabak-demo',
     name: 'Demo Driver', city: 'Cebu City', vehicle: 'sedan', plate: 'DMO 1234', model: 'Toyota Vios', year: 2021, status: 'approved',
