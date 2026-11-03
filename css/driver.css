@@ -23,7 +23,8 @@
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 64px; background: #faf5f3;
   clip-path: polygon(0 75%, 100% 0, 100% 100%, 0 100%);
 }
-.dsky__inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+/* width: 100%: auto margins in the head's flex column would shrink it to its content and pull it off the cards' edge */
+.dsky__inner { position: relative; z-index: 1; width: 100%; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 .dsky__who { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14px; color: #e2d0f4; }
 .dsky__who b { color: #fff; }
 .dsky__today { margin: 0; font: 800 52px/1 var(--font-display); letter-spacing: -.03em; color: var(--gold); font-variant-numeric: tabular-nums; }
@@ -34,6 +35,17 @@
   font-size: 13px; font-weight: 600; color: #fff;
 }
 .dsky__chips b { color: var(--gold); }
+@media (max-width: 379.98px) {
+.page--driver .dsky { padding-bottom: 84px; }
+.dsky__inner { gap: 10px; }
+.dsky__today { font-size: 42px; }
+.onpill { padding-left: 14px; gap: 10px; }
+.onpill__go { padding: 11px 13px; }
+}
+@media (max-height: 520px) and (max-width: 899.98px) {
+.page--driver .dsky { padding-bottom: 80px; }
+.dsky__today { font-size: 38px; }
+}
 @media (min-width: 900px) {
 .page--driver .dsky { padding-bottom: 120px; }
 .dsky__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); align-items: end; column-gap: 28px; }
@@ -44,7 +56,7 @@
 
 /* Online, as Home's white search pill */
 .onpill {
-  min-height: 56px; padding: 6px 6px 6px 18px; display: flex; align-items: center; gap: 12px;
+  width: 100%; max-width: 520px; min-height: 56px; padding: 6px 6px 6px 18px; display: flex; align-items: center; gap: 12px;
   border: 0; border-radius: 999px; background: #fff; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
   box-shadow: 0 10px 30px rgba(20, 8, 42, .3);
 }
@@ -67,43 +79,49 @@
 .dtone--lilac { background: #f2e9fa url("/assets/images/v3/glow-lilac.svg") right -50px top -30px / 260px 230px no-repeat; }
 .dtone--peach { background: #fcefd9 url("/assets/images/v3/glow-peach.svg") right -50px top -30px / 260px 230px no-repeat; }
 
+/* The big card is a grid, so the picture always has its own column and never covers the words or buttons */
 .dhero {
-  position: relative; overflow: hidden; min-height: 200px; padding: 16px 18px; border-radius: 22px; border: 2px solid var(--gold);
-  display: flex; flex-direction: column; gap: 4px; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .18);
-  animation: m-in .3s var(--ease-out) backwards;
+  position: relative; overflow: hidden; padding: 16px 18px; border-radius: 22px; border: 2px solid var(--gold);
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(92px, 34%, 240px); column-gap: 12px; row-gap: 4px; align-content: start;
+  grid-template-areas: "kind kind" "from art" "to art" "fare art" "actions actions";
+  box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .18); animation: m-in .3s var(--ease-out) backwards;
 }
-.dhero__kind { font-size: 12.5px; font-weight: 800; color: var(--kind); }
-.dhero__from { margin: 0; max-width: 62%; font: 800 20px/1.2 var(--font-display); color: var(--ink); }
-.dhero__to { margin: 0; max-width: 62%; font-size: 13.5px; color: var(--sub); }
-.dhero__fare { margin: 4px 0 0; font: 800 32px var(--font-display); letter-spacing: -.02em; color: var(--ink); }
-.dhero__art { position: absolute; right: -6px; top: 34px; width: 46%; max-width: 230px; height: auto; pointer-events: none; }
-.dhero__actions { position: relative; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.dhero__kind { grid-area: kind; font-size: 12.5px; font-weight: 800; color: var(--kind); }
+.dhero__from { grid-area: from; margin: 0; font: 800 20px/1.2 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
+.dhero__to { grid-area: to; margin: 0; font-size: 13.5px; color: var(--sub); }
+.dhero__fare { grid-area: fare; margin: 4px 0 0; font: 800 32px var(--font-display); letter-spacing: -.02em; color: var(--ink); }
+.dhero__art { grid-area: art; align-self: center; width: 100%; height: auto; pointer-events: none; }
+.dhero__actions { grid-area: actions; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .dhero__actions .button { min-height: 46px; font-size: 15px; }
-.dhero__actions .button:first-child { flex: 1 1 160px; }
+.dhero__actions .button:first-child { flex: 1 1 160px; max-width: 300px; } /* never a full-width bar on a wide card */
 .dhero__actions .button--ghost { background: rgba(255, 255, 255, .78); }
 .dhero__route { display: inline-flex; align-items: center; gap: 6px; }
 .dhero__route .icon { width: 16px; height: 16px; stroke: var(--brand-deep); }
 
+/* Small cards: the name gets the full width, the fare and the picture share the bottom row */
 .dminis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dmini {
-  position: relative; overflow: hidden; min-height: 108px; padding: 12px; border: 0; border-radius: 18px;
-  display: flex; flex-direction: column; gap: 2px; font: inherit; color: var(--ink); text-align: left; cursor: pointer;
+  position: relative; overflow: hidden; min-height: 112px; padding: 12px; border: 0; border-radius: 18px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto 1fr; column-gap: 6px;
+  grid-template-areas: "kind kind" "from from" "fare art";
+  font: inherit; color: var(--ink); text-align: left; cursor: pointer;
   transition: transform .15s var(--spring), box-shadow .2s;
 }
 .dmini:hover { box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
 .dmini:active { transform: scale(.97); }
-.dmini__kind { font-size: 12px; font-weight: 800; color: var(--kind); }
-.dmini__from { font-size: 14px; font-weight: 700; line-height: 1.25; max-width: 70%; }
-.dmini__fare { margin-top: auto; font: 800 20px var(--font-display); }
-.dmini__art { position: absolute; right: -4px; bottom: 6px; width: 74px; height: auto; pointer-events: none; }
+.dmini__kind { grid-area: kind; font-size: 12px; font-weight: 800; color: var(--kind); }
+.dmini__from { grid-area: from; font-size: 14px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.dmini__fare { grid-area: fare; align-self: end; font: 800 20px var(--font-display); }
+.dmini__art { grid-area: art; align-self: end; width: 64px; height: auto; pointer-events: none; }
 @media (min-width: 900px) {
-#jobList { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr); align-items: start; }
+#jobList { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .dminis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .dmini { min-height: 200px; }
-.dmini__art { width: 96px; }
+.dhero:only-child { grid-column: 1 / -1; }
+.dmini__art { width: 88px; }
 }
 .dempty {
-  padding: 22px 18px; border-radius: 22px; display: flex; flex-direction: column; gap: 6px;
+  grid-column: 1 / -1; padding: 22px 18px; border-radius: 22px; display: flex; flex-direction: column; gap: 6px;
   box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14);
 }
 .dempty h3 { margin: 0; font: 800 19px var(--font-display); color: var(--ink); }
@@ -133,8 +151,11 @@
 
 /* ---------- Shortcuts (like Schedule · Multi-stop · Vouchers) and the promo card ---------- */
 .dmore { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-@media (min-width: 900px) {
+@media (min-width: 600px) {
 .dmore { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+@media (min-width: 600px) and (max-width: 899.98px) {
+.dminis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .dtiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: 22px; background: #fff; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14); }
 .dtile {
