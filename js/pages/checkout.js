@@ -3,7 +3,7 @@ import { CONFIG } from '../config.js';
 import { shopMenu, deliveryQuote, placeOrder, addressFor, errorMessage } from '../api.js';
 import { cartTotals } from '../money.js';
 import { getCart, setLineQty, clearCart } from '../cart.js';
-import { $, $$, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast, calm, pop } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast, calm, pop, glowNext } from '../ui.js';
 
 mountChrome({ roles: ['client'] });
 
@@ -150,6 +150,7 @@ async function start() {
       const items = getCart().lines.map(({ id, qty, picks, note }) => ({ id, qty, picks, note }));
       const { id } = await placeOrder({ shopId: shop.id, items, address, notes: (data.get('notes') || '').trim(), payment: data.get('payment') });
       clearCart();
+      glowNext('reward', btn);
       location.href = `/pages/order.html?id=${encodeURIComponent(id)}`;
     } catch (err) {
       toast(err.status === 400 ? err.message : errorMessage(err));

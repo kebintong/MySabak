@@ -19,7 +19,7 @@ async function load() {
         <span class="recent__text"><span class="recent__name">${esc((t.dropoff && t.dropoff.label) || 'Pinned location')}</span>
           <span class="recent__meta">${t.kind === 'express' ? 'Parcel' : 'Ride'} · ${esc(vehicleName(t.vehicle))} · ${esc(when(t.at))} · ${pesoOr(t.price && t.price.total, '[FARE]')}</span></span>
         <button type="button" class="btn-soft" data-rebook="${i}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`).join('')
-    : `<li class="trips-empty"><img src="/assets/images/v3/car.svg" alt="" width="160" height="100">
+    : `<li class="trips-empty"><img src="/assets/images/3d/car.webp" alt="" width="200" height="68">
         <span>No rides yet. Your rides and deliveries show up here.</span></li>`;
   $('#orderList').innerHTML = orders.length
     ? orders.map((o) => `<li><a class="row row--link" href="/pages/order.html?id=${encodeURIComponent(o.id)}">

@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="/css/order.css">
   <script type="module" src="/js/pages/order.js"></script>
 </head>
-<body class="page">
+<body class="page page--sky">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
@@ -39,7 +39,7 @@
         <div id="notFound" class="card" hidden><p class="empty">We couldn’t find this order.</p></div>
 
         <div id="orderBody" class="stack" hidden>
-          <section class="card" aria-labelledby="trackTitle">
+          <section class="card glow-border" aria-labelledby="trackTitle">
             <h2 class="card__title" id="trackTitle">Status</h2>
             <ol class="timeline" id="timeline"></ol>
             <p class="demo-note">Demo: no shop or rider is connected, so the order stays at “Order placed”.</p>

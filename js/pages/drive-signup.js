@@ -3,7 +3,7 @@
    → "Application sent", updates by email). */
 import { CONFIG } from '../config.js';
 import { driverApply, errorMessage } from '../api.js';
-import { $, $$, mountChrome, toast, wirePasswordReveal } from '../ui.js';
+import { $, $$, mountChrome, toast, wirePasswordReveal, edgeGlow } from '../ui.js';
 
 mountChrome();
 
@@ -102,6 +102,7 @@ form.addEventListener('submit', async (e) => {
     $('[data-bind="doneName"]').textContent = data.get('name').trim().split(' ')[0];
     $('[data-bind="doneEmail"]').textContent = data.get('email').trim().toLowerCase();
     showView('done');
+    edgeGlow('reward', next);
     history.replaceState(null, '', location.pathname); // Back doesn't return to the filled-in form
     $('.content').scrollTo(0, 0);
   } catch (err) {
