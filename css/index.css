@@ -566,6 +566,7 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 .svc--ride .svc__art { width: 250px; height: auto; right: -40px; }
 .svc__art { width: 108px; height: 76px; }
 .promo-wrap { grid-column: 2 / -1; margin-top: 0; }
+.quick { height: auto; } /* stretch to the row, so it matches the Magic rides card beside it */
 .promo.promo--magic { min-height: 136px; height: 100%; padding-right: 38%; }
 .promo__mascot { width: auto; height: calc(100% + 8px); max-width: 36%; object-fit: contain; object-position: right bottom; }
 }
