@@ -2,35 +2,41 @@
    review, and today's numbers. */
 import { adminOverview, adminApplications, errorMessage } from '../api.js';
 import { $, esc, toast } from '../ui.js';
-import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, initials, ago } from './admin-common.js';
+import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, initials, since, tag, wireTips } from './admin-common.js';
 
 mountAdmin().then((user) => {
   if (!user) return;
   const h = new Date().getHours();
   $('#greeting').textContent = `${h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}, ${String(user.name).split(/\s+/)[0]}`;
-  $('#whoLine').textContent = user.email ? `Signed in as ${user.email}` : 'Signed in';
+  // the date, because "Today so far" below needs it (who's signed in is in the profile menu)
+  $('#dateLine').textContent = new Date().toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long' });
   $('#adminHome').hidden = false;
+  wireTips($('#adminHome'));
   load().catch((err) => toast(errorMessage(err)));
 });
 
 async function load() {
   const [o, drivers, shops] = await Promise.all([adminOverview(), adminApplications('drivers'), adminApplications('merchants')]);
   $('#sampleChip').hidden = !o.sample;
-  $('#todaySample').hidden = !o.sample;
 
-  const card = (label, now, word, total, extra, art, href, good) => `
-    <article class="count glow-border">
-      <span class="count__label">${label}</span>
+  // Each count: what's happening now, the total, and the one thing to act on (a link when there is something to do)
+  const pct = (a, b) => `${Math.round((a / (b || 1)) * 100)}%`;
+  const card = (label, now, word, total, extra, href, good, tip) => `
+    <article class="count" tabindex="0" data-tip="${esc(tip)}">
+      <span class="stat-l">${label}</span>
       <span class="count__now">${num(now)} <small>${word}</small></span>
       <span class="count__total">${total}</span>
-      ${href ? `<a class="count__extra" href="${href}">${extra}</a>` : `<span class="count__extra${good ? ' count__extra--good' : ''}">${extra}</span>`}
-      <img class="count__art" src="${art}" alt="" width="96" height="72">
+      ${href ? `<a class="count__extra" href="${href}">${extra} →</a>` : `<span class="count__extra${good ? ' count__extra--good' : ''}">${extra}</span>`}
     </article>`;
-  $('#counts').innerHTML = card('Riders', o.riders.online, 'using the app now', `${num(o.riders.registered)} registered`, `▲ ${num(o.riders.joinedToday)} joined today`, '/assets/images/3d/mascot.webp', null, true)
-    + card('Drivers', o.drivers.online, 'online now', `${num(o.drivers.approved)} approved · ${num(o.drivers.onTrip)} on a trip`,
-      o.drivers.waiting ? `${o.drivers.waiting} waiting for review` : 'No one waiting for review', '/assets/images/3d/car.webp', '/pages/admin-registrations.html?kind=drivers')
-    + card('Merchants', o.merchants.open, 'shops open now', `${num(o.merchants.shops)} shops`,
-      o.merchants.waiting ? `${o.merchants.waiting} new shops to approve` : 'No shops waiting', '/assets/images/3d/food.webp', '/pages/admin-registrations.html?kind=merchants');
+  const r = o.riders; const d = o.drivers; const m = o.merchants;
+  $('#counts').innerHTML = card('Riders', r.online, 'online', `${num(r.registered)} registered`, `▲ ${num(r.joinedToday)} joined today`, null, true,
+    `Riders right now|${num(r.online)} of ${num(r.registered)} registered riders have the app open (${pct(r.online, r.registered)})|${num(r.joinedToday)} new accounts since midnight`)
+    + card('Drivers', d.online, 'online', `${num(d.approved)} approved · ${num(d.onTrip)} on a trip`,
+      d.waiting ? `${d.waiting} waiting for review` : 'No one waiting for review', d.waiting ? '/pages/admin-registrations.html?kind=drivers' : null, false,
+      `Drivers right now|${num(d.onTrip)} on a trip · ${num(d.online - d.onTrip)} free for a booking|${pct(d.online, d.approved)} of approved drivers are online`)
+    + card('Merchants', m.open, 'open', `${num(m.shops)} shops`,
+      m.waiting ? `${m.waiting} new shops to approve` : 'No shops waiting', m.waiting ? '/pages/admin-registrations.html?kind=merchants' : null, false,
+      `Shops right now|${num(m.open)} of ${num(m.shops)} shops are taking orders (${pct(m.open, m.shops)})|${num(m.shops - m.open)} closed for now`);
 
   // The newest applications still waiting, drivers and shops together
   const waiting = [...drivers, ...shops].filter((a) => a.status === 'review').sort((a, b) => b.appliedAt - a.appliedAt).slice(0, 5);
@@ -38,9 +44,9 @@ async function load() {
     const name = a.kind === 'drivers' ? a.name : a.shop;
     const what = a.kind === 'drivers' ? `Driver · ${VEHICLE[a.vehicle] || a.vehicle} · ${a.city}` : `Shop · ${a.category} · ${a.area}`;
     return `<li><a class="waitrow" href="/pages/admin-registrations.html?kind=${a.kind}&id=${encodeURIComponent(a.id)}">
-      <span class="waitrow__ava" aria-hidden="true">${esc(initials(name))}</span>
-      <span class="row__main"><span class="row__title">${esc(name)}</span><span class="row__sub">${esc(what)} · ${esc(ago(a.appliedAt))}</span></span>
-      <span class="tag tag--review">${STATUS.review.icon} ${STATUS.review.label}</span></a></li>`;
+      <span class="ava" aria-hidden="true">${esc(initials(name))}</span>
+      <span class="row__main"><span class="row__title">${esc(name)}</span><span class="row__sub">${esc(what)} · ${esc(since(a.appliedAt))}</span></span>
+      ${tag('review', STATUS.review.label)}</a></li>`;
   }).join('') : '<li class="empty">No one is waiting for review.</li>';
 
   const t = o.today;
@@ -49,6 +55,23 @@ async function load() {
     <div><span class="today__n">${minSec(t.avgPickupSec)}</span><span class="today__l">average pickup</span></div>`;
   const total = SERVICES.reduce((s, x) => s + t.byService[x.id], 0) || 1;
   $('#svcbar').setAttribute('aria-label', `Trips by service: ${SERVICES.map((s) => `${s.name} ${t.byService[s.id]}`).join(', ')}`);
-  $('#svcbar').innerHTML = SERVICES.map((s) => `<span style="flex:${t.byService[s.id]};background:${s.color}" title="${s.name}: ${t.byService[s.id]} (${Math.round((t.byService[s.id] / total) * 100)}%)"></span>`).join('');
+  $('#svcbar').innerHTML = SERVICES.map((s) => `<span style="flex:${t.byService[s.id]};background:${s.color}" tabindex="0"
+    data-tip="${s.name}|${num(t.byService[s.id])} trips today · ${Math.round((t.byService[s.id] / total) * 100)}% of all"></span>`).join('');
   $('#svcLegend').innerHTML = SERVICES.map((s) => `<li><i style="--c:${s.color}"></i>${s.name} <b>${num(t.byService[s.id])}</b></li>`).join('');
+
+  // Weekly tips: the total, the change on the 7 days before, and a bar per day (today so far is the last)
+  const w = o.tipsWeek;
+  const sum = w.values.reduce((a, b) => a + b, 0);
+  const change = Math.round(((sum - w.lastWeek) / (w.lastWeek || 1)) * 100);
+  const max = Math.max(...w.values);
+  $('#wtipsTotal').textContent = `₱${num(sum)}`;
+  $('#wtipsChange').textContent = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}% on the week before`;
+  $('#wtipsChange').classList.toggle('kpi6__d--bad', change < 0);
+  $('#wtipsBars').innerHTML = w.values.map((v, i) => {
+    const today = i === w.values.length - 1;
+    const label = today ? 'Today so far' : w.days[i];
+    return `<div class="wbar${today ? ' is-today' : ''}" tabindex="0" data-tip="${label}|₱${num(v)} in tips|${Math.round((v / sum) * 100)}% of the week">
+      <span class="wbar__fill" style="height:${Math.max(6, Math.round((v / max) * 100))}%"></span><span class="wbar__d">${esc(w.days[i])}</span></div>`;
+  }).join('');
+  $('#wtipsBars').setAttribute('aria-label', `Tips per day: ${w.values.map((v, i) => `${w.days[i]} ₱${num(v)}`).join(', ')}`);
 }

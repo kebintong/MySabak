@@ -242,7 +242,7 @@ sign-in form, with a **Customer · Driver · Merchant** switch at the top of eac
 | Customer | `pages/account.html` (`clientSignIn`) | Ride (`/`) | Ride · Shops · Support |
 | Driver | `pages/drive.html` (`driverSignIn`) | `pages/driver.html` | Drive · Support |
 | Merchant | `pages/merchant.html` (`merchantSignIn`) | `pages/merchant-home.html` | My shop · Support |
-| Admin | `pages/account.html` (`clientSignIn`; not advertised) | `pages/admin.html` | Overview · Registrations · Analytics · Support |
+| Admin | `pages/account.html` (`clientSignIn`; not advertised) | `pages/admin.html` | Overview · Registrations · Analytics · Management |
 
 Signed out, everyone sees Ride · Drive · Shops · Support (+ Account on phones). Signed in, the profile menu (top right)
 replaces Sign in and the Account tab. Drivers and merchants who open a customer page (Ride, Shops, a shop, checkout, an
@@ -254,14 +254,19 @@ account's role (returned by `clientSignIn` and `currentUser`) sends them to `pag
 an admin page is sent to their own home, or to the sign-in page when signed out. **Backend:** the role must come from the
 user record on the server, and every admin endpoint must check it there; hiding the page is not the protection.
 
-## Admin (`pages/admin.html`, `admin-registrations.html`, `admin-analytics.html`)
+## Admin (`pages/admin.html`, `admin-registrations.html`, `admin-analytics.html`, `admin-management.html`)
 Midnight look with a horizontal night sky. Numbers marked "Sample" come from `DEMO_ADMIN` in `js/demo-data.js`.
+The type scale, weights, radii and the one-glow-per-page rule are written at the top of `css/admin.css`. Every chart
+number, count card and status has details on hover (mouse), tap (touch) or focus (keyboard; arrow keys step through
+line charts): `wireTips` / `wirePoints` in `js/pages/admin-common.js`. Things with more to see open in a sheet
+(`openSheet`): a bottom sheet on phones, centred on bigger screens.
 
 | Page | What it shows | Calls |
 |---|---|---|
-| Overview (`pages/admin.html`) | Live counts of riders, drivers and merchants (links to the drivers / shops waiting), the newest applications waiting, today's trips, tips, average pickup and trips by service | `adminOverview()`, `adminApplications(kind)` |
-| Registrations (`pages/admin-registrations.html?kind=drivers\|merchants&id=…`) | **Drivers · Merchants** switch; Waiting / Needs a fix / Approved / Rejected tabs; an applicant's details and papers, three checks that must be ticked to approve, then **Approve**, **Ask to fix** (with a reason the applicant is told) or **Reject**. Phones show the list, then one applicant with a back button | `adminApplications(kind)`, `adminDecide(...)` |
+| Overview (`pages/admin.html`) | Live counts of riders, drivers and merchants (links to the drivers / shops waiting), the newest applications waiting, today's trips, tips, average pickup and trips by service, and **Weekly tips** (7-day total, change on the week before, a bar per day) | `adminOverview()` (incl. `tipsWeek: { days, values, lastWeek }`), `adminApplications(kind)` |
+| Registrations (`pages/admin-registrations.html?kind=drivers\|merchants&tab=review\|fix\|approved\|rejected&id=…`) | **Drivers · Merchants** switch; Waiting / To fix / Approved / Rejected tabs; an applicant's details and papers (tap a paper for a larger view, what to look for, and **Ask them to fix this**, which picks the matching reason), three checks that must be ticked to approve, then **Approve**, **Ask to fix** (a reason the applicant is told, plus an optional note of up to 200 characters) or **Reject**. Phones show the list, then one applicant with a back button | `adminApplications(kind)`, `adminDecide(...)` |
 | Analytics (`pages/admin-analytics.html`) | This week's numbers, growth of riders / drivers / shops (each on its own scale), trips per day by service (with a table view), tips per day, how riders pay, the new-driver funnel, and each area's status | `adminAnalytics()` |
+| Management (`pages/admin-management.html?id=…`) | Every account (riders, drivers, merchants; waiting applicants as *Pending review*) in a table you can search (name, shop, email, mobile) and filter by role and status, 10 rows at a time. One account's profile: **Edit details** (name, email, mobile, area; emails are unique), **Send password reset**, **Turn off** (with a reason; they're signed out and can't sign in) / **Turn account back on**; pending accounts link to their application. **Sign-up links** to copy or share (drivers: `drive-signup.html`; shops and riders: their pages, whose sign-up forms aren't built yet) and **Registration activity** (applicants per status, newest accounts) | `adminUsers()`, `adminUpdateUser(...)`, `adminSetUserStatus(...)`, `adminPasswordReset(id)`, `adminApplications(kind)` |
 
 Sample applicants live in `DEMO_APPLICATIONS`; the driver application made in this browser (`pages/drive-signup.html`) is listed
 first. Approving or rejecting it changes what that driver sees when they sign in; a fix request keeps them in review.
@@ -301,6 +306,7 @@ customer: "Your account" (saved places, trips, payments: coming soon) and this b
 | `currentUser()` / `signOut()` | `{ role: 'client'\|'admin'\|'driver'\|'merchant', name, email }` or `null` / nothing | top bar profile menu, every page |
 | `clientSignIn({ login, password })` / `clientSignOut()` | `{ name, role: 'client'\|'admin' }` (401 if no match) / nothing | customer sign in (admins too) |
 | `adminApplications(kind)` / `adminDecide({ kind, id, decision, reason })` | applications newest first, each with `status` (`review`\|`fix`\|`approved`\|`rejected`), `reason`, `appliedAt`, `papers` and the applicant's details / `{ status }` (`decision` = `approved`\|`fix`\|`rejected`; `fix` needs a `reason`; 404 unless waiting or being fixed) | admin registrations, overview |
+| `adminUsers()` / `adminUpdateUser({ id, name, email, phone, area })` / `adminSetUserStatus({ id, status, reason })` / `adminPasswordReset(id)` | accounts newest first, each `{ id, role: 'rider'\|'driver'\|'merchant', name, shop?, email, phone, area, joinedAt, lastActiveAt, trips, status: 'active'\|'pending'\|'deactivated', reason, statusAt, vehicle?, plate?, application? }` / the updated account (400 with `field` for a bad value, 409 for a taken email or a pending account) / the updated account (`deactivated` needs a `reason`) / `{ sentTo }` (409 unless active) | admin management |
 | `adminOverview()` / `adminAnalytics()` | live counts and today's numbers / the week's numbers and charts (see `DEMO_ADMIN`) | admin overview, analytics |
 | `setShopOpen(open)` / `setItemAvailable(itemId, available)` | `{ open }` / `{ ok }` | merchant dashboard |
 | `updateShop({ name?, about?, image? })` / `updateItem(itemId, { name?, note?, price?, section?, image? })` | the shop / the item, as `merchantHome()` shows it (400 with a plain reason for bad input, 413 if the photo can't be stored). `image` arrives as a JPEG data URL: upload it and store its URL. Names up to 60 characters, descriptions up to 200, `price` a whole peso amount from 1 | merchant dashboard |
@@ -416,7 +422,7 @@ Any design works as long as `api.js` returns the shapes above. One option:
 | `GET /api/shops` · `GET /api/shops/:id` · `POST /api/shops/:id/quote` | Shop |
 | `POST /api/merchants/session` · `GET /api/merchants/me` · `PUT /api/merchants/me/open` · `PUT /api/merchants/me/items/:id` · `PATCH /api/merchants/me/shop` · `PATCH /api/merchants/me/items/:id` · `POST /api/orders/:id/status` | Merchant dashboard |
 | `POST /api/orders` · `GET /api/orders/:id` · `GET /api/me/orders` | orders |
-| `GET /api/admin/overview` · `GET /api/admin/applications?kind=…` · `POST /api/admin/applications/:id/decision` · `GET /api/admin/analytics` (403 unless the signed-in user's role is admin, checked on the server) | admin pages |
+| `GET /api/admin/overview` · `GET /api/admin/applications?kind=…` · `POST /api/admin/applications/:id/decision` · `GET /api/admin/analytics` · `GET /api/admin/users` · `PATCH /api/admin/users/:id` · `POST /api/admin/users/:id/status` · `POST /api/admin/users/:id/password-reset` (403 unless the signed-in user's role is admin, checked on the server) | admin pages |
 
 Work fares, fees and tip limits out on the server: anything calculated in the browser can be edited by the user.
 

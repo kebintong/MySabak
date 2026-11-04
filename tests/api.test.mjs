@@ -312,3 +312,40 @@ test('admins sign in on the customer form; only they can see and decide registra
   localStorage.removeItem('mysabak.demo.driver');
   localStorage.removeItem('mysabak.demo.adminDecisions');
 });
+
+test('admins manage accounts: edit details, turn accounts off (they can\'t sign in) and back on', async () => {
+  const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
+  await assert.rejects(api.adminUsers(), { status: 403 }, 'signed out');
+  await api.clientSignIn({ login: DEMO_ACCOUNTS.admin.email, password: DEMO_ACCOUNTS.admin.password });
+
+  const all = await api.adminUsers();
+  assert.ok(all.some((u) => u.role === 'rider') && all.some((u) => u.role === 'driver') && all.some((u) => u.role === 'merchant'));
+  assert.ok(all.every((u, i) => i === 0 || all[i - 1].joinedAt >= u.joinedAt), 'newest first');
+  const pending = all.find((u) => u.status === 'pending');
+  assert.ok(pending && pending.application, 'waiting applicants are listed as pending');
+  await assert.rejects(api.adminUpdateUser({ ...pending, name: 'X' }), { status: 409 }, 'review the application first');
+  await assert.rejects(api.adminSetUserStatus({ id: pending.id, status: 'deactivated', reason: 'x' }), { status: 409 });
+
+  const driver = all.find((u) => u.id === 'demo-driver');
+  await assert.rejects(api.adminUpdateUser({ ...driver, email: 'nope' }), { status: 400, field: 'email' });
+  await assert.rejects(api.adminUpdateUser({ ...driver, phone: '1234' }), { status: 400, field: 'phone' });
+  await assert.rejects(api.adminUpdateUser({ ...driver, email: DEMO_ACCOUNTS.client.email }), { status: 409 }, 'emails are unique');
+  const edited = await api.adminUpdateUser({ ...driver, name: '  Demo Driver Two ', phone: '+63 917 000 0001' });
+  assert.equal(edited.name, 'Demo Driver Two');
+  assert.equal(edited.phone, '09170000001');
+
+  await assert.rejects(api.adminSetUserStatus({ id: driver.id, status: 'deactivated' }), { status: 400 }, 'needs a reason');
+  const off = await api.adminSetUserStatus({ id: driver.id, status: 'deactivated', reason: 'Papers expired' });
+  assert.equal(off.status, 'deactivated');
+  assert.equal(off.reason, 'Papers expired');
+  await assert.rejects(api.adminPasswordReset(driver.id), { status: 409 });
+  assert.equal((await api.currentUser()).role, 'admin', 'the admin stays signed in');
+  await assert.rejects(api.driverSignIn({ login: DEMO_ACCOUNTS.driver.email, password: DEMO_ACCOUNTS.driver.password }), { status: 403 });
+
+  assert.equal((await api.adminSetUserStatus({ id: driver.id, status: 'active' })).status, 'active');
+  assert.deepEqual(await api.adminPasswordReset(driver.id), { sentTo: DEMO_ACCOUNTS.driver.email });
+  await api.driverSignIn({ login: DEMO_ACCOUNTS.driver.email, password: DEMO_ACCOUNTS.driver.password });
+  await api.signOut();
+  localStorage.removeItem('mysabak.demo.adminUsers');
+  localStorage.removeItem('mysabak.demo.driver');
+});

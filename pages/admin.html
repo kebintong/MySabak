@@ -28,9 +28,9 @@
         <header class="page-head">
           <div class="ahead__row">
             <div>
-              <p class="lede" id="greeting">Good day</p>
+              <p class="eyebrow" id="greeting">Good day</p>
               <h1 class="page-title">Overview</h1>
-              <p class="lede" id="whoLine">Signed in</p>
+              <p class="lede" id="dateLine">Today</p>
             </div>
             <span class="sample-chip" id="sampleChip" hidden>Sample numbers</span>
           </div>
@@ -38,18 +38,30 @@
 
         <section class="counts rise" aria-label="Live counts" id="counts"></section>
 
-        <div class="agrid">
-          <section class="card" aria-labelledby="waitTitle">
+        <div class="agrid agrid--lead">
+          <section class="card glow-border" aria-labelledby="waitTitle">
             <h2 class="card__title card__title--row" id="waitTitle">Waiting for review <a class="card__link" href="/pages/admin-registrations.html">See all</a></h2>
             <ul class="list" id="waitList"></ul>
           </section>
 
-          <section class="card" aria-labelledby="todayTitle">
-            <h2 class="card__title card__title--row" id="todayTitle">Today so far <span class="tag tag--sample" id="todaySample" hidden>Sample</span></h2>
-            <div class="today" id="today"></div>
-            <div class="svcbar" id="svcbar" role="img"></div>
-            <ul class="legend" id="svcLegend"></ul>
-          </section>
+          <div class="acol">
+            <section class="card" aria-labelledby="todayTitle">
+              <h2 class="card__title" id="todayTitle">Today so far</h2>
+              <div class="today" id="today"></div>
+              <div class="svcbar" id="svcbar" role="img"></div>
+              <ul class="legend" id="svcLegend"></ul>
+            </section>
+
+            <section class="card wtipsc" aria-labelledby="wtipsTitle">
+              <h2 class="card__title card__title--row" id="wtipsTitle">Weekly tips <a class="card__link" href="/pages/admin-analytics.html">Analytics</a></h2>
+              <div class="wtips7__top">
+                <span class="count__now" id="wtipsTotal"></span>
+                <span class="kpi6__d" id="wtipsChange"></span>
+              </div>
+              <p class="tiphint">Tips to mysabak, last 7 days. Point at or tap a day.</p>
+              <div class="wbars" id="wtipsBars" role="group"></div>
+            </section>
+          </div>
         </div>
       </div>
     </main>

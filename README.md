@@ -7,7 +7,7 @@ Frontend design demo: plain HTML, CSS and JavaScript modules, nothing to compile
 
 ```
 index.html          Home (Figma "Home v3") → Ride screen (#ride): Ride | Parcel, map, Book → pay (Cash / GCash / Online banking, your price) → driver → Ride complete
-pages/              trips · wallet · account · shops · shop · checkout · order · support · drive · drive-signup · driver · merchant · merchant-home
+pages/              trips · wallet · account · shops · shop · checkout · order · support · drive · drive-signup · driver · merchant · merchant-home · admin (Overview) · admin-registrations · admin-analytics · admin-management
 manifest.webmanifest · sw.js   install details · offline cache
 css/                base.css (shared) + one file per page that needs its own styles
 js/

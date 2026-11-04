@@ -18,7 +18,7 @@ import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
 import {
   SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS, DEMO_PLACES, DEMO_RIDERS, DEMO_MERCHANT_ORDERS, DEMO_MERCHANT_WEEK,
-  DEMO_APPLICATIONS, DEMO_ADMIN,
+  DEMO_APPLICATIONS, DEMO_ADMIN, DEMO_USERS,
 } from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
@@ -512,6 +512,7 @@ export async function clientSignIn({ login, password }) {
   if (!c) throw Object.assign(new Error('No customer account uses that mobile number or email.'), { status: 401 });
   if (password !== c.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
   const role = c === DEMO_ACCOUNTS.admin ? 'admin' : 'client';
+  if (role === 'client' && accountOff('demo-client')) throw turnedOff();
   endSessions('client');
   demo.set('clientSession', { name: c.name, email: c.email, phone: c.phone, role, at: Date.now() });
   return { name: c.name, role };
@@ -547,6 +548,7 @@ export async function driverSignIn({ login, password }) {
   const demoDriver = DEMO_ACCOUNTS.driver;
   if (isLogin(demoDriver)) {
     if (password !== demoDriver.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+    if (accountOff('demo-driver')) throw turnedOff();
     const { password: _, ...profile } = demoDriver; // eslint-disable-line no-unused-vars
     const prev = demo.get('driver', null);
     demo.set('driver', { ...profile, method: 'demo', online: prev && prev.method === 'demo' ? prev.online : false });
@@ -559,6 +561,7 @@ export async function driverSignIn({ login, password }) {
   if (!matches) {
     throw Object.assign(new Error('No driver account uses that mobile number or email. Check it, or sign up.'), { status: 401 });
   }
+  if (accountOff(BROWSER_DRIVER)) throw turnedOff();
   endSessions('driver');
   demo.set('driverSession', { phone: d.phone, at: Date.now() });
   return { status: d.status };
@@ -599,12 +602,19 @@ const requireAdmin = () => {
   if (!s || s.role !== 'admin') throw Object.assign(new Error('Admins only'), { status: 403 });
 };
 
+/** When this browser first opened the admin pages: the SAMPLE applicants' and accounts' times count back from it. */
+const adminOpenedAt = () => demo.get('adminOpenedAt', null) || (demo.set('adminOpenedAt', Date.now()), Date.now());
+
+/** An account an admin turned off (pages/admin-management.html) can't sign in. */
+const accountOff = (id) => (demo.get('adminUsers', {})[id] || {}).status === 'deactivated';
+const turnedOff = () => Object.assign(new Error('This account is turned off. Contact mysabak support to turn it back on.'), { status: 403 });
+
 const BROWSER_DRIVER = 'browser-driver'; // the application made in this browser on pages/drive-signup.html
 
 /** Every application of one kind, with the decisions made in this browser applied. */
 function applications(kind) {
   const decided = demo.get('adminDecisions', {});
-  const opened = demo.get('adminOpenedAt', null) || (demo.set('adminOpenedAt', Date.now()), Date.now());
+  const opened = adminOpenedAt();
   const list = DEMO_APPLICATIONS[kind].map(({ hoursAgo, ...a }) => ({ ...a, kind, sample: true, appliedAt: opened - hoursAgo * 3600e3 }));
   const d = demo.get('driver', null);
   if (kind === 'drivers' && d && d.method === 'online') {
@@ -653,15 +663,18 @@ export async function adminDecide({ kind, id, decision, reason = '' }) {
 }
 
 /**
- * Live counts and today's numbers for the admin overview.
+ * Live counts, today's numbers and this week's tips (tipsWeek: { days, values, lastWeek }) for the admin overview.
  * DEMO: SAMPLE numbers (DEMO_ADMIN); the waiting counts come from the applications.
  * Backend: e.g. GET /api/admin/overview
  */
 export async function adminOverview() {
   requireAdmin();
   const waiting = (kind) => applications(kind).filter((a) => a.status === 'review').length;
-  const { riders, drivers, merchants, today } = DEMO_ADMIN;
-  return { sample: true, riders, drivers: { ...drivers, waiting: waiting('drivers') }, merchants: { ...merchants, waiting: waiting('merchants') }, today };
+  const { riders, drivers, merchants, today, tipsPerDay, tripsPerDay } = DEMO_ADMIN;
+  const sum = (a) => a.reduce((s, x) => s + x, 0);
+  // tips for each of the last 7 days (oldest first; the last is today so far) and the 7 days before, in total
+  const tipsWeek = { days: tripsPerDay.map((d) => d.day), values: tipsPerDay.slice(-7), lastWeek: sum(tipsPerDay.slice(-14, -7)) };
+  return { sample: true, riders, drivers: { ...drivers, waiting: waiting('drivers') }, merchants: { ...merchants, waiting: waiting('merchants') }, today, tipsWeek };
 }
 
 /**
@@ -671,6 +684,114 @@ export async function adminAnalytics() {
   requireAdmin();
   const { week, tripsPerDay, growth, tipsPerDay, payments, driverFunnel, areas } = DEMO_ADMIN;
   return { sample: true, week, tripsPerDay, growth, tipsPerDay, payments, driverFunnel, areas };
+}
+
+/* ---------- Admin: accounts (pages/admin-management.html) ---------- */
+
+const DAY = 86400e3;
+const HOUR = 3600e3;
+const PH_MOBILE = /^(\+?63|0)9\d{9}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Every account: the demo logins, the SAMPLE accounts, and driver / shop applicants (waiting ones are 'pending'). */
+function users() {
+  const opened = adminOpenedAt();
+  const A = DEMO_ACCOUNTS;
+  const logins = [
+    { id: 'demo-client', role: 'rider', name: A.client.name, email: A.client.email, phone: A.client.phone, area: A.client.city },
+    { id: 'demo-driver', role: 'driver', name: A.driver.name, email: A.driver.email, phone: A.driver.phone, area: A.driver.city, vehicle: A.driver.vehicle, plate: A.driver.plate },
+    { id: 'demo-merchant', role: 'merchant', name: A.merchant.name, shop: A.merchant.shop.name, email: A.merchant.email, phone: A.merchant.phone, area: A.merchant.shop.area },
+  ].map((u) => ({ trips: 0, status: 'active', reason: '', statusAt: null, sample: false, demoLogin: true, joinedAt: opened - 30 * DAY, lastActiveAt: opened - HOUR, ...u }));
+  const sample = DEMO_USERS.map(({ daysAgo, hoursAgo, statusDaysAgo, ...u }) => ({
+    reason: '', ...u, sample: true, joinedAt: opened - daysAgo * DAY, lastActiveAt: opened - hoursAgo * HOUR,
+    statusAt: statusDaysAgo == null ? null : opened - statusDaysAgo * DAY,
+  }));
+  const applicants = ['drivers', 'merchants'].flatMap((kind) => applications(kind).filter((a) => a.status !== 'rejected').map((a) => {
+    const driver = kind === 'drivers';
+    return {
+      id: a.id, role: driver ? 'driver' : 'merchant', name: driver ? a.name : a.owner, ...(driver ? { vehicle: a.vehicle, plate: a.plate } : { shop: a.shop }),
+      email: a.email, phone: a.phone, area: driver ? a.city : a.area, trips: 0, joinedAt: a.appliedAt, lastActiveAt: a.appliedAt,
+      status: a.status === 'approved' ? 'active' : 'pending', reason: '', statusAt: null, application: { kind, status: a.status }, sample: a.sample,
+    };
+  }));
+  const edits = demo.get('adminUsers', {});
+  return [...logins, ...sample, ...applicants].map((u) => (edits[u.id] && u.status !== 'pending' ? { ...u, ...edits[u.id] } : u))
+    .sort((a, b) => b.joinedAt - a.joinedAt);
+}
+
+const findUser = (id) => {
+  const u = users().find((x) => x.id === id);
+  if (!u) throw Object.assign(new Error('That account no longer exists.'), { status: 404 });
+  if (u.status === 'pending') throw Object.assign(new Error('Review their application first.'), { status: 409 });
+  return u;
+};
+const saveUser = (id, change) => demo.set('adminUsers', { ...demo.get('adminUsers', {}), [id]: { ...demo.get('adminUsers', {})[id], ...change } });
+
+/**
+ * Every rider, driver and merchant account, newest first.
+ * DEMO: SAMPLE accounts (DEMO_USERS), the demo logins and the driver / shop applicants; edits are saved in this browser.
+ * Backend: e.g. GET /api/admin/users
+ * @returns {Promise<Array<{id, role:'rider'|'driver'|'merchant', name, shop?, email, phone, area, joinedAt, lastActiveAt,
+ *   trips, status:'active'|'pending'|'deactivated', reason, statusAt, vehicle?, plate?, application?, sample, demoLogin?}>>}
+ */
+export async function adminUsers() {
+  requireAdmin();
+  return users();
+}
+
+/**
+ * Change an account's name, email, mobile number and area. Applicants still waiting can't be edited (409).
+ * Backend: e.g. PATCH /api/admin/users/:id
+ * @returns {Promise<object>} the updated account
+ */
+export async function adminUpdateUser({ id, name, email, phone, area }) {
+  requireAdmin();
+  const u = findUser(id);
+  const clean = { name: String(name || '').trim(), email: String(email || '').trim(), phone: String(phone || '').replace(/[\s-]/g, ''), area: String(area || '').trim() };
+  const bad = (message, field) => Object.assign(new Error(message), { status: 400, field });
+  if (!clean.name) throw bad('Enter their name.', 'name');
+  if (!EMAIL_RE.test(clean.email)) throw bad('Enter a valid email address.', 'email');
+  if (!PH_MOBILE.test(clean.phone)) throw bad('Enter a mobile number like 0917 123 4567.', 'phone');
+  if (!clean.area) throw bad('Enter their area or city.', 'area');
+  clean.phone = clean.phone.replace(/^\+?63/, '0');
+  if (users().some((x) => x.id !== id && sameEmail(x.email, clean.email))) throw Object.assign(new Error('Another account already uses that email.'), { status: 409, field: 'email' });
+  saveUser(u.id, clean);
+  return users().find((x) => x.id === id);
+}
+
+/**
+ * Turn an account off (needs a reason; it can't sign in until turned back on) or back on.
+ * Backend: e.g. POST /api/admin/users/:id/status { status, reason }; end the account's sessions when turning it off.
+ * @param {{id:string, status:'active'|'deactivated', reason?:string}} input
+ * @returns {Promise<object>} the updated account
+ */
+export async function adminSetUserStatus({ id, status, reason = '' }) {
+  requireAdmin();
+  if (!['active', 'deactivated'].includes(status)) throw Object.assign(new Error('Unknown status'), { status: 400 });
+  const u = findUser(id);
+  if (status === 'deactivated' && !String(reason).trim()) throw Object.assign(new Error('Say why the account is being turned off.'), { status: 400 });
+  saveUser(u.id, { status, reason: status === 'deactivated' ? String(reason).trim() : '', statusAt: Date.now() });
+  if (status === 'deactivated') {
+    // signed in on this device? sign them out (never the admin's own session)
+    const c = demo.get('clientSession', null);
+    if (id === 'demo-client' && c && c.role !== 'admin') demo.set('clientSession', null);
+    if (id === 'demo-merchant') demo.set('merchantSession', null);
+    if (id === 'demo-driver' || id === BROWSER_DRIVER) demo.set('driverSession', null);
+  }
+  return users().find((x) => x.id === id);
+}
+
+/**
+ * Email an active account a link to set a new password.
+ * DEMO: nothing is sent. Backend: e.g. POST /api/admin/users/:id/password-reset
+ * @returns {Promise<{sentTo:string}>}
+ */
+export async function adminPasswordReset(id) {
+  requireAdmin();
+  const u = findUser(id);
+  if (u.status !== 'active') throw Object.assign(new Error('Turn the account back on first.'), { status: 409 });
+  await wait(400);
+  return { sentTo: u.email };
 }
 
 /**
@@ -835,6 +956,7 @@ export async function merchantSignIn({ login, password }) {
   const isLogin = login.includes('@') ? sameEmail(m.email, login) : samePhone(m.phone, login);
   if (!isLogin) throw Object.assign(new Error('No merchant account uses that mobile number or email.'), { status: 401 });
   if (password !== m.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+  if (accountOff('demo-merchant')) throw turnedOff();
   endSessions('merchant');
   demo.set('merchantSession', { shopId: m.shop.id, at: Date.now() });
   return { shopId: m.shop.id };
