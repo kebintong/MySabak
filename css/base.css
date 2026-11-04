@@ -457,7 +457,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 }
 .hero {
   position: relative;
-  min-height: calc(262px + var(--safe-t));
+  min-height: calc(232px + var(--safe-t)); /* Figma's 262px left a 70px empty band above the Ride card */
   padding: calc(8px + var(--safe-t)) 16px 44px;
   background: url("/assets/images/v3/hero-night-sky.svg") center bottom / 100% 100% no-repeat;
 }
