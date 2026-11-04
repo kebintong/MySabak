@@ -506,8 +506,9 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 .svc-wrap .svc--ride::before { content: ""; position: absolute; right: -40px; top: -40px; width: 240px; height: 180px; border-radius: 50%; background: #e8daf7; filter: blur(15px); }
 .svc-wrap .svc--ride::after { display: none; } /* the old idle shine: .sheen does it now */
 .svc--ride .svc__copy { z-index: 1; }
-.svc--ride .svc__art { right: -50px; bottom: 8px; width: 226px; height: auto; }
-.svc__art { right: 6px; bottom: 6px; width: 80px; height: 56px; object-fit: contain; object-position: right bottom; }
+/* the flat art sits whole inside its card; one height for the three small cards so they weigh the same */
+.svc--ride .svc__art { right: 12px; bottom: 10px; width: auto; height: 70px; max-width: 55%; }
+.svc__art { right: 10px; bottom: 10px; width: auto; height: 46px; max-width: 70%; object-fit: contain; object-position: right bottom; }
 .svc--lilac, .svc--peach { background-image: none; }
 .svc--lilac::before, .svc--peach::before { content: ""; position: absolute; right: -34px; bottom: -48px; width: 130px; height: 120px; border-radius: 50%; background: #e8daf7; filter: blur(10px); }
 .svc--peach::before { background: #f8e3c0; }
@@ -564,10 +565,15 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 .hero { clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%); }
 .svc-wrap { grid-column: auto; }
 .svc-wrap .svc--ride { height: 136px; }
-.svc--ride .svc__art { width: 250px; height: auto; right: -40px; }
-.svc__art { width: 108px; height: 76px; }
+.svc--ride .svc__art { height: 92px; }
+.svc__art { height: 64px; }
 .promo-wrap { grid-column: 2 / -1; margin-top: 0; }
-.promo.promo--magic { min-height: 136px; height: 100%; padding-right: 38%; }
+/* taller promo → bigger mascot (it's sized from the card's height); Quick stretches to match the row */
+.promo.promo--magic { min-height: 160px; height: 100%; padding-right: 38%; }
+.quick { height: auto; }
+}
+@media (min-width: 600px) and (max-width: 899.98px) {
+.promo.promo--magic { min-height: 200px; }
 }
 /* the picked ride: the lilac → gold glow border */
 .vehicle[aria-checked="true"] { border-color: transparent; background: linear-gradient(#f7f0fd, #f7f0fd) padding-box, var(--glow-border) border-box; }
