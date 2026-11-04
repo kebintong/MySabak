@@ -539,7 +539,8 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
   animation: sky-drift 9s ease-in-out 2 alternate;
 }
 .promo__shadow { position: absolute; right: 5%; bottom: 3px; width: 32%; height: 12px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(14, 2, 32, .55), rgba(0, 0, 0, 0) 70%); }
-.promo__mascot { position: absolute; right: 3%; bottom: 2px; width: 38%; max-width: 200px; height: auto; transform-origin: 50% 100%; animation: mascot-float 4.2s ease-in-out 2; }
+/* sized to the card's height so it only peeks over the top, never onto the row above */
+.promo__mascot { position: absolute; right: 3%; bottom: 2px; width: auto; height: calc(100% + 8px); max-width: 36%; object-fit: contain; object-position: right bottom; transform-origin: 50% 100%; animation: mascot-float 4.2s ease-in-out 2; }
 .promo--magic .promo__copy { position: relative; left: auto; top: auto; gap: 0; align-items: flex-start; }
 .promo--magic .promo__eyebrow { font-size: 12px; animation: foil 4s linear 2; }
 .promo--magic .promo__title { margin: 4px 0 0; font-size: 20px; line-height: 1.2; letter-spacing: -.3px; color: #fff; }
@@ -567,7 +568,6 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 .svc__art { width: 108px; height: 76px; }
 .promo-wrap { grid-column: 2 / -1; margin-top: 0; }
 .promo.promo--magic { min-height: 136px; height: 100%; padding-right: 38%; }
-.promo__mascot { width: auto; height: calc(100% + 8px); max-width: 36%; object-fit: contain; object-position: right bottom; }
 }
 /* the picked ride: the lilac → gold glow border */
 .vehicle[aria-checked="true"] { border-color: transparent; background: linear-gradient(#f7f0fd, #f7f0fd) padding-box, var(--glow-border) border-box; }
