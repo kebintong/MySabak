@@ -51,46 +51,87 @@ export const since = (ts) => (ago(ts) === 'just now' ? 'just now' : `${ago(ts)} 
 
 /* ---------- Details on hover, tap or focus ----------
    Any element with data-tip="Title|line|line" shows a small card above it: on hover with a mouse, on tap on a
-   touch screen (tap again or anywhere else to close), and on keyboard focus. Charts with many points call
-   showTip() themselves. One card for the whole page, fixed to the screen so card edges never clip it. */
-let tipEl = null;
-let tipFor = null;
-const tipBox = () => {
-  if (tipEl) return tipEl;
-  tipEl = document.createElement('div');
-  tipEl.className = 'ctip';
-  tipEl.setAttribute('role', 'tooltip');
-  tipEl.id = 'ctip';
-  tipEl.hidden = true;
-  document.body.appendChild(tipEl);
-  const close = () => hideTip();
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-  document.addEventListener('scroll', close, true);
-  window.addEventListener('resize', close);
-  document.addEventListener('pointerdown', (e) => { if (tipFor && !tipFor.contains(e.target)) close(); });
-  return tipEl;
-};
+   touch screen (tap again or anywhere else to close), and on keyboard focus. Line charts use wirePoints().
+   One card for the whole page, fixed to the screen so card edges never clip it.
+
+   Why it feels smooth: the card only ever moves with transform (no layout), glides to where it should be on
+   each screen refresh (it eases behind the pointer instead of jumping), is measured only when its text changes,
+   fades in and out instead of popping, and moving from one bar to the next keeps it on screen so it slides
+   across. With "reduce motion" turned on it snaps into place. */
+const T = { el: null, owner: null, on: false, key: '', w: 0, h: 0, x: 0, y: 0, tx: 0, ty: 0, raf: 0, last: 0, hideTimer: 0 };
+const GLIDE_MS = 55; // how far behind the pointer the card trails (time constant)
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const escT = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-/** Show `lines` (first one bold) above the screen point or box `at` ({left, top, right, bottom} or {x, y}). */
+const tipBox = () => {
+  if (T.el) return T.el;
+  T.el = document.createElement('div');
+  T.el.className = 'ctip';
+  T.el.setAttribute('role', 'tooltip');
+  T.el.id = 'ctip';
+  document.body.appendChild(T.el);
+  const close = () => hideTip(true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  document.addEventListener('scroll', close, { capture: true, passive: true });
+  window.addEventListener('resize', close);
+  document.addEventListener('pointerdown', (e) => { if (T.owner && !T.owner.contains(e.target)) close(); });
+  return T.el;
+};
+
+/** One step of the glide: ease the card toward its target, framerate-independent. */
+function glide(now) {
+  const dt = T.last ? Math.min(64, now - T.last) : 16;
+  T.last = now;
+  const k = reduceMotion() ? 1 : 1 - Math.exp(-dt / GLIDE_MS);
+  T.x += (T.tx - T.x) * k;
+  T.y += (T.ty - T.y) * k;
+  const done = Math.abs(T.tx - T.x) < 0.25 && Math.abs(T.ty - T.y) < 0.25;
+  if (done) { T.x = T.tx; T.y = T.ty; }
+  T.el.style.transform = `translate3d(${T.x.toFixed(2)}px, ${T.y.toFixed(2)}px, 0)`;
+  T.raf = done ? 0 : requestAnimationFrame(glide);
+}
+
+const setOwner = (owner) => {
+  if (owner === T.owner) return;
+  if (T.owner) { T.owner.classList.remove('is-tip'); T.owner.removeAttribute('aria-describedby'); }
+  T.owner = owner || null;
+  if (T.owner) { T.owner.classList.add('is-tip'); T.owner.setAttribute('aria-describedby', 'ctip'); }
+};
+
+/**
+ * Show `lines` (first one bold) above the screen box `at` ({left, top, right, bottom}) or point ({x, y}).
+ * `owner` gets .is-tip while its details show (charts dim the other bars with it).
+ */
 export function showTip(lines, at, owner) {
   const box = tipBox();
-  box.innerHTML = lines.map((l, i) => (i === 0 ? `<b>${escT(l)}</b>` : `<span>${escT(l)}</span>`)).join('');
-  box.hidden = false;
-  tipFor = owner || null;
+  clearTimeout(T.hideTimer);
+  const key = lines.join('|');
+  if (key !== T.key) { // new text: measure once (the only layout read)
+    box.innerHTML = lines.map((l, i) => (i === 0 ? `<b>${escT(l)}</b>` : `<span>${escT(l)}</span>`)).join('');
+    T.key = key;
+    T.w = box.offsetWidth;
+    T.h = box.offsetHeight;
+  }
   const r = 'x' in at ? { left: at.x, right: at.x, top: at.y, bottom: at.y } : at;
-  const w = box.offsetWidth;
-  const h = box.offsetHeight;
   const cx = (r.left + r.right) / 2;
-  box.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, cx - w / 2))}px`;
-  box.style.top = `${r.top - h - 10 >= 8 ? r.top - h - 10 : r.bottom + 10}px`;
-  if (owner) owner.setAttribute('aria-describedby', 'ctip');
+  T.tx = Math.max(8, Math.min(innerWidth - T.w - 8, cx - T.w / 2));
+  T.ty = r.top - T.h - 10 >= 8 ? r.top - T.h - 10 : r.bottom + 10;
+  // glide within one chart (bar to bar, along a line); a different chart gets a fresh card in place
+  const sameChart = T.on && T.owner && owner && (T.owner === owner || T.owner.parentElement === owner.parentElement);
+  const appearing = !sameChart;
+  T.on = true;
+  setOwner(owner);
+  box.classList.add('is-on');
+  if (appearing) { T.x = T.tx; T.y = T.ty; } // appear in place; glide only once it's showing
+  if (!T.raf) { T.last = 0; T.raf = requestAnimationFrame(glide); }
 }
-export function hideTip() {
-  if (!tipEl || tipEl.hidden) return;
-  tipEl.hidden = true;
-  if (tipFor) tipFor.removeAttribute('aria-describedby');
-  tipFor = null;
+
+/** Hide the card. Not right away by default, so moving to the next bar slides it across instead of blinking. */
+export function hideTip(now = false) {
+  if (!T.el) return;
+  clearTimeout(T.hideTimer);
+  const off = () => { T.on = false; T.el.classList.remove('is-on'); setOwner(null); };
+  if (now) off(); else T.hideTimer = setTimeout(off, 90);
 }
 
 /** Wire every [data-tip] inside `root` (now and later: it listens on root). */
@@ -110,46 +151,66 @@ export function wireTips(root) {
   root.addEventListener('click', (e) => {
     const el = target(e);
     if (!el || !touch || e.target.closest('a, button:not([data-tip])')) return;
-    if (tipFor === el) hideTip(); else show(el);
+    if (T.owner === el && T.on) hideTip(true); else show(el);
   });
   root.addEventListener('focusin', (e) => { const el = target(e); if (el && !touch) show(el); });
   root.addEventListener('focusout', (e) => { if (target(e)) hideTip(); });
 }
 
 /**
- * A chart with one value per x position (a line or sparkline): pointing anywhere on it shows the nearest point's
- * details and moves a dot there; arrow keys step through the points when it has focus.
- * @param {Element} host  the box the chart fills (position: relative); gets a .cdot marker
+ * A line chart (or sparkline): a dot rides the line under the pointer, between days too, with a thin guide line;
+ * the card above the chart slides along with it and shows the nearest day. Arrow keys step day by day.
+ * On touch screens, tap or drag a finger along it (scrolling up and down still works).
+ * @param {Element} host  the box the chart fills (position: relative); gets the .cdot and .cguide
  * @param {number} n  how many points
  * @param {(i:number) => {lines:string[], x:number, y:number}} at  details and position (0–1 of the host's box) of point i
  */
 export function wirePoints(host, n, at) {
-  const dot = document.createElement('span');
-  dot.className = 'cdot';
-  dot.hidden = true;
-  host.appendChild(dot);
+  const pts = Array.from({ length: n }, (_, i) => at(i));
+  host.insertAdjacentHTML('beforeend', '<span class="cguide" aria-hidden="true"></span><span class="cdot" aria-hidden="true"></span>');
+  const guide = host.querySelector(':scope > .cguide');
+  const dot = host.querySelector(':scope > .cdot');
   host.tabIndex = 0;
   let cur = n - 1;
-  const show = (i) => {
-    cur = Math.max(0, Math.min(n - 1, i));
-    const p = at(cur);
-    const r = host.getBoundingClientRect();
-    dot.style.left = `${p.x * 100}%`;
-    dot.style.top = `${p.y * 100}%`;
-    dot.hidden = false;
-    showTip(p.lines, { x: r.left + p.x * r.width, y: r.top + p.y * r.height - 4 }, host);
+  let fx = pts[cur].x;
+  let pendingX = null;
+  let frame = 0;
+
+  /** Where the line is at fraction fx (0–1) of the width, and which day is nearest. */
+  const sample = (f) => {
+    let j = 0;
+    while (j < n - 2 && pts[j + 1].x < f) j += 1;
+    const a = pts[j];
+    const b = pts[Math.min(n - 1, j + 1)];
+    const t = b.x === a.x ? 0 : Math.max(0, Math.min(1, (f - a.x) / (b.x - a.x)));
+    return { y: a.y + (b.y - a.y) * t, i: t < 0.5 ? j : Math.min(n - 1, j + 1) };
   };
-  const fromEvent = (e) => {
-    const r = host.getBoundingClientRect();
-    return Math.round(((e.clientX - r.left) / r.width) * (n - 1));
+  const draw = () => {
+    frame = 0;
+    const r = host.getBoundingClientRect(); // read first, then only writes: no forced layout
+    if (pendingX !== null) { fx = Math.max(pts[0].x, Math.min(pts[n - 1].x, (pendingX - r.left) / r.width)); pendingX = null; }
+    const s = sample(fx);
+    cur = s.i;
+    const px = fx * r.width;
+    dot.style.transform = `translate3d(${px.toFixed(2)}px, ${(s.y * r.height).toFixed(2)}px, 0)`;
+    guide.style.transform = `translate3d(${px.toFixed(2)}px, 0, 0)`;
+    showTip(pts[cur].lines, { left: r.left + px, right: r.left + px, top: r.top, bottom: r.bottom }, host);
   };
-  host.addEventListener('pointermove', (e) => show(fromEvent(e)));
-  host.addEventListener('pointerdown', (e) => show(fromEvent(e)));
-  host.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { dot.hidden = true; hideTip(); } });
-  host.addEventListener('focus', () => show(cur));
-  host.addEventListener('blur', () => { dot.hidden = true; hideTip(); });
+  const ask = () => { if (!frame) frame = requestAnimationFrame(draw); };
+  const fromPointer = (e) => { pendingX = e.clientX; ask(); };
+
+  host.addEventListener('pointerenter', fromPointer);
+  host.addEventListener('pointermove', fromPointer, { passive: true });
+  host.addEventListener('pointerdown', fromPointer);
+  host.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideTip(); });
+  host.addEventListener('focus', () => { fx = pts[cur].x; ask(); });
+  host.addEventListener('blur', () => hideTip());
   host.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); show(cur + (e.key === 'ArrowRight' ? 1 : -1)); }
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    cur = Math.max(0, Math.min(n - 1, cur + (e.key === 'ArrowRight' ? 1 : -1)));
+    fx = pts[cur].x;
+    ask();
   });
 }
 
@@ -170,7 +231,7 @@ export function openSheet({ title, body, onReady }) {
   d.querySelector('#asheetTitle').textContent = title;
   d.querySelector('#asheetBody').innerHTML = body;
   d.onclose = () => { if (back && back.focus) back.focus(); };
-  hideTip();
+  hideTip(true);
   d.showModal();
   if (onReady) onReady(d);
   return d;
