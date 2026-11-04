@@ -257,9 +257,9 @@ function armLoop(nav) {
   const paint = (i) => { roll.innerHTML = loopArt(i); name(i); };
   paint(here());
 
-  const turn = () => {
-    if (turning) return;
-    turning = true;
+  // Swiping rolls the next icon in while the thumb is still down; letting go opens it, dragging back undoes it
+  let armed = null;
+  const arm = () => {
     const to = (step + 1) % LOOP.length;
     const old = $('.tab__art', roll);
     roll.insertAdjacentHTML('beforeend', loopArt(to));
@@ -267,16 +267,30 @@ function armLoop(nav) {
     if (navigator.vibrate) navigator.vibrate(12);
     const quick = calm();
     // a wheel turning right: the old icon rolls out right, the next rolls in from the left and settles
-    old.animate(quick ? [{ opacity: 1 }, { opacity: 0 }]
+    const out = old.animate(quick ? [{ opacity: 1 }, { opacity: 0 }]
       : [{ transform: old.style.transform || 'none' }, { transform: 'translateX(115%) rotate(150deg) scale(.5)', opacity: 0 }],
     { duration: quick ? 160 : 380, easing: GLIDE, fill: 'forwards' });
-    const done = neu.animate(quick ? [{ opacity: 0 }, { opacity: 1 }]
+    const into = neu.animate(quick ? [{ opacity: 0 }, { opacity: 1 }]
       : [{ transform: 'translateX(-115%) rotate(-150deg) scale(.5)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-    { duration: quick ? 160 : 560, easing: quick ? 'linear' : SPRING, fill: 'backwards' }).finished;
+    { duration: quick ? 160 : 560, easing: quick ? 'linear' : SPRING, fill: 'both' });
     if (!quick) box.animate([{ transform: 'none' }, { transform: 'scale(1.12)', offset: 0.3 }, { transform: 'none' }], { duration: 560, easing: GLIDE });
     food.classList.add('is-turning');
+    armed = { to, old, neu, out, into };
+  };
+  const disarm = () => {
+    const { neu, out, into } = armed;
+    armed = null;
+    food.classList.remove('is-turning');
+    out.reverse();
+    into.reverse();
+    into.finished.then(() => { neu.remove(); out.cancel(); }, () => {});
+  };
+  const commit = () => {
+    const { to, old, into } = armed;
+    armed = null;
+    turning = true;
     try { localStorage.setItem(LEARNED_KEY, '1'); } catch (_) { /* storage off: the hint keeps showing */ }
-    done.then(() => {
+    into.finished.then(() => { // a quick flick may let go mid-roll: finish it first
       old.remove();
       food.classList.remove('is-turning', 'is-held');
       name(to);
@@ -317,13 +331,16 @@ function armLoop(nav) {
   food.addEventListener('pointermove', (e) => {
     if (!start || turning) return;
     const dx = e.clientX - start.x;
+    if (armed) { if (dx < SWIPE / 2) disarm(); return; }
     // mostly rightward counts, even drifting up or down (within ~50°)
-    if (dx >= SWIPE && Math.abs(e.clientY - start.y) < dx * 1.2) { start = null; swiped = true; turn(); return; }
+    if (dx >= SWIPE && Math.abs(e.clientY - start.y) < dx * 1.2) { swiped = true; arm(); return; }
     $('.tab__art', roll).style.transform = lean(dx); // leans with the thumb, so it feels attached
   });
-  const release = () => {
+  const release = (e) => {
     if (!start) return;
     start = null;
+    if (armed && e.type === 'pointerup') { commit(); return; }
+    if (armed) disarm();
     food.classList.remove('is-held');
     const art = $('.tab__art', roll);
     if (!art.style.transform) return;
@@ -338,7 +355,7 @@ function armLoop(nav) {
     if (swiped) { swiped = false; e.preventDefault(); e.stopImmediatePropagation(); return; } // nor the shop's order sheet
     if (!food.dataset.order) e.preventDefault(); // a tap does nothing (the shop page still opens its order sheet)
   });
-  food.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); turn(); } });
+  food.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' && !start && !turning) { e.preventDefault(); arm(); commit(); } });
   // Home's Back button, the phone's Back, and pages restored from the back/forward cache
   window.addEventListener('hashchange', () => { if (!turning && here() !== step) paint(here()); });
   window.addEventListener('pageshow', (e) => { if (e.persisted && !turning) paint(here()); });
