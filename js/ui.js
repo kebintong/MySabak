@@ -40,7 +40,7 @@ export function paintSky(el) {
   el.innerHTML = '<span class="sky-aurora"></span><span class="sky-aurora sky-aurora--gold"></span>'
     + '<svg class="sky-dust" viewBox="0 0 390 262" preserveAspectRatio="none" aria-hidden="true">'
     + '<path d="M-10 236 C90 210 150 228 230 176 C290 138 330 90 400 70" stroke="#FFE29A" stroke-opacity=".45" stroke-width="2" stroke-dasharray="1 9"/>'
-    + '<path d="M-10 244 C96 222 160 238 236 188 C296 150 336 104 400 84" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="1 13" style="animation-duration:10s"/></svg>'
+    + '<path d="M-10 244 C96 222 160 238 236 188 C296 150 336 104 400 84" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="1 13" style="animation-duration:17.5s"/></svg>'
     + `<svg class="sky-dots" aria-hidden="true">${dots(SKY_DOTS, '#fff')}${dots(SKY_GOLD, '#FFE29A')}</svg>`
     + SKY_TWINKLES.map(([x, y, s, gold, d]) => `<svg class="sky-tw" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-delay:${d}s" viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}" fill="${gold ? '#FFE29A' : '#fff'}"/></svg>`).join('');
 }

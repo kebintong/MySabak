@@ -1786,7 +1786,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .sky-aurora {
   position: absolute; left: 44%; top: -40px; width: 260px; height: 150px; border-radius: 50%;
   background: radial-gradient(ellipse at center, rgba(211, 91, 224, .45), rgba(211, 91, 224, 0) 70%);
-  animation: sky-drift 9s ease-in-out 2 alternate;
+  animation: sky-drift 9s ease-in-out infinite alternate;
 }
 .sky-aurora--gold {
   left: -60px; top: auto; bottom: 0; width: 240px; height: 120px;
@@ -1794,10 +1794,10 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   animation-delay: -4s;
 }
 .sky-dust { position: absolute; inset: 0; width: 100%; height: 100%; }
-.sky-dust path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; animation: sky-dust 7s linear 1; }
+.sky-dust path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; animation: sky-dust 12.25s linear infinite; }
 .sky-dots { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.sky-dot { opacity: .6; animation: sky-blink 3.4s ease-in-out 2; }
-.sky-tw { position: absolute; transform-origin: 50% 50%; animation: sky-twinkle 2.8s ease-in-out 3; }
+.sky-dot { opacity: .6; animation: sky-blink 3.4s ease-in-out infinite; }
+.sky-tw { position: absolute; transform-origin: 50% 50%; animation: sky-twinkle 2.8s ease-in-out infinite; }
 .page-head:has(> .skyfx) { position: relative; isolation: isolate; }
 .page-head:has(> .skyfx) > :not(.skyfx) { position: relative; z-index: 1; }
 .page--sky .app > .skyfx { bottom: auto; height: calc(230px + var(--safe-t)); }
@@ -1809,7 +1809,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .glowwrap__blobs > span {
   position: absolute; top: 0; bottom: 0; left: -6px; width: 46%; border-radius: 50%;
   background: var(--lilac-glow); filter: blur(14px); opacity: .7;
-  animation: glow-breathe 4.4s cubic-bezier(.45, 0, .55, 1) 3;
+  animation: glow-breathe 4.4s cubic-bezier(.45, 0, .55, 1) infinite;
 }
 .glowwrap__blobs > span + span { left: auto; right: -6px; background: var(--gold-glow); animation-delay: 1.8s; }
 .glowwrap__blobs--big { inset: 10% 0 6%; }
@@ -1826,7 +1826,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(105deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, .55) 50%, rgba(255, 255, 255, 0) 65%);
   transform: translateX(-120%);
-  animation: sheen 5.5s ease-in-out 1;
+  animation: sheen 5.5s ease-in-out infinite;
 }
 /* springy press for call-to-action buttons */
 .cta { transition: transform 280ms cubic-bezier(.34, 1.56, .64, 1); }
@@ -1859,7 +1859,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .is-glowing .glowwrap__blobs > span { animation: glow-dim 1.7s ease 1; }
 
 @keyframes sky-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-28px, 14px) scale(1.12); } }
-@keyframes sky-dust { to { stroke-dashoffset: -160; } }
+@keyframes sky-dust { to { stroke-dashoffset: -280; } } /* a whole number of dash repeats (10 and 14), so the loop has no jump */
 @keyframes sky-blink { 0%, 100% { opacity: .2; } 50% { opacity: .9; } }
 @keyframes sky-twinkle { 0%, 100% { opacity: .25; transform: scale(.55) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
 @keyframes glow-breathe { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .9; transform: scale(1.05); } }
