@@ -285,23 +285,36 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 
 /* ---------- Details on hover / tap (wireTips, wirePoints in admin-common.js) ---------- */
 .ctip {
-  position: fixed; z-index: 1100; max-width: min(280px, calc(100vw - 16px)); padding: 8px 12px; border-radius: var(--r-ctl, 12px);
-  background: #1e0638; color: #e2d0f4; box-shadow: 0 8px 24px rgba(30, 6, 56, .3);
-  display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.45; pointer-events: none;
-  animation: ctip-in .14s ease-out;
+  position: fixed; left: 0; top: 0; z-index: 1100; min-width: 184px; max-width: min(280px, calc(100vw - 16px));
+  padding: 8px 12px; border-radius: var(--r-ctl, 12px); background: #1e0638; color: #e2d0f4; box-shadow: 0 8px 24px rgba(30, 6, 56, .3);
+  display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.45; font-variant-numeric: tabular-nums; pointer-events: none;
+  /* moved only with transform (set by admin-common.js), so moving it never makes the page re-lay itself out */
+  opacity: 0; visibility: hidden; will-change: transform, opacity;
+  transition: opacity .14s ease, visibility 0s linear .14s;
 }
+.ctip.is-on { opacity: 1; visibility: visible; transition: opacity .12s ease; }
 .ctip b { color: #fff; font-size: 14px; font-weight: 600; }
-.ctip[hidden] { display: none; }
-@keyframes ctip-in { from { opacity: 0; transform: translateY(4px); } }
 [data-tip] { cursor: default; }
 [data-tip]:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
-.cdot {
-  position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff; border: 2px solid #3e1270;
-  box-shadow: 0 0 0 3px rgba(110, 48, 180, .2); pointer-events: none;
-}
-.cdot[hidden] { display: none; }
-.pointable { position: relative; touch-action: pan-y; cursor: crosshair; border-radius: 4px; }
+/* Line charts: a dot riding the line and a thin guide line under the pointer */
+.pointable { position: relative; touch-action: pan-y; cursor: default; border-radius: 4px; -webkit-tap-highlight-color: transparent; }
 .pointable:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
+.cdot, .cguide { position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0; transition: opacity .15s ease; will-change: transform; }
+.cdot {
+  width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff; border: 2px solid #3e1270;
+  box-shadow: 0 0 0 3px rgba(110, 48, 180, .2);
+}
+.cguide { bottom: 0; width: 1px; margin-left: -.5px; background: rgba(62, 18, 112, .28); }
+.pointable.is-tip > .cdot, .pointable.is-tip > .cguide { opacity: 1; }
+/* Bar charts: the bar being read stays bright, the others step back */
+.stack7__col, .wbar, .hbar, .svcbar span { transition: opacity .18s ease; }
+.stack7:has(.is-tip) .stack7__col:not(.is-tip),
+.wbars:has(.is-tip) .wbar:not(.is-tip),
+.svcbar:has(.is-tip) span:not(.is-tip) { opacity: .4; }
+.hbars:has(.is-tip) .hbar:not(.is-tip) { opacity: .5; }
+@media (prefers-reduced-motion: reduce) {
+.ctip, .ctip.is-on, .cdot, .cguide, .stack7__col, .wbar, .hbar, .svcbar span { transition: none; }
+}
 .tiphint { margin: 0 0 4px; font-size: 12px; color: var(--sub); }
 
 /* ---------- Details sheet (openSheet) ---------- */
@@ -317,7 +330,7 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 }
 @keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
 @keyframes sheet-in { from { transform: scale(.97); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .asheet[open], .ctip { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .asheet[open] { animation: none; } }
 .asheet__head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 12px 20px; background: #fff; border-bottom: 1px solid var(--line); }
 .asheet__title { margin: 0; font-size: 18px; font-weight: 700; }
 .asheet__x { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--tint); cursor: pointer; }
@@ -370,17 +383,15 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 }
 .acol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .acol > .card:last-child { flex: 1; display: flex; flex-direction: column; }
-.count[data-tip] { cursor: help; }
+.count[data-tip] { cursor: default; }
 .count:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-.svcbar span[data-tip] { cursor: help; transition: filter .15s; }
-.svcbar span[data-tip]:hover, .svcbar span[data-tip]:focus-visible { filter: brightness(1.12); outline-offset: 1px; }
 .wtips7__top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .wtips7__top .count__now { margin: 0; }
 .wbars { flex: 1; min-height: 120px; display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
-.wbar { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; cursor: help; border-radius: 6px; }
-.wbar__fill { width: 100%; max-width: 40px; border-radius: 4px 4px 2px 2px; background: #c9b0e8; transition: background-color .15s; }
+.wbar { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; cursor: default; border-radius: 6px; }
+.wbar__fill { width: 100%; max-width: 40px; border-radius: 4px 4px 2px 2px; background: #c9b0e8; transition: background-color .18s ease; }
 .wbar.is-today .wbar__fill { background: #6e30b4; }
-.wbar:hover .wbar__fill, .wbar:focus-visible .wbar__fill { background: #3e1270; }
+.wbar.is-tip .wbar__fill { background: #3e1270; }
 .wbar__d { flex: none; font-size: 12px; color: var(--sub); }
 .wbar.is-today .wbar__d { color: var(--ink); font-weight: 700; }
 .wbar:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
@@ -392,12 +403,10 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 .agrid--even .linewrap { flex: 1; display: flex; flex-direction: column; min-height: 200px; }
 .agrid--even .line30 { flex: 1; height: auto; min-height: 200px; }
 .agrid--even .hbars { flex: 1; justify-content: center; }
-.kpi6[data-tip], .hbar[data-tip], .stack7__col[data-tip] { cursor: help; }
+.kpi6[data-tip], .hbar[data-tip], .stack7__col[data-tip] { cursor: default; }
 .kpi6:focus-visible, .hbar:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .hbar { padding: 4px 0; border-radius: 6px; }
-.hbar:hover .hbar__fill { filter: brightness(1.15); }
-.stack7__col:hover .stack7__bar { filter: brightness(1.08); }
-.stack7__col:hover .stack7__n { color: var(--brand-deep); }
+.stack7__col.is-tip .stack7__n { color: var(--brand-deep); }
 @media (max-width: 559px) {
 .hbar { grid-template-columns: 104px 1fr 44px; gap: 8px; }
 .stack7 { gap: 4px; }
