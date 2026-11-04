@@ -654,6 +654,43 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 }
 
 .tab[data-tab="food"]:active .tab__icon { transform: scale(.9); }
+/* The round button: a loop of pages, swipe right for the next (ui.js armLoop) */
+.tab[data-tab="food"] { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.tab[data-tab="food"] .tab__icon { transition: transform .2s var(--spring), box-shadow .35s var(--ease-out); }
+.tab__roll { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; display: grid; grid-template: 100% / 100%; }
+.tab__art { grid-area: 1 / 1; display: grid; grid-template: 100% / 100%; place-items: center; will-change: transform; }
+.tab__art > *, .tab__art--face::before { grid-area: 1 / 1; }
+.tab__face { position: relative; width: auto; height: 64%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+/* soft light behind the mascot only: breathes, and brightens while held */
+.tab__art--face::before {
+  content: ""; width: 80%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(232, 128, 240, .8), rgba(197, 154, 240, .35) 55%, rgba(197, 154, 240, 0));
+  animation: face-glow 3.2s ease-in-out infinite;
+  transition: scale .3s var(--spring), filter .3s;
+}
+.tab[data-tab="food"].is-held .tab__art--face::before { scale: 1.2; filter: brightness(1.35); }
+@keyframes face-glow { 50% { opacity: .55; } }
+/* "Swipe me" bubble, until the first swipe (ui.js armLoop hint) */
+.tab__tip {
+  position: absolute; left: 50%; bottom: calc(100% + 16px); z-index: 2;
+  padding: 6px 11px; border-radius: 12px; white-space: nowrap; pointer-events: none;
+  background: linear-gradient(145deg, #5b1c8f, #8e3fc9); color: #fff; font-size: 12px; font-weight: 700;
+  box-shadow: 0 6px 16px rgba(41, 10, 69, .3);
+  animation: tip 3s var(--ease-out) forwards;
+}
+.tab__tip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border: 6px solid transparent; border-top-color: #7a32b4; }
+@keyframes tip {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.85); }
+  12%, 80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+@media (prefers-reduced-motion: reduce) { .tab__art--face::before { animation: none; } .tab__tip { animation-name: tip-fade; } @keyframes tip-fade { 12%, 80% { opacity: 1; transform: translateX(-50%); } 0%, 100% { opacity: 0; transform: translateX(-50%); } } }
+.tab[data-tab="food"].is-turning .tab__icon { box-shadow: 0 0 0 2px #fff, 0 0 18px 6px rgba(246, 196, 108, .55), 0 6px 16px rgba(41, 10, 69, .3); }
+.tab__count {
+  position: absolute; right: -6px; top: -6px; z-index: 1;
+  min-width: 26px; height: 26px; padding: 0 5px; box-sizing: border-box; display: grid; place-items: center;
+  border: 2px solid #fff; border-radius: 13px; background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800;
+}
 @media (min-width: 900px) {
 /* floating pill: the button sinks 14px into a notch, mostly inside the bar */
 .dock:has(.tab[data-tab="food"]) {

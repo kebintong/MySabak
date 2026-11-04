@@ -173,23 +173,175 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
         const href = (role.hrefs && role.hrefs[id]) || t.href;
         const on = t.id === active;
         return `<a data-tab="${t.id}" class="tab${on ? ' is-active' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
-          + `<span class="tab__icon">${icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
+          + `<span class="tab__icon">${t.id === 'food' ? FACE : icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
           + `<span class="tab__label">${t.label}</span></a>`;
       }).join('');
+      armLoop(nav);
       foodToCart(nav);
     }
     return user;
   });
 }
 
-/** With items in the order, the round Food button goes to it (checkout) instead of the shops map.
-    The shop page still opens its own order sheet over this. */
+/** With items in the order, a tap on the round button goes to it (checkout) and a gold count shows how many.
+    The shop page swaps this for its own order sheet and total. */
 function foodToCart(nav) {
   const food = $('[data-tab="food"]', nav);
   const count = getCart().lines.reduce((n, l) => n + l.qty, 0);
   if (!food || !count) return;
   food.href = '/pages/checkout.html';
+  food.dataset.order = count;
   food.setAttribute('aria-label', `View order: ${count} item${count === 1 ? '' : 's'}`);
+  $$('.tab__count', food).forEach((n) => n.remove());
+  $('.tab__icon', food).insertAdjacentHTML('beforeend', `<span class="tab__count">${count}</span>`);
+}
+
+/* ---------- The round button: a loop of pages ----------
+   It shows where you are: the mascot (Home), Ride, Food or Parcel. Hold and swipe it right (or press →): it
+   rolls to the next one and goes there, Home → Ride → Food → Parcel → Home. A tap does nothing, unless
+   there's an order to open. */
+const FACE = '<img class="tab__face" src="/assets/images/mascot-face.png" alt="" width="128" height="132">';
+export const LOOP = [
+  { label: 'Home', href: '/' },
+  { label: 'Ride', href: '/#ride', icon: 'i-car' },
+  { label: 'Food', href: '/pages/shops.html', icon: 'i-food' },
+  { label: 'Parcel', href: '/#parcel', icon: 'i-box' },
+];
+const SWIPE = 36; // px to the right that counts as a swipe
+const SPRING = 'cubic-bezier(.34, 1.56, .64, 1)';
+const GLIDE = 'cubic-bezier(.22, 1, .36, 1)';
+
+/** Which LOOP step a page is. tab: the tab bar's data-tabs (the food pages say 'food'). */
+export function loopStep(path, hash, tab) {
+  if (tab === 'food') return 2;
+  if (path !== '/' && path !== '/index.html') return 0;
+  if (hash === '#parcel') return 3;
+  return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? 1 : 0;
+}
+
+const loopArt = (i) => (LOOP[i].icon ? `<span class="tab__art">${icon(LOOP[i].icon)}</span>` : `<span class="tab__art tab__art--face">${FACE}</span>`);
+// How far the icon leans as the thumb pulls right: quick at first, then it stiffens and stops, so it stays in the circle
+const lean = (dx) => {
+  const k = 1 - Math.exp(-Math.max(0, dx) / 28);
+  return k ? `translateX(${(k * 5).toFixed(1)}px) rotate(${(k * 26).toFixed(1)}deg)` : '';
+};
+const LEARNED_KEY = 'mysabak.swiped'; // set after the first swipe: no more hint
+
+// Same page (Home's #ride / #parcel): change the hash so app.js routes without a reload
+function loopGo(href) {
+  const url = new URL(href, location.origin);
+  const home = (p) => (p === '/index.html' ? '/' : p);
+  if (home(url.pathname) === home(location.pathname)) location.hash = url.hash;
+  else location.href = href;
+}
+
+function armLoop(nav) {
+  const food = $('[data-tab="food"]', nav);
+  if (!food || food.dataset.loop) return;
+  food.dataset.loop = '1';
+  const box = $('.tab__icon', food);
+  box.innerHTML = '<span class="tab__roll"></span>';
+  const roll = $('.tab__roll', box);
+  food.insertAdjacentHTML('beforeend', '<span class="sr-only" id="loopHint"></span>');
+  food.setAttribute('aria-describedby', 'loopHint');
+  const here = () => loopStep(location.pathname, location.hash, nav.dataset.tabs);
+  let step = 0;
+  let start = null; // where this press began
+  let turning = false;
+  let swiped = false; // this press turned the button, so its click must not follow the link
+  const name = (i) => {
+    step = i;
+    $('.tab__label', food).textContent = LOOP[i].label;
+    $('#loopHint').textContent = `Swipe right, or press the right arrow, for ${LOOP[(i + 1) % LOOP.length].label}.`;
+  };
+  const paint = (i) => { roll.innerHTML = loopArt(i); name(i); };
+  paint(here());
+
+  const turn = () => {
+    if (turning) return;
+    turning = true;
+    const to = (step + 1) % LOOP.length;
+    const old = $('.tab__art', roll);
+    roll.insertAdjacentHTML('beforeend', loopArt(to));
+    const neu = roll.lastElementChild;
+    if (navigator.vibrate) navigator.vibrate(12);
+    const quick = calm();
+    // a wheel turning right: the old icon rolls out right, the next rolls in from the left and settles
+    old.animate(quick ? [{ opacity: 1 }, { opacity: 0 }]
+      : [{ transform: old.style.transform || 'none' }, { transform: 'translateX(115%) rotate(150deg) scale(.5)', opacity: 0 }],
+    { duration: quick ? 160 : 380, easing: GLIDE, fill: 'forwards' });
+    const done = neu.animate(quick ? [{ opacity: 0 }, { opacity: 1 }]
+      : [{ transform: 'translateX(-115%) rotate(-150deg) scale(.5)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+    { duration: quick ? 160 : 560, easing: quick ? 'linear' : SPRING, fill: 'backwards' }).finished;
+    if (!quick) box.animate([{ transform: 'none' }, { transform: 'scale(1.12)', offset: 0.3 }, { transform: 'none' }], { duration: 560, easing: GLIDE });
+    food.classList.add('is-turning');
+    try { localStorage.setItem(LEARNED_KEY, '1'); } catch (_) { /* storage off: the hint keeps showing */ }
+    done.then(() => {
+      old.remove();
+      food.classList.remove('is-turning', 'is-held');
+      name(to);
+      turning = false;
+      loopGo(LOOP[to].href);
+    });
+  };
+
+  // Until the first swipe: a second after load the button nudges right, the next icon peeks in, and a bubble says so
+  const hint = () => {
+    if (start || turning) return;
+    box.insertAdjacentHTML('beforeend', '<span class="tab__tip" aria-hidden="true">Swipe me →</span>');
+    const tip = box.lastElementChild;
+    tip.addEventListener('animationend', () => tip.remove());
+    if (calm()) return;
+    const art = $('.tab__art', roll);
+    roll.insertAdjacentHTML('beforeend', loopArt((step + 1) % LOOP.length));
+    const peek = roll.lastElementChild;
+    const t = { duration: 1200, easing: GLIDE };
+    art.animate([{ transform: 'none' }, { transform: lean(40), offset: 0.4 }, { transform: 'none' }], t);
+    peek.animate([
+      { transform: 'translateX(-115%) rotate(-150deg)', opacity: 0 },
+      { transform: 'translateX(-62%) rotate(-55deg)', opacity: 1, offset: 0.4 },
+      { transform: 'translateX(-115%) rotate(-150deg)', opacity: 0 },
+    ], { ...t, fill: 'both' }).finished.then(() => peek.remove());
+  };
+  let learned = true;
+  try { learned = localStorage.getItem(LEARNED_KEY) === '1'; } catch (_) { /* storage off: no hint */ }
+  if (!learned) setTimeout(hint, 1000);
+
+  food.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || turning) return;
+    start = { x: e.clientX, y: e.clientY };
+    food.classList.add('is-held');
+    swiped = false;
+    try { food.setPointerCapture(e.pointerId); } catch (_) { /* pointer already gone */ }
+  });
+  food.addEventListener('pointermove', (e) => {
+    if (!start || turning) return;
+    const dx = e.clientX - start.x;
+    // mostly rightward counts, even drifting up or down (within ~50°)
+    if (dx >= SWIPE && Math.abs(e.clientY - start.y) < dx * 1.2) { start = null; swiped = true; turn(); return; }
+    $('.tab__art', roll).style.transform = lean(dx); // leans with the thumb, so it feels attached
+  });
+  const release = () => {
+    if (!start) return;
+    start = null;
+    food.classList.remove('is-held');
+    const art = $('.tab__art', roll);
+    if (!art.style.transform) return;
+    art.animate([{ transform: art.style.transform }, { transform: 'none' }], { duration: 420, easing: SPRING });
+    art.style.transform = '';
+  };
+  food.addEventListener('pointerup', release);
+  food.addEventListener('pointercancel', release);
+  food.addEventListener('dragstart', (e) => e.preventDefault()); // a dragged link would cancel the pointer
+  food.addEventListener('contextmenu', (e) => e.preventDefault());
+  food.addEventListener('click', (e) => {
+    if (swiped) { swiped = false; e.preventDefault(); e.stopImmediatePropagation(); return; } // nor the shop's order sheet
+    if (!food.dataset.order) e.preventDefault(); // a tap does nothing (the shop page still opens its order sheet)
+  });
+  food.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); turn(); } });
+  // Home's Back button, the phone's Back, and pages restored from the back/forward cache
+  window.addEventListener('hashchange', () => { if (!turning && here() !== step) paint(here()); });
+  window.addEventListener('pageshow', (e) => { if (e.persisted && !turning) paint(here()); });
 }
 
 /** Send someone whose role may not use this page to their own home. Returns true when it redirected. */
@@ -204,6 +356,7 @@ export function guardRole(user, roles) {
 export function filterTabs(nav, user) {
   const role = ROLES[user ? user.role : 'guest'];
   $$('[data-tab]', nav).forEach((a) => { a.hidden = !role.tabs.includes(a.dataset.tab); });
+  armLoop(nav);
   foodToCart(nav);
 }
 

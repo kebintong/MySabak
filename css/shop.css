@@ -1,13 +1,8 @@
 /* mysabak · shop styles. Loaded after base.css. */
 
 /* Shop page, items in the order: the button shows the total and a gold count, and opens the order */
-.tab[data-tab="food"].has-order .tab__icon > .icon { display: none; }
+.tab[data-tab="food"].has-order .tab__roll { display: none; }
 .tab__total { position: relative; color: #fff; font-size: 13px; font-weight: 700; }
-.tab__count {
-  position: absolute; right: -6px; top: -6px; z-index: 1;
-  min-width: 26px; height: 26px; padding: 0 5px; box-sizing: border-box; display: grid; place-items: center;
-  border: 2px solid #fff; border-radius: 13px; background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800;
-}
 .shop-info__ava { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; display: block; }
 .shop-info__body { display: contents; }
 .shop-about { display: none; margin: 3px 0 0; font-size: 14px; line-height: 1.4; color: #e2d0f4; }

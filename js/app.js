@@ -1051,6 +1051,8 @@ function route() {
   });
 }
 window.addEventListener('hashchange', route);
+// Phones: the round button floats just above the step panels (index.css .is-ride .tabbar), whatever their height
+new ResizeObserver(([e]) => el.body.style.setProperty('--ride-sheet', `${e.target.offsetHeight}px`)).observe($('.ride .bottom'));
 
 // Back: Choose your ride → edit the drop-off; otherwise → Home
 $('#rideBack').addEventListener('click', () => {

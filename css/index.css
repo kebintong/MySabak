@@ -109,7 +109,7 @@ body:not([data-state="request"]) .map-controls { display: none; }
    Phones: one column like the Figma frame. Desktop: the same pieces in a wider grid (see below).
    ========================================================= */
 .is-home .ride, .is-home .map-controls { display: none; }
-.is-ride .home, .is-ride .tabbar, .is-ride .topbar { display: none; }
+.is-ride .home, .is-ride .topbar { display: none; }
 .hero__inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 .hero__top { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .pickup__pin { width: 22px; height: 22px; stroke: var(--gold); }
@@ -273,6 +273,18 @@ body:not([data-state="request"]) .map-controls { display: none; }
 .promo__copy { left: 24px; top: 20px; }
 .promo__title { font-size: 22px; }
 .tabbar { left: 50%; right: auto; bottom: calc(24px + var(--safe-b)); transform: translateX(-50%); }
+}
+
+/* Ride and Parcel: only the round button stays (ui.js armLoop), floating over the map, bottom right:
+   on phones just above the step panels (app.js sets --ride-sheet), on desktop in the corner */
+.is-ride .tabbar { left: auto; right: var(--gutter); bottom: calc(var(--ride-sheet, 0px) + 14px); transform: none; pointer-events: none; transition: bottom .28s var(--ease-out); }
+.is-ride .tabbar .dock { height: auto; padding: 0; border-color: transparent; background: none; box-shadow: none; filter: none; }
+.is-ride .tabbar .dock::before, .is-ride .tabbar .tab:not([data-tab="food"]) { display: none; }
+.is-ride .tabbar .tab[data-tab="food"] { padding-top: 0; pointer-events: auto; }
+.is-ride .tabbar .tab[data-tab="food"] .tab__icon { margin-top: 0; }
+.is-ride .tabbar .tab[data-tab="food"]::after { top: -12px; }
+@media (min-width: 900px) {
+.is-ride .tabbar { right: 24px; bottom: calc(24px + var(--safe-b)); }
 }
 
 .suggest__km { margin-left: auto; padding-left: 8px; flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--sub); }
@@ -541,7 +553,12 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 }
 .promo__shadow { position: absolute; right: 5%; bottom: 3px; width: 32%; height: 12px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(14, 2, 32, .55), rgba(0, 0, 0, 0) 70%); }
 /* sized to the card's height so it only peeks over the top, never onto the row above */
-.promo__mascot { position: absolute; right: 3%; bottom: 2px; width: auto; height: calc(100% + 8px); max-width: 36%; object-fit: contain; object-position: right bottom; transform-origin: 50% 100%; animation: mascot-float 4.2s ease-in-out 2; }
+.promo__mascot { position: absolute; right: 3%; bottom: 2px; width: auto; height: calc(100% + 8px); max-width: 36%; object-fit: contain; object-position: right bottom; transform-origin: 50% 100%; filter: drop-shadow(0 0 12px rgba(211, 91, 224, .5)) drop-shadow(0 0 26px rgba(197, 154, 240, .35)); animation: mascot-float 4.2s ease-in-out 2, mascot-glow 4.2s ease-in-out 2; }
+/* phones: ~15% bigger, peeking further over the top; the extra top margin keeps it off the Quick row */
+@media (max-width: 599.98px) {
+.promo-wrap { margin-top: 40px; }
+.promo__mascot { height: calc(100% + 34px); max-width: 40%; }
+}
 .promo--magic .promo__copy { position: relative; left: auto; top: auto; gap: 0; align-items: flex-start; }
 .promo--magic .promo__eyebrow { font-size: 12px; animation: foil 4s linear 2; }
 .promo--magic .promo__title { margin: 4px 0 0; font-size: 20px; line-height: 1.2; letter-spacing: -.3px; color: #fff; }
@@ -552,6 +569,7 @@ body.is-status-hidden .panel--search, body.is-status-hidden .panel--trip { displ
 .promo__claim:hover .icon { transform: translateX(3px); }
 .promo__claim[aria-pressed="true"] > span { background: rgba(255, 255, 255, .16); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 226, 154, .6); }
 @keyframes mascot-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(-1deg); } }
+@keyframes mascot-glow { 50% { filter: drop-shadow(0 0 16px rgba(211, 91, 224, .65)) drop-shadow(0 0 34px rgba(197, 154, 240, .45)); } }
 
 /* Recent: the last two trips, each with Rebook */
 .recent { margin-top: 6px; }
