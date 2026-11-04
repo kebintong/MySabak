@@ -268,13 +268,20 @@ const sampleSeries = (n, from, to, wobble, seed) => Array.from({ length: n }, (_
   return Math.round(from + ((to - from) * i) / (n - 1) + (s - Math.floor(s) - 0.5) * wobble);
 });
 
+// Tips per day for the last 30 days, oldest first (the last one is today so far). This week's tips and their change
+// are worked out from it, so the Overview's Weekly tips and the Analytics numbers agree.
+const TIPS_30 = sampleSeries(29, 6200, 7500, 1500, 4).concat([8420]);
+const total = (a) => a.reduce((s, x) => s + x, 0);
+const TIPS_WEEK = total(TIPS_30.slice(-7));
+const TIPS_CHANGE = Math.round(((TIPS_WEEK - total(TIPS_30.slice(-14, -7))) / total(TIPS_30.slice(-14, -7))) * 100);
+
 export const DEMO_ADMIN = {
   riders: { online: 1284, registered: 18420, joinedToday: 46 },
   drivers: { online: 214, approved: 486, onTrip: 83 },
   merchants: { open: 57, shops: 92 },
   today: { trips: 830, tips: 8420, avgPickupSec: 220, byService: { ride: 390, express: 110, moto: 220, shop: 110 } },
   week: {
-    trips: 9100, tripsChange: '▲ 6%', tips: 52400, tipsChange: '▲ 9%', ridersActive: 6830, ridersChange: '▲ 4%',
+    trips: 9100, tripsChange: '▲ 6%', tips: TIPS_WEEK, tipsChange: `${TIPS_CHANGE >= 0 ? '▲' : '▼'} ${Math.abs(TIPS_CHANGE)}%`, ridersActive: 6830, ridersChange: '▲ 4%',
     driversActive: 412, driversChange: '▲ 31', avgPickupSec: 220, pickupChange: '▼ 0:20 faster', cancelledPct: 4.6, cancelledChange: '▲ 0.4 pts',
   },
   // the last 7 days, oldest first; the last one is today so far
@@ -290,7 +297,7 @@ export const DEMO_ADMIN = {
     drivers: sampleSeries(30, 402, 486, 5, 2),
     shops: sampleSeries(30, 79, 92, 1, 3),
   },
-  tipsPerDay: sampleSeries(29, 6200, 7500, 1500, 4).concat([8420]),
+  tipsPerDay: TIPS_30,
   payments: [{ name: 'Cash', share: 64 }, { name: 'GCash', share: 28 }, { name: 'Online banking', share: 8 }],
   driverFunnel: [{ name: 'Applied', count: 186 }, { name: 'Papers checked', count: 142 }, { name: 'Approved', count: 118 }, { name: 'First trip done', count: 97 }],
   areas: [
@@ -301,3 +308,22 @@ export const DEMO_ADMIN = {
     { name: 'Lapu-Lapu · Mactan', trips: 1180, avgPickupSec: 230, cancelledPct: 4.4, health: 'good' },
   ],
 };
+
+/* Admin Management (pages/admin-management.html): SAMPLE accounts that already exist (joined `daysAgo`, last seen
+   `hoursAgo` before the admin first opens the admin pages). Waiting driver and shop applicants are added from
+   DEMO_APPLICATIONS, and the three demo logins above from DEMO_ACCOUNTS. Roles: 'rider' | 'driver' | 'merchant'. */
+export const DEMO_USERS = [
+  { id: 'su-r1', role: 'rider', name: 'Lea Gutierrez', email: 'lea.g@example.com', phone: '09175550311', area: 'Capitol Site', daysAgo: 212, hoursAgo: 2, trips: 48, status: 'active' },
+  { id: 'su-r2', role: 'rider', name: 'Miguel Fernandez', email: 'miguel.f@example.com', phone: '09175550324', area: 'Lahug · IT Park', daysAgo: 160, hoursAgo: 5, trips: 112, status: 'active' },
+  { id: 'su-r3', role: 'rider', name: 'Trisha Lim', email: 'trisha.l@example.com', phone: '09175550337', area: 'Banilad', daysAgo: 95, hoursAgo: 30, trips: 21, status: 'active' },
+  { id: 'su-r4', role: 'rider', name: 'Joel Cabahug', email: 'joel.c@example.com', phone: '09175550342', area: 'Mandaue', daysAgo: 64, hoursAgo: 1, trips: 37, status: 'active' },
+  { id: 'su-r5', role: 'rider', name: 'Andrea Yap', email: 'andrea.y@example.com', phone: '09175550355', area: 'Lahug · IT Park', daysAgo: 3, hoursAgo: 20, trips: 2, status: 'active' },
+  { id: 'su-r6', role: 'rider', name: 'Ramon Dizon', email: 'ramon.d@example.com', phone: '09175550368', area: 'Talamban', daysAgo: 1, hoursAgo: 6, trips: 0, status: 'active' },
+  { id: 'su-r7', role: 'rider', name: 'Kristine Alcantara', email: 'kristine.a@example.com', phone: '09175550371', area: 'Lapu-Lapu · Mactan', daysAgo: 288, hoursAgo: 340, trips: 9, status: 'active' },
+  { id: 'su-r8', role: 'rider', name: 'Noel Pacaña', email: 'noel.p@example.com', phone: '09175550384', area: 'Guadalupe', daysAgo: 140, hoursAgo: 900, trips: 14, status: 'deactivated', reason: 'Asked to close their account', statusDaysAgo: 30 },
+  { id: 'su-d1', role: 'driver', name: 'Ronald Sy', email: 'ronald.s@example.com', phone: '09175550412', area: 'Mandaue', daysAgo: 180, hoursAgo: 1, trips: 1240, vehicle: 'motor', plate: '781 KLM', status: 'active' },
+  { id: 'su-d2', role: 'driver', name: 'Jessa Morales', email: 'jessa.m@example.com', phone: '09175550425', area: 'Cebu City', daysAgo: 122, hoursAgo: 3, trips: 860, vehicle: 'sedan', plate: 'PQR 3310', status: 'active' },
+  { id: 'su-d3', role: 'driver', name: 'Arnel Flores', email: 'arnel.f@example.com', phone: '09175550438', area: 'Lapu-Lapu', daysAgo: 240, hoursAgo: 410, trips: 530, vehicle: 'suv', plate: 'STU 9021', status: 'deactivated', reason: 'Repeated complaints from riders', statusDaysAgo: 12 },
+  { id: 'su-m1', role: 'merchant', name: 'Cecilia Go', shop: 'Sugbo Siomai House', email: 'siomaihouse@example.com', phone: '09175550511', area: 'Fuente Osmeña', daysAgo: 200, hoursAgo: 4, trips: 2310, status: 'active' },
+  { id: 'su-m2', role: 'merchant', name: 'Mila Soriano', shop: 'Ate Mila’s Karinderya', email: 'atemila@example.com', phone: '09175550524', area: 'Mabolo', daysAgo: 75, hoursAgo: 26, trips: 640, status: 'active' },
+];
