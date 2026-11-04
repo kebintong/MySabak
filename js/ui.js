@@ -5,6 +5,7 @@
 import { CONFIG } from './config.js';
 import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut } from './api.js';
 import { peso as formatPeso, cleanTip } from './money.js';
+import { getCart } from './cart.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -175,9 +176,20 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
           + `<span class="tab__icon">${icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
           + `<span class="tab__label">${t.label}</span></a>`;
       }).join('');
+      foodToCart(nav);
     }
     return user;
   });
+}
+
+/** With items in the order, the round Food button goes to it (checkout) instead of the shops map.
+    The shop page still opens its own order sheet over this. */
+function foodToCart(nav) {
+  const food = $('[data-tab="food"]', nav);
+  const count = getCart().lines.reduce((n, l) => n + l.qty, 0);
+  if (!food || !count) return;
+  food.href = '/pages/checkout.html';
+  food.setAttribute('aria-label', `View order: ${count} item${count === 1 ? '' : 's'}`);
 }
 
 /** Send someone whose role may not use this page to their own home. Returns true when it redirected. */
@@ -192,6 +204,7 @@ export function guardRole(user, roles) {
 export function filterTabs(nav, user) {
   const role = ROLES[user ? user.role : 'guest'];
   $$('[data-tab]', nav).forEach((a) => { a.hidden = !role.tabs.includes(a.dataset.tab); });
+  foodToCart(nav);
 }
 
 const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
