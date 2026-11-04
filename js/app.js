@@ -514,7 +514,7 @@ const latestRecent = () => store.get(RECENT_KEY, [])[0] || null;
 function buildVehicles() {
   el.vehicles.innerHTML = CONFIG.vehicles.map((v, i) => `
     <button type="button" class="vehicle" role="radio" data-vehicle="${v.id}" aria-checked="false" tabindex="-1" style="--i:${i}">
-      <img class="v-icon" src="assets/images/3d/${v.art}.webp" alt="" width="80" height="50">
+      <img class="v-icon" src="assets/images/3d/${v.art}.svg" alt="" width="80" height="50">
       <span class="v-text">
         <span class="v-name">${v.name}</span>
         <span class="v-meta"><span class="v-cap">${v.capacity} · </span><span class="v-eta"></span><span class="v-away"> away</span></span>

@@ -17,9 +17,9 @@ import { $, $$, mountChrome, toast, peso, esc, when, icon, edgeGlow } from '../u
 mountChrome({ roles: ['driver'] });
 
 const KIND = {
-  ride: { name: 'Ride', icon: 'i-car', color: '#5630d8', ink: '#5b2596', tone: 'lilac', art: '/assets/images/3d/car.webp' },
-  express: { name: 'Express', icon: 'i-box', color: '#E0782F', ink: '#8a4b0f', tone: 'peach', art: '/assets/images/3d/parcel.webp' },
-  shop: { name: 'Shop delivery', icon: 'i-bag', color: '#1E7A44', ink: '#1f6b3a', tone: 'lilac', art: '/assets/images/3d/food.webp' },
+  ride: { name: 'Ride', icon: 'i-car', color: '#5630d8', ink: '#5b2596', tone: 'lilac', art: '/assets/images/3d/car.svg' },
+  express: { name: 'Express', icon: 'i-box', color: '#E0782F', ink: '#8a4b0f', tone: 'peach', art: '/assets/images/3d/parcel.svg' },
+  shop: { name: 'Shop delivery', icon: 'i-bag', color: '#1E7A44', ink: '#1f6b3a', tone: 'lilac', art: '/assets/images/3d/food.svg' },
 };
 const PAY = { cash: 'Cash', gcash: 'GCash', bank: 'Online banking' };
 

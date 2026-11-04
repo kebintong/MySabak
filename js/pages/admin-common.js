@@ -12,7 +12,7 @@ export function mountAdmin() {
 }
 
 export const VEHICLE = { motor: 'Motor', sedan: 'Sedan', suv: 'SUV' };
-export const VEHICLE_ART = { motor: '/assets/images/3d/moto.webp', sedan: '/assets/images/3d/car.webp', suv: '/assets/images/3d/car.webp' };
+export const VEHICLE_ART = { motor: '/assets/images/3d/moto.svg', sedan: '/assets/images/3d/car.svg', suv: '/assets/images/3d/car.svg' };
 // Trip services, in a fixed order with the validated chart colours (Express needs its labels: low contrast on white)
 export const SERVICES = [
   { id: 'ride', name: 'Ride', color: '#7b3fbf' },
