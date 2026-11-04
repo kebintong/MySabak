@@ -559,14 +559,13 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   display: flex; align-items: center; justify-content: center;
   transition: background-color .15s;
 }
-.tab__label { font-size: 12px; font-weight: 500; transition: color .15s; }
-.tab .icon { width: 24px; height: 24px; transition: stroke .15s; }
+.tab__label { font-size: 11px; font-weight: 500; transition: color .15s; }
+.tab .icon { width: 26px; height: 26px; transition: stroke .15s; }
 .tab:hover { color: var(--brand-deep); }
-.tab:hover .tab__icon { background: rgba(242, 233, 250, .6); }
 .tab:hover .icon { stroke: var(--brand-deep); }
 .tab.is-active { color: var(--brand-deep); }
 .tab.is-active .tab__label { font-weight: 600; }
-.tab.is-active .tab__icon { background: var(--tint); animation: pill-in .4s var(--spring); }
+.tab.is-active .tab__icon { animation: pill-in .4s var(--spring); } /* no pill behind it: the filled icon marks the tab */
 /* active icon goes solid, its inner lines lilac (icons.svg reads these) */
 .tab.is-active .icon { stroke: var(--brand-deep); --icon-fill: var(--brand-deep); --icon-detail: var(--tint); }
 @media (max-width: 899.98px) {
@@ -860,7 +859,6 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 @keyframes card-shine { 0%, 70% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 @keyframes fab-pulse { from { transform: scale(1); opacity: .6; } to { transform: scale(1.375); opacity: 0; } }
 @keyframes twinkle { 0%, 100% { opacity: .3; transform: scale(.7); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
-@keyframes bell-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(12deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(6deg); } }
 @keyframes aurora { from { transform: translateX(0) scale(1); opacity: .8; } to { transform: translateX(-18px) scale(1.08); opacity: 1; } }
 @keyframes float { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-5px) rotate(2deg); } }
 @keyframes foil { from { background-position: 0 0; } to { background-position: -200% 0; } }
@@ -1215,7 +1213,8 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .auth-link { font-size: 14px; font-weight: 700; color: var(--brand-deep); text-decoration: none; }
 .auth-link:hover { text-decoration: underline; }
 .auth-link--strong { color: var(--brand); }
-.auth-legal { margin: 0; font-size: 12.5px; line-height: 1.5; text-align: center; color: var(--sub); }
+.auth-legal { margin: 0; font-size: 12px; line-height: 1.5; text-align: center; color: var(--sub); text-wrap: balance; } /* even lines, no lone "Policy." */
+.auth-legal a { white-space: nowrap; }
 .auth-legal a, .check a { color: var(--brand-deep); font-weight: 600; }
 .field__error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fdecec; color: #a32020; font-size: 13.5px; font-weight: 600; }
 /* Sign-up: choose how to apply, walk-in office, done */

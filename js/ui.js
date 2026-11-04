@@ -441,7 +441,7 @@ export function wireSignInForm(form, signInFn, next) {
   const checkLogin = () => {
     const v = loginInput.value.trim();
     const ok = v.includes('@') ? EMAIL.test(v) : PHONE.test(v.replace(/[\s-]/g, ''));
-    loginInput.setCustomValidity(!v || ok ? '' : 'Enter a mobile number (09XX XXX XXXX) or an email address.');
+    loginInput.setCustomValidity(!v || ok ? '' : 'Enter a mobile number (like 0917 123 4567) or an email address.');
   };
   loginInput.addEventListener('input', checkLogin);
   const showError = (message) => { error.textContent = message; error.hidden = !message; };

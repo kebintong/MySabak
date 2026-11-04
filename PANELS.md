@@ -40,7 +40,7 @@ Design: Figma "H-v3 · Mascot · Midnight magic glow". Phones show it like the F
 | Panel | Data | Source |
 |---|---|---|
 | Pickup from `Current location` | pickup label | GPS + `addressFor()` (tap: use my location) |
-| Bell, Schedule, Multi-stop, Vouchers, + (add a place) | none | **not built**: tapping says "coming soon" |
+| Schedule, Multi-stop, Vouchers, + (add a place) | none | **not built**: tapping says "coming soon" |
 | "Where are you going?" | none | opens the ride screen with the drop-off box focused (`#where`) |
 | Home / Office chips | the user's saved places | **not built** (needs accounts) |
 | Ride / Moto / Parcel / Food cards | none | Ride screen (`#ride`), Ride with Motor picked (`#moto`), Express (`#parcel`), Shops |
