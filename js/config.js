@@ -15,7 +15,7 @@ export const CONFIG = {
   vehicles: [
     { id: 'motor', name: 'Motor', capacity: '1 passenger', parcel: 'Small parcels', icon: 'i-motor', art: 'moto', base: null, perKm: null },
     { id: 'sedan', name: 'Sedan', capacity: 'Up to 4',     parcel: 'Boxes',         icon: 'i-car',   art: 'car',  base: null, perKm: null },
-    { id: 'suv',   name: 'SUV',   capacity: 'Up to 6',     parcel: 'Large items',   icon: 'i-suv',   art: 'car',  base: null, perKm: null },
+    { id: 'suv',   name: 'SUV',   capacity: 'Up to 6',     parcel: 'Large items',   icon: 'i-suv',   art: 'suv',  base: null, perKm: null },
   ],
   defaultVehicle: 'sedan',
 

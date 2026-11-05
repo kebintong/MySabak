@@ -1482,26 +1482,57 @@ body.is-loading .choose__summary {
   animation: rise .3s var(--ease-out);
 }
 
+/* "You've arrived": the night sky, two drifting aurora glows, blinking stars, and a gold halo turning round the tick */
 .done__hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   flex: none;
   padding: 26px 20px 22px;
   text-align: center;
   color: #fff;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, .14) 0 40px, transparent 41px),
-    radial-gradient(circle at 88% 70%, rgba(255, 255, 255, .1) 0 60px, transparent 61px),
-    linear-gradient(160deg, var(--brand) 0%, var(--navy) 100%);
+  background: linear-gradient(160deg, #1e0638 0%, #4a1680 55%, #7b3fbf 100%);
+}
+.done__hero > :not(.done__aurora, .glitter, .done__halo) { position: relative; z-index: 1; }
+.done__aurora {
+  position: absolute; z-index: -1; left: -20%; top: -60%; width: 75%; height: 160%; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(211, 91, 224, .5), rgba(211, 91, 224, 0) 68%);
+  animation: done-drift 9s ease-in-out infinite alternate;
+}
+.done__aurora--gold {
+  left: auto; right: -25%; top: 10%; width: 70%; height: 130%;
+  background: radial-gradient(ellipse at center, rgba(246, 196, 108, .32), rgba(246, 196, 108, 0) 66%);
+  animation-duration: 11s; animation-direction: alternate-reverse;
+}
+.done__hero .glitter { z-index: 0; }
+.done__halo {
+  position: absolute; z-index: 0; left: 50%; top: 18px; width: 96px; height: 96px; margin-left: -48px; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(255, 226, 154, 0), #ffe29a, rgba(197, 154, 240, .9), rgba(255, 226, 154, 0) 70%);
+  -webkit-mask: radial-gradient(circle, transparent 0 41px, #000 42px 46px, transparent 47px);
+  mask: radial-gradient(circle, transparent 0 41px, #000 42px 46px, transparent 47px);
+  filter: drop-shadow(0 0 6px rgba(255, 226, 154, .8));
+  animation: spin 4s linear infinite, pop-in .5s var(--spring) both;
+}
+.done__hero::after { /* a soft gold glow behind the tick */
+  content: ""; position: absolute; z-index: 0; left: 50%; top: 10px; width: 112px; height: 112px; margin-left: -56px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 226, 154, .45), rgba(255, 226, 154, 0) 70%);
+  animation: done-glow 2.6s ease-in-out infinite;
+}
+@keyframes done-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(24px, 10px) scale(1.15); } }
+@keyframes done-glow { 0%, 100% { opacity: .6; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) {
+.done__aurora, .done__halo, .done__hero::after { animation: none; }
 }
 
 .done__check {
   width: 64px;
   height: 64px;
-  margin: 0 auto 10px;
+  margin: 8px auto 18px;
   border-radius: 50%;
   background: #fff;
   display: grid;
   place-items: center;
-  box-shadow: 0 10px 24px rgba(23, 18, 43, .3);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .14), 0 10px 24px rgba(14, 2, 32, .45);
   animation: pop-in .45s var(--spring) both;
 }
 
@@ -1515,7 +1546,7 @@ body.is-loading .choose__summary {
 .done__sub {
   margin: 4px 0 0;
   font-size: 14px;
-  color: rgba(255, 255, 255, .85);
+  color: #e2d0f4;
 }
 
 .done__body {
@@ -1550,8 +1581,16 @@ body.is-loading .choose__summary {
   .done__check {
     width: 48px;
     height: 48px;
-    margin-bottom: 6px;
+    margin: 6px auto 12px;
   }
+
+  .done__halo {
+    top: 10px; width: 76px; height: 76px; margin-left: -38px;
+    -webkit-mask: radial-gradient(circle, transparent 0 31px, #000 32px 36px, transparent 37px);
+    mask: radial-gradient(circle, transparent 0 31px, #000 32px 36px, transparent 37px);
+  }
+
+  .done__hero::after { top: 2px; width: 92px; height: 92px; margin-left: -46px; }
 
   .done__title {
     font-size: 22px;
@@ -1583,10 +1622,10 @@ body.is-loading .choose__summary {
 
 .done__rate {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 0;
 }
 
 .done__rate-label {
@@ -1596,23 +1635,29 @@ body.is-loading .choose__summary {
 }
 
 .star {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
-  background: var(--field);
+  border-radius: 50%;
+  background: none;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: transform .12s var(--spring), background-color .12s;
+  transition: transform .12s var(--spring);
 }
 
 .star:hover {
-  background: var(--tint);
+  transform: scale(1.12);
 }
 
-.star.is-on {
-  background: #fff4d6;
+.star:hover .icon {
+  stroke: #e0a100;
+}
+
+.star:focus-visible {
+  outline: 3px solid rgba(91, 37, 150, .45);
+  outline-offset: -2px;
 }
 
 .star.is-on .icon {

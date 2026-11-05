@@ -687,7 +687,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .tab__total--long { font-size: 11.5px; letter-spacing: -.02em; }
 /* A live ride or parcel on its step: an icon for where it's at (search, vehicle, hand, pin) over the fare */
 .tab__trip { display: grid; justify-items: center; gap: 2px; }
-.tab[data-tab="food"] .tab__trip .icon { width: 22px; height: 22px; }
+.tab[data-tab="food"] .tab__trip .icon { width: 22px; height: 22px; --pin-fill: #fff; --pin-dot: #5b2596; }
 .tab__fare { color: #fff; font: 800 11px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap; }
 .tab__trip--searching .icon { animation: hunt 1.6s ease-in-out infinite; } /* the glass circles, looking */
 @keyframes hunt { 25% { transform: translate(2px, -1px); } 50% { transform: translate(0, -3px); } 75% { transform: translate(-2px, -1px); } }
@@ -1334,7 +1334,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 /* ---------- Map pins ---------- */
 .spin { width: 30px; height: 40px; padding: 0; border: 0; background: none; cursor: pointer; }
 .spin svg { width: 100%; height: 100%; display: block; overflow: visible; transform-origin: 50% 100%; transition: transform .2s var(--spring); filter: drop-shadow(0 3px 3px rgba(23, 18, 43, .3)); }
-.spin svg path { fill: var(--pin, var(--brand)); stroke: #fff; stroke-width: 2.2; }
+.spin svg path { fill: var(--pin, var(--brand)); stroke: #fff; stroke-width: 2.2; vector-effect: non-scaling-stroke; }
 .spin svg circle { fill: #fff; }
 .spin.is-active { z-index: 3; }
 .spin.is-active svg { transform: scale(1.4); }
@@ -1511,7 +1511,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 .shop-info__facts [hidden], .shop-info__link[hidden] { display: none; }
 .shop-info__facts .is-closed { color: #fff; }
-.shop-info__link .icon { stroke: #fff; }
+.shop-info__link .icon { stroke: #fff; --pin-fill: #fff; --pin-dot: #5b2596; }
 .shop-hero__map { display: none; }
 .menu-tabs::-webkit-scrollbar { display: none; }
 .msec__title span { font: 600 12px var(--font-body); color: var(--sub); }
@@ -1625,10 +1625,10 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .done__route li { position: relative; padding-left: 26px; display: flex; flex-direction: column; font-size: 14.5px; font-weight: 700; color: var(--ink); }
 .done__route li span { font-size: 11.5px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; }
 .done__route li::before { content: ""; position: absolute; left: 3px; top: 5px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--brand); background: #fff; }
-.done__to::before { background: var(--brand) !important; border-radius: 50% 50% 50% 0 !important; transform: rotate(-45deg); }
+.done__route li.done__to::before { left: 2px; top: 1px; width: 13px; height: 17px; border: 0; border-radius: 0; background: url("/assets/images/pin.svg") center / contain no-repeat; }
 .done__from::after { content: ""; position: absolute; left: 9px; top: 21px; bottom: -12px; width: 2px; background: repeating-linear-gradient(var(--line-brand) 0 4px, transparent 4px 7px); }
-.stars { display: flex; gap: 4px; }
-.star .icon { width: 22px; height: 22px; stroke: var(--placeholder); }
+.stars { display: flex; gap: 2px; }
+.star .icon { width: 30px; height: 30px; stroke: #c3b6d3; stroke-width: 1.6; transition: stroke .15s, fill .15s; }
 @media (min-width: 900px) {
 .done[open] { align-items: center; }
 }

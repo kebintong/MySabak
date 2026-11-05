@@ -308,6 +308,9 @@ function showTripDone(order) {
   const time = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
   dlg.innerHTML = `<div class="done__card">
     <div class="done__hero">
+      <span class="done__aurora" aria-hidden="true"></span><span class="done__aurora done__aurora--gold" aria-hidden="true"></span>
+      <span class="glitter glitter--night" aria-hidden="true"><i class="w" style="--star-x:8%;--star-y:18%;--star-size:10px;--star-delay:0s"></i><i style="--star-x:6%;--star-y:60%;--star-size:7px;--star-delay:0.7s"></i><i class="w" style="--star-x:4%;--star-y:86%;--star-size:5px;--star-delay:1.9s"></i><i style="--star-x:27%;--star-y:10%;--star-size:6px;--star-delay:2.4s"></i><i style="--star-x:72%;--star-y:12%;--star-size:9px;--star-delay:0.3s"></i><i class="w" style="--star-x:91%;--star-y:36%;--star-size:11px;--star-delay:1.2s"></i><i style="--star-x:95%;--star-y:82%;--star-size:6px;--star-delay:2s"></i><i style="--star-x:88%;--star-y:60%;--star-size:4px;--star-delay:2.8s"></i></span>
+      <span class="done__halo" aria-hidden="true"></span>
       <span class="done__check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
       <h2 class="done__title" id="doneTitle">${esc(words().doneTitle)}</h2>
       <p class="done__sub">${esc(order.to || 'Your drop-off')} · ${esc(time)}</p>
