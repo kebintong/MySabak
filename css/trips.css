@@ -1,4 +1,52 @@
-/* mysabak · trips styles. Loaded after base.css. */
+/* mysabak · Trips & Orders styles. Loaded after base.css. */
 
-/* Trips: the same rows, in a card */
+/* Live cards: a ride or food order on its way. Tap the top row to open its map (js/pages/trips.js) */
+.ongoing__list { display: flex; flex-direction: column; gap: 12px; }
+.ocard {
+  border-radius: 20px; background: var(--surface); border: 1px solid var(--line-brand);
+  box-shadow: 0 1px 2px rgba(41, 10, 69, .06), 0 8px 24px rgba(41, 10, 69, .08);
+  padding: 6px 6px 14px; display: flex; flex-direction: column; gap: 12px;
+}
+.ocard__head {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 10px 0;
+  border: 0; border-radius: 16px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.ocard__head:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.ocard__icon { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--tint); display: grid; place-items: center; }
+.ocard__icon .icon { width: 22px; height: 22px; stroke: var(--brand-deep); }
+.ocard__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ocard__text b { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocard__text span { font-size: 13px; color: var(--sub); }
+.ocard__eta { display: inline-block; padding: 6px 9px; border-radius: 999px; background: var(--gold); color: var(--ink); font-size: 13px; font-weight: 800; white-space: nowrap; }
+.ocard__price { font-size: 15px; font-weight: 800; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ocard__chev { width: 18px; height: 18px; flex: none; stroke: var(--sub); transform: rotate(90deg); transition: transform .25s var(--ease-out); }
+.ocard.is-open .ocard__chev { transform: rotate(-90deg); }
+/* the four steps: done in purple, the current one half gold */
+.ocard__segs { display: flex; gap: 4px; padding: 0 10px; }
+.ocard__segs span { flex: 1; height: 4px; border-radius: 2px; background: #ece4f6; }
+.ocard__segs .is-done { background: #7b3fbf; }
+.ocard__segs .is-now { background: linear-gradient(90deg, var(--gold) 55%, #ece4f6 55%); }
+.ocard__more { padding: 0 10px; display: flex; flex-direction: column; gap: 12px; }
+.ocard__more[hidden] { display: none; }
+.ocard__map {
+  position: relative; height: 180px; border-radius: 14px; overflow: hidden;
+  background: url("/assets/images/map-bg.svg") center / cover no-repeat, var(--map-ground); /* shows until (or if) the map loads */
+  animation: ocard-open .3s var(--ease-out);
+}
+@keyframes ocard-open { from { opacity: 0; transform: translateY(-6px); } }
+.ocard__steps { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; font-weight: 600; color: var(--sub); }
+.ocard__steps .is-now { color: var(--brand-deep); }
+.ocard__driver { display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.ocard__driver .ocard__text b { font-size: 14px; }
+.ocard__ava { width: 34px; height: 34px; flex: none; border-radius: 50%; background: #e8dcf7; color: var(--brand-deep); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+a.btn-soft { text-decoration: none; } /* "Open trip" and "View" are links styled as the Rebook button */
+.ocard__link { align-self: flex-start; padding: 6px 0; font-size: 14px; font-weight: 700; color: var(--brand); text-decoration: none; }
+@media (prefers-reduced-motion: reduce) { .ocard__map { animation: none; } .ocard__chev { transition: none; } }
+
+/* History: everything finished, newest first, filtered All / Rides / Food */
+.hist__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.hist__head .card__title { margin: 0; }
+.hist__chips { display: flex; gap: 6px; }
+.hchip { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-brand); background: var(--surface); color: var(--brand-deep); font: 700 13px/1 var(--font-body); cursor: pointer; }
+.hchip[aria-pressed="true"] { background: var(--brand-deep); border-color: var(--brand-deep); color: #fff; }
 .trips-empty { padding: 4px 0 2px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 14px; color: var(--sub); }

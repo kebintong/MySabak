@@ -349,22 +349,21 @@ export async function cancelRide(bookingId) {
 /**
  * The customer's live Ride or Express booking, so any page can show it and the ride screen can pick it up again.
  * null when there's none. status: 'searching' (no driver yet), then as onTripUpdate; 'completed' stays until
- * endTrip(). progress: how far through that status it is (0–1). Backend: the server knows the trip's status.
+ * endTrip(). Backend: the server knows the trip's status; return it here.
  * DEMO: worked out from the clock and the timings onTripUpdate saved.
- * @returns {Promise<null|{id, kind:'ride'|'express', status:string, progress:number, etaMinutes:number|null,
- *   booking:object, driver:object|null}>}
+ * @returns {Promise<null|{id, kind:'ride'|'express', status:string, etaMinutes:number|null, booking:object, driver:object|null}>}
  */
 export async function myActiveTrip() {
   let a = demo.get('activeTrip', null);
   if (!a) return null;
-  const trip = (status, progress, etaMinutes) => ({ id: a.id, kind: a.booking.kind, status, progress, etaMinutes, booking: a.booking, driver: a.driver });
+  const trip = (status, etaMinutes) => ({ id: a.id, kind: a.booking.kind, status, etaMinutes, booking: a.booking, driver: a.driver });
   if (!a.driver) {
-    if (Date.now() < a.bookedAt + DEMO_ACCEPT_MS) return trip('searching', 0, null);
+    if (Date.now() < a.bookedAt + DEMO_ACCEPT_MS) return trip('searching', null);
     a = demoAccept(a);
   }
-  if (!a.plan) return trip('arriving', 0, null);
+  if (!a.plan) return trip('arriving', null);
   const { i, f } = phaseAt(a.plan, Date.now() - a.acceptedAt - a.pausedMs);
-  return trip(a.plan[i].status, f, etaOf(a.plan[i], f));
+  return trip(a.plan[i].status, etaOf(a.plan[i], f));
 }
 
 /** The trip is over (done screen shown, or the driver cancelled): it's no longer live. */

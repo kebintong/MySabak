@@ -18,8 +18,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/trips.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/js/pages/trips.js"></script>
 </head>
 <body class="page page--sky">
@@ -32,24 +34,26 @@
 
         <header class="page-head">
           <h1 class="page-title">Trips &amp; Orders</h1>
-          <p class="lede">Your rides, deliveries and shop orders.</p>
+          <p class="lede" id="tripsLede">Your rides, deliveries and shop orders.</p>
         </header>
 
-        <!-- A ride or food order on its way (the gold count on the Trips & Orders tab) -->
-        <section class="card glow-border" id="ongoingCard" aria-labelledby="ongoingTitle" hidden>
-          <h2 class="card__title" id="ongoingTitle">Ongoing</h2>
-          <ul class="list" id="ongoingList"></ul>
+        <!-- Rides and food orders on their way (the gold count on the Trips & Orders tab): a card each,
+             tap one to open its map (js/pages/trips.js) -->
+        <section class="ongoing" id="ongoing" aria-labelledby="ongoingTitle" hidden>
+          <h2 class="sr-only" id="ongoingTitle">Ongoing</h2>
+          <div class="ongoing__list" id="ongoingList"></div>
         </section>
 
-        <section class="card glow-border" aria-labelledby="ridesTitle">
-          <h2 class="card__title" id="ridesTitle">Rides and deliveries</h2>
-          <ul class="list" id="rideList"></ul>
-          <a class="button button--block card__action" href="/#ride">Book a ride</a>
-        </section>
-
-        <section class="card" aria-labelledby="ordersTitle">
-          <h2 class="card__title" id="ordersTitle">Shop orders</h2>
-          <ul class="list" id="orderList"></ul>
+        <section class="card" aria-labelledby="historyTitle">
+          <div class="hist__head">
+            <h2 class="card__title" id="historyTitle">History</h2>
+            <div class="hist__chips" role="group" aria-label="Show">
+              <button type="button" class="hchip" data-show="all" aria-pressed="true">All</button>
+              <button type="button" class="hchip" data-show="ride" aria-pressed="false">Rides</button>
+              <button type="button" class="hchip" data-show="food" aria-pressed="false">Food</button>
+            </div>
+          </div>
+          <ul class="list" id="historyList"></ul>
         </section>
       </div>
     </main>
