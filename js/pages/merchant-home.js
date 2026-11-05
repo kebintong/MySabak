@@ -75,7 +75,7 @@ function renderBranches() {
   const card = $('#branchesToday');
   card.hidden = home.role !== 'owner';
   if (card.hidden) return;
-  const state = (b) => (b.account.status === 'invited' ? ['Setup', ' is-off'] : b.account.status === 'disabled' ? ['Off', ' is-off'] : b.open ? ['Open', ''] : ['Closed', ' is-off']);
+  const state = (b) => (b.account.status === 'disabled' ? ['Off', ' is-off'] : b.open ? ['Open', ''] : ['Closed', ' is-off']);
   $('#branchGlance').innerHTML = home.branches.map((b) => {
     const [label, off] = state(b);
     const onScreen = b.id === home.branch.id;

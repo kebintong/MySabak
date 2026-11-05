@@ -1028,7 +1028,8 @@ function branches() {
   };
   const samples = DEMO_BRANCHES.map(({ password, ...b }) => ({ ...b, sample: true, account: { status: 'active' } })); // eslint-disable-line no-unused-vars
   const changes = demo.get('branchChanges', {});
-  return [main, ...samples, ...demo.get('branchesAdded', [])].map((b) => ({ ...b, ...changes[b.id] }));
+  return [main, ...samples, ...demo.get('branchesAdded', [])].map((b) => ({ ...b, ...changes[b.id] }))
+    .map((b) => (b.account.status === 'invited' ? { ...b, account: { status: 'active' } } : b)); // saved before setup codes were removed
 }
 const changeBranch = (id, change) => demo.set('branchChanges', { ...demo.get('branchChanges', {}), [id]: { ...demo.get('branchChanges', {})[id], ...change } });
 const findBranch = (id) => branches().find((b) => b.id === id);
@@ -1110,7 +1111,7 @@ const ownerCtx = () => {
 /**
  * Merchant sign-in with a mobile number OR an email, plus password: the owner, or a branch account.
  * DEMO: the demo merchant (DEMO_ACCOUNTS.merchant) and the SAMPLE branch accounts (DEMO_BRANCHES) need their
- * password; a branch account set up in this browser takes any password (passwords are never stored here).
+ * password; a branch added in this browser takes any password (passwords are never stored here).
  * Backend: check the password on the server; the session says owner or which branch.
  * @returns {Promise<{shopId:string, branchId?:string}>}  throws { status: 401 } when they don't match
  */
@@ -1128,7 +1129,6 @@ export async function merchantSignIn({ login, password }) {
   }
   const b = branches().find((x) => !x.main && matches(x.manager.login));
   if (!b) throw Object.assign(new Error('No merchant account uses that mobile number or email.'), { status: 401 });
-  if (b.account.status === 'invited') throw forbidden('Set up this branch account first, with the code from the shop owner.');
   if (b.account.status === 'disabled') throw forbidden('This branch account is turned off. Ask the shop owner to turn it back on.');
   const sample = DEMO_BRANCHES.find((x) => x.id === b.id);
   if (sample && password !== sample.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
@@ -1142,8 +1142,6 @@ export async function merchantSignOut() {
   demo.set('merchantSession', null);
 }
 
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O or 1/I to mix up
-const newCode = () => Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
 const loginTaken = (login, exceptId) => {
   const people = [...Object.values(DEMO_ACCOUNTS).flatMap((a) => [a.email, a.phone]), ...branches().filter((b) => b.id !== exceptId).map((b) => b.manager.login)];
   return people.some((p) => (login.includes('@') ? sameEmail(p, login) : samePhone(p, login)));
@@ -1158,28 +1156,6 @@ function cleanManager({ managerName, managerLogin }, exceptId) {
   return { name, login };
 }
 
-/**
- * Set up a branch account with the code the owner shared, then sign in as that branch.
- * DEMO: the password isn't kept. Backend: store a password hash; codes should expire (e.g. after 7 days).
- * @param {{code:string, login:string, password:string}} input  login = the manager's mobile number or email the owner entered
- * @returns {Promise<{branchId:string}>}
- */
-export async function setupBranchAccount({ code, login, password }) {
-  await wait(500);
-  const c = String(code || '').trim().toUpperCase();
-  const b = branches().find((x) => x.account.status === 'invited' && x.account.code === c);
-  if (!b) throw bad('That setup code isn’t right. Check it with the shop owner.');
-  const l = String(login || '').trim();
-  if (!(l.includes('@') ? sameEmail(b.manager.login, l) : samePhone(b.manager.login, l))) {
-    throw bad('Use the mobile number or email the shop owner entered for you.');
-  }
-  if (String(password || '').length < 8) throw bad('Choose a password with at least 8 characters.');
-  changeBranch(b.id, { account: { status: 'active' } });
-  endSessions('merchant');
-  demo.set('merchantSession', { shopId: MAIN_ID(), branchId: b.id, at: Date.now() });
-  return { branchId: b.id };
-}
-
 /* ---------- Owner: branches ---------- */
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -1192,11 +1168,10 @@ const hoursText = (opens, closes) => {
 };
 
 /**
- * Add a branch. It gets a branch account for its manager, waiting for setup with a one-time code that the owner
- * sends to the manager (e.g. by text or Messenger). Owner only.
- * DEMO: kept in this browser; nothing is sent. Backend: send the code by SMS or email, and let it expire.
+ * Add a branch. Its manager signs in on Merchant sign in with the mobile number or email the owner enters. Owner only.
+ * DEMO: kept in this browser; the manager signs in with any password. Backend: send them a sign-in link by SMS or email.
  * @param {{name, areaId, street, opensAt, closesAt, phone, managerName, managerLogin}} input
- * @returns {Promise<{branch:object, code:string}>}
+ * @returns {Promise<{branch:object}>}
  */
 export async function addBranch(input) {
   ownerCtx();
@@ -1210,27 +1185,25 @@ export async function addBranch(input) {
   const phone = String(input.phone || '').trim();
   if (!PH_MOBILE.test(phone.replace(/[\s-]/g, ''))) throw bad('Enter the branch’s mobile number, like 0917 123 4567.');
   const manager = cleanManager(input);
-  const code = newCode();
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 20) || 'branch';
   const branch = {
     id: `${MAIN_ID()}-${slug}-${Math.random().toString(36).slice(2, 6)}`, name, area: area.name,
     address: `${street}, ${area.name}`, phone, lng: area.lng, lat: area.lat,
     opensAt: input.opensAt, closesAt: input.closesAt, hours: hoursText(input.opensAt, input.closesAt),
-    manager, account: { status: 'invited', code }, addedAt: Date.now(),
+    manager, account: { status: 'active' }, addedAt: Date.now(),
   };
   if (!demo.set('branchesAdded', [...demo.get('branchesAdded', []), branch])) throw Object.assign(new Error('Couldn’t save the branch.'), { status: 507 });
-  return { branch, code };
+  return { branch };
 }
 
-/** Give a branch a new manager: their branch account waits for setup again, with a new code. Owner only. */
+/** Give a branch a new manager: they sign in with their own mobile number or email; the old manager no longer can. Owner only. */
 export async function changeBranchManager(branchId, input) {
   ownerCtx();
   const b = findBranch(branchId);
   if (!b || b.main) throw Object.assign(new Error('Branch not found'), { status: 404 });
   const manager = cleanManager(input, b.id);
-  const code = newCode();
-  changeBranch(b.id, { manager, account: { status: 'invited', code } });
-  return { code };
+  changeBranch(b.id, { manager });
+  return { manager };
 }
 
 /** Turn a branch account off (it can't sign in, customers can't order from it) or back on. Owner only. */
@@ -1239,7 +1212,6 @@ export async function setBranchAccount(branchId, status) {
   const b = findBranch(branchId);
   if (!b || b.main) throw Object.assign(new Error('Branch not found'), { status: 404 });
   if (!['active', 'disabled'].includes(status)) throw bad('Unknown status');
-  if (b.account.status === 'invited') throw Object.assign(new Error('This branch account isn’t set up yet.'), { status: 409 });
   changeBranch(b.id, { account: { status } });
   return { status };
 }
@@ -1694,8 +1666,25 @@ function demoOrder(o) {
   const reached = DEMO_ORDER_TIMES.filter(([, ms]) => age >= ms).pop();
   if (!reached) return o;
   if (reached[0] !== 'picked_up' || !o.address) return { ...o, status: reached[0] };
-  // On the way: the rider rides a straight line from the shop to the address, picked up → delivered
-  const f = (age - 180e3) / (360e3 - 180e3);
-  const rider = { lng: shop.lng + (o.address.lng - shop.lng) * f, lat: shop.lat + (o.address.lat - shop.lat) * f };
-  return { ...o, status: 'picked_up', rider };
+  // On the way: the rider rides the order's road route (orderRoute), or a straight line, picked up → delivered
+  const path = demo.get('orderRoutes', {})[o.id] || [[shop.lng, shop.lat], [o.address.lng, o.address.lat]];
+  return { ...o, status: 'picked_up', rider: pointAlong(path, (age - 180e3) / (360e3 - 180e3)) };
+}
+
+/**
+ * The road route of a shop order, shop → drop-off ([lng, lat] pairs). A straight line if routing fails or takes over 3 s.
+ * DEMO: worked out once and kept in this browser (last 20), so the demo rider rides it.
+ * @returns {Promise<Array<[number, number]>>}
+ */
+export async function orderRoute(order) {
+  const saved = demo.get('orderRoutes', {});
+  if (saved[order.id]) return saved[order.id];
+  const shop = await shopMenu(order.shop.id);
+  const to = order.address;
+  const road = await Promise.race([routeBetween(shop, to), wait(3000).then(() => { throw new Error('slow'); })])
+    .then((r) => r.coords).catch(() => []);
+  if (road.length < 2) return straightLine(shop, to).coords;
+  const coords = [[shop.lng, shop.lat], ...road, [to.lng, to.lat]];
+  demo.set('orderRoutes', { ...Object.fromEntries(Object.entries(saved).slice(-19)), [order.id]: coords });
+  return coords;
 }

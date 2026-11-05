@@ -253,6 +253,13 @@ test('a sample shop order moves along by itself; the demo merchant’s own waits
   const riding = await api.orderStatus('S-riding');
   assert.equal(riding.status, 'picked_up');
   assert.ok(Math.abs(riding.rider.lng - (TEST_SHOP.lng + 0.01)) < 1e-4 && Math.abs(riding.rider.lat - (TEST_SHOP.lat + 0.005)) < 1e-4);
+  // With a road route saved (orderRoute): halfway along the roads. North 0.01°, then east as far: halfway is the corner.
+  const east = 0.01 / Math.cos(((TEST_SHOP.lat + 0.01) * Math.PI) / 180);
+  const corner = [TEST_SHOP.lng, TEST_SHOP.lat + 0.01];
+  localStorage.setItem('mysabak.demo.orderRoutes', JSON.stringify({ 'S-riding': [[TEST_SHOP.lng, TEST_SHOP.lat], corner, [TEST_SHOP.lng + east, TEST_SHOP.lat + 0.01]] }));
+  const onRoads = (await api.orderStatus('S-riding')).rider;
+  assert.ok(Math.abs(onRoads.lng - corner[0]) < 1e-4 && Math.abs(onRoads.lat - corner[1]) < 1e-4);
+  localStorage.removeItem('mysabak.demo.orderRoutes');
   if (before === null) localStorage.removeItem(key); else localStorage.setItem(key, before);
 });
 

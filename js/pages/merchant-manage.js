@@ -1,4 +1,4 @@
-/* Management (pages/merchant-manage.html): the owner's branches (Add branch with a setup code for its manager,
+/* Management (pages/merchant-manage.html): the owner's branches (Add branch with its manager’s sign-in,
    change manager, turn a branch account off, view a branch), the shop customers see, and the menu (edit, and
    sold-out per branch). A branch account sees its own branch and marks its menu items sold out. */
 import {
@@ -21,21 +21,17 @@ const isOwner = () => home.role === 'owner';
 
 
 /* ---------- Management: the branches (owner), or this branch (branch account) ---------- */
-const ACCOUNT = { owner: 'You (owner)', active: 'Active', invited: 'Waiting for setup', disabled: 'Turned off' };
+const ACCOUNT = { owner: 'You (owner)', active: 'Active', disabled: 'Turned off' };
 const fact = (k, v) => `<div class="bfact"><span>${k}</span><b>${v}</b></div>`;
 
 function branchRow(b) {
   const open = openRow === b.id;
   const onScreen = b.id === home.branch.id;
-  const code = b.account.status === 'invited' ? `<div class="bcode">
-      <div><span>Setup code for ${esc(b.manager.name)}</span><b>${esc(b.account.code)}</b></div>
-      <button type="button" class="button button--ghost mbtn" data-copy="${esc(b.account.code)}">Copy</button>
-      <p>Send it to them by text or Messenger. On Merchant sign in, they tap “Set up a branch account”.</p></div>` : '';
   const managerForm = editingManager === b.id ? `<form class="bmanager" data-manager="${esc(b.id)}" novalidate>
       <label class="field"><span class="field__label">New manager’s name</span><input class="input" name="managerName" required maxlength="60" autocomplete="off"></label>
       <label class="field"><span class="field__label">Mobile number or email</span><input class="input" name="managerLogin" required autocapitalize="off" spellcheck="false" autocomplete="off"></label>
       <p class="field__error" role="alert" hidden></p>
-      <div class="badd__actions"><button type="button" class="button button--ghost mbtn" data-manager-cancel>Cancel</button><button type="submit" class="button mbtn">Save and get a new code</button></div>
+      <div class="badd__actions"><button type="button" class="button button--ghost mbtn" data-manager-cancel>Cancel</button><button type="submit" class="button mbtn">Save</button></div>
     </form>` : '';
   const actions = [
     onScreen ? '<span class="badge">On screen</span>' : `<button type="button" class="button mbtn" data-view="${b.main ? '' : esc(b.id)}">View branch</button>`,
@@ -48,14 +44,14 @@ function branchRow(b) {
       <span class="branch__pin" aria-hidden="true">${icon('i-pin')}</span>
       <span class="branch__text"><span class="branch__name">${esc(b.name)}${b.main ? ' <small>Main</small>' : ''}${b.sample ? ' <span class="tag-demo">Sample</span>' : ''}</span>
         <span class="branch__area">${esc(b.area)} · ${b.todayOrders} order${b.todayOrders === 1 ? '' : 's'} today</span></span>
-      <span class="branch__state${b.account.status === 'invited' || b.account.status === 'disabled' ? ' is-off' : b.open ? '' : ' is-off'}">${
-  b.account.status === 'invited' ? 'Setup' : b.account.status === 'disabled' ? 'Off' : b.open ? 'Open' : 'Closed'}</span>
+      <span class="branch__state${b.account.status === 'disabled' ? ' is-off' : b.open ? '' : ' is-off'}">${
+  b.account.status === 'disabled' ? 'Off' : b.open ? 'Open' : 'Closed'}</span>
     </button>
     <div class="branch__body"><div class="branch__inner"><div class="branch__detail">
       ${fact('Address', esc(b.address))}${fact('Hours', esc(b.hours))}
       ${fact('Manager', `${esc(b.manager.name)}<small>${esc(b.manager.login)}</small>`)}${fact('Today', `${b.todayOrders} orders · ${peso(b.todaySales)}`)}
       ${fact('Phone', esc(b.phone || '—'))}${fact('Account', ACCOUNT[b.account.status])}
-      ${code}${managerForm}
+      ${managerForm}
       <div class="branch__go">${actions}</div>
     </div></div></div>
   </li>`;
@@ -163,7 +159,7 @@ $('#addBranchForm').addEventListener('submit', async (e) => {
     form.reset();
     setAddOpen(false);
     openRow = branch.id;
-    toast('Branch added. Send the setup code to its manager.');
+    toast('Branch added. Its manager signs in on Merchant sign in with the mobile number or email you entered.');
     await reload();
   } catch (err) {
     if (err.status === 401) { failed(err); return; }
@@ -176,11 +172,6 @@ $('#addBranchForm').addEventListener('submit', async (e) => {
 $('#management').addEventListener('click', async (e) => {
   const head = e.target.closest('[data-branch]');
   if (head) { openRow = openRow === head.dataset.branch ? null : head.dataset.branch; editingManager = null; renderManagement(); return; }
-  const copy = e.target.closest('[data-copy]');
-  if (copy) {
-    try { await navigator.clipboard.writeText(copy.dataset.copy); toast('Setup code copied.'); } catch (_) { toast(`The code is ${copy.dataset.copy}.`); }
-    return;
-  }
   const change = e.target.closest('[data-change-manager]');
   if (change) { editingManager = change.dataset.changeManager; renderManagement(); $('[data-manager] input').focus(); return; }
   if (e.target.closest('[data-manager-cancel]')) { editingManager = null; renderManagement(); return; }
@@ -203,7 +194,7 @@ $('#management').addEventListener('submit', async (e) => {
   try {
     await changeBranchManager(form.dataset.manager, Object.fromEntries(new FormData(form)));
     editingManager = null;
-    toast('Manager changed. Send them the new setup code.');
+    toast('Manager changed. They sign in with the mobile number or email you entered.');
     await reload();
   } catch (err) {
     if (err.status === 401) { failed(err); return; }
