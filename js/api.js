@@ -1670,7 +1670,8 @@ export const ORDER_STEPS = [
  * A shop order and where it is.
  * DEMO: a sample shop's order moves along by itself (demoOrder); the demo merchant's moves when the merchant acts.
  * @returns {Promise<{id, shop, lines, subtotal, deliveryFee:number|null, address, notes, payment,
- *   status:'placed'|'accepted'|'preparing'|'ready'|'picked_up'|'delivered'|'cancelled', placedAt:number}>}
+ *   status:'placed'|'accepted'|'preparing'|'ready'|'picked_up'|'delivered'|'cancelled', placedAt:number,
+ *   rider?:{lng:number, lat:number}}>}  rider: where the rider is, while it's on the way (picked_up)
  */
 export async function orderStatus(orderId) {
   const order = demo.get('orders', []).find((o) => o.id === orderId);
@@ -1687,7 +1688,14 @@ export async function myOrders() {
 // (the demo merchant's own branches move theirs from the merchant pages, so those are left as stored)
 const DEMO_ORDER_TIMES = [['accepted', 20e3], ['preparing', 40e3], ['ready', 150e3], ['picked_up', 180e3], ['delivered', 360e3]];
 function demoOrder(o) {
-  if (o.status !== 'placed' || !SHOPS.some((s) => s.id === o.shop.id)) return o;
-  const reached = DEMO_ORDER_TIMES.filter(([, ms]) => Date.now() - o.placedAt >= ms).pop();
-  return reached ? { ...o, status: reached[0] } : o;
+  const shop = SHOPS.find((s) => s.id === o.shop.id);
+  if (o.status !== 'placed' || !shop) return o;
+  const age = Date.now() - o.placedAt;
+  const reached = DEMO_ORDER_TIMES.filter(([, ms]) => age >= ms).pop();
+  if (!reached) return o;
+  if (reached[0] !== 'picked_up' || !o.address) return { ...o, status: reached[0] };
+  // On the way: the rider rides a straight line from the shop to the address, picked up → delivered
+  const f = (age - 180e3) / (360e3 - 180e3);
+  const rider = { lng: shop.lng + (o.address.lng - shop.lng) * f, lat: shop.lat + (o.address.lat - shop.lat) * f };
+  return { ...o, status: 'picked_up', rider };
 }

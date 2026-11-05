@@ -1,11 +1,73 @@
-/* mysabak · order styles. Loaded after base.css. */
+/* mysabak · Your order styles. Loaded after base.css. The order is a receipt ticket (js/pages/order.js). */
 
-/* Order timeline */
-.timeline { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; }
-.timeline li:last-child { padding-bottom: 0; }
-.timeline li:not(:last-child)::after { content: ""; position: absolute; left: 10px; top: 23px; bottom: 1px; width: 2px; background: var(--line-brand); transform: translateX(-50%); }
-.timeline li.is-done { color: var(--ink); }
-.timeline li.is-done::before { background: var(--brand); border-color: var(--brand); }
-.timeline li.is-done::after { background: var(--brand); }
-.timeline li.is-current { color: var(--navy); font-weight: 800; }
-.timeline li.is-current::before { border-color: var(--brand); box-shadow: 0 0 0 5px rgba(91, 37, 150, 0.15); background: var(--brand); }
+.order { display: flex; flex-direction: column; gap: 14px; }
+.ticket {
+  position: relative; padding: 20px 20px 18px; border-radius: 20px; background: var(--surface);
+  box-shadow: 0 10px 30px rgba(41, 10, 69, .18);
+  display: flex; flex-direction: column; gap: 14px;
+  animation: ticket-in .45s var(--ease-out) backwards;
+}
+@keyframes ticket-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* the status stamp: a live dot while the order is on its way */
+.ticket__stamp {
+  align-self: flex-start; margin: 0; padding: 7px 12px; border-radius: 999px;
+  display: flex; align-items: center; gap: 7px;
+  background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+}
+.ticket__live { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); animation: ticket-blink 1.4s ease-in-out infinite; }
+@keyframes ticket-blink { 50% { opacity: .25; } }
+.ticket__stamp.is-done { background: #e3f3e8; color: #1e6b3c; }
+.ticket__stamp.is-done .ticket__live { display: none; }
+.ticket__stamp.is-cancelled { background: var(--field); color: var(--sub); }
+
+.ticket__shop { margin: 0; font-family: var(--font-display); font-size: 24px; line-height: 1.15; font-weight: 800; color: var(--ink); }
+.ticket__meta { margin: 4px 0 0; font-size: 13px; line-height: 1.35; color: var(--sub); }
+.ticket__meta:empty { display: none; }
+
+/* the four steps (as on the Trips & Orders card): done purple, the current one half gold and breathing */
+.ticket__segs { display: flex; gap: 4px; }
+.ticket__segs span { position: relative; flex: 1; height: 5px; border-radius: 3px; background: #ece4f6; overflow: hidden; }
+.ticket__segs i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; transition: width .6s var(--ease-out); }
+.ticket__segs .is-done i { width: 100%; background: #7b3fbf; }
+.ticket__segs .is-now i { width: 55%; background: var(--gold); animation: ticket-breathe 1.8s ease-in-out infinite; }
+@keyframes ticket-breathe { 50% { opacity: .55; } }
+.ticket__steps { display: flex; justify-content: space-between; gap: 6px; margin-top: -6px; font-size: 11px; font-weight: 600; color: var(--sub); }
+.ticket__steps .is-now { color: var(--brand-deep); }
+
+/* the tear line, with a notch on each edge */
+.ticket__cut { position: relative; margin: 4px -20px; border-top: 2px dashed var(--line-brand); }
+.ticket__cut::before, .ticket__cut::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: #faf5f3; }
+.ticket__cut::before { left: -11px; }
+.ticket__cut::after { right: -11px; }
+
+.ticket__lines { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ticket__line { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.ticket__line dt { font-size: 14px; font-weight: 600; color: var(--ink); }
+.ticket__line dt small { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--sub); }
+.ticket__line dd { margin: 0; font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ticket__line--total { padding-top: 10px; border-top: 1px solid var(--line); }
+.ticket__line--total dt, .ticket__line--total dd { font-size: 18px; font-weight: 800; }
+.ticket__id { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: #f6f1fa; font-size: 12px; font-weight: 600; color: var(--sub); }
+.ticket__id code { font: 700 12px/1.2 ui-monospace, Consolas, monospace; color: var(--brand-deep); word-break: break-all; text-align: right; }
+
+/* actions under the ticket, as wide as there are of them */
+.ticket__acts { display: flex; gap: 8px; }
+.tact {
+  flex: 1 1 0; min-width: 0; min-height: 64px; padding: 8px; border: 0; border-radius: 16px;
+  background: var(--surface); color: var(--brand-deep); text-decoration: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  font: 700 12px/1.2 var(--font-body); text-align: center;
+  box-shadow: 0 1px 2px rgba(41, 10, 69, .06), 0 6px 18px rgba(41, 10, 69, .07);
+  transition: transform .15s var(--ease-out);
+}
+.tact[hidden] { display: none; }
+.tact .icon { width: 20px; height: 20px; stroke: currentColor; }
+.tact:active { transform: scale(.96); }
+.tact--gold { background: var(--gold); color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket, .ticket__live, .ticket__segs .is-now i { animation: none; }
+  .ticket__segs i, .tact { transition: none; }
+  .tact:active { transform: none; }
+}

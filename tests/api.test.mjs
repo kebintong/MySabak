@@ -247,6 +247,12 @@ test('a sample shop order moves along by itself; the demo merchant’s own waits
   const statuses = Object.fromEntries((await api.myOrders()).map((o) => [o.id, o.status]));
   assert.deepEqual(statuses, { 'S-new': 'placed', 'S-cooking': 'preparing', 'S-old': 'delivered', 'M-old': 'placed' });
   assert.equal((await api.orderStatus('S-cooking')).status, 'preparing');
+  // Halfway between picked up (3 min) and delivered (6 min): the rider is halfway from the shop to the address
+  const home = { lng: TEST_SHOP.lng + 0.02, lat: TEST_SHOP.lat + 0.01, label: 'Home' };
+  localStorage.setItem(key, JSON.stringify([{ ...order('S-riding', TEST_SHOP.id, 270e3), address: home }]));
+  const riding = await api.orderStatus('S-riding');
+  assert.equal(riding.status, 'picked_up');
+  assert.ok(Math.abs(riding.rider.lng - (TEST_SHOP.lng + 0.01)) < 1e-4 && Math.abs(riding.rider.lat - (TEST_SHOP.lat + 0.005)) < 1e-4);
   if (before === null) localStorage.removeItem(key); else localStorage.setItem(key, before);
 });
 

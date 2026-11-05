@@ -31,30 +31,36 @@
       <div class="content__inner">
 
         <header class="page-head">
-          <a class="page-head__back" href="/pages/shops.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Shops</a>
-          <h1 class="page-title" id="orderTitle">Your order</h1>
-          <p class="lede" id="orderMeta"></p>
+          <!-- Back to the page you came from (js/pages/order.js backLink); Trips & Orders when there's none -->
+          <a class="page-head__back" id="backLink" href="/pages/trips.html"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg><span>Trips &amp; Orders</span></a>
+          <h1 class="page-title">Your order</h1>
         </header>
 
         <div id="notFound" class="card" hidden><p class="empty">We couldn’t find this order.</p></div>
 
-        <div id="orderBody" class="stack" hidden>
-          <section class="card glow-border" aria-labelledby="trackTitle">
-            <h2 class="card__title" id="trackTitle">Status</h2>
-            <ol class="timeline" id="timeline"></ol>
-            <p class="demo-note">Demo: no shop or rider is connected, so the order stays at “Order placed”.</p>
-          </section>
+        <!-- The order as a receipt ticket: status stamp, steps, lines, order number; actions under it (js/pages/order.js) -->
+        <div id="orderBody" class="order" hidden>
+          <article class="ticket" aria-labelledby="shopName">
+            <p class="ticket__stamp" id="stamp" role="status"><span class="ticket__live" aria-hidden="true"></span><span id="stampText"></span></p>
+            <div>
+              <h2 class="ticket__shop" id="shopName"></h2>
+              <p class="ticket__meta" id="orderMeta"></p>
+              <p class="ticket__meta" id="orderTo"></p>
+            </div>
+            <div class="ticket__segs" id="segs" aria-hidden="true"></div>
+            <div class="ticket__steps" id="steps" aria-hidden="true"></div>
+            <div class="ticket__cut" aria-hidden="true"></div>
+            <dl class="ticket__lines" id="receipt"></dl>
+            <div class="ticket__id"><span>Order number</span><code id="orderId"></code></div>
+          </article>
 
-          <section class="card" aria-labelledby="receiptTitle">
-            <h2 class="card__title" id="receiptTitle">Receipt</h2>
-            <dl class="receipt" id="receipt"></dl>
-            <button type="button" class="button button--ghost button--block card__action" id="tipBtn"><svg class="icon " aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg>Tip mysabak</button>
-          </section>
+          <div class="ticket__acts">
+            <a class="tact" id="trackBtn" href="/pages/trips.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Track on map</a>
+            <a class="tact" id="callBtn" href="#" hidden><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg>Call shop</a>
+            <button type="button" class="tact tact--gold" id="tipBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg><span>Tip mysabak</span></button>
+          </div>
 
-          <section class="card" aria-labelledby="detailsTitle">
-            <h2 class="card__title" id="detailsTitle">Delivery details</h2>
-            <ul class="list" id="details"></ul>
-          </section>
+          <p class="demo-note">Demo: no real shop or rider is connected. A sample shop’s order moves along by itself over a few minutes; the demo merchant’s orders move when the merchant updates them.</p>
         </div>
       </div>
     </main>

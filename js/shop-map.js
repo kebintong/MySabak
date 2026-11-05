@@ -20,10 +20,12 @@ const PIN_SVG = '<svg viewBox="0 0 730 965" aria-hidden="true"><path d="M365 0C5
  * @param {HTMLElement} container  element to draw the map in
  * @param {object} opts
  * @param {boolean} [opts.interactive=true]  false: a picture of the map (shop page header)
+ * @param {boolean} [opts.cooperative=false]  a map inside a scrolling page: two fingers (or Ctrl + scroll) move it,
+ *   one finger still scrolls the page (Trips & Orders cards)
  * @param {(id:string) => void} [opts.onPin]  a shop pin was tapped
  * @param {() => {top,bottom,left,right}} [opts.padding]  space covered by panels, so pins stay in view
  */
-export function shopMap(container, { interactive = true, onPin = () => {}, padding = () => ({ top: 40, bottom: 40, left: 40, right: 40 }) } = {}) {
+export function shopMap(container, { interactive = true, cooperative = false, onPin = () => {}, padding = () => ({ top: 40, bottom: 40, left: 40, right: 40 }) } = {}) {
   const off = () => container.closest('.map, .shop-hero__map')?.classList.add('is-off');
   if (!window.maplibregl) { off(); return stub(); }
 
@@ -34,6 +36,7 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
     center: CONFIG.startCenter,
     zoom: 13.5,
     interactive,
+    cooperativeGestures: interactive && cooperative,
     attributionControl: false,
     dragRotate: false,
     pitchWithRotate: false,
@@ -47,6 +50,7 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
   const pins = new Map(); // id → { marker, el, shop }
   let you = null;
   let dest = null;
+  let rider = null;
 
   map.on('style.load', () => {
     ready = true;
@@ -121,6 +125,17 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
       dest.getElement().innerHTML = `<svg viewBox="0 0 30 40" aria-hidden="true"><path d="M15 39C12 34 2 27 2 15a13 13 0 0 1 26 0c0 12-10 19-13 24Z"/><rect x="10" y="10" width="10" height="10" rx="2"/></svg><span class="spin__label">${esc(label)}</span>`;
       dest.setLngLat([point.lng, point.lat]).addTo(map);
     },
+    /** The driver or rider on their way, as the mascot (null hides it). */
+    setRider(point) {
+      if (!point) { if (rider) rider.remove(); rider = null; return; }
+      if (!rider) {
+        const el = document.createElement('div');
+        el.className = 'rider-mk';
+        el.innerHTML = '<img src="/assets/images/mascot.svg" alt="">';
+        rider = new maplibregl.Marker({ element: el, anchor: 'center' });
+      }
+      rider.setLngLat([point.lng, point.lat]).addTo(map);
+    },
     /** Route line from the customer to the shop ([lng, lat] pairs; null clears it). */
     setRoute(coords) { route = coords && coords.length > 1 ? coords : null; drawRoute(); },
     /** Fit these points ([lng, lat]) in view. */
@@ -138,7 +153,7 @@ export function shopMap(container, { interactive = true, onPin = () => {}, paddi
 
 function stub() {
   const noop = () => {};
-  return { map: null, setShops: noop, setActive: noop, setUser: noop, setDest: noop, setRoute: noop, fit: noop, resize: noop };
+  return { map: null, setShops: noop, setActive: noop, setUser: noop, setDest: noop, setRider: noop, setRoute: noop, fit: noop, resize: noop };
 }
 
 /**
