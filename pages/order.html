@@ -18,8 +18,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/order.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/js/pages/order.js"></script>
 </head>
 <body class="page page--sky">
@@ -38,27 +40,29 @@
 
         <div id="notFound" class="card" hidden><p class="empty">We couldn’t find this order.</p></div>
 
-        <!-- The order as a receipt ticket: status stamp, steps, lines, order number; actions under it (js/pages/order.js) -->
+        <!-- A live map of the delivery, then the order as a receipt ticket, then a tip (js/pages/order.js) -->
         <div id="orderBody" class="order" hidden>
+          <section class="omap map" id="mapBox" aria-label="Map: the shop, your drop-off and your rider">
+            <div class="map__canvas" id="orderMap"></div>
+          </section>
+
           <article class="ticket" aria-labelledby="shopName">
-            <p class="ticket__stamp" id="stamp" role="status"><span class="ticket__live" aria-hidden="true"></span><span id="stampText"></span></p>
+            <span class="stamp" id="stamp"><span class="stamp__live" aria-hidden="true"></span><span id="stampText" role="status"></span></span>
             <div>
               <h2 class="ticket__shop" id="shopName"></h2>
               <p class="ticket__meta" id="orderMeta"></p>
-              <p class="ticket__meta" id="orderTo"></p>
             </div>
-            <div class="ticket__segs" id="segs" aria-hidden="true"></div>
-            <div class="ticket__steps" id="steps" aria-hidden="true"></div>
-            <div class="ticket__cut" aria-hidden="true"></div>
-            <dl class="ticket__lines" id="receipt"></dl>
+            <p class="ticket__now" id="nowSub"></p>
+            <div class="segs" id="segs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <div class="steps" id="steps" aria-hidden="true"><span>Placed</span><span>Preparing</span><span>On the way</span><span>Delivered</span></div>
+            <div class="cut" aria-hidden="true"></div>
+            <dl class="orc" id="receipt"></dl>
+            <div class="cut" aria-hidden="true"></div>
+            <ul class="odet" id="details" aria-label="Delivery"></ul>
             <div class="ticket__id"><span>Order number</span><code id="orderId"></code></div>
           </article>
 
-          <div class="ticket__acts">
-            <a class="tact" id="trackBtn" href="/pages/trips.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Track on map</a>
-            <a class="tact" id="callBtn" href="#" hidden><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg>Call shop</a>
-            <button type="button" class="tact tact--gold" id="tipBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg><span>Tip mysabak</span></button>
-          </div>
+          <button type="button" class="otip" id="tipBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg><span>Tip mysabak</span></button>
 
           <p class="demo-note">Demo: no real shop or rider is connected. A sample shop’s order moves along by itself over a few minutes; the demo merchant’s orders move when the merchant updates them.</p>
         </div>

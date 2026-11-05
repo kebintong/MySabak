@@ -18,10 +18,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/trips.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script type="module" src="/js/pages/trips.js"></script>
 </head>
 <body class="page page--sky">
@@ -32,28 +30,25 @@
     <main class="content">
       <div class="content__inner">
 
+        <!-- Ongoing / Rides / Food: what's on its way now, then each kind's history (js/pages/trips.js) -->
         <header class="page-head">
           <h1 class="page-title">Trips &amp; Orders</h1>
-          <p class="lede" id="tripsLede">Your rides, deliveries and shop orders.</p>
+          <div class="tswitch" role="group" aria-label="Show">
+            <button type="button" data-show="ongoing" aria-pressed="true">Ongoing <span class="tswitch__n" id="ongoingN" hidden></span></button>
+            <button type="button" data-show="rides" aria-pressed="false">Rides</button>
+            <button type="button" data-show="food" aria-pressed="false">Food</button>
+          </div>
         </header>
 
-        <!-- Rides and food orders on their way (the gold count on the Trips & Orders tab): a card each,
-             tap one to open its map (js/pages/trips.js) -->
-        <section class="ongoing" id="ongoing" aria-labelledby="ongoingTitle" hidden>
-          <h2 class="sr-only" id="ongoingTitle">Ongoing</h2>
-          <div class="ongoing__list" id="ongoingList"></div>
-        </section>
-
-        <section class="card" aria-labelledby="historyTitle">
-          <div class="hist__head">
-            <h2 class="card__title" id="historyTitle">History</h2>
-            <div class="hist__chips" role="group" aria-label="Show">
-              <button type="button" class="hchip" data-show="all" aria-pressed="true">All</button>
-              <button type="button" class="hchip" data-show="ride" aria-pressed="false">Rides</button>
-              <button type="button" class="hchip" data-show="food" aria-pressed="false">Food</button>
+        <section class="tpanel" aria-live="polite">
+          <ul class="tlist" id="tripsList"></ul>
+          <div class="tquick" id="quick">
+            <h2 class="tquick__title">Start something</h2>
+            <div class="tquick__row">
+              <a class="tquick__go" href="/#ride"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg>Book a ride</a>
+              <a class="tquick__go" href="/pages/shops.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-food"/></svg>Order food</a>
             </div>
           </div>
-          <ul class="list" id="historyList"></ul>
         </section>
       </div>
     </main>

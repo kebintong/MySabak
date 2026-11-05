@@ -1,73 +1,96 @@
-/* mysabak · Your order styles. Loaded after base.css. The order is a receipt ticket (js/pages/order.js). */
+/* mysabak · Your order styles. Loaded after base.css. A live map, then the order as a receipt ticket (js/pages/order.js). */
 
 .order { display: flex; flex-direction: column; gap: 14px; }
-.ticket {
-  position: relative; padding: 20px 20px 18px; border-radius: 20px; background: var(--surface);
+.order > * { animation: order-in .45s var(--ease-out) backwards; }
+.order > :nth-child(2) { animation-delay: 70ms; }
+.order > :nth-child(n + 3) { animation-delay: 140ms; }
+@keyframes order-in { from { opacity: 0; transform: translateY(12px); } }
+
+/* The live map (shop-map.js). .map is full-screen elsewhere; here it's a card. The drawn map shows until it loads. */
+.omap.map {
+  position: relative; inset: auto; height: 210px; border-radius: 20px; overflow: hidden;
+  background: url("/assets/images/map-bg.svg") center / cover no-repeat, var(--map-ground);
   box-shadow: 0 10px 30px rgba(41, 10, 69, .18);
-  display: flex; flex-direction: column; gap: 14px;
-  animation: ticket-in .45s var(--ease-out) backwards;
 }
-@keyframes ticket-in { from { opacity: 0; transform: translateY(14px); } }
+.omap[hidden] { display: none; }
 
-/* the status stamp: a live dot while the order is on its way */
-.ticket__stamp {
-  align-self: flex-start; margin: 0; padding: 7px 12px; border-radius: 999px;
-  display: flex; align-items: center; gap: 7px;
-  background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+/* The ticket: a receipt with punched notches at each tear line */
+.ticket {
+  position: relative; display: flex; flex-direction: column; gap: 14px; padding: 20px 20px 18px;
+  background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px rgba(41, 10, 69, .14);
 }
-.ticket__live { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); animation: ticket-blink 1.4s ease-in-out infinite; }
-@keyframes ticket-blink { 50% { opacity: .25; } }
-.ticket__stamp.is-done { background: #e3f3e8; color: #1e6b3c; }
-.ticket__stamp.is-done .ticket__live { display: none; }
-.ticket__stamp.is-cancelled { background: var(--field); color: var(--sub); }
+.stamp {
+  align-self: flex-start; display: flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px;
+  background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800; line-height: 1; letter-spacing: .08em; text-transform: uppercase;
+}
+.stamp__live { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); animation: stamp-blink 1.4s ease-in-out infinite; }
+@keyframes stamp-blink { 50% { opacity: .25; } }
+.stamp.is-delivered { background: #e3f3e8; color: #1e6b3c; }
+.stamp.is-cancelled { background: var(--field); color: var(--sub); }
+.stamp.is-delivered .stamp__live, .stamp.is-cancelled .stamp__live { display: none; }
+.ticket__shop { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.15; color: var(--ink); }
+.ticket__meta { margin: 4px 0 0; font-size: 13px; font-weight: 500; color: var(--sub); }
+.ticket__now { margin: -4px 0 0; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); }
 
-.ticket__shop { margin: 0; font-family: var(--font-display); font-size: 24px; line-height: 1.15; font-weight: 800; color: var(--ink); }
-.ticket__meta { margin: 4px 0 0; font-size: 13px; line-height: 1.35; color: var(--sub); }
-.ticket__meta:empty { display: none; }
+/* Progress: four segments that fill in; the current one half gold, gently breathing */
+.segs { display: flex; gap: 4px; }
+.segs span { position: relative; flex: 1; height: 5px; border-radius: 3px; background: #ece4f6; overflow: hidden; }
+.segs span::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; background: #7b3fbf;
+  transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease-out), background-color .3s;
+}
+.segs .is-done::after { transform: scaleX(1); animation: seg-fill .6s var(--ease-out) backwards; }
+.segs .is-now::after { transform: scaleX(.55); background: var(--gold); animation: seg-fill .6s var(--ease-out) backwards, seg-breathe 1.8s ease-in-out .6s infinite; }
+.segs span:nth-child(2)::after { animation-delay: 120ms, .72s; }
+.segs span:nth-child(3)::after { animation-delay: 240ms, .84s; }
+.segs span:nth-child(4)::after { animation-delay: 360ms, .96s; }
+@keyframes seg-fill { from { transform: scaleX(0); } }
+@keyframes seg-breathe { 50% { opacity: .55; } }
+.steps { display: flex; justify-content: space-between; gap: 6px; margin-top: -6px; font-size: 11px; font-weight: 600; color: var(--sub); }
+.steps .is-on { color: var(--brand-deep); font-weight: 800; }
 
-/* the four steps (as on the Trips & Orders card): done purple, the current one half gold and breathing */
-.ticket__segs { display: flex; gap: 4px; }
-.ticket__segs span { position: relative; flex: 1; height: 5px; border-radius: 3px; background: #ece4f6; overflow: hidden; }
-.ticket__segs i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; transition: width .6s var(--ease-out); }
-.ticket__segs .is-done i { width: 100%; background: #7b3fbf; }
-.ticket__segs .is-now i { width: 55%; background: var(--gold); animation: ticket-breathe 1.8s ease-in-out infinite; }
-@keyframes ticket-breathe { 50% { opacity: .55; } }
-.ticket__steps { display: flex; justify-content: space-between; gap: 6px; margin-top: -6px; font-size: 11px; font-weight: 600; color: var(--sub); }
-.ticket__steps .is-now { color: var(--brand-deep); }
+/* The tear line: dashed, with a notch punched out of each side */
+.cut { position: relative; height: 0; margin: 4px -20px; border-top: 2px dashed #e6dcef; }
+.cut::before, .cut::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: #faf5f3; /* the page behind the ticket */ }
+.cut::before { left: -11px; }
+.cut::after { right: -11px; }
 
-/* the tear line, with a notch on each edge */
-.ticket__cut { position: relative; margin: 4px -20px; border-top: 2px dashed var(--line-brand); }
-.ticket__cut::before, .ticket__cut::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: #faf5f3; }
-.ticket__cut::before { left: -11px; }
-.ticket__cut::after { right: -11px; }
+/* Receipt lines */
+.orc { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.orc__line { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; animation: order-in .4s var(--ease-out) backwards; }
+.orc__line:nth-child(2) { animation-delay: 40ms; }
+.orc__line:nth-child(3) { animation-delay: 80ms; }
+.orc__line:nth-child(n + 4) { animation-delay: 120ms; }
+.orc__line dt { font-size: 14px; font-weight: 600; color: var(--ink); }
+.orc__line dt small { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--sub); }
+.orc__line dd { margin: 0; font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.orc__line--total dt, .orc__line--total dd { font-size: 18px; font-weight: 800; }
 
-.ticket__lines { margin: 0; display: flex; flex-direction: column; gap: 10px; }
-.ticket__line { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.ticket__line dt { font-size: 14px; font-weight: 600; color: var(--ink); }
-.ticket__line dt small { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--sub); }
-.ticket__line dd { margin: 0; font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.ticket__line--total { padding-top: 10px; border-top: 1px solid var(--line); }
-.ticket__line--total dt, .ticket__line--total dd { font-size: 18px; font-weight: 800; }
-.ticket__id { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: #f6f1fa; font-size: 12px; font-weight: 600; color: var(--sub); }
-.ticket__id code { font: 700 12px/1.2 ui-monospace, Consolas, monospace; color: var(--brand-deep); word-break: break-all; text-align: right; }
+/* Delivery: label left, value right, like the lines above */
+.odet { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.odet li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.odet span { color: var(--sub); font-weight: 600; }
+.odet b { color: var(--ink); font-weight: 700; text-align: right; }
 
-/* actions under the ticket, as wide as there are of them */
-.ticket__acts { display: flex; gap: 8px; }
-.tact {
-  flex: 1 1 0; min-width: 0; min-height: 64px; padding: 8px; border: 0; border-radius: 16px;
-  background: var(--surface); color: var(--brand-deep); text-decoration: none; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-  font: 700 12px/1.2 var(--font-body); text-align: center;
-  box-shadow: 0 1px 2px rgba(41, 10, 69, .06), 0 6px 18px rgba(41, 10, 69, .07);
+.ticket__id {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px;
+  background: #f6f1fa; font-size: 12px; font-weight: 600; color: var(--sub);
+}
+.ticket__id code { font: 700 12px/1.2 ui-monospace, Consolas, monospace; color: var(--brand-deep); overflow-wrap: anywhere; text-align: right; }
+
+/* Tip mysabak */
+.otip {
+  height: 52px; border: 0; border-radius: 16px; background: var(--gold); color: var(--ink); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px; font: 800 15px/1 var(--font-body);
   transition: transform .15s var(--ease-out);
 }
-.tact[hidden] { display: none; }
-.tact .icon { width: 20px; height: 20px; stroke: currentColor; }
-.tact:active { transform: scale(.96); }
-.tact--gold { background: var(--gold); color: var(--ink); }
+.otip[hidden] { display: none; }
+.otip .icon { width: 20px; height: 20px; stroke: var(--ink); }
+.otip:active { transform: scale(.97); }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticket, .ticket__live, .ticket__segs .is-now i { animation: none; }
-  .ticket__segs i, .tact { transition: none; }
-  .tact:active { transform: none; }
+  .order > *, .orc__line, .segs span::after { animation: none; }
+  .stamp__live { animation: none; }
+  .segs span::after, .otip { transition: none; }
+  .otip:active { transform: none; }
 }
