@@ -44,24 +44,19 @@ test('mood: compares today with the usual day, scaled to the hours passed', () =
   assert.match(moodFor({ ...day, sales: 1500, now: at(15) }).title, /\S/);
 });
 
-test('owner adds a branch; its manager sets up the branch account with the code and sees only that branch', async () => {
+test('owner adds a branch; its manager signs in with the login the owner entered and sees only that branch', async () => {
   await api.merchantSignIn(OWNER());
   await assert.rejects(api.addBranch({ ...newBranch, managerLogin: DEMO_ACCOUNTS.client.email }), { status: 409 });
   await assert.rejects(api.addBranch({ ...newBranch, closesAt: '08:00' }), { status: 400 });
-  const { branch, code } = await api.addBranch(newBranch);
-  assert.match(code, /^[A-Z2-9]{6}$/);
-  assert.equal(branch.account.status, 'invited');
+  const { branch } = await api.addBranch(newBranch);
+  assert.equal(branch.account.status, 'active');
   let home = await api.merchantHome();
   assert.equal(home.role, 'owner');
   assert.equal(home.branches.length, 3, 'main, the sample Talisay branch and the new one');
-  const { shops } = await api.listShops({ near: { lng: 123.942, lat: 10.333 } });
-  assert.notEqual(shops.find((s) => s.brand).id, branch.id, 'customers can’t order from a branch that isn’t set up');
 
   await api.merchantSignOut();
-  await assert.rejects(api.merchantSignIn({ login: 'rico@example.com', password: 'anything-1' }), { status: 403 });
-  await assert.rejects(api.setupBranchAccount({ code: 'WRONG1', login: 'rico@example.com', password: 'longenough' }), { status: 400 });
-  await assert.rejects(api.setupBranchAccount({ code, login: 'someone@example.com', password: 'longenough' }), { status: 400 });
-  await api.setupBranchAccount({ code: code.toLowerCase(), login: 'Rico@example.com', password: 'longenough' });
+  await assert.rejects(api.merchantSignIn({ login: 'someone@example.com', password: 'longenough' }), { status: 401 });
+  await api.merchantSignIn({ login: 'Rico@example.com', password: 'longenough' });
   home = await api.merchantHome();
   assert.equal(home.role, 'branch');
   assert.equal(home.branch.id, branch.id);
@@ -81,11 +76,12 @@ test('owner adds a branch; its manager sets up the branch account with the code 
   await api.setBranchAccount(branch.id, 'disabled');
   await assert.rejects(api.merchantSignIn({ login: 'rico@example.com', password: 'longenough' }), { status: 403 });
   await assert.rejects(api.shopMenu(branch.id), { status: 404 });
-  // A new manager gets a new code; the old one stops working
-  const again = await api.changeBranchManager(branch.id, { managerName: 'Joy Lim', managerLogin: '0917 555 0199' });
-  assert.notEqual(again.code, code);
-  await assert.rejects(api.setupBranchAccount({ code, login: 'rico@example.com', password: 'longenough' }), { status: 400 });
-  await api.setupBranchAccount({ code: again.code, login: '09175550199', password: 'longenough' });
+  // A new manager signs in with their own login; the old manager's no longer works
+  await api.changeBranchManager(branch.id, { managerName: 'Joy Lim', managerLogin: '0917 555 0199' });
+  await api.setBranchAccount(branch.id, 'active');
+  await api.merchantSignOut();
+  await assert.rejects(api.merchantSignIn({ login: 'rico@example.com', password: 'longenough' }), { status: 401 });
+  await api.merchantSignIn({ login: '09175550199', password: 'longenough' });
   assert.equal((await api.merchantHome()).name, 'Joy Lim');
 });
 

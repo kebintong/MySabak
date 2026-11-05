@@ -133,7 +133,7 @@ export const ROLES = {
     home: '/pages/driver.html', homeLabel: 'Driver home', homeIcon: 'i-wheel', signIn: '/pages/drive.html',
   },
   merchant: {
-    label: 'Merchant', tabs: ['merchant', 'merchantPos', 'merchantStats', 'merchantManage', 'support'],
+    label: 'Merchant', tabs: ['merchant', 'merchantPos', 'merchantStats', 'merchantManage'],
     home: '/pages/merchant-home.html', homeLabel: 'Shop dashboard', homeIcon: 'i-store', signIn: '/pages/merchant.html',
   },
   // Signs in on the customer form; not shown on any sign-in switch.

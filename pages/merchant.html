@@ -58,22 +58,6 @@
                 <button type="submit" class="button button--block" id="signinBtn">Sign in</button>
                 <p class="auth-legal">By signing in, you agree to mysabak’s <a href="#" data-soon="Merchant Terms">Merchant Terms</a> and <a href="#" data-soon="Privacy Policy">Privacy Policy</a>.</p>
               </form>
-              <!-- A branch manager's first time: the code from the shop owner, their login, a new password -->
-              <form class="form" id="setupForm" novalidate hidden>
-                <label class="field"><span class="field__label">Setup code from the shop owner</span>
-                  <input class="input setup-code" name="code" type="text" required maxlength="6" placeholder="ABC234"
-                         autocomplete="one-time-code" autocapitalize="characters" spellcheck="false"></label>
-                <label class="field"><span class="field__label">Your mobile number or email</span>
-                  <input class="input" name="login" type="text" required placeholder="The one the owner entered for you"
-                         autocomplete="username" autocapitalize="off" spellcheck="false"></label>
-                <div class="field"><label class="field__label" for="newPassword">Choose a password</label>
-                <div class="input-wrap"><input class="input" id="newPassword" name="password" type="password" required minlength="8" autocomplete="new-password">
-                <button type="button" class="input-wrap__btn" data-reveal="newPassword" aria-label="Show password">Show</button></div>
-                <span class="field__hint">At least 8 characters.</span></div>
-                <p class="field__error" role="alert" hidden></p>
-                <button type="submit" class="button button--block">Set up and sign in</button>
-              </form>
-              <p class="signin__new" id="setupSwitch"><span class="signin__ask">Managing a branch?</span> <span class="signin__hint">Use the setup code from your shop owner.</span> <a class="auth-link auth-link--strong" href="#" id="setupLink">Set up a branch account</a></p>
               <p class="signin__new"><span class="signin__ask">Want to sell on mysabak?</span> <span class="signin__hint">List your shop and take orders on mysabak.</span> <a class="auth-link auth-link--strong" href="#" id="partnerLink">Become a partner</a></p>
           </div>
         </div>

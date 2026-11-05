@@ -1,7 +1,7 @@
 /* Your order (pages/order.html?id=…): a live map of the delivery (shop, drop-off, the rider gliding along), then the
    order as a receipt ticket (status, progress, lines, delivery) and a tip for mysabak. */
 import { CONFIG } from '../config.js';
-import { orderStatus, myTips, shopMenu, straightLine, ORDER_STEPS } from '../api.js';
+import { orderStatus, myTips, shopMenu, orderRoute, ORDER_STEPS } from '../api.js';
 import { $, $$, mountChrome, esc, peso, pesoOr, params, when, openTipSheet, pop, calm } from '../ui.js';
 import { shopMap } from '../shop-map.js';
 
@@ -112,11 +112,12 @@ async function setUpMap(order) {
   map = shopMap($('#orderMap'), { cooperative: true, padding: () => ({ top: 56, bottom: 36, left: 44, right: 44 }) });
   if (shop) { map.setShops([shop]); map.setActive(shop.id); }
   if (to) map.setDest(to, 'You');
-  if (shop && to) {
-    const coords = straightLine(shop, to).coords;
-    map.setRoute(coords);
-    map.fit(coords);
-  } else map.fit([[(shop || to).lng, (shop || to).lat]]);
+  if (!(shop && to)) { map.fit([[(shop || to).lng, (shop || to).lat]]); return true; }
+  map.fit([[shop.lng, shop.lat], [to.lng, to.lat]]);
+  // The roads between them (a straight line if routing fails); the rider rides these too
+  const coords = await orderRoute(order).catch(() => [[shop.lng, shop.lat], [to.lng, to.lat]]);
+  map.setRoute(coords);
+  map.fit(coords, { animate: true });
   return true;
 }
 
