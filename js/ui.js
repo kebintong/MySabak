@@ -188,9 +188,10 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
 }
 
 /* What the round button shows besides its icons: the shop order (Cart step: its total; gold badge: the item
-   count) and a live ride or parcel (its step: the fare; gold badge: minutes until the driver, then drop-off) */
+   count) and a live ride or parcel (its step: an icon for where it's at over the fare; gold badge: minutes until
+   the driver, then to drop-off). Gold notches on the rim mark every step with something live. */
 const order = { count: 0, total: '' };
-let trip = null; // { kind:'ride'|'express', fare:'₱120'|'', status, eta:number|null }
+let trip = null; // { kind:'ride'|'express', vehicle, fare:'₱120'|'', status, eta:number|null }
 let onChange = () => {}; // set by armLoop: the dial follows the order and the trip
 
 /** Show the order on the round button: item count and total (e.g. "₱360"); 0 items shows the plain cart. */
@@ -208,10 +209,11 @@ export function trackTrip() {
   myActiveTrip().then((t) => {
     const live = t && t.status !== 'completed' ? t : null;
     const p = live && live.booking.price;
-    trip = live && { kind: live.kind, status: live.status, eta: live.etaMinutes, fare: p && isNum(p.total) ? peso(p.total) : '' };
+    trip = live && { kind: live.kind, vehicle: live.booking.vehicle, status: live.status, eta: live.etaMinutes,
+      fare: p && isNum(p.total) ? peso(p.total) : '' };
     onChange();
-    // shortcut: polls every 5 s while a trip is live; a backend could push status changes instead
-    if (live) tripTimer = setTimeout(trackTrip, 5000);
+    // shortcut: polls while a trip is live (every 1 s while finding a driver, then 5 s); a backend could push instead
+    if (live) tripTimer = setTimeout(trackTrip, live.status === 'searching' ? 1000 : 5000);
   }).catch(() => { /* no trip shown: the ride screen still has it */ });
 }
 
@@ -280,8 +282,13 @@ export function turnDelta(prev, next) {
 
 // The live trip's step: Parcel for an Express delivery, Ride otherwise
 const tripStep = () => (trip ? (trip.kind === 'express' ? PARCEL : RIDE) : -1);
-// A step's money in place of its icon: the Cart's order total, the live trip's fare ('' = the icon)
-const face = (i) => (i === CART ? order.total : i === tripStep() ? trip.fare : '');
+// Something live on a step: an order on the Cart, the trip on its step (a gold notch on the rim)
+const isLive = (i) => (i === CART && order.count > 0) || i === tripStep();
+// What a step looks like right now, as a key: its art is redrawn (with a bounce) when this changes
+const face = (i) => (i === CART ? order.total : i === tripStep() ? `${trip.status}|${trip.fare}` : '');
+// The trip's icon for where it's at: finding a driver, the booked vehicle on its way, the driver here, off to the pin
+const TRIP_ICON = { searching: 'i-search', arrived: 'i-hand', on_trip: 'i-pin' };
+const tripIcon = () => TRIP_ICON[trip.status] || (CONFIG.vehicles.find((v) => v.id === trip.vehicle) || { icon: 'i-car' }).icon;
 // A step's gold badge: the trip's minutes ("Here" once the driver is) on its step, else the order's item count
 function badge(i) {
   if (i === tripStep()) return trip.status === 'arrived' ? 'Here' : isNum(trip.eta) ? `${trip.eta}m` : '';
@@ -290,17 +297,21 @@ function badge(i) {
 // Words for screen readers: what the step holds right now
 function says(i) {
   if (i === tripStep()) {
-    const t = { arriving: isNum(trip.eta) ? `driver ${trip.eta} min away` : 'driver on the way', arrived: 'driver is here',
-      on_trip: isNum(trip.eta) ? `${trip.eta} min to drop-off` : 'on the way' }[trip.status] || 'booked';
+    const t = { searching: 'looking for a driver', arriving: isNum(trip.eta) ? `driver ${trip.eta} min away` : 'driver on the way',
+      arrived: 'driver is here', on_trip: isNum(trip.eta) ? `${trip.eta} min to drop-off` : 'on the way' }[trip.status] || 'booked';
     return `${LOOP[i].label}, ${t}${trip.fare ? `, ${trip.fare}` : ''}`;
   }
   if (i === CART && order.count) return `Cart, ${order.count} item${order.count === 1 ? '' : 's'}${order.total ? `, ${order.total}` : ''}`;
   return LOOP[i].label;
 }
-// The money is smaller when long, so ₱12,345 still fits the circle
-const artInner = (i) => (face(i)
-  ? `<b class="tab__total${face(i).length > 6 ? ' tab__total--long' : ''}">${esc(face(i))}</b>`
-  : icon(LOOP[i].icon));
+// The trip: its status icon over the fare. The order: its total, smaller when long so ₱12,345 still fits the circle
+function artInner(i) {
+  if (i === tripStep()) {
+    return `<span class="tab__trip tab__trip--${trip.status}">${icon(tripIcon())}${trip.fare ? `<b class="tab__fare">${esc(trip.fare)}</b>` : ''}</span>`;
+  }
+  if (i === CART && order.total) return `<b class="tab__total${order.total.length > 6 ? ' tab__total--long' : ''}">${esc(order.total)}</b>`;
+  return icon(LOOP[i].icon);
+}
 const loopArt = (i) => `<span class="tab__art" data-face="${esc(face(i))}">${artInner(i)}</span>`;
 // The icon tilts with the finger between steps, so it feels attached (at most ±36°)
 const tilt = (deg) => (deg ? `rotate(${(deg * 0.4).toFixed(1)}deg)` : '');
@@ -327,6 +338,9 @@ function armLoop(nav) {
   const box = $('.tab__icon', food);
   box.insertAdjacentHTML('afterbegin', '<span class="tab__roll"></span>'); // keeps the count, if it's in already
   const roll = $('.tab__roll', box);
+  // One notch per step around the rim (Cart at the top, then clockwise like the turn): gold where something's live
+  box.insertAdjacentHTML('beforeend', `<span class="tab__notches" aria-hidden="true">${LOOP.map((_, n) => `<i style="--n:${n}"></i>`).join('')}</span>`);
+  const notches = $$('.tab__notches i', box);
   food.insertAdjacentHTML('beforeend', '<span class="sr-only" id="loopHint" aria-live="polite"></span>');
   food.setAttribute('aria-describedby', 'loopHint');
   const page = () => loopStep(location.pathname, location.hash, nav.dataset.tabs);
@@ -344,7 +358,10 @@ function armLoop(nav) {
     step = i;
     const label = says(i);
     $('.tab__label', food).textContent = label;
-    $('#loopHint').textContent = `Showing ${label}${at(i) ? '' : ', tap to open it'}. Turn it, or press the arrow keys, to pick another page.`;
+    // The other live step (an order while a ride is shown, or the ride while the Cart is) is named too
+    const also = LOOP.map((_, k) => k).filter((k) => k !== i && isLive(k)).map(says);
+    $('#loopHint').textContent = `Showing ${label}${at(i) ? '' : ', tap to open it'}.${also.length ? ` Also: ${also.join('; ')}.` : ''} Turn it, or press the arrow keys, to pick another page.`;
+    notches.forEach((n, k) => { n.classList.toggle('is-live', isLive(k)); n.classList.toggle('is-shown', k === i); });
     const text = badge(i);
     if (text === badged.text && i === badged.step) return;
     $$('.tab__count', food).forEach((n) => n.remove());

@@ -277,6 +277,8 @@ export async function bookRide(booking) {
   const id = demo.id(booking.kind === 'express' ? 'EXP' : 'RIDE');
   const record = { id, ...booking, price: { ...booking.price, tip }, at: Date.now() };
   demo.set('lastBooking', record);
+  // Live from now on, on every page (myActiveTrip): first looking for a driver, until endTrip() or cancelRide()
+  demo.set('activeTrip', { id, booking: record, driver: null, bookedAt: Date.now(), acceptedAt: null, pausedMs: 0, plan: null });
   demo.set('rides', [record, ...demo.get('rides', [])].slice(0, 20));
   if (tip) {
     const tipRecord = { id: demo.id('TIP'), orderId: id, orderType: booking.kind, amount: tip, method: booking.payment, at: Date.now() };
@@ -305,14 +307,36 @@ export async function myTrips() {
 export async function findDriver(bookingId) {
   const booking = demo.get('lastBooking', null);
   if (!booking || booking.id !== bookingId) throw Object.assign(new Error('Booking not found'), { status: 404 });
-  await wait(3200);
+  const live = demo.get('activeTrip', null);
+  const bookedAt = live && live.id === bookingId ? live.bookedAt : Date.now();
+  await wait(Math.max(0, bookedAt + DEMO_ACCEPT_MS - Date.now())); // a page opened later waits only what's left
   if ((demo.get('cancelled', []) || []).includes(bookingId)) throw Object.assign(new Error('Cancelled'), { status: 499 });
-  const d = DEMO_DRIVERS[booking.vehicle] || DEMO_DRIVERS.sedan;
-  const driver = { id: `DRV-${booking.vehicle}`, name: d.name, rating: d.rating, trips: d.trips, phone: null, photo: null,
-    vehicle: { type: booking.vehicle, ...d.vehicle }, demo: true };
-  // The trip is live from here, on every page (myActiveTrip), until endTrip() or cancelRide()
-  demo.set('activeTrip', { id: bookingId, booking, driver, acceptedAt: Date.now(), pausedMs: 0, plan: null });
-  return driver;
+  const a = demo.get('activeTrip', null);
+  if (!a || a.id !== bookingId) throw Object.assign(new Error('Cancelled'), { status: 499 });
+  return demoAccept(a).driver;
+}
+
+// DEMO: a sample driver accepts 3.2 s after booking, whichever page is open then
+const DEMO_ACCEPT_MS = 3200;
+function demoAccept(a) {
+  if (a.driver) return a;
+  const d = DEMO_DRIVERS[a.booking.vehicle] || DEMO_DRIVERS.sedan;
+  a.driver = { id: `DRV-${a.booking.vehicle}`, name: d.name, rating: d.rating, trips: d.trips, phone: null, photo: null,
+    vehicle: { type: a.booking.vehicle, ...d.vehicle }, demo: true };
+  a.acceptedAt = a.bookedAt + DEMO_ACCEPT_MS;
+  a.plan = a.plan || demoPlan(a.booking, 1, 3); // timings from the start, so every page has the ETA; the map redraws the paths
+  demo.set('activeTrip', a);
+  return a;
+}
+
+// DEMO: how long each part of a trip takes (ms) and its minutes to show; ~1 km approach unless the route says
+function demoPlan(b, km, approachMin) {
+  return [
+    { status: 'arriving', ms: Math.min(12000, Math.max(6000, km * 6000)), eta: approachMin || 3 },
+    { status: 'arrived', ms: 2500, eta: 0 },
+    { status: 'on_trip', ms: 14000, eta: (b.trip && b.trip.minutes) || null },
+    { status: 'completed', ms: 0, eta: 0 },
+  ];
 }
 
 /** Cancel a booking (while searching, or before pickup). DEMO: remembered in this browser. */
@@ -323,15 +347,19 @@ export async function cancelRide(bookingId) {
 }
 
 /**
- * The customer's live Ride or Express booking (a driver accepted it), so any page can show it and the ride
- * screen can pick it up again. null when there's none. status as onTripUpdate; 'completed' stays until endTrip().
- * Backend: the server knows the trip's status; return it here.
+ * The customer's live Ride or Express booking, so any page can show it and the ride screen can pick it up again.
+ * null when there's none. status: 'searching' (no driver yet), then as onTripUpdate; 'completed' stays until
+ * endTrip(). Backend: the server knows the trip's status; return it here.
  * DEMO: worked out from the clock and the timings onTripUpdate saved.
- * @returns {Promise<null|{id, kind:'ride'|'express', status:string, etaMinutes:number|null, booking:object, driver:object}>}
+ * @returns {Promise<null|{id, kind:'ride'|'express', status:string, etaMinutes:number|null, booking:object, driver:object|null}>}
  */
 export async function myActiveTrip() {
-  const a = demo.get('activeTrip', null);
+  let a = demo.get('activeTrip', null);
   if (!a) return null;
+  if (!a.driver) {
+    if (Date.now() < a.bookedAt + DEMO_ACCEPT_MS) return { id: a.id, kind: a.booking.kind, status: 'searching', etaMinutes: null, booking: a.booking, driver: null };
+    a = demoAccept(a);
+  }
   if (!a.plan) return { id: a.id, kind: a.booking.kind, status: 'arriving', etaMinutes: null, booking: a.booking, driver: a.driver };
   const { i, f } = phaseAt(a.plan, Date.now() - a.acceptedAt - a.pausedMs);
   const ph = a.plan[i];
@@ -384,12 +412,7 @@ export function onTripUpdate(bookingId, onUpdate) {
     if (stopped) return;
     const km = approach.distanceKm || 1;
     // The timings are saved once (myActiveTrip reads them); a resumed trip keeps them and only redraws the paths
-    const plan = a.plan || [
-      { status: 'arriving', ms: Math.min(12000, Math.max(6000, km * 6000)), eta: approach.minutes || 3 },
-      { status: 'arrived', ms: 2500, eta: 0 },
-      { status: 'on_trip', ms: 14000, eta: (b.trip && b.trip.minutes) || null },
-      { status: 'completed', ms: 0, eta: 0 },
-    ];
+    const plan = a.plan || demoPlan(b, km, approach.minutes);
     const paths = [approach.coords, [pickup], route, [route[route.length - 1]]];
     phases = plan.map((p, i) => ({ ...p, path: paths[i] }));
     if (!a.plan) { a.plan = plan; save(); }
