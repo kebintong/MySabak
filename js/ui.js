@@ -3,8 +3,8 @@
    Top bar + tab bar, toast, place search, tip picker and tip sheet.
    ========================================================= */
 import { CONFIG } from './config.js';
-import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut } from './api.js';
-import { peso as formatPeso, cleanTip } from './money.js';
+import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut, shopMenu } from './api.js';
+import { peso as formatPeso, cleanTip, cartTotals } from './money.js';
 import { getCart } from './cart.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -173,59 +173,109 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
         const href = (role.hrefs && role.hrefs[id]) || t.href;
         const on = t.id === active;
         return `<a data-tab="${t.id}" class="tab${on ? ' is-active' : ''}" href="${href}"${on ? ' aria-current="page"' : ''}>`
-          + `<span class="tab__icon">${t.id === 'food' ? FACE : icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
+          + `<span class="tab__icon">${t.id === 'food' ? '' : icon(t.icon, `icon--xl${on ? '' : ' icon--muted'}`)}</span>`
           + `<span class="tab__label">${t.label}</span></a>`;
       }).join('');
+      foodToCart(); // first: the dial starts where the order says, without a roll
       armLoop(nav);
-      foodToCart(nav);
     }
     return user;
   });
 }
 
-/** With items in the order, a tap on the round button goes to it (checkout) and a gold count shows how many.
-    The shop page swaps this for its own order sheet and total. */
-function foodToCart(nav) {
-  const food = $('[data-tab="food"]', nav);
-  const count = getCart().lines.reduce((n, l) => n + l.qty, 0);
-  if (!food || !count) return;
-  food.href = '/pages/checkout.html';
-  food.dataset.order = count;
-  food.setAttribute('aria-label', `View order: ${count} item${count === 1 ? '' : 's'}`);
-  $$('.tab__count', food).forEach((n) => n.remove());
-  $('.tab__icon', food).insertAdjacentHTML('beforeend', `<span class="tab__count">${count}</span>`);
+/* The order on the round button: a gold item count, and on the Cart step the total in place of the cart icon */
+const order = { count: 0, total: '' };
+let onOrder = () => {}; // set by armLoop: the dial follows the order
+
+/** Show the order on the round button: item count and total (e.g. "₱360"); 0 items shows the plain cart. */
+export function showOrder(count, total = '') {
+  const changed = count !== order.count;
+  order.count = count;
+  order.total = count ? total : '';
+  const food = $('.tab[data-tab="food"]');
+  if (food) {
+    $$('.tab__count', food).forEach((n) => n.remove());
+    if (count) $('.tab__icon', food).insertAdjacentHTML('beforeend', `<span class="tab__count" aria-hidden="true">${count}</span>`);
+    if (count && changed) pop($('.tab__count', food), 0.6);
+  }
+  onOrder();
 }
 
-/* ---------- The round button: a loop of pages ----------
-   It shows where you are: the mascot (Home), Ride, Food or Parcel. Hold and swipe it right (or press →): it
-   rolls to the next one and goes there, Home → Ride → Food → Parcel → Home. A tap does nothing, unless
-   there's an order to open. */
-const FACE = '<img class="tab__face" src="/assets/images/mascot-face.png" alt="" width="128" height="132">';
+// Every page: the count straight away, the total once the shop's menu is in (prices always come from the menu)
+function foodToCart() {
+  const cart = getCart();
+  showOrder(cart.lines.reduce((n, l) => n + l.qty, 0), order.total);
+  if (!cart.lines.length) return;
+  shopMenu(cart.shopId).then((s) => {
+    if (getCart().shopId !== cart.shopId) return; // the cart changed shops meanwhile
+    const t = cartTotals(getCart(), s.menu);
+    showOrder(t.count, peso(t.subtotal));
+  }).catch(() => { /* shop gone: the count still shows */ });
+}
+
+/** Cart lines (money.js cartTotals → lines) as list rows with a −/+ stepper (Cart page, checkout). */
+export function cartRows(lines) {
+  return lines.map((l) => `<li class="row">
+      <div class="row__main"><span class="row__title">${esc(l.name)}</span>
+        ${l.options.length ? `<span class="row__sub">${esc(l.options.join(', '))}</span>` : ''}
+        ${l.note ? `<span class="row__sub">“${esc(l.note)}”</span>` : ''}
+        <span class="row__sub">${peso(l.price)} each</span></div>
+      <div class="stepper" role="group" aria-label="${esc(l.name)} quantity">
+        <button type="button" data-step="-1" data-line="${esc(l.key)}" aria-label="One less">${icon('i-minus', 'icon--sm')}</button>
+        <span>${l.qty}</span>
+        <button type="button" data-step="1" data-line="${esc(l.key)}" aria-label="One more">${icon('i-plus', 'icon--sm')}</button>
+      </div><span class="row__end">${peso(l.total)}</span></li>`).join('');
+}
+
+/* ---------- The round button: a dial of pages ----------
+   It shows where you are: Ride, Food, Parcel, or the Cart (the Cart page, checkout, and every page outside the
+   loop). With an order, the Cart shows its total, and the food pages rest on it. Turn a finger round it (or
+   press → / ←): each quarter turn rolls one icon on, clockwise Cart → Ride → Food → Parcel → Cart, back the
+   other way. Turning never leaves the page; a tap opens the icon shown (Food, with an order: that order's shop).
+   On its own page a tap does nothing. A page can take over a tap (the shop opens its order sheet for Cart) by
+   cancelling the 'loop:open' event, whose detail is the step's label. */
+const CART = 0;
+const FOOD = 2;
 export const LOOP = [
-  { label: 'Home', href: '/' },
+  { label: 'Cart', href: '/pages/cart.html', icon: 'i-cart' },
   { label: 'Ride', href: '/#ride', icon: 'i-car' },
   { label: 'Food', href: '/pages/shops.html', icon: 'i-food' },
   { label: 'Parcel', href: '/#parcel', icon: 'i-box' },
 ];
-const SWIPE = 36; // px to the right that counts as a swipe
+const QUARTER = 90; // degrees of turn per icon
+const DEAD = 12; // px round the centre where the angle jumps about: ignored
 const SPRING = 'cubic-bezier(.34, 1.56, .64, 1)';
 const GLIDE = 'cubic-bezier(.22, 1, .36, 1)';
 
-/** Which LOOP step a page is. tab: the tab bar's data-tabs (the food pages say 'food'). */
+/** Which LOOP step a page shows. tab: the tab bar's data-tabs (the food, cart and checkout pages say 'food'). */
 export function loopStep(path, hash, tab) {
-  if (tab === 'food') return 2;
+  if (path.startsWith('/pages/cart') || path.startsWith('/pages/checkout')) return CART;
+  if (tab === 'food') return FOOD;
   if (path !== '/' && path !== '/index.html') return 0;
   if (hash === '#parcel') return 3;
   return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? 1 : 0;
 }
 
-const loopArt = (i) => (LOOP[i].icon ? `<span class="tab__art">${icon(LOOP[i].icon)}</span>` : `<span class="tab__art tab__art--face">${FACE}</span>`);
-// How far the icon leans as the thumb pulls right: quick at first, then it stiffens and stops, so it stays in the circle
-const lean = (dx) => {
-  const k = 1 - Math.exp(-Math.max(0, dx) / 28);
-  return k ? `translateX(${(k * 5).toFixed(1)}px) rotate(${(k * 26).toFixed(1)}deg)` : '';
-};
-const LEARNED_KEY = 'mysabak.swiped'; // set after the first swipe: no more hint
+/** Change in angle from prev to next, in degrees, the short way round: (-180, 180]. */
+export function turnDelta(prev, next) {
+  const d = (((next - prev) % 360) + 360) % 360;
+  return d > 180 ? d - 360 : d;
+}
+
+// The Cart with an order shows its total (smaller when long, so ₱12,345 still fits the circle)
+const artInner = (i) => (i === CART && order.total
+  ? `<b class="tab__total${order.total.length > 6 ? ' tab__total--long' : ''}">${esc(order.total)}</b>`
+  : icon(LOOP[i].icon));
+const loopArt = (i) => `<span class="tab__art" data-total="${esc(i === CART ? order.total : '')}">${artInner(i)}</span>`;
+// The icon tilts with the finger between steps, so it feels attached (at most ±36°)
+const tilt = (deg) => (deg ? `rotate(${(deg * 0.4).toFixed(1)}deg)` : '');
+const LEARNED_KEY = 'mysabak.swiped'; // set after the first turn: no more hint
+
+// Food with an order goes back to the shop it's from
+function loopHref(i) {
+  const cart = getCart();
+  return LOOP[i].label === 'Food' && cart.lines.length ? `/pages/shop.html?id=${encodeURIComponent(cart.shopId)}` : LOOP[i].href;
+}
 
 // Same page (Home's #ride / #parcel): change the hash so app.js routes without a reload
 function loopGo(href) {
@@ -240,69 +290,73 @@ function armLoop(nav) {
   if (!food || food.dataset.loop) return;
   food.dataset.loop = '1';
   const box = $('.tab__icon', food);
-  box.innerHTML = '<span class="tab__roll"></span>';
+  box.insertAdjacentHTML('afterbegin', '<span class="tab__roll"></span>'); // keeps the count, if it's in already
   const roll = $('.tab__roll', box);
-  food.insertAdjacentHTML('beforeend', '<span class="sr-only" id="loopHint"></span>');
+  food.insertAdjacentHTML('beforeend', '<span class="sr-only" id="loopHint" aria-live="polite"></span>');
   food.setAttribute('aria-describedby', 'loopHint');
-  const here = () => loopStep(location.pathname, location.hash, nav.dataset.tabs);
+  const page = () => loopStep(location.pathname, location.hash, nav.dataset.tabs);
+  // Where the dial rests: this page's step, but the food pages rest on the Cart (and its total) with an order
+  const rest = () => (page() === FOOD && order.count ? CART : page());
+  // On that step's own page? Checkout and pages outside the loop show the Cart but aren't the Cart page
+  const at = (i) => i === page() && (i !== CART || location.pathname.startsWith('/pages/cart'));
+  const shown = () => roll.lastElementChild; // older icons may still be rolling out before it
   let step = 0;
-  let start = null; // where this press began
-  let turning = false;
+  let rested = 0; // the rest step last time we looked: a dial still there follows the order
+  let press = null; // this press: the button's centre, the last angle, degrees turned since the last step
   let swiped = false; // this press turned the button, so its click must not follow the link
   const name = (i) => {
     step = i;
-    $('.tab__label', food).textContent = LOOP[i].label;
-    $('#loopHint').textContent = `Swipe right, or press the right arrow, for ${LOOP[(i + 1) % LOOP.length].label}.`;
+    const label = i === CART && order.count
+      ? `Cart, ${order.count} item${order.count === 1 ? '' : 's'}${order.total ? `, ${order.total}` : ''}` : LOOP[i].label;
+    $('.tab__label', food).textContent = label;
+    $('#loopHint').textContent = `Showing ${label}${at(i) ? '' : ', tap to open it'}. Turn it, or press the arrow keys, to pick another page.`;
   };
-  const paint = (i) => { roll.innerHTML = loopArt(i); name(i); };
-  paint(here());
+  const paint = (i) => { roll.innerHTML = loopArt(i); name(i); rested = rest(); };
+  paint(rest());
+  // Only a person's turn counts (not the dial following the order)
+  const markLearned = () => { try { localStorage.setItem(LEARNED_KEY, '1'); } catch (_) { /* storage off: the hint keeps showing */ } };
 
-  // Swiping rolls the next icon in while the thumb is still down; letting go opens it, dragging back undoes it
-  let armed = null;
-  const arm = () => {
-    const to = (step + 1) % LOOP.length;
-    const old = $('.tab__art', roll);
+  // One icon on (dir 1) or back (dir -1), like a wheel: the shown icon rolls out one side, the next rolls in from the other
+  const turn = (dir, to = (step + dir + LOOP.length) % LOOP.length) => {
+    const old = shown();
     roll.insertAdjacentHTML('beforeend', loopArt(to));
-    const neu = roll.lastElementChild;
+    const neu = shown();
     if (navigator.vibrate) navigator.vibrate(12);
     const quick = calm();
-    // a wheel turning right: the old icon rolls out right, the next rolls in from the left and settles
-    const out = old.animate(quick ? [{ opacity: 1 }, { opacity: 0 }]
-      : [{ transform: old.style.transform || 'none' }, { transform: 'translateX(115%) rotate(150deg) scale(.5)', opacity: 0 }],
-    { duration: quick ? 160 : 380, easing: GLIDE, fill: 'forwards' });
-    const into = neu.animate(quick ? [{ opacity: 0 }, { opacity: 1 }]
-      : [{ transform: 'translateX(-115%) rotate(-150deg) scale(.5)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-    { duration: quick ? 160 : 560, easing: quick ? 'linear' : SPRING, fill: 'both' });
+    const x = 115 * dir;
+    const r = 150 * dir;
+    old.animate(quick ? [{ opacity: 1 }, { opacity: 0 }]
+      : [{ transform: old.style.transform || 'none' }, { transform: `translateX(${x}%) rotate(${r}deg) scale(.5)`, opacity: 0 }],
+    { duration: quick ? 160 : 380, easing: GLIDE, fill: 'forwards' }).finished.then(() => old.remove(), () => {});
+    // 'backwards', not 'both': once settled, its inline tilt must win again
+    neu.animate(quick ? [{ opacity: 0 }, { opacity: 1 }]
+      : [{ transform: `translateX(${-x}%) rotate(${-r}deg) scale(.5)`, opacity: 0 }, { transform: 'none', opacity: 1 }],
+    { duration: quick ? 160 : 560, easing: quick ? 'linear' : SPRING, fill: 'backwards' });
     if (!quick) box.animate([{ transform: 'none' }, { transform: 'scale(1.12)', offset: 0.3 }, { transform: 'none' }], { duration: 560, easing: GLIDE });
-    food.classList.add('is-turning');
-    armed = { to, old, neu, out, into };
-  };
-  const disarm = () => {
-    const { neu, out, into } = armed;
-    armed = null;
-    food.classList.remove('is-turning');
-    out.reverse();
-    into.reverse();
-    into.finished.then(() => { neu.remove(); out.cancel(); }, () => {});
-  };
-  const commit = () => {
-    const { to, old, into } = armed;
-    armed = null;
-    turning = true;
-    try { localStorage.setItem(LEARNED_KEY, '1'); } catch (_) { /* storage off: the hint keeps showing */ }
-    into.finished.then(() => { // a quick flick may let go mid-roll: finish it first
-      old.remove();
-      food.classList.remove('is-turning', 'is-held');
-      name(to);
-      turning = false;
-      loopGo(LOOP[to].href);
-    });
+    name(to);
   };
 
-  // Until the first swipe: a second after load the button nudges right, the next icon peeks in, and a bubble says so
+  // The order changed: a dial resting where it should rolls to the new rest (first item in a shop → the Cart
+  // and its total; last one out → back to Food); a dial on the Cart just shows the new total
+  onOrder = () => {
+    const was = rested;
+    rested = rest();
+    if (press) return;
+    if (step === was && rested !== was) { turn(1, rested); return; }
+    if (step !== CART) return;
+    const art = shown();
+    name(CART);
+    const before = art.dataset.total;
+    if (before === order.total) return;
+    art.dataset.total = order.total;
+    art.innerHTML = artInner(CART);
+    if (before) pop(box, 1.1); // a changed total bounces; the first one arriving on load doesn't
+  };
+
+  // Until the first turn: a second after load the button tilts, the next icon peeks in, and a bubble says so
   const hint = () => {
-    if (start || turning) return;
-    box.insertAdjacentHTML('beforeend', '<span class="tab__tip" aria-hidden="true">Swipe me →</span>');
+    if (press) return;
+    box.insertAdjacentHTML('beforeend', '<span class="tab__tip" aria-hidden="true">Turn me ↻</span>');
     const tip = box.lastElementChild;
     tip.addEventListener('animationend', () => tip.remove());
     if (calm()) return;
@@ -310,7 +364,7 @@ function armLoop(nav) {
     roll.insertAdjacentHTML('beforeend', loopArt((step + 1) % LOOP.length));
     const peek = roll.lastElementChild;
     const t = { duration: 1200, easing: GLIDE };
-    art.animate([{ transform: 'none' }, { transform: lean(40), offset: 0.4 }, { transform: 'none' }], t);
+    art.animate([{ transform: 'none' }, { transform: tilt(70), offset: 0.4 }, { transform: 'none' }], t);
     peek.animate([
       { transform: 'translateX(-115%) rotate(-150deg)', opacity: 0 },
       { transform: 'translateX(-62%) rotate(-55deg)', opacity: 1, offset: 0.4 },
@@ -322,27 +376,37 @@ function armLoop(nav) {
   if (!learned) setTimeout(hint, 1000);
 
   food.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || turning) return;
-    start = { x: e.clientX, y: e.clientY };
+    if (e.button !== 0) return;
+    const r = box.getBoundingClientRect();
+    press = { cx: r.left + r.width / 2, cy: r.top + r.height / 2, angle: null, turned: 0 };
     food.classList.add('is-held');
     swiped = false;
     try { food.setPointerCapture(e.pointerId); } catch (_) { /* pointer already gone */ }
   });
   food.addEventListener('pointermove', (e) => {
-    if (!start || turning) return;
-    const dx = e.clientX - start.x;
-    if (armed) { if (dx < SWIPE / 2) disarm(); return; }
-    // mostly rightward counts, even drifting up or down (within ~50°)
-    if (dx >= SWIPE && Math.abs(e.clientY - start.y) < dx * 1.2) { swiped = true; arm(); return; }
-    $('.tab__art', roll).style.transform = lean(dx); // leans with the thumb, so it feels attached
+    if (!press) return;
+    const dx = e.clientX - press.cx;
+    const dy = e.clientY - press.cy;
+    if (Math.hypot(dx, dy) < DEAD) { press.angle = null; return; }
+    // screen y points down, so a growing angle is clockwise
+    const a = (Math.atan2(dy, dx) * 180) / Math.PI;
+    if (press.angle !== null) press.turned += turnDelta(press.angle, a);
+    press.angle = a;
+    if (Math.abs(press.turned) > 20) swiped = true; // a turn, not a tap
+    while (Math.abs(press.turned) >= QUARTER) {
+      const dir = Math.sign(press.turned);
+      press.turned -= dir * QUARTER;
+      food.classList.add('is-turning');
+      turn(dir);
+      markLearned();
+    }
+    shown().style.transform = tilt(press.turned);
   });
-  const release = (e) => {
-    if (!start) return;
-    start = null;
-    if (armed && e.type === 'pointerup') { commit(); return; }
-    if (armed) disarm();
-    food.classList.remove('is-held');
-    const art = $('.tab__art', roll);
+  const release = () => {
+    if (!press) return;
+    press = null;
+    food.classList.remove('is-held', 'is-turning');
+    const art = shown();
     if (!art.style.transform) return;
     art.animate([{ transform: art.style.transform }, { transform: 'none' }], { duration: 420, easing: SPRING });
     art.style.transform = '';
@@ -352,13 +416,26 @@ function armLoop(nav) {
   food.addEventListener('dragstart', (e) => e.preventDefault()); // a dragged link would cancel the pointer
   food.addEventListener('contextmenu', (e) => e.preventDefault());
   food.addEventListener('click', (e) => {
-    if (swiped) { swiped = false; e.preventDefault(); e.stopImmediatePropagation(); return; } // nor the shop's order sheet
-    if (!food.dataset.order) e.preventDefault(); // a tap does nothing (the shop page still opens its order sheet)
+    e.preventDefault(); // the link's href is only for no-JS; the dial decides
+    if (swiped) { swiped = false; return; }
+    if (!at(step)) {
+      const open = new CustomEvent('loop:open', { bubbles: true, cancelable: true, detail: LOOP[step].label });
+      if (food.dispatchEvent(open)) loopGo(loopHref(step));
+      return;
+    }
+    // its own page: nothing to open, so a little wiggle says "turn me"
+    if (!calm()) shown().animate([{ transform: 'none' }, { transform: tilt(-40) }, { transform: tilt(40) }, { transform: 'none' }], { duration: 360, easing: GLIDE });
   });
-  food.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' && !start && !turning) { e.preventDefault(); arm(); commit(); } });
-  // Home's Back button, the phone's Back, and pages restored from the back/forward cache
-  window.addEventListener('hashchange', () => { if (!turning && here() !== step) paint(here()); });
-  window.addEventListener('pageshow', (e) => { if (e.persisted && !turning) paint(here()); });
+  food.addEventListener('keydown', (e) => {
+    const dir = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!dir || press) return;
+    e.preventDefault();
+    turn(dir);
+    markLearned();
+  });
+  // Home's Back button, the phone's Back, a tap that only changed the hash, and the back/forward cache
+  window.addEventListener('hashchange', () => { if (!press) (rest() !== step ? paint(rest()) : (name(step), rested = rest())); });
+  window.addEventListener('pageshow', (e) => { if (e.persisted && !press) { paint(rest()); foodToCart(); } });
 }
 
 /** Send someone whose role may not use this page to their own home. Returns true when it redirected. */
@@ -373,8 +450,8 @@ export function guardRole(user, roles) {
 export function filterTabs(nav, user) {
   const role = ROLES[user ? user.role : 'guest'];
   $$('[data-tab]', nav).forEach((a) => { a.hidden = !role.tabs.includes(a.dataset.tab); });
+  foodToCart();
   armLoop(nav);
-  foodToCart(nav);
 }
 
 const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();

@@ -653,23 +653,13 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 }
 
 .tab[data-tab="food"]:active .tab__icon { transform: scale(.9); }
-/* The round button: a loop of pages, swipe right for the next (ui.js armLoop) */
+/* The round button: a dial of pages, turn it to pick, tap to open (ui.js armLoop) */
 .tab[data-tab="food"] { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .tab[data-tab="food"] .tab__icon { transition: transform .2s var(--spring), box-shadow .35s var(--ease-out); }
 .tab__roll { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; display: grid; grid-template: 100% / 100%; }
 .tab__art { grid-area: 1 / 1; display: grid; grid-template: 100% / 100%; place-items: center; will-change: transform; }
-.tab__art > *, .tab__art--face::before { grid-area: 1 / 1; }
-.tab__face { position: relative; width: auto; height: 64%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
-/* soft light behind the mascot only: breathes, and brightens while held */
-.tab__art--face::before {
-  content: ""; width: 80%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(232, 128, 240, .8), rgba(197, 154, 240, .35) 55%, rgba(197, 154, 240, 0));
-  animation: face-glow 3.2s ease-in-out infinite;
-  transition: scale .3s var(--spring), filter .3s;
-}
-.tab[data-tab="food"].is-held .tab__art--face::before { scale: 1.2; filter: brightness(1.35); }
-@keyframes face-glow { 50% { opacity: .55; } }
-/* "Swipe me" bubble, until the first swipe (ui.js armLoop hint) */
+.tab__art > * { grid-area: 1 / 1; }
+/* "Turn me" bubble, until the first turn (ui.js armLoop hint) */
 .tab__tip {
   position: absolute; left: 50%; bottom: calc(100% + 16px); z-index: 2;
   padding: 6px 11px; border-radius: 12px; white-space: nowrap; pointer-events: none;
@@ -683,8 +673,11 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   12%, 80% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -6px); }
 }
-@media (prefers-reduced-motion: reduce) { .tab__art--face::before { animation: none; } .tab__tip { animation-name: tip-fade; } @keyframes tip-fade { 12%, 80% { opacity: 1; transform: translateX(-50%); } 0%, 100% { opacity: 0; transform: translateX(-50%); } } }
+@media (prefers-reduced-motion: reduce) { .tab__tip { animation-name: tip-fade; } @keyframes tip-fade { 12%, 80% { opacity: 1; transform: translateX(-50%); } 0%, 100% { opacity: 0; transform: translateX(-50%); } } }
 .tab[data-tab="food"].is-turning .tab__icon { box-shadow: 0 0 0 2px #fff, 0 0 18px 6px rgba(246, 196, 108, .55), 0 6px 16px rgba(41, 10, 69, .3); }
+/* The Cart step with an order: its total in the 64px circle (ui.js artInner) */
+.tab__total { color: #fff; font: 800 14px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap; }
+.tab__total--long { font-size: 11.5px; letter-spacing: -.02em; }
 .tab__count {
   position: absolute; right: -6px; top: -6px; z-index: 1;
   min-width: 26px; height: 26px; padding: 0 5px; box-sizing: border-box; display: grid; place-items: center;
@@ -1380,8 +1373,6 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .finder__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 16px; margin-bottom: calc(92px + var(--safe-b)); scrollbar-width: none; }
 /* ends just above the tab bar */
 .finder__scroll::-webkit-scrollbar, .browse::-webkit-scrollbar { display: none; }
-.finder__sub { margin: 18px 6px 4px; font-size: 15px; font-weight: 800; color: var(--navy); }
-.finder__orders .list { padding: 0 6px; }
 .shops-empty { padding: 28px 18px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .shops-empty .icon { width: 30px; height: 30px; }
 .shops-empty h3 { margin: 6px 0 0; font-size: 17px; font-weight: 800; color: var(--navy); }

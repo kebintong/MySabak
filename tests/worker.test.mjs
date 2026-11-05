@@ -138,13 +138,14 @@ test('health: says so when the secret is missing', async () => {
 });
 
 // ---------- Repo guards ----------
-const tracked = () => execFileSync('git', ['ls-files'], { encoding: 'utf8' }).split('\n').filter(Boolean);
+const ROOT = new URL('../', import.meta.url); // the repo, wherever node --test was started from
+const tracked = () => execFileSync('git', ['ls-files'], { encoding: 'utf8', cwd: ROOT }).split('\n').filter(Boolean);
 
 test('no API keys in the committed code', () => {
   const keyLike = /(tomtomKey|geoapifyKey)\s*:\s*['"][A-Za-z0-9]{16,}|TOMTOM_KEY\s*=\s*['"]?[A-Za-z0-9]{16,}|[?&]key=[A-Za-z0-9]{24,}/;
   const offenders = tracked()
     .filter((f) => /\.(js|mjs|json|jsonc|html|toml|yml|yaml)$|(^|\/)\.dev\.vars|(^|\/)\.env/.test(f))
-    .filter((f) => keyLike.test(readFileSync(f, 'utf8')));
+    .filter((f) => keyLike.test(readFileSync(new URL(f, ROOT), 'utf8')));
   assert.deepEqual(offenders, [], 'Keys belong in the TOMTOM_KEY Cloudflare secret (see README.md)');
 });
 

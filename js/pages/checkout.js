@@ -3,7 +3,7 @@ import { CONFIG } from '../config.js';
 import { shopMenu, deliveryQuote, placeOrder, addressFor, errorMessage } from '../api.js';
 import { cartTotals } from '../money.js';
 import { getCart, setLineQty, clearCart } from '../cart.js';
-import { $, $$, mountChrome, esc, peso, pesoOr, icon, placeSearch, toast, calm, pop, glowNext } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, pesoOr, cartRows, placeSearch, toast, calm, pop, glowNext } from '../ui.js';
 
 mountChrome({ roles: ['client'] });
 
@@ -42,16 +42,7 @@ function setPeek(id, text) {
 function renderLines() {
   const t = cartTotals(getCart(), shop.menu);
   if (!t.count) { showEmpty(); return t; }
-  $('#lines').innerHTML = t.lines.map((l) => `<li class="row">
-      <div class="row__main"><span class="row__title">${esc(l.name)}</span>
-        ${l.options.length ? `<span class="row__sub">${esc(l.options.join(', '))}</span>` : ''}
-        ${l.note ? `<span class="row__sub">“${esc(l.note)}”</span>` : ''}
-        <span class="row__sub">${peso(l.price)} each</span></div>
-      <div class="stepper" role="group" aria-label="${esc(l.name)} quantity">
-        <button type="button" data-step="-1" data-line="${esc(l.key)}" aria-label="One less">${icon('i-minus', 'icon--sm')}</button>
-        <span>${l.qty}</span>
-        <button type="button" data-step="1" data-line="${esc(l.key)}" aria-label="One more">${icon('i-plus', 'icon--sm')}</button>
-      </div><span class="row__end">${peso(l.total)}</span></li>`).join('');
+  $('#lines').innerHTML = cartRows(t.lines);
   return t;
 }
 
