@@ -2,11 +2,11 @@
    The map only pins what the customer asked for: search results, a category, or the shop they tapped.
    Tapping a row or a pin previews that shop on the map; tapping the previewed row again opens it. */
 import { CONFIG } from '../config.js';
-import { listShops, myOrders, ORDER_STEPS } from '../api.js';
+import { listShops } from '../api.js';
 import { openState } from '../menu.js';
 import { storefront } from '../placeholders.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, mountChrome, esc, when, peso, toast, icon } from '../ui.js';
+import { $, mountChrome, esc, toast, icon } from '../ui.js';
 
 mountChrome({ signIn: false, roles: ['client'] }); // no Sign in button here: customers sign in from Ride or Account
 
@@ -99,15 +99,6 @@ function pick(id, { fromMap = false } = {}) {
   if (fromMap && level === 0) setLevel(1); // the preview card lives in the sheet
   const row = document.querySelector(`#shopList .srow[data-id="${CSS.escape(id)}"]`);
   if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-}
-
-async function loadOrders() {
-  const orders = await myOrders();
-  $('#ordersCard').hidden = !orders.length;
-  const stepName = (id) => (ORDER_STEPS.find((s) => s.id === id) || { name: id }).name;
-  $('#orderList').innerHTML = orders.slice(0, 5).map((o) => `<li><a class="row row--link" href="/pages/order.html?id=${encodeURIComponent(o.id)}">
-      <div class="row__main"><span class="row__title">${esc(o.shop.name)}</span><span class="row__sub">${esc(when(o.placedAt))} · ${esc(stepName(o.status))}</span></div>
-      <span class="row__end">${peso(o.subtotal)}</span></a></li>`).join('');
 }
 
 function useLocation(point) {
@@ -232,5 +223,4 @@ DESKTOP.addEventListener('change', () => { setLevel(1); map.resize(); });
 
 /* ---------- Start ---------- */
 load({ fit: true });
-loadOrders();
 knownLocation().then((p) => { if (p) useLocation(p); });

@@ -7,7 +7,7 @@ import { visibleGroups, defaultPicks, cleanPicks, unitPrice, openState } from '.
 import { getCart, addToCart, setLineQty, hasOtherShop } from '../cart.js';
 import { itemPicture, storefront } from '../placeholders.js';
 import { shopMap, knownLocation } from '../shop-map.js';
-import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast, calm, pop } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, pesoOr, params, icon, toast, calm, pop, showOrder } from '../ui.js';
 
 let shop = null;
 // The tab bar is drawn after sign-in is checked: show the order on it either way round
@@ -295,21 +295,13 @@ function renderCart() {
   if (!t.count) closePanel();
 }
 
-/* With items in this shop's order, the round Food button shows the total and count, and opens the order */
-let shownCount = null;
+/* With items in this shop's order, the round button rests on the Cart with the total and count; a tap opens the
+   order here. Another shop's cart stays as ui.js shows it (its prices are in that shop's menu). */
+let shownCount = 0;
 function showOrderOnFood(t) {
-  const tab = $('.tab[data-tab="food"]');
-  if (!tab) return;
-  const changed = shownCount !== null && shownCount !== t.count;
   shownCount = t.count;
-  tab.classList.toggle('has-order', Boolean(t.count));
-  const iconBox = $('.tab__icon', tab);
-  $$('.tab__total, .tab__count', iconBox).forEach((n) => n.remove());
-  if (!t.count) { tab.removeAttribute('aria-label'); return; }
-  const items = `${t.count} item${t.count === 1 ? '' : 's'}`;
-  tab.setAttribute('aria-label', `View order: ${items}, ${peso(t.subtotal)}`);
-  iconBox.insertAdjacentHTML('beforeend', `<b class="tab__total">${peso(t.subtotal)}</b><span class="tab__count">${t.count}</span>`);
-  if (changed) { pop(iconBox, 1.12); pop($('.tab__count', iconBox), 0.6); }
+  const other = getCart().shopId;
+  if (!other || other === shop.id) showOrder(t.count, peso(t.subtotal));
 }
 
 $('#cartBody').addEventListener('click', (e) => {
@@ -323,8 +315,8 @@ $('#cartBody').addEventListener('click', (e) => {
 });
 
 const panel = $('#cartPanel');
-$('[data-tabs]').addEventListener('click', (e) => {
-  if (!e.target.closest('.tab[data-tab="food"].has-order')) return;
+$('[data-tabs]').addEventListener('loop:open', (e) => {
+  if (e.detail !== 'Cart' || !shownCount) return; // nothing ordered here: checkout says what's in the cart
   e.preventDefault();
   panel.showModal();
   if (calm()) return;
@@ -345,7 +337,7 @@ function closePanel() {
   });
 }
 panel.addEventListener('cancel', (e) => { e.preventDefault(); closePanel(); }); // Esc
-panel.addEventListener('close', () => { const food = $('.tab[data-tab="food"].has-order'); if (food) food.focus(); });
+panel.addEventListener('close', () => { const food = $('.tab[data-tab="food"]'); if (food) food.focus(); });
 panel.addEventListener('click', (e) => { if (e.target === panel) closePanel(); }); // tap outside
 $('#cartClose').addEventListener('click', closePanel);
 

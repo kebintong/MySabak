@@ -1,8 +1,5 @@
 /* mysabak · shop styles. Loaded after base.css. */
 
-/* Shop page, items in the order: the button shows the total and a gold count, and opens the order */
-.tab[data-tab="food"].has-order .tab__roll { display: none; }
-.tab__total { position: relative; color: #fff; font-size: 13px; font-weight: 700; }
 .shop-info__ava { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; display: block; }
 .shop-info__body { display: contents; }
 .shop-about { display: none; margin: 3px 0 0; font-size: 14px; line-height: 1.4; color: #e2d0f4; }
@@ -79,7 +76,7 @@
 .hot-btn--block { width: 100%; }
 .icon-btn { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--field); display: grid; place-items: center; cursor: pointer; }
 .icon-btn:hover { background: var(--tint); }
-/* Your order: a sheet on phones, a centred dialog on desktop (the Food button opens it) */
+/* Your order: a sheet on phones, a centred dialog on desktop (the round button turned to Cart opens it, ui.js armLoop) */
 .cart-panel {
   width: 100%; max-width: 520px; max-height: 85dvh;
   margin: auto auto 0; padding: 0; border: 0;

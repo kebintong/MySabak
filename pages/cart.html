@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cart · mysabak</title>
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/cart.css">
+  <script type="module" src="/js/pages/cart.js"></script>
+</head>
+<body class="page page--sky">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+
+        <header class="page-head">
+          <h1 class="page-title">Cart</h1>
+          <p class="lede">What you’re ordering now, and your past shop orders.</p>
+        </header>
+
+        <!-- Your cart: one shop at a time (js/cart.js) -->
+        <section class="card glow-border" aria-labelledby="cartTitle">
+          <h2 class="card__title card__title--row" id="cartTitle"><span>Your cart</span><a class="cart-shop" id="cartShop" hidden></a></h2>
+          <div id="cartFull" hidden>
+            <ul class="list" id="lines"></ul>
+            <dl class="receipt cart-total"><div class="receipt__row receipt__row--total"><dt>Subtotal<span>Delivery fee at checkout</span></dt><dd id="subtotal"></dd></div></dl>
+            <a class="button button--block card__action" id="checkoutBtn" href="/pages/checkout.html">Checkout</a>
+          </div>
+          <div id="cartEmpty" hidden>
+            <p class="empty">Your cart is empty.</p>
+            <a class="button button--ghost button--block" href="/pages/shops.html">Find food</a>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="ordersTitle">
+          <h2 class="card__title" id="ordersTitle">Your orders</h2>
+          <ul class="list" id="orderList"></ul>
+        </section>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="food" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

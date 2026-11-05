@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-10-30T08:14:16.785Z",
         "reason": "user asked to follow the whole Figma design; Figma's 'Card v3/Promo · Sweet Treats' specifies the shimmering gold-foil gradient eyebrow (the only gradient text in this file)"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "css/base.css"
+        ],
+        "createdAt": "2026-11-05T01:04:24.570Z",
+        "reason": "Claude triage: base.css .bring__list li::before draws a rotated checkmark tick (border-left + border-bottom at -45deg), not a side accent bar on a card"
       }
     ]
   }
