@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>POS · mysabak</title>
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/merchant-home.css">
+  <link rel="stylesheet" href="/css/merchant-pos.css">
+  <script type="module" src="/js/pages/merchant-pos.js"></script>
+</head>
+<body class="page page--head-sky page--merchant">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner content__inner--full">
+        <div id="pos" class="stack mdash" hidden>
+          <!-- Night sky: shop, branch, Accept orders switch (js/pages/merchant-common.js) -->
+          <header class="page-head mhead" data-mhead></header>
+
+          <section class="card pos" aria-label="Point of sale">
+            <div class="seg pos__tabs" role="tablist" aria-label="Sell">
+              <button type="button" class="seg__btn" role="tab" id="tabCounter" aria-controls="counter" aria-selected="true" data-postab="counter">Counter sale</button>
+              <button type="button" class="seg__btn" role="tab" id="tabOnline" aria-controls="online" aria-selected="false" data-postab="online">Online orders</button>
+            </div>
+
+            <!-- Counter: tap items into the ticket, take cash or GCash -->
+            <div class="counter" id="counter" role="tabpanel" aria-labelledby="tabCounter">
+              <div class="counter__menu">
+                <div class="fchips counter__filter" id="posFilter" role="group" aria-label="Show items in"></div>
+                <ul class="posgrid" id="posGrid"></ul>
+              </div>
+              <aside class="ticket" id="ticket" aria-labelledby="ticketTitle">
+                <button type="button" class="ticket__bar" id="ticketBar" aria-expanded="false" aria-controls="ticketBody">
+                  <span id="ticketBarText">No items yet</span><b id="ticketBarTotal">₱0</b></button>
+                <div class="ticket__body" id="ticketBody">
+                  <h2 class="card__title card__title--row" id="ticketTitle">Current sale <button type="button" class="auth-link" id="ticketClear">Clear</button></h2>
+                  <ul class="ticket__lines" id="ticketLines"></ul>
+                  <div class="ticket__total"><span>Total</span><b id="ticketTotal">₱0</b></div>
+                  <form class="ticket__pay" id="payForm" novalidate>
+                    <div class="seg ticket__method" role="radiogroup" aria-label="Payment">
+                      <label class="seg__btn"><input type="radio" name="payment" value="cash" checked> Cash</label>
+                      <label class="seg__btn"><input type="radio" name="payment" value="gcash"> GCash</label>
+                    </div>
+                    <div class="ticket__cash" id="cashBox">
+                      <label class="field"><span class="field__label">Cash received</span>
+                        <input class="input" name="cash" type="number" inputmode="decimal" min="0" step="1" placeholder="0"></label>
+                      <div class="ticket__quick" id="quickCash"></div>
+                      <p class="ticket__change" id="change" aria-live="polite"></p>
+                    </div>
+                    <p class="field__error" role="alert" hidden></p>
+                    <button type="submit" class="button button--block" id="chargeBtn" disabled>Charge ₱0</button>
+                  </form>
+                  <details class="mdone ticket__recent"><summary id="recentTitle">Counter sales today (0)</summary><ul class="slist" id="recentList"></ul></details>
+                </div>
+              </aside>
+            </div>
+
+            <!-- Online orders: three columns on desktop, tabs on phones; finished ones fold away below -->
+            <div class="online" id="online" role="tabpanel" aria-labelledby="tabOnline" hidden>
+              <div class="seg ocols__tabs" role="tablist" aria-label="Order status" id="orderTabs"></div>
+              <div class="ocols" id="orderCols" aria-live="polite"></div>
+              <details class="mdone" id="doneOrders">
+                <summary id="doneTitle">Done today</summary>
+                <ul class="mlist" id="doneList"></ul>
+              </details>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="merchantPos" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Management · mysabak</title>
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/merchant-home.css">
+  <script type="module" src="/js/pages/merchant-manage.js"></script>
+</head>
+<body class="page page--head-sky page--merchant">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner content__inner--full">
+        <div id="manage" class="stack mdash" hidden>
+          <!-- Night sky: shop, branch, Accept orders switch (js/pages/merchant-common.js) -->
+          <header class="page-head mhead" data-mhead></header>
+
+          <div class="mcards mcards--manage">
+            <section class="card dcard" id="management" aria-labelledby="mgmtTitle">
+              <h2 class="card__title card__title--row" id="mgmtTitle">Branches <span class="muted small" id="mgmtCount"></span></h2>
+              <ul class="blist" id="branchList"></ul>
+              <div class="badd" id="addBranch" hidden>
+                <button type="button" class="badd__btn" id="addBranchBtn" aria-expanded="false" aria-controls="addBranchForm"><span class="badd__plus" aria-hidden="true"></span>Add branch</button>
+                <div class="badd__body"><div class="badd__inner">
+                  <form class="badd__form" id="addBranchForm" novalidate>
+                    <label class="field badd__wide"><span class="field__label">Branch name</span><input class="input" name="name" required maxlength="40" placeholder="e.g. Talisay"></label>
+                    <label class="field"><span class="field__label">Where</span><select class="input" name="areaId" id="branchArea" required></select></label>
+                    <label class="field"><span class="field__label">Street address</span><input class="input" name="street" required maxlength="80" placeholder="Street and barangay"></label>
+                    <label class="field"><span class="field__label">Opens</span><input class="input" name="opensAt" type="time" value="09:00" required></label>
+                    <label class="field"><span class="field__label">Closes</span><input class="input" name="closesAt" type="time" value="21:00" required></label>
+                    <label class="field badd__wide"><span class="field__label">Branch mobile number</span><input class="input" name="phone" type="tel" inputmode="tel" required placeholder="0917 123 4567"></label>
+                    <p class="badd__note badd__wide">The branch manager gets their own branch account. They see only this branch.</p>
+                    <label class="field"><span class="field__label">Manager’s name</span><input class="input" name="managerName" required maxlength="60" autocomplete="off"></label>
+                    <label class="field"><span class="field__label">Manager’s mobile number or email</span><input class="input" name="managerLogin" required autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="0917 123 4567 or name@email.com"></label>
+                    <p class="field__error badd__wide" role="alert" hidden></p>
+                    <div class="badd__actions badd__wide"><button type="button" class="button button--ghost" id="addBranchCancel">Cancel</button><button type="submit" class="button">Add branch</button></div>
+                  </form>
+                </div></div>
+              </div>
+            </section>
+            <!-- What customers see at every branch: photo, name, description; Edit (owner) opens the shop sheet -->
+          <section class="card dcard mshop" aria-labelledby="shopCardTitle">
+            <div class="mshop__photo" id="shopPhoto"></div>
+            <div class="mshop__text">
+              <div class="mshop__head"><h2 class="card__title" id="shopCardTitle">Your shop</h2><button type="button" class="button button--ghost mbtn" id="editShop">Edit shop</button></div>
+              <p class="mshop__name" id="shopCardName"></p>
+              <p class="mshop__about" id="shopAbout"></p>
+              <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
+            </div>
+          </section>
+
+          </div>
+
+          <!-- Products: picture, short description, variant prices, Edit, Available switch -->
+          <section class="card products" aria-labelledby="menuTitle">
+            <div class="products__head">
+              <h2 class="card__title" id="menuTitle">Your products <span class="muted small" id="menuCount"></span></h2>
+              <div class="fchips products__filter" id="menuFilter" role="group" aria-label="Show products in"></div>
+            </div>
+            <ul class="pgrid" id="menuList"></ul>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="merchantManage" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

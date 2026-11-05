@@ -124,7 +124,8 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
 });
 
 test('shop: list, order with delivery fee unknown until rates are set, order stays "placed"', async () => {
-  const { shops } = await api.listShops({ near: { lng: 123.8854, lat: 10.3157 }, category: 'food' });
+  const { shops: all } = await api.listShops({ near: { lng: 123.8854, lat: 10.3157 }, category: 'food' });
+  const shops = all.filter((s) => !s.brand); // the demo merchant's shop has its own test
   assert.equal(shops.length, 2);
   assert.ok(shops.every((s) => s.category === 'food'));
   assert.ok(shops[0].km <= shops[1].km, 'nearest first');
@@ -228,7 +229,7 @@ test('demo merchant account: sign in, open/close, sold out items, sign out', asy
   assert.equal(home.available.adobo, false);
   assert.equal(home.available.lumpia, true);
   const { shops } = await api.listShops({});
-  assert.equal(shops.some((s) => s.id === acc.shop.id), false, 'the merchant shop is not listed publicly');
+  assert.equal(shops.filter((s) => s.brand === acc.shop.id).length, 1, 'the merchant shop is listed once, as one of its branches');
 
   // Editing the shop and its items: only the fields given change, bad input is refused
   const photo = 'data:image/jpeg;base64,AAAA';

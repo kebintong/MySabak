@@ -1,0 +1,51 @@
+/* mysabak · merchant sales page (pages/merchant-analytics.html). Loaded after base.css and merchant-home.css:
+   the night sky header with the period and branch pickers, four totals rising into it, the chart, top items
+   and cancelled orders. */
+
+.page--merchant .sales-head { padding-bottom: 76px; gap: 14px; }
+.sales-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 14px 0 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; }
+.sales-back .icon { width: 18px; height: 18px; stroke: #fff; }
+.sales-back:hover { background: rgba(255, 255, 255, .22); }
+.sales-title { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 20px; }
+.sales-controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.page--merchant .sales-seg { background: rgba(255, 255, 255, .14); }
+.sales-seg .seg__btn { color: #e2d0f4; }
+.sales-seg .seg__btn[aria-selected="true"] { background: #fff; color: var(--brand-deep); }
+.sales-branch select { height: 46px; min-width: 190px; border-radius: 14px; font-weight: 700; }
+
+/* Totals */
+.sstats { margin-top: -62px; position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sstat { display: flex; flex-direction: column; gap: 3px; padding: 16px 18px; border-radius: 20px; background: #fff; box-shadow: var(--shadow-card); animation: m-in .3s ease-out backwards; }
+.sstat span { font-size: 13px; font-weight: 600; color: var(--muted); }
+.sstat b { font: 800 24px var(--font-body); color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sstat i { font-style: normal; font-size: 12.5px; font-weight: 700; color: var(--ok, #1e7a44); }
+.sstat i.is-down { color: #b4410c; }
+.sstat small { font-size: 12.5px; color: var(--muted); }
+@media (min-width: 760px) {
+.sstats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sstat b { font-size: 28px; }
+}
+
+/* Chart + lists */
+.sgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (min-width: 1000px) {
+.sgrid { grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); }
+}
+.schart { display: flex; align-items: flex-end; gap: clamp(2px, calc(60px / var(--n, 7)), 10px); height: 220px; overflow-x: auto; }
+.schart__col { flex: 1; min-width: 14px; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.schart__plot { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.schart__bar { width: 100%; max-width: 36px; height: var(--h); border-radius: 7px 7px 3px 3px; background: var(--line-brand);
+  transform-origin: bottom; animation: bar-grow .45s ease-out backwards; animation-delay: calc(var(--i, 0) * 25ms + 80ms); transition: background-color .15s; }
+.schart__col.is-now .schart__bar, .schart__col:hover .schart__bar { background: var(--accent); }
+.schart__label { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.schart__col.is-now .schart__label { color: var(--ink); font-weight: 700; }
+.slist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; }
+.slist li { display: flex; justify-content: space-between; gap: 12px; }
+.slist li small { color: var(--muted); font-size: 13px; }
+.slist b { font-variant-numeric: tabular-nums; }
+.slist .empty { display: block; color: var(--muted); }
+@media (max-width: 520px) {
+.schart { height: 180px; }
+.schart__label { font-size: 10px; }
+}

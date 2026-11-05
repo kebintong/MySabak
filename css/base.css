@@ -1738,8 +1738,6 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 .profile__ava--lg { width: 42px; height: 42px; font-size: 15px; }
 .profile__name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
-.btn--ghost .profile__chev { width: 16px; height: 16px; transform: rotate(90deg); transition: transform .2s var(--ease-out); }
-.profile--open .profile__chev { transform: rotate(-90deg); }
 .profile__menu {
   position: absolute; right: 0; top: calc(100% + 8px); width: min(280px, calc(100vw - 2 * var(--gutter)));
   padding: 8px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line-brand); box-shadow: var(--shadow-lg);

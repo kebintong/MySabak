@@ -1,0 +1,102 @@
+/* mysabak · POS (pages/merchant-pos.html). Loaded after base.css and merchant-home.css.
+   Counter sale: menu grid beside a sticky ticket (desktop), a ticket bar that opens over the dock (phones).
+   Online orders reuse the order columns from merchant-home.css. */
+
+.page--merchant .pos { margin-top: -82px; position: relative; display: flex; flex-direction: column; gap: 16px; }
+.pos__tabs { align-self: flex-start; }
+.pos__tabs .seg__btn { flex: none; padding: 0 18px; }
+
+/* ---------- Counter: menu + ticket ---------- */
+.counter { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (min-width: 900px) {
+.counter { grid-template-columns: minmax(0, 1fr) minmax(320px, 380px); }
+}
+.counter__menu { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.counter__filter { margin: 0; padding: 0; flex-wrap: wrap; overflow: visible; }
+.counter .fchip { height: 38px; padding: 0 14px; background: #fff; color: var(--sub); font-weight: 700; }
+.counter .fchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.posgrid { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(46%, 150px), 1fr)); }
+.positem { position: relative; display: flex; flex-direction: column; border-radius: 16px; background: var(--field); animation: m-in .25s ease-out backwards; animation-delay: calc(var(--i, 0) * 25ms); }
+.positem.is-picking { grid-column: 1 / -1; background: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.positem__btn { min-height: 150px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px; border: 0; border-radius: 16px; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; transition: transform .15s var(--spring); }
+.positem__btn:active:not(:disabled) { transform: scale(.96); }
+.positem__btn:focus-visible { outline: 3px solid rgba(91, 37, 150, .45); outline-offset: 2px; }
+.positem__btn:disabled { cursor: not-allowed; }
+.positem.is-picking .positem__btn { flex-direction: row; align-items: center; min-height: 0; }
+.positem__img { width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: var(--tint); }
+.positem.is-picking .positem__img { width: 72px; flex-shrink: 0; }
+.positem__img img, .positem__img .pic { width: 100%; height: 100%; object-fit: cover; display: block; }
+.positem__name { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+.positem__price { margin-top: auto; font: 800 15px var(--font-body); font-variant-numeric: tabular-nums; }
+.positem.is-picking .positem__price { margin: 0 0 0 auto; }
+.positem__price small { font-size: 12px; font-weight: 500; color: var(--muted); }
+.positem.is-off { opacity: .5; }
+.positem.is-off .positem__price { color: var(--muted); }
+.positem__sizes { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 10px 12px; }
+.positem__sizes .fchip { height: 44px; background: var(--field); color: var(--ink); }
+.positem__sizes .fchip:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Ticket */
+.ticket { border-radius: 20px; background: var(--field); }
+@media (min-width: 900px) {
+.ticket { position: sticky; top: 12px; }
+.ticket__bar { display: none; }
+}
+.ticket__body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.ticket__body .card__title { margin: 0; font-size: 17px; }
+.ticket__lines { flex-shrink: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; }
+#ticketClear { padding: 4px 2px; border: 0; background: none; font: 700 14px var(--font-body); color: var(--brand-deep); cursor: pointer; }
+.tline { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #fff; }
+.tline.is-bumped { animation: m-in .25s ease-out; }
+.tline__name { min-width: 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.tline__name small { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.tline__qty { display: inline-flex; align-items: center; gap: 6px; }
+.tline__qty b { min-width: 20px; text-align: center; font-variant-numeric: tabular-nums; }
+.qbtn { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--tint); color: var(--brand-deep); font: 800 18px var(--font-body); cursor: pointer; }
+.qbtn:hover { background: var(--line-brand); }
+.tline__sum { font-variant-numeric: tabular-nums; }
+.ticket__lines .empty { padding: 14px 4px; color: var(--muted); }
+.ticket__total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 1px dashed var(--line); }
+.ticket__total span { font-size: 15px; font-weight: 700; color: var(--sub); }
+.ticket__total b { font: 800 26px var(--font-body); font-variant-numeric: tabular-nums; }
+.ticket__pay { display: flex; flex-direction: column; gap: 10px; }
+.ticket__method { display: flex; }
+.ticket__method .seg__btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.ticket__method input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ticket__method .seg__btn:has(input:checked) { background: var(--accent); color: #fff; }
+.ticket__method .seg__btn:has(input:focus-visible) { outline: 3px solid rgba(91, 37, 150, .45); outline-offset: 2px; }
+.ticket__cash .field { margin: 0; }
+.ticket__quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ticket__quick .fchip { height: 36px; }
+.ticket__change { margin: 8px 0 0; font-size: 15px; color: var(--sub); }
+.ticket__change b { font: 800 20px var(--font-body); color: var(--ok, #1e7a44); }
+.ticket__change .is-short { font-weight: 700; color: #b4410c; }
+.ticket__recent { margin-top: 2px; }
+.ticket__recent .slist { margin-top: 10px; font-size: 14px; }
+.ticket [hidden] { display: none !important; }
+
+/* Phones: the ticket bar sits above the dock and opens the ticket over the menu */
+@media (max-width: 899.98px) {
+.ticket { position: fixed; left: 10px; right: 10px; bottom: calc(96px + var(--safe-b)); z-index: 30; background: #fff; box-shadow: var(--shadow-lg); max-height: calc(100dvh - 190px); display: flex; flex-direction: column; }
+.ticket__bar { flex-shrink: 0; width: 100%; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border: 0; border-radius: 20px; background: var(--accent); color: #fff; font: 700 15px var(--font-body); cursor: pointer; }
+.ticket__bar b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.ticket__body { overflow-y: auto; }
+.ticket:not(.is-open) .ticket__body { display: none; }
+.ticket.is-open .ticket__bar { border-radius: 20px 20px 0 0; }
+.counter__menu { padding-bottom: 70px; } /* room for the ticket bar */
+.tline { background: var(--field); }
+}
+
+/* ---------- Online orders ---------- */
+.online { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- Receipt ---------- */
+.receipt .slist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; }
+.receipt .slist li { display: flex; justify-content: space-between; gap: 12px; }
+.receipt .slist small { color: var(--muted); }
+.receipt__sum { display: flex; justify-content: space-between; font-size: 15px; color: var(--sub); }
+.receipt__sum b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.receipt__change { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border-radius: 14px; background: #e3f3e8; }
+.receipt__change span { font-weight: 700; color: var(--ok, #1e7a44); }
+.receipt__change b { font: 800 26px var(--font-body); color: var(--ok, #1e7a44); }

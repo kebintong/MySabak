@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sales · mysabak</title>
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/merchant-home.css">
+  <link rel="stylesheet" href="/css/merchant-analytics.css">
+  <script type="module" src="/js/pages/merchant-analytics.js"></script>
+</head>
+<body class="page page--head-sky page--merchant">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner content__inner--full">
+        <div id="sales" class="stack mdash" hidden>
+          <header class="page-head mhead sales-head">
+            <a class="sales-back" href="/pages/merchant-home.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Dashboard</a>
+            <div class="sales-title">
+              <div>
+                <h1 class="mhero__title" id="salesTitle">Sales</h1>
+                <p class="mhero__meta" id="salesSub"></p>
+              </div>
+              <div class="sales-controls">
+                <div class="seg sales-seg" role="tablist" aria-label="Period" id="rangeTabs">
+                  <button type="button" class="seg__btn" role="tab" data-range="day">Daily</button>
+                  <button type="button" class="seg__btn" role="tab" data-range="week">Weekly</button>
+                  <button type="button" class="seg__btn" role="tab" data-range="month">Monthly</button>
+                </div>
+                <label class="sales-branch" id="branchWrap" hidden><span class="sr-only">Branch</span><select class="input" id="branchSelect"></select></label>
+              </div>
+            </div>
+          </header>
+
+          <section class="sstats" aria-label="Totals" id="stats"></section>
+
+          <div class="sgrid">
+            <section class="card" aria-labelledby="chartTitle">
+              <h2 class="card__title" id="chartTitle">Sales</h2>
+              <div class="schart" id="chart" role="img"></div>
+              <p class="card__foot" id="sampleNote" hidden>Days before today are sample numbers until the server keeps real sales history.</p>
+            </section>
+            <div class="stack">
+              <section class="card" aria-labelledby="topTitle">
+                <h2 class="card__title" id="topTitle">Top items</h2>
+                <ol class="slist" id="topList"></ol>
+              </section>
+              <section class="card" aria-labelledby="cancelTitle">
+                <h2 class="card__title" id="cancelTitle">Cancelled orders</h2>
+                <ol class="slist" id="cancelList"></ol>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="merchantStats" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

@@ -109,7 +109,10 @@ export const TABS = [
   { id: 'wallet', label: 'Wallet', icon: 'i-wallet', href: '/pages/wallet.html' },
   { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html' },
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
-  { id: 'merchant', label: 'My shop', icon: 'i-store', href: '/pages/merchant-home.html' },
+  { id: 'merchant', label: 'Dashboard', icon: 'i-store', href: '/pages/merchant-home.html' },
+  { id: 'merchantPos', label: 'POS', icon: 'i-receipt', href: '/pages/merchant-pos.html' },
+  { id: 'merchantStats', label: 'Analytics', icon: 'i-chart', href: '/pages/merchant-analytics.html' },
+  { id: 'merchantManage', label: 'Manage', icon: 'i-pencil', href: '/pages/merchant-manage.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
   { id: 'admin', label: 'Overview', icon: 'i-shield', href: '/pages/admin.html' },
   { id: 'adminReg', label: 'Registrations', icon: 'i-check', href: '/pages/admin-registrations.html' },
@@ -130,7 +133,7 @@ export const ROLES = {
     home: '/pages/driver.html', homeLabel: 'Driver home', homeIcon: 'i-wheel', signIn: '/pages/drive.html',
   },
   merchant: {
-    label: 'Merchant', tabs: ['merchant', 'support'],
+    label: 'Merchant', tabs: ['merchant', 'merchantPos', 'merchantStats', 'merchantManage', 'support'],
     home: '/pages/merchant-home.html', homeLabel: 'Shop dashboard', homeIcon: 'i-store', signIn: '/pages/merchant.html',
   },
   // Signs in on the customer form; not shown on any sign-in switch.
@@ -460,6 +463,14 @@ const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).m
  * The top-right account control: "Sign in" when signed out; when signed in, a profile button whose
  * dropdown holds the account's home and Sign out (Sign out lives only here).
  */
+/** A merchant's pages, in the profile menu (the same order as the tab bar). */
+const merchantMenu = () => [
+  ['i-store', 'Dashboard', '/pages/merchant-home.html'],
+  ['i-receipt', 'POS', '/pages/merchant-pos.html'],
+  ['i-chart', 'Analytics', '/pages/merchant-analytics.html'],
+  ['i-pencil', 'Management', '/pages/merchant-manage.html'],
+];
+
 export function mountAccount(link, user, { signIn = true } = {}) {
   if (!link) return;
   if (!user) { link.hidden = !signIn; return; }
@@ -471,14 +482,14 @@ export function mountAccount(link, user, { signIn = true } = {}) {
     <button type="button" class="btn btn--ghost profile__btn" aria-haspopup="menu" aria-expanded="false" aria-label="Profile: ${esc(user.name || role.label)}">
       <span class="profile__ava" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
       <span class="profile__name desktop-only">${esc(first)}</span>
-      ${icon('i-chevron', 'profile__chev')}
     </button>
     <div class="profile__menu" role="menu" hidden>
       <div class="profile__who">
         <span class="profile__ava profile__ava--lg" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
-        <div><b>${esc(user.name || role.label)}</b><span>${esc(role.label)}${user.email ? ` · ${esc(user.email)}` : ''}</span></div>
+        <div><b>${esc(user.name || role.label)}</b><span>${esc(user.branch ? `Branch account · ${user.branch}` : role.label)}${user.email ? ` · ${esc(user.email)}` : ''}</span></div>
       </div>
-      <a class="profile__item" role="menuitem" href="${role.home}">${icon(role.homeIcon)}${esc(role.homeLabel)}</a>
+      ${(user.role === 'merchant' ? merchantMenu() : [[role.homeIcon, role.homeLabel, role.home]])
+    .map(([ic, label, href]) => `<a class="profile__item" role="menuitem" href="${href}">${icon(ic)}${esc(label)}</a>`).join('')}
       <button type="button" class="profile__item profile__item--out" role="menuitem" data-signout>${icon('i-power')}Sign out</button>
     </div>`;
   link.replaceWith(wrap);
@@ -491,6 +502,7 @@ export function mountAccount(link, user, { signIn = true } = {}) {
     if (open) $('.profile__item', menu).focus();
   };
   btn.addEventListener('click', () => setOpen(menu.hidden));
+  menu.addEventListener('click', (e) => { if (e.target.closest('a')) setOpen(false); }); // a #section link stays on the page
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) setOpen(false); });
   wrap.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
@@ -535,7 +547,7 @@ export function wireSignInForm(form, signInFn, next) {
       const res = await signInFn({ login: login.includes('@') ? login : login.replace(/[\s-]/g, ''), password: data.get('password') });
       location.href = typeof next === 'function' ? next(res) : next;
     } catch (err) {
-      showError(err.status === 401 || err.status === 400 ? err.message : errorMessage(err));
+      showError([400, 401, 403].includes(err.status) ? err.message : errorMessage(err)); // 403: turned off or not set up yet
       button.disabled = false;
       button.textContent = 'Sign in';
     }

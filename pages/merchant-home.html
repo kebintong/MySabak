@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Merchant · mysabak</title>
+  <title>Dashboard · mysabak</title>
   <meta name="theme-color" content="#5b2596">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
@@ -29,65 +29,32 @@
 
     <main class="content">
       <div class="content__inner content__inner--full">
-        <div id="merchantHome" class="stack mdash" hidden>
-          <!-- Night sky (draft A): shop, greeting, open / closed, today's numbers in gold -->
-          <header class="page-head mhead">
-            <div class="mhero">
-              <div class="mhero__shop">
-                <span class="mhero__ava" id="shopAva" aria-hidden="true"></span>
-                <div class="mhero__text">
-                  <p class="mhero__hello" id="greeting">Good day</p>
-                  <h1 class="mhero__title" id="shopName">Your shop</h1>
-                  <p class="mhero__meta"><span id="shopArea"></span> · <span id="shopHours"></span></p>
-                </div>
-              </div>
-              <div class="mhero__open">
-                <span class="live" id="openBadge"><span class="live__dot" aria-hidden="true"></span><span id="openLabel">Open</span></span>
-                <span id="openHint">Accepting orders</span>
-                <button type="button" class="switch" id="openSwitch" role="switch" aria-checked="true" aria-label="Accepting orders"><span></span></button>
-              </div>
-            </div>
-            <section class="kpis" aria-label="Today">
-              <div class="kpi" style="--i:0"><span class="kpi__value" id="todayOrders">0</span><span class="kpi__label">Orders today</span></div>
-              <div class="kpi" style="--i:1"><span class="kpi__value" id="todaySales">0</span><span class="kpi__label">Sales today</span></div>
-              <div class="kpi" style="--i:2"><span class="kpi__value" id="waitingOrders">0</span><span class="kpi__label">Waiting for you</span></div>
-              <div class="kpi" style="--i:3"><span class="kpi__value" id="avgOrder">0</span><span class="kpi__label">Average order</span></div>
-            </section>
-          </header>
+        <div id="dashboard" class="stack mdash" hidden>
+          <!-- Night sky: shop, branch, greeting, Accept orders switch (js/pages/merchant-common.js) -->
+          <header class="page-head mhead" data-mhead></header>
 
-          <!-- Orders: three columns on desktop, tabs on phones; finished ones fold away below -->
-          <section class="card morders" aria-labelledby="ordersTitle">
-            <h2 class="card__title card__title--row" id="ordersTitle">Orders <span class="muted small">Newest first</span></h2>
-            <div class="seg ocols__tabs" role="tablist" aria-label="Order status" id="orderTabs"></div>
-            <div class="ocols" id="orderCols" aria-live="polite"></div>
-            <details class="mdone" id="doneOrders">
-              <summary id="doneTitle">Done today</summary>
-              <ul class="mlist" id="doneList"></ul>
-            </details>
-          </section>
-
-          <div class="merchant-grid">
-            <section class="card" aria-labelledby="weekTitle">
-              <h2 class="card__title card__title--row" id="weekTitle">Sales this week <span class="badge" id="weekTotal">₱0</span></h2>
-              <div class="wchart" id="weekChart" role="img"></div>
-              <p class="card__foot">Item prices go 100% to your shop. The delivery fee goes 100% to the rider.</p>
+          <!-- Right now · Preview analytics · Mood board; they rise into the sky -->
+          <div class="mcards">
+            <section class="card dcard dcard--now" aria-labelledby="nowTitle">
+              <h2 class="card__title card__title--row" id="nowTitle">Right now <a class="muted small" href="/pages/merchant-pos.html#online">Open POS →</a></h2>
+              <div class="nowcounts" id="nowCounts"></div>
+              <ul class="nowlist" id="nowList" aria-live="polite"></ul>
+              <a class="button button--block" href="/pages/merchant-pos.html">Open POS</a>
             </section>
-            <!-- What customers see: photo, name, description; Edit opens the shop sheet -->
-            <section class="card mshop" aria-labelledby="shopCardTitle">
-              <div class="mshop__head"><h2 class="card__title" id="shopCardTitle">Your shop</h2><button type="button" class="button button--ghost mbtn" id="editShop">Edit shop</button></div>
-              <div class="mshop__photo" id="shopPhoto"></div>
-              <p class="mshop__name" id="shopCardName"></p>
-              <p class="mshop__about" id="shopAbout"></p>
+            <section class="card dcard" aria-labelledby="previewTitle">
+              <h2 class="card__title card__title--row" id="previewTitle">Preview analytics <span class="muted small">Tap for details</span></h2>
+              <div class="ptiles" id="previewTiles"></div>
+            </section>
+            <section class="card dcard" aria-labelledby="moodTitle">
+              <h2 class="card__title card__title--row" id="moodTitle">Mood board <span class="muted small">Today</span></h2>
+              <div class="mood" id="mood" aria-live="polite"></div>
             </section>
           </div>
 
-          <!-- Products: picture, short description, variant prices, Edit, Available switch -->
-          <section class="card products" aria-labelledby="menuTitle">
-            <div class="products__head">
-              <h2 class="card__title" id="menuTitle">Your products <span class="muted small" id="menuCount"></span></h2>
-              <div class="fchips products__filter" id="menuFilter" role="group" aria-label="Show products in"></div>
-            </div>
-            <ul class="pgrid" id="menuList"></ul>
+          <!-- Owner: every branch at a glance -->
+          <section class="card" id="branchesToday" aria-labelledby="branchesTitle" hidden>
+            <h2 class="card__title card__title--row" id="branchesTitle">Branches today <a class="muted small" href="/pages/merchant-manage.html">Manage branches →</a></h2>
+            <ul class="bglance" id="branchGlance"></ul>
           </section>
         </div>
       </div>

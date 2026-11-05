@@ -18,7 +18,7 @@ import { CONFIG } from './config.js';
 import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
 import {
   SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS, DEMO_PLACES, DEMO_RIDERS, DEMO_MERCHANT_ORDERS, DEMO_MERCHANT_WEEK,
-  DEMO_APPLICATIONS, DEMO_ADMIN, DEMO_USERS,
+  DEMO_BRANCHES, DEMO_BRANCH_ORDERS, BRANCH_AREAS, DEMO_APPLICATIONS, DEMO_ADMIN, DEMO_USERS,
 } from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
 
@@ -475,7 +475,15 @@ export async function currentUser() {
   const client = demo.get('clientSession', null);
   if (client) return { role: client.role || 'client', name: client.name, email: client.email || null };
   const merchant = demo.get('merchantSession', null);
-  if (merchant) return { role: 'merchant', name: DEMO_ACCOUNTS.merchant.name, email: DEMO_ACCOUNTS.merchant.email, shop: DEMO_ACCOUNTS.merchant.shop.name };
+  if (merchant && !merchant.branchId) return { role: 'merchant', owner: true, name: DEMO_ACCOUNTS.merchant.name, email: DEMO_ACCOUNTS.merchant.email, shop: DEMO_ACCOUNTS.merchant.shop.name };
+  if (merchant) {
+    const b = findBranch(merchant.branchId);
+    if (b && b.account.status === 'active') {
+      const login = b.manager.login;
+      return { role: 'merchant', owner: false, name: b.manager.name, email: login.includes('@') ? login : null, shop: DEMO_ACCOUNTS.merchant.shop.name, branch: b.name };
+    }
+    demo.set('merchantSession', null); // the branch account was turned off or changed hands
+  }
   const d = await driverStatus();
   if (d.signedIn) return { role: 'driver', name: d.name, email: d.email || null };
   return null;
@@ -941,30 +949,255 @@ export async function driverEarnings() {
 }
 
 /* =========================================================
-   Merchant (shop owners): sign in, open / close, orders, menu availability. No POS (Stage 2).
+   Merchant (shop owners and their branches): sign in, open / close, orders, menu availability, branches.
+   The owner account runs the main branch, adds branches and sees every one. Each other branch is run by its own
+   branch account (its manager), which sees only that branch. The menu and prices are the owner's and shared by
+   every branch; each branch has its own orders, Accept orders switch and sold-out items. No POS (Stage 2).
    ========================================================= */
 
+/* ---------- Branches ---------- */
+
+/** Every branch of the demo merchant's shop: the main one, the SAMPLE ones and those added in this browser. */
+function branches() {
+  const m = DEMO_ACCOUNTS.merchant;
+  const s = m.shop;
+  const main = {
+    id: s.id, name: s.area, area: s.area, address: s.address, phone: s.phone, lng: s.lng, lat: s.lat,
+    opensAt: s.opensAt, closesAt: s.closesAt, hours: s.hours, main: true, scale: 1,
+    manager: { name: m.name, login: m.email }, account: { status: 'owner' },
+  };
+  const samples = DEMO_BRANCHES.map(({ password, ...b }) => ({ ...b, sample: true, account: { status: 'active' } })); // eslint-disable-line no-unused-vars
+  const changes = demo.get('branchChanges', {});
+  return [main, ...samples, ...demo.get('branchesAdded', [])].map((b) => ({ ...b, ...changes[b.id] }));
+}
+const changeBranch = (id, change) => demo.set('branchChanges', { ...demo.get('branchChanges', {}), [id]: { ...demo.get('branchChanges', {})[id], ...change } });
+const findBranch = (id) => branches().find((b) => b.id === id);
+const MAIN_ID = () => DEMO_ACCOUNTS.merchant.shop.id;
+
+/** A branch's Accept orders switch and sold-out items (the main branch keeps the older 'merchant' key). */
+function branchSettings(id) {
+  if (id === MAIN_ID()) return demo.get('merchant', { open: true, available: {} });
+  return demo.get('branchSettings', {})[id] || { open: true, available: {} };
+}
+function saveBranchSettings(id, settings) {
+  if (id === MAIN_ID()) demo.set('merchant', settings);
+  else demo.set('branchSettings', { ...demo.get('branchSettings', {}), [id]: settings });
+}
+
+/** The owner's shop as customers see it (name, photo, description, menu with the owner's edits). */
+function brandShop() {
+  const s = DEMO_ACCOUNTS.merchant.shop;
+  const edits = demo.get('merchantEdits', { shop: {}, items: {} });
+  return { ...s, ...edits.shop, menu: s.menu.map((i) => ({ ...i, ...edits.items[i.id] })) };
+}
+
+/** One branch as a shop: the shared menu at the branch's place and hours, with its sold-out items marked. */
+function branchShop(b) {
+  const settings = branchSettings(b.id);
+  const brand = brandShop();
+  return {
+    ...brand, id: b.id, brand: brand.id, branch: { id: b.id, name: b.name },
+    area: b.area, address: b.address, phone: b.phone, lng: b.lng, lat: b.lat, hours: b.hours, opensAt: b.opensAt, closesAt: b.closesAt,
+    accepting: settings.open !== false,
+    menu: brand.menu.map((i) => ({ ...i, soldOut: settings.available[i.id] === false })),
+    branches: liveBranches().map(({ id, name, area }) => ({ id, name, area })),
+  };
+}
+/** Branches customers can order from: the main one and those whose branch account is set up and on. */
+const liveBranches = () => branches().filter((b) => b.main || b.account.status === 'active');
+
 /**
- * Merchant sign-in with a mobile number OR an email, plus password.
- * DEMO: only the demo merchant (demo-data.js → DEMO_ACCOUNTS.merchant) exists.
- * @returns {Promise<{shopId:string}>}  throws { status: 401 } when they don't match
+ * The nearest branch that is taking orders, else the nearest one. Exported for the tests.
+ * @param {Array<{lng:number, lat:number, accepting?:boolean}>} list
+ */
+export function nearestBranch(list, near) {
+  if (!near) return list[0];
+  const byKm = [...list].sort((a, b) => haversineKm(near, a) - haversineKm(near, b));
+  return byKm.find((b) => b.accepting !== false) || byKm[0];
+}
+
+/* ---------- Sessions ---------- */
+
+const forbidden = (msg) => Object.assign(new Error(msg), { status: 403 });
+const VIEW_ONLY = 'You’re viewing this branch. Take over to make changes here.';
+
+/**
+ * Who is signed in as a merchant on this device, and which branch they're looking at.
+ * role 'owner': sees every branch; acts on the main branch, or another one after Take over.
+ * role 'branch': a branch account; sees and acts on its own branch only.
+ */
+function merchantCtx() {
+  const s = demo.get('merchantSession', null);
+  if (!s) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  if (s.branchId) {
+    const b = findBranch(s.branchId);
+    if (!b || b.account.status !== 'active') {
+      demo.set('merchantSession', null);
+      throw Object.assign(new Error('Sign in first'), { status: 401 });
+    }
+    return { role: 'branch', branch: b, canAct: true, session: s };
+  }
+  const all = branches();
+  const b = all.find((x) => x.id === s.viewing) || all[0];
+  return { role: 'owner', branch: b, canAct: Boolean(b.main || s.takeover === b.id), session: s };
+}
+const ownerCtx = () => {
+  const ctx = merchantCtx();
+  if (ctx.role !== 'owner') throw forbidden('Only the shop owner can do that.');
+  return ctx;
+};
+
+/**
+ * Merchant sign-in with a mobile number OR an email, plus password: the owner, or a branch account.
+ * DEMO: the demo merchant (DEMO_ACCOUNTS.merchant) and the SAMPLE branch accounts (DEMO_BRANCHES) need their
+ * password; a branch account set up in this browser takes any password (passwords are never stored here).
+ * Backend: check the password on the server; the session says owner or which branch.
+ * @returns {Promise<{shopId:string, branchId?:string}>}  throws { status: 401 } when they don't match
  */
 export async function merchantSignIn({ login, password }) {
   if (!login || !password) throw Object.assign(new Error('Enter your mobile number or email, and your password.'), { status: 400 });
   await wait(700);
   const m = DEMO_ACCOUNTS.merchant;
-  const isLogin = login.includes('@') ? sameEmail(m.email, login) : samePhone(m.phone, login);
-  if (!isLogin) throw Object.assign(new Error('No merchant account uses that mobile number or email.'), { status: 401 });
-  if (password !== m.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+  const matches = (who) => (login.includes('@') ? sameEmail(who, login) : samePhone(who, login));
+  if (matches(login.includes('@') ? m.email : m.phone)) {
+    if (password !== m.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
+    if (accountOff('demo-merchant')) throw turnedOff();
+    endSessions('merchant');
+    demo.set('merchantSession', { shopId: m.shop.id, at: Date.now() });
+    return { shopId: m.shop.id };
+  }
+  const b = branches().find((x) => !x.main && matches(x.manager.login));
+  if (!b) throw Object.assign(new Error('No merchant account uses that mobile number or email.'), { status: 401 });
+  if (b.account.status === 'invited') throw forbidden('Set up this branch account first, with the code from the shop owner.');
+  if (b.account.status === 'disabled') throw forbidden('This branch account is turned off. Ask the shop owner to turn it back on.');
+  const sample = DEMO_BRANCHES.find((x) => x.id === b.id);
+  if (sample && password !== sample.password) throw Object.assign(new Error('Wrong password. Try again.'), { status: 401 });
   if (accountOff('demo-merchant')) throw turnedOff();
   endSessions('merchant');
-  demo.set('merchantSession', { shopId: m.shop.id, at: Date.now() });
-  return { shopId: m.shop.id };
+  demo.set('merchantSession', { shopId: m.shop.id, branchId: b.id, at: Date.now() });
+  return { shopId: m.shop.id, branchId: b.id };
 }
 
 export async function merchantSignOut() {
   demo.set('merchantSession', null);
 }
+
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O or 1/I to mix up
+const newCode = () => Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+const loginTaken = (login, exceptId) => {
+  const people = [...Object.values(DEMO_ACCOUNTS).flatMap((a) => [a.email, a.phone]), ...branches().filter((b) => b.id !== exceptId).map((b) => b.manager.login)];
+  return people.some((p) => (login.includes('@') ? sameEmail(p, login) : samePhone(p, login)));
+};
+function cleanManager({ managerName, managerLogin }, exceptId) {
+  const name = cleanText(managerName, 60, 'manager’s name', true);
+  const login = String(managerLogin || '').trim();
+  if (!(login.includes('@') ? EMAIL_RE.test(login) : PH_MOBILE.test(login.replace(/[\s-]/g, '')))) {
+    throw bad('Enter the manager’s mobile number (like 0917 123 4567) or email.');
+  }
+  if (loginTaken(login, exceptId)) throw Object.assign(new Error('That mobile number or email already has a mysabak account.'), { status: 409 });
+  return { name, login };
+}
+
+/**
+ * Set up a branch account with the code the owner shared, then sign in as that branch.
+ * DEMO: the password isn't kept. Backend: store a password hash; codes should expire (e.g. after 7 days).
+ * @param {{code:string, login:string, password:string}} input  login = the manager's mobile number or email the owner entered
+ * @returns {Promise<{branchId:string}>}
+ */
+export async function setupBranchAccount({ code, login, password }) {
+  await wait(500);
+  const c = String(code || '').trim().toUpperCase();
+  const b = branches().find((x) => x.account.status === 'invited' && x.account.code === c);
+  if (!b) throw bad('That setup code isn’t right. Check it with the shop owner.');
+  const l = String(login || '').trim();
+  if (!(l.includes('@') ? sameEmail(b.manager.login, l) : samePhone(b.manager.login, l))) {
+    throw bad('Use the mobile number or email the shop owner entered for you.');
+  }
+  if (String(password || '').length < 8) throw bad('Choose a password with at least 8 characters.');
+  changeBranch(b.id, { account: { status: 'active' } });
+  endSessions('merchant');
+  demo.set('merchantSession', { shopId: MAIN_ID(), branchId: b.id, at: Date.now() });
+  return { branchId: b.id };
+}
+
+/* ---------- Owner: branches ---------- */
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const hoursText = (opens, closes) => {
+  const t = (hhmm) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  };
+  return `${t(opens)} – ${t(closes)}`;
+};
+
+/**
+ * Add a branch. It gets a branch account for its manager, waiting for setup with a one-time code that the owner
+ * sends to the manager (e.g. by text or Messenger). Owner only.
+ * DEMO: kept in this browser; nothing is sent. Backend: send the code by SMS or email, and let it expire.
+ * @param {{name, areaId, street, opensAt, closesAt, phone, managerName, managerLogin}} input
+ * @returns {Promise<{branch:object, code:string}>}
+ */
+export async function addBranch(input) {
+  ownerCtx();
+  const name = cleanText(input.name, 40, 'branch name', true);
+  if (branches().some((b) => b.name.toLowerCase() === name.toLowerCase())) throw Object.assign(new Error('You already have a branch with that name.'), { status: 409 });
+  const area = BRANCH_AREAS.find((a) => a.id === input.areaId);
+  if (!area) throw bad('Pick where the branch is.');
+  const street = cleanText(input.street, 80, 'street address', true);
+  if (!TIME.test(input.opensAt || '') || !TIME.test(input.closesAt || '')) throw bad('Enter the opening and closing times.');
+  if (input.closesAt <= input.opensAt) throw bad('Closing time must be after opening time.');
+  const phone = String(input.phone || '').trim();
+  if (!PH_MOBILE.test(phone.replace(/[\s-]/g, ''))) throw bad('Enter the branch’s mobile number, like 0917 123 4567.');
+  const manager = cleanManager(input);
+  const code = newCode();
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 20) || 'branch';
+  const branch = {
+    id: `${MAIN_ID()}-${slug}-${Math.random().toString(36).slice(2, 6)}`, name, area: area.name,
+    address: `${street}, ${area.name}`, phone, lng: area.lng, lat: area.lat,
+    opensAt: input.opensAt, closesAt: input.closesAt, hours: hoursText(input.opensAt, input.closesAt),
+    manager, account: { status: 'invited', code }, addedAt: Date.now(),
+  };
+  if (!demo.set('branchesAdded', [...demo.get('branchesAdded', []), branch])) throw Object.assign(new Error('Couldn’t save the branch.'), { status: 507 });
+  return { branch, code };
+}
+
+/** Give a branch a new manager: their branch account waits for setup again, with a new code. Owner only. */
+export async function changeBranchManager(branchId, input) {
+  ownerCtx();
+  const b = findBranch(branchId);
+  if (!b || b.main) throw Object.assign(new Error('Branch not found'), { status: 404 });
+  const manager = cleanManager(input, b.id);
+  const code = newCode();
+  changeBranch(b.id, { manager, account: { status: 'invited', code } });
+  return { code };
+}
+
+/** Turn a branch account off (it can't sign in, customers can't order from it) or back on. Owner only. */
+export async function setBranchAccount(branchId, status) {
+  ownerCtx();
+  const b = findBranch(branchId);
+  if (!b || b.main) throw Object.assign(new Error('Branch not found'), { status: 404 });
+  if (!['active', 'disabled'].includes(status)) throw bad('Unknown status');
+  if (b.account.status === 'invited') throw Object.assign(new Error('This branch account isn’t set up yet.'), { status: 409 });
+  changeBranch(b.id, { account: { status } });
+  return { status };
+}
+
+/** Owner: look at another branch (view only until Take over), or back at the main branch (null). */
+export async function viewBranch(branchId) {
+  const { session } = ownerCtx();
+  if (branchId && !findBranch(branchId)) throw Object.assign(new Error('Branch not found'), { status: 404 });
+  demo.set('merchantSession', { ...session, viewing: branchId || null, takeover: null });
+}
+
+/** Owner: take over the branch being viewed (act on its orders, switch and sold-out items), or stop. */
+export async function takeOverBranch(on) {
+  const { session, branch } = ownerCtx();
+  demo.set('merchantSession', { ...session, takeover: on && !branch.main ? branch.id : null });
+}
+
+/* ---------- Dashboard ---------- */
 
 /** Order statuses a merchant moves through, and the buttons for each. */
 export const MERCHANT_ACTIONS = {
@@ -973,68 +1206,225 @@ export const MERCHANT_ACTIONS = {
   preparing: [{ id: 'ready', label: 'Ready for pickup', to: 'ready' }],
 };
 
-/**
- * Everything the merchant dashboard shows. 401 if not signed in.
- * DEMO: the shop's open/closed switch and item availability are kept in this browser; orders are a few SAMPLE
- * orders (demo-data.js → DEMO_MERCHANT_ORDERS, `demo: true`) plus any placed for this shop in this browser.
- * `week` is sales per day for the last 7 days, oldest first, ending with today (SAMPLE except today).
- * @returns {Promise<{name:string, shop:object, open:boolean, available:Object<string, boolean>,
- *   orders:Array<Order & {customer?:string}>, today:{orders:number, sales:number}, week:number[]}>}
- */
-export async function merchantHome() {
-  const session = demo.get('merchantSession', null);
-  if (!session) throw Object.assign(new Error('Sign in first'), { status: 401 });
-  const m = DEMO_ACCOUNTS.merchant;
-  const settings = demo.get('merchant', { open: true, available: {} });
-  const edits = demo.get('merchantEdits', { shop: {}, items: {} });
-  const shop = { ...m.shop, ...edits.shop, menu: m.shop.menu.map((i) => ({ ...i, ...edits.items[i.id] })) };
-  const orders = [...demo.get('orders', []).filter((o) => o.shop.id === m.shop.id), ...sampleMerchantOrders()]
-    .sort((a, b) => b.placedAt - a.placedAt);
-  const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
-  const todays = orders.filter((o) => o.placedAt >= midnight.getTime() && o.status !== 'cancelled');
-  const sales = todays.reduce((n, o) => n + o.subtotal, 0);
-  return {
-    name: m.name,
-    shop,
-    open: settings.open !== false,
-    available: Object.fromEntries(m.shop.menu.map((i) => [i.id, settings.available[i.id] !== false])),
-    orders,
-    today: { orders: todays.length, sales },
-    week: DEMO_MERCHANT_WEEK.map((n, i, all) => (i === all.length - 1 ? sales : n)),
-  };
-}
-
-/** DEMO: Demo Kitchen's sample orders, made once per browser and then kept (so Accept etc. stick). */
-function sampleMerchantOrders() {
-  let saved = demo.get('merchantSampleOrders', null);
-  if (!saved) {
+/** DEMO: a branch's SAMPLE orders, made once per browser and then kept (so Accept etc. stick). */
+function sampleOrders(branchId) {
+  const main = branchId === MAIN_ID();
+  const key = main ? 'merchantSampleOrders' : 'branchSampleOrders';
+  const all = main ? { [branchId]: demo.get(key, null) } : demo.get(key, {});
+  if (!all[branchId]) {
+    const source = main ? DEMO_MERCHANT_ORDERS : DEMO_BRANCH_ORDERS[branchId];
+    if (!source) return [];
     const now = Date.now();
-    saved = DEMO_MERCHANT_ORDERS.map(({ minutesAgo, lines, ...o }) => ({
+    all[branchId] = source.map(({ minutesAgo, lines, ...o }) => ({
       ...o,
-      shop: { id: DEMO_ACCOUNTS.merchant.shop.id, name: DEMO_ACCOUNTS.merchant.shop.name },
+      shop: { id: branchId, name: DEMO_ACCOUNTS.merchant.shop.name },
       lines: lines.map((l) => ({ options: [], ...l, note: '' })),
       subtotal: lines.reduce((n, l) => n + l.price * l.qty, 0),
       placedAt: now - minutesAgo * 60000,
       demo: true,
     }));
-    demo.set('merchantSampleOrders', saved);
+    demo.set(key, main ? all[branchId] : all);
   }
-  return saved;
+  return all[branchId];
+}
+/** A branch's orders: the ones customers placed in this browser and its SAMPLE ones, newest first. */
+const ordersOf = (branchId) => [
+  ...demo.get('orders', []).filter((o) => o.shop.id === branchId),
+  ...demo.get('posSales', []).filter((o) => o.shop.id === branchId), // counter sales (channel 'counter')
+  ...sampleOrders(branchId),
+]
+  .sort((a, b) => b.placedAt - a.placedAt);
+const midnight = (daysAgo = 0) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - daysAgo); return d.getTime(); };
+const todayOf = (orders) => orders.filter((o) => o.placedAt >= midnight());
+const salesOf = (orders) => orders.filter((o) => o.status !== 'cancelled').reduce((n, o) => n + o.subtotal, 0);
+
+/**
+ * Sales of a branch on a past day (1 = yesterday), before the orders this browser placed.
+ * DEMO: SAMPLE numbers. The main branch's last week is DEMO_MERCHANT_WEEK; older days and SAMPLE branches follow a
+ * fixed made-up pattern; branches added in this browser have no history. Backend: real daily totals.
+ */
+function pastSales(b, daysAgo) {
+  if (b.main && daysAgo < 7) return DEMO_MERCHANT_WEEK[6 - daysAgo];
+  if (!b.scale) return 0;
+  const d = new Date(midnight(daysAgo));
+  const n = d.getDate() * 7 + d.getMonth() * 13 + d.getDay() * 29;
+  return Math.round(((1600 + (n % 23) * 95) * b.scale) / 5) * 5;
+}
+/** Sales of a branch on a day: SAMPLE history plus the orders placed then. */
+const daySales = (b, daysAgo) => (daysAgo ? pastSales(b, daysAgo) : 0)
+  + salesOf(ordersOf(b.id).filter((o) => o.placedAt >= midnight(daysAgo) && o.placedAt < midnight(daysAgo - 1)));
+/** The branch's usual sales for a whole day: the average of the last 7 days (0 when it has no history). */
+const usualSales = (b) => Math.round([1, 2, 3, 4, 5, 6, 7].reduce((n, d) => n + daySales(b, d), 0) / 7);
+
+/**
+ * Everything the merchant dashboard shows, for the branch on screen. 401 if not signed in.
+ * The owner sees the main branch (or the one they're viewing) and every branch's status; a branch account sees
+ * its own branch only. `canAct` is false while the owner only views another branch.
+ * DEMO: switches and sold-out items are kept in this browser; orders are SAMPLE ones (`demo: true`) plus any
+ * placed for the branch in this browser. `week` is sales per day for the last 7 days, oldest first, ending today.
+ * @returns {Promise<{name:string, role:'owner'|'branch', canAct:boolean, takeover:boolean, branch:object,
+ *   branches:Array<object>|null, shop:object, open:boolean, available:Object<string, boolean>, orders:Array<object>,
+ *   counter:Array<object> (today's counter sales; `orders` are the online ones),
+ *   today:{orders:number, sales:number}, week:number[], usual:number}>}
+ */
+export async function merchantHome() {
+  const ctx = merchantCtx();
+  const b = ctx.branch;
+  const settings = branchSettings(b.id);
+  const shop = brandShop();
+  const all = ordersOf(b.id);
+  const orders = all.filter((o) => o.channel !== 'counter');
+  const today = todayOf(all).filter((o) => o.status !== 'cancelled');
+  const sales = salesOf(today);
+  const status = (x) => {
+    const o = todayOf(ordersOf(x.id)).filter((y) => y.status !== 'cancelled');
+    return {
+      id: x.id, name: x.name, area: x.area, address: x.address, hours: x.hours, phone: x.phone, main: Boolean(x.main), sample: Boolean(x.sample),
+      manager: x.manager, account: x.account, open: branchSettings(x.id).open !== false, todayOrders: o.length, todaySales: salesOf(o),
+    };
+  };
+  return {
+    name: ctx.role === 'owner' ? DEMO_ACCOUNTS.merchant.name : b.manager.name,
+    role: ctx.role,
+    canAct: ctx.canAct,
+    takeover: ctx.role === 'owner' && !b.main && ctx.canAct,
+    branch: status(b),
+    branches: ctx.role === 'owner' ? branches().map(status) : null,
+    shop: { ...shop, area: b.area, address: b.address, hours: b.hours, opensAt: b.opensAt, closesAt: b.closesAt },
+    open: settings.open !== false,
+    available: Object.fromEntries(shop.menu.map((i) => [i.id, settings.available[i.id] !== false])),
+    orders,
+    counter: todayOf(all).filter((o) => o.channel === 'counter'),
+    today: { orders: today.length, sales },
+    week: [6, 5, 4, 3, 2, 1, 0].map((d) => daySales(b, d)),
+    usual: usualSales(b),
+  };
 }
 
-/** Open or close the shop for orders. */
+/**
+ * Sales for the analytics page: one branch or all of them ('all', owner only), for today, the last 7 days or this
+ * month. A branch account always gets its own branch.
+ * DEMO: days before today are SAMPLE numbers (`sampleHistory`), with orders and cancellations estimated from them;
+ * today, the top items and the cancelled list come from the orders in this browser.
+ * @param {{range:'day'|'week'|'month', branchId?:string}} q
+ * @returns {Promise<{range, branchId, branches:Array<{id,name}>|null, total, previous, orders, average, cancelled,
+ *   cancelledAmount, series:Array<{label:string, value:number, now?:boolean}>, top:Array<{name, qty, sales}>,
+ *   (previous: the period before; for 'day', yesterday up to the same hour)
+ *   cancelledList:Array<{id, customer, amount, at}>, channels:{online, counter}, sampleHistory:boolean}>}
+ *   channels: sales of the orders in this browser, online vs counter (POS)
+ */
+export async function merchantSales({ range = 'day', branchId = 'all' } = {}) {
+  const ctx = merchantCtx();
+  if (!['day', 'week', 'month'].includes(range)) throw bad('Unknown range');
+  const all = branches();
+  let picked;
+  if (ctx.role === 'branch') picked = [ctx.branch];
+  else picked = branchId === 'all' ? all : all.filter((b) => b.id === branchId);
+  if (!picked.length) throw Object.assign(new Error('Branch not found'), { status: 404 });
+  const sum = (daysAgo) => picked.reduce((n, b) => n + daySales(b, daysAgo), 0);
+  const today = new Date();
+  const days = range === 'day' ? 1 : range === 'week' ? 7 : today.getDate();
+  const orders = picked.flatMap((b) => ordersOf(b.id));
+  const inRange = orders.filter((o) => o.placedAt >= midnight(days - 1));
+  const open = Math.min(...picked.map((b) => Number(b.opensAt.slice(0, 2))));
+  const close = Math.max(...picked.map((b) => Number(b.closesAt.slice(0, 2))));
+  let series;
+  if (range === 'day') {
+    series = [];
+    for (let h = open; h < close; h += 1) {
+      const value = salesOf(inRange.filter((o) => new Date(o.placedAt).getHours() === h));
+      series.push({ label: `${((h + 11) % 12) + 1}${h < 12 ? 'a' : 'p'}`, value, now: h === today.getHours() });
+    }
+  } else {
+    series = Array.from({ length: days }, (_, i) => {
+      const daysAgo = days - 1 - i;
+      const d = new Date(midnight(daysAgo));
+      const label = range === 'week' ? (daysAgo ? d.toLocaleDateString('en-PH', { weekday: 'short' }) : 'Today') : String(d.getDate());
+      return { label, value: sum(daysAgo), now: daysAgo === 0 };
+    });
+  }
+  let total = 0;
+  for (let d = 0; d < days; d += 1) total += sum(d);
+  let previous = 0;
+  for (let d = days; d < days * 2; d += 1) previous += sum(d);
+  // Today is compared with yesterday up to this hour, not with all of yesterday
+  if (range === 'day') previous = Math.round(previous * Math.min(1, Math.max(0, (today.getHours() + today.getMinutes() / 60 - open) / (close - open))));
+  const pastTotal = total - salesOf(inRange);
+  const pastOrders = Math.round(pastTotal / 95); // SAMPLE: about ₱95 an order
+  const real = inRange.filter((o) => o.status !== 'cancelled');
+  const cancelledReal = inRange.filter((o) => o.status === 'cancelled');
+  const count = real.length + pastOrders;
+  const top = new Map();
+  real.forEach((o) => o.lines.forEach((l) => {
+    const t = top.get(l.name) || { name: l.name, qty: 0, sales: 0 };
+    t.qty += l.qty; t.sales += l.price * l.qty;
+    top.set(l.name, t);
+  }));
+  return {
+    range,
+    branchId: ctx.role === 'branch' ? ctx.branch.id : branchId,
+    branches: ctx.role === 'owner' ? all.map(({ id, name }) => ({ id, name })) : null,
+    total, previous,
+    orders: count,
+    average: count ? Math.round(total / count) : 0,
+    cancelled: cancelledReal.length + Math.round(pastOrders * 0.03),
+    cancelledAmount: cancelledReal.reduce((n, o) => n + o.subtotal, 0) + Math.round(pastOrders * 0.03) * 95,
+    series,
+    top: [...top.values()].sort((a, b) => b.sales - a.sales).slice(0, 5),
+    cancelledList: cancelledReal.map((o) => ({ id: o.id, customer: o.customer || 'Customer', amount: o.subtotal, at: o.placedAt })),
+    channels: { online: salesOf(real.filter((o) => o.channel !== 'counter')), counter: salesOf(real.filter((o) => o.channel === 'counter')) },
+    sampleHistory: range !== 'day',
+  };
+}
+
+/**
+ * POS: ring up a counter (walk-in) sale at the branch on screen. Lines are priced from the menu like online
+ * orders; sold-out items are refused. Cash needs the amount received (the change is worked out); GCash is
+ * paid in full. The sale counts in the dashboard and analytics, but not in the online order columns.
+ * DEMO: kept in this browser; no drawer or printer. Backend: e.g. POST /api/merchant/pos/sales
+ * @param {{items:Array<{id:string, qty:number, picks?:object}>, payment:'cash'|'gcash', cash?:number}} sale
+ * @returns {Promise<{id, lines, subtotal, payment, cash:number|null, change:number|null, placedAt:number}>}
+ */
+export async function posSale({ items, payment, cash } = {}) {
+  const ctx = merchantCtx();
+  if (!ctx.canAct) throw forbidden(VIEW_ONLY);
+  const shop = branchShop(ctx.branch);
+  const byId = new Map(shop.menu.map((m) => [m.id, m]));
+  const lines = (items || []).filter((l) => byId.has(l.id) && l.qty > 0).map((l) => {
+    const item = byId.get(l.id);
+    if (item.soldOut) throw Object.assign(new Error(`${item.name} is sold out. Remove it to finish the sale.`), { status: 409 });
+    const picks = cleanPicks(item, l.picks);
+    return { id: l.id, name: item.name, price: unitPrice(item, picks), qty: Math.min(Math.round(l.qty), 99), picks, options: pickLabels(item, picks), note: '' };
+  });
+  if (!lines.length) throw bad('Add something to the sale first.');
+  const subtotal = lines.reduce((n, l) => n + l.price * l.qty, 0);
+  if (!['cash', 'gcash'].includes(payment)) throw bad('Pick how the customer pays.');
+  const received = payment === 'cash' ? Number(cash) : null;
+  if (payment === 'cash' && (!Number.isFinite(received) || received < subtotal)) throw bad('The cash received is less than the total.');
+  const sale = {
+    id: demo.id('POS').toUpperCase(), channel: 'counter', customer: 'Walk-in',
+    shop: { id: ctx.branch.id, name: shop.name }, lines, subtotal, payment,
+    cash: received, change: received === null ? null : Math.round((received - subtotal) * 100) / 100,
+    status: 'completed', placedAt: Date.now(),
+  };
+  if (!demo.set('posSales', [sale, ...demo.get('posSales', [])].slice(0, 300))) throw Object.assign(new Error('Couldn’t save the sale.'), { status: 507 });
+  return sale;
+}
+
+/** Open or close the branch on screen for orders. */
 export async function setShopOpen(open) {
-  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
-  const settings = demo.get('merchant', { open: true, available: {} });
-  demo.set('merchant', { ...settings, open: Boolean(open) });
+  const ctx = merchantCtx();
+  if (!ctx.canAct) throw forbidden(VIEW_ONLY);
+  saveBranchSettings(ctx.branch.id, { ...branchSettings(ctx.branch.id), open: Boolean(open) });
   return { open: Boolean(open) };
 }
 
-/** Mark a menu item available or sold out. */
+/** Mark a menu item available or sold out at the branch on screen. */
 export async function setItemAvailable(itemId, available) {
-  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
-  const settings = demo.get('merchant', { open: true, available: {} });
-  demo.set('merchant', { ...settings, available: { ...settings.available, [itemId]: Boolean(available) } });
+  const ctx = merchantCtx();
+  if (!ctx.canAct) throw forbidden(VIEW_ONLY);
+  const settings = branchSettings(ctx.branch.id);
+  saveBranchSettings(ctx.branch.id, { ...settings, available: { ...settings.available, [itemId]: Boolean(available) } });
   return { ok: true };
 }
 
@@ -1053,12 +1443,12 @@ function saveEdits(edits) {
 }
 
 /**
- * Change the shop's photo, name or short description (`about`). Only the fields given change.
- * DEMO: kept in this browser. BACKEND: upload the photo (a data URL here) and store its URL in `image`.
+ * Change the shop's photo, name or short description (`about`), for every branch. Only the fields given change.
+ * Owner only. DEMO: kept in this browser. BACKEND: upload the photo (a data URL here) and store its URL in `image`.
  * @returns {Promise<object>} the shop as `merchantHome().shop` shows it
  */
 export async function updateShop({ name, about, image } = {}) {
-  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  ownerCtx();
   const edits = demo.get('merchantEdits', { shop: {}, items: {} });
   const next = { ...edits.shop };
   if (name !== undefined) next.name = cleanText(name, 60, 'shop name', true);
@@ -1072,13 +1462,13 @@ export async function updateShop({ name, about, image } = {}) {
 }
 
 /**
- * Change a menu item's photo, name, description (`note`), price or section. Only the fields given change.
- * `price` is the base price in whole pesos; variant prices stay added on top of it.
+ * Change a menu item's photo, name, description (`note`), price or section, for every branch. Only the fields given
+ * change. `price` is the base price in whole pesos; variant prices stay added on top of it. Owner only.
  * DEMO: kept in this browser. BACKEND: upload the photo and store its URL in `image`.
  * @returns {Promise<object>} the item as `merchantHome().shop.menu` shows it
  */
 export async function updateItem(itemId, { name, note, price, section, image } = {}) {
-  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
+  ownerCtx();
   if (!DEMO_ACCOUNTS.merchant.shop.menu.some((i) => i.id === itemId)) throw Object.assign(new Error('Item not found'), { status: 404 });
   const edits = demo.get('merchantEdits', { shop: {}, items: {} });
   const next = { ...edits.items[itemId] };
@@ -1098,17 +1488,22 @@ export async function updateItem(itemId, { name, note, price, section, image } =
   return (await merchantHome()).shop.menu.find((i) => i.id === itemId);
 }
 
-/** Move an order along (Accept, Decline, Start preparing, Ready for pickup). */
+/** Move an order of the branch on screen along (Accept, Decline, Start preparing, Ready for pickup). */
 export async function updateMerchantOrder(orderId, actionId) {
-  if (!demo.get('merchantSession', null)) throw Object.assign(new Error('Sign in first'), { status: 401 });
-  const key = sampleMerchantOrders().some((o) => o.id === orderId) ? 'merchantSampleOrders' : 'orders';
-  const orders = demo.get(key, []);
+  const ctx = merchantCtx();
+  const id = ctx.branch.id;
+  const inSample = sampleOrders(id).some((o) => o.id === orderId);
+  if (!inSample && !demo.get('orders', []).some((o) => o.id === orderId && o.shop.id === id)) throw Object.assign(new Error('Order not found'), { status: 404 });
+  if (!ctx.canAct) throw forbidden(VIEW_ONLY);
+  const main = id === MAIN_ID();
+  const key = !inSample ? 'orders' : main ? 'merchantSampleOrders' : 'branchSampleOrders';
+  const stored = demo.get(key, []);
+  const orders = inSample && !main ? stored[id] : stored;
   const order = orders.find((o) => o.id === orderId);
-  if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });
   const action = (MERCHANT_ACTIONS[order.status] || []).find((a) => a.id === actionId);
   if (!action) throw Object.assign(new Error('That step isn’t possible now.'), { status: 409 });
   order.status = action.to;
-  demo.set(key, orders);
+  demo.set(key, stored);
   return { status: order.status };
 }
 
@@ -1124,7 +1519,9 @@ export async function updateMerchantOrder(orderId, actionId) {
  */
 export async function listShops({ near, category = 'all', q = '' } = {}) {
   const text = q.trim().toLowerCase();
-  const shops = SHOPS
+  // The demo merchant's shop is listed once, as its nearest branch that is taking orders
+  const live = liveBranches().map((b) => ({ ...b, accepting: branchSettings(b.id).open !== false }));
+  const shops = [...SHOPS, branchShop(nearestBranch(live, near))]
     .filter((s) => category === 'all' || s.category === category)
     .filter((s) => !text || [s.name, s.area, SHOP_CATEGORIES.find((c) => c.id === s.category)?.name || ''].some((t) => t.toLowerCase().includes(text)) || s.menu.some((m) => m.name.toLowerCase().includes(text)))
     .map(({ menu, ...s }) => ({ ...s, items: menu.filter((m) => !m.bundle).length, km: near ? haversineKm(near, s) : null }))
@@ -1138,9 +1535,12 @@ export async function listShops({ near, category = 'all', q = '' } = {}) {
  *   color, tint, rating, image, about,
  *   menu:Array<{id, name, note, price:number, section, tag?, bundle?, image:string|null, art?, options:Array}>}>}
  *   options: [{id, name, type:'one'|'many', required, max?, choices:[{name, price, hint?}], showIf?}] (see menu.js)
+ *   A shop with branches also has brand (its main id), branch {id, name}, branches [{id, name, area}], accepting
+ *   (its Accept orders switch) and soldOut on its menu items.
  */
 export async function shopMenu(shopId) {
-  const shop = SHOPS.find((s) => s.id === shopId);
+  const branch = liveBranches().find((b) => b.id === shopId);
+  const shop = SHOPS.find((s) => s.id === shopId) || (branch && branchShop(branch));
   if (!shop) throw Object.assign(new Error('Shop not found'), { status: 404 });
   return shop;
 }
@@ -1166,9 +1566,11 @@ export async function deliveryQuote(shopId, address) {
  */
 export async function placeOrder(order) {
   const shop = await shopMenu(order.shopId);
+  if (shop.accepting === false) throw Object.assign(new Error('This branch isn’t taking orders right now. Try another branch.'), { status: 409 });
   const byId = new Map(shop.menu.map((m) => [m.id, m]));
   const lines = (order.items || []).filter((l) => byId.has(l.id) && l.qty > 0).map((l) => {
     const item = byId.get(l.id);
+    if (item.soldOut) throw Object.assign(new Error(`${item.name} is sold out at this branch. Remove it to order.`), { status: 409 });
     const picks = cleanPicks(item, l.picks);
     return {
       id: l.id, name: item.name, price: unitPrice(item, picks), qty: Math.min(Math.round(l.qty), 99),
@@ -1180,7 +1582,7 @@ export async function placeOrder(order) {
   await wait(1000);
   const saved = {
     id: demo.id('SHOP'),
-    shop: { id: shop.id, name: shop.name, area: shop.area },
+    shop: { id: shop.id, name: shop.name, area: shop.area, ...(shop.branch ? { branch: shop.branch.name } : {}) },
     lines,
     subtotal: lines.reduce((n, l) => n + l.price * l.qty, 0),
     deliveryFee: quote.fee,

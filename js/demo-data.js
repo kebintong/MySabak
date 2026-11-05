@@ -221,6 +221,43 @@ export const DEMO_MERCHANT_ORDERS = [
 /* Sales per day for the last 7 days, oldest first (the last one is today, before the sample orders). */
 export const DEMO_MERCHANT_WEEK = [1840, 2210, 1675, 2490, 3120, 3560, 0];
 
+/* Branches. Demo Kitchen's own shop above is its main branch (Capitol Site, near CDUH), run by the owner.
+   Talisay is a SAMPLE second branch with its own branch account (manager login below), so the owner and
+   branch views can both be tried. `scale` sizes its SAMPLE sales history against the main branch. */
+export const DEMO_BRANCHES = [
+  {
+    id: 'demo-kitchen-talisay', name: 'Talisay', area: 'Talisay City', address: 'Tabunok, Talisay City', phone: '0917 000 0012',
+    lng: 123.8495, lat: 10.2620, opensAt: '10:00', closesAt: '20:00', hours: '10:00 AM – 8:00 PM', scale: 0.6,
+    manager: { name: 'Liza Ramos', login: 'talisay@mysabak.demo' }, password: 'mysabak-demo',
+  },
+];
+/* SAMPLE orders for the SAMPLE branches, like DEMO_MERCHANT_ORDERS. */
+export const DEMO_BRANCH_ORDERS = {
+  'demo-kitchen-talisay': [
+    { id: 'DT-2011', customer: 'Lea', minutesAgo: 4, status: 'placed', notes: '',
+      lines: [{ name: 'Pork sinigang', qty: 1, price: 150, options: ['Bowl'] }, { name: 'Rice', qty: 1, price: 20, options: ['Plain'] }] },
+    { id: 'DT-2010', customer: 'Jomar', minutesAgo: 18, status: 'preparing', notes: 'Less salt, please.',
+      lines: [{ name: 'Chicken adobo + rice', qty: 2, price: 120, options: ['Solo'] }] },
+    { id: 'DT-2009', customer: 'Mae', minutesAgo: 55, status: 'cancelled', notes: '',
+      lines: [{ name: 'Leche flan', qty: 2, price: 60, options: ['Slice'] }] },
+  ],
+};
+/* Where a new branch can be (Add branch). Approximate centers; the street is typed in.
+   Backend: replace with a map pin or place search. */
+export const BRANCH_AREAS = [
+  { id: 'talisay', name: 'Talisay City', lng: 123.8495, lat: 10.2620 },
+  { id: 'mandaue', name: 'Mandaue City', lng: 123.9420, lat: 10.3330 },
+  { id: 'lapulapu', name: 'Lapu-Lapu City', lng: 123.9590, lat: 10.3100 },
+  { id: 'minglanilla', name: 'Minglanilla', lng: 123.7960, lat: 10.2440 },
+  { id: 'consolacion', name: 'Consolacion', lng: 123.9570, lat: 10.3770 },
+  { id: 'banilad', name: 'Banilad, Cebu City', lng: 123.9118, lat: 10.3435 },
+  { id: 'itpark', name: 'IT Park, Lahug', lng: 123.9058, lat: 10.3299 },
+  { id: 'mabolo', name: 'Mabolo, Cebu City', lng: 123.9145, lat: 10.3175 },
+  { id: 'guadalupe', name: 'Guadalupe, Cebu City', lng: 123.8810, lat: 10.3220 },
+  { id: 'colon', name: 'Colon, Cebu City', lng: 123.8990, lat: 10.2965 },
+  { id: 'srp', name: 'South Road Properties', lng: 123.8790, lat: 10.2820 },
+];
+
 /* Driver demo: SAMPLE job requests are made from these Cebu places (approximate positions),
    so the demo driver has Ride, Express and Shop delivery requests to try. Tagged "Demo" on screen. */
 export const DEMO_PLACES = [

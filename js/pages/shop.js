@@ -38,12 +38,19 @@ function renderInfo() {
   document.title = `${shop.name} · mysabak`;
   $('#shopName').textContent = shop.name;
   $('#shopAddr').textContent = shop.address || shop.area;
+  // A shop with branches: which one this is, and the others to switch to
+  if ((shop.branches || []).length > 1 && !$('#branchPick')) {
+    $('#shopAddr').insertAdjacentHTML('afterend', `<label class="branch-pick"><span>Branch</span>
+      <select id="branchPick">${shop.branches.map((b) => `<option value="${esc(b.id)}"${b.id === shop.id ? ' selected' : ''}>${esc(b.name)}${b.area !== b.name ? ` · ${esc(b.area)}` : ''}</option>`).join('')}</select></label>`);
+    $('#branchPick').addEventListener('change', (e) => { location.href = `/pages/shop.html?id=${encodeURIComponent(e.target.value)}`; });
+  }
   $('#shopAva').innerHTML = shop.image ? `<img src="${esc(shop.image)}" alt="">` : storefront(shop);
   const o = openState(shop);
   $('#shopFacts').innerHTML = [
     shop.rating ? `<span>★ ${shop.rating.toFixed(1)}</span>` : '',
     `<span>${esc(shop.hours)}</span>`,
-    o ? `<span class="${o.open ? 'is-open' : 'is-closed'}">${o.open ? 'Open now' : 'Closed now'}</span>` : '',
+    shop.accepting === false ? '<span class="is-closed">Not taking orders now</span>'
+      : o ? `<span class="${o.open ? 'is-open' : 'is-closed'}">${o.open ? 'Open now' : 'Closed now'}</span>` : '',
     '<span id="shopKm" hidden></span>',
   ].join('');
   $('#directions').href = `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
@@ -89,11 +96,11 @@ function sections() {
   return out;
 }
 
-const itemCard = (m) => `<button type="button" class="mcard" data-item="${esc(m.id)}">
+const itemCard = (m) => `<button type="button" class="mcard${m.soldOut ? ' is-sold' : ''}" data-item="${esc(m.id)}"${m.soldOut ? ' disabled' : ''}>
           <span class="mcard__img">${pic(m)}</span>${m.tag ? `<em class="mcard__tag">${esc(m.tag)}</em>` : ''}
           <span class="mcard__name">${esc(m.name)}</span>${m.note ? `<span class="mcard__note">${esc(m.note)}</span>` : ''}
-          <span class="mcard__foot"><span>${peso(m.price)}</span><i aria-hidden="true">${icon('i-plus', 'icon--sm icon--white')}</i></span>
-          <span class="sr-only">Choose options</span></button>`;
+          <span class="mcard__foot"><span>${m.soldOut ? 'Sold out' : peso(m.price)}</span>${m.soldOut ? '' : `<i aria-hidden="true">${icon('i-plus', 'icon--sm icon--white')}</i>`}</span>
+          ${m.soldOut ? '' : '<span class="sr-only">Choose options</span>'}</button>`;
 
 function renderMenu() {
   const secs = sections();
