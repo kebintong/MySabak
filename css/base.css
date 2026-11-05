@@ -110,11 +110,18 @@ body[data-state="trip"] [data-show]:not([data-show~="trip"]) { display: none !im
 /* =========================================================
    App shell + map
    ========================================================= */
+/* Pinned to the real screen, not 100dvh: some Android phones count the system bars in dvh when installed,
+   which pushed the tab bar off the bottom */
 .app {
-  position: relative;
-  height: 100vh;
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
+}
+/* Installed on iPhone the status bar is see-through (black-translucent, white text) over our purple headers.
+   Map screens have no header up there, so a purple strip keeps the clock readable (0px tall elsewhere). */
+.page--map .app::before, .is-ride .app::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; z-index: 60;
+  height: var(--safe-t); background: #5b2596; pointer-events: none;
 }
 .map {
   position: absolute;
