@@ -349,21 +349,22 @@ export async function cancelRide(bookingId) {
 /**
  * The customer's live Ride or Express booking, so any page can show it and the ride screen can pick it up again.
  * null when there's none. status: 'searching' (no driver yet), then as onTripUpdate; 'completed' stays until
- * endTrip(). Backend: the server knows the trip's status; return it here.
+ * endTrip(). progress: how far through that status it is (0–1). Backend: the server knows the trip's status.
  * DEMO: worked out from the clock and the timings onTripUpdate saved.
- * @returns {Promise<null|{id, kind:'ride'|'express', status:string, etaMinutes:number|null, booking:object, driver:object|null}>}
+ * @returns {Promise<null|{id, kind:'ride'|'express', status:string, progress:number, etaMinutes:number|null,
+ *   booking:object, driver:object|null}>}
  */
 export async function myActiveTrip() {
   let a = demo.get('activeTrip', null);
   if (!a) return null;
+  const trip = (status, progress, etaMinutes) => ({ id: a.id, kind: a.booking.kind, status, progress, etaMinutes, booking: a.booking, driver: a.driver });
   if (!a.driver) {
-    if (Date.now() < a.bookedAt + DEMO_ACCEPT_MS) return { id: a.id, kind: a.booking.kind, status: 'searching', etaMinutes: null, booking: a.booking, driver: null };
+    if (Date.now() < a.bookedAt + DEMO_ACCEPT_MS) return trip('searching', 0, null);
     a = demoAccept(a);
   }
-  if (!a.plan) return { id: a.id, kind: a.booking.kind, status: 'arriving', etaMinutes: null, booking: a.booking, driver: a.driver };
+  if (!a.plan) return trip('arriving', 0, null);
   const { i, f } = phaseAt(a.plan, Date.now() - a.acceptedAt - a.pausedMs);
-  const ph = a.plan[i];
-  return { id: a.id, kind: a.booking.kind, status: ph.status, etaMinutes: etaOf(ph, f), booking: a.booking, driver: a.driver };
+  return trip(a.plan[i].status, f, etaOf(a.plan[i], f));
 }
 
 /** The trip is over (done screen shown, or the driver cancelled): it's no longer live. */
@@ -1668,17 +1669,26 @@ export const ORDER_STEPS = [
 
 /**
  * A shop order and where it is.
- * DEMO: stays at 'placed' (no shop or rider updates it).
+ * DEMO: a sample shop's order moves along by itself (demoOrder); the demo merchant's moves when the merchant acts.
  * @returns {Promise<{id, shop, lines, subtotal, deliveryFee:number|null, address, notes, payment,
  *   status:'placed'|'accepted'|'preparing'|'ready'|'picked_up'|'delivered'|'cancelled', placedAt:number}>}
  */
 export async function orderStatus(orderId) {
   const order = demo.get('orders', []).find((o) => o.id === orderId);
   if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });
-  return order;
+  return demoOrder(order);
 }
 
 /** The signed-in user's shop orders, newest first. DEMO: this browser's. */
 export async function myOrders() {
-  return demo.get('orders', []);
+  return demo.get('orders', []).map(demoOrder);
+}
+
+// DEMO: no real shop or rider works a sample shop's order, so it moves along with time since it was placed
+// (the demo merchant's own branches move theirs from the merchant pages, so those are left as stored)
+const DEMO_ORDER_TIMES = [['accepted', 20e3], ['preparing', 40e3], ['ready', 150e3], ['picked_up', 180e3], ['delivered', 360e3]];
+function demoOrder(o) {
+  if (o.status !== 'placed' || !SHOPS.some((s) => s.id === o.shop.id)) return o;
+  const reached = DEMO_ORDER_TIMES.filter(([, ms]) => Date.now() - o.placedAt >= ms).pop();
+  return reached ? { ...o, status: reached[0] } : o;
 }

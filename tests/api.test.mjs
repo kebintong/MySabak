@@ -223,6 +223,7 @@ test('a live trip: kept from booking, its status read from the clock, gone when 
   localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 18500, pausedMs: 0 }));
   t = await api.myActiveTrip(); // 6 s into the 14 s trip
   assert.deepEqual([t.status, t.etaMinutes], ['on_trip', 7]);
+  assert.ok(Math.abs(t.progress - 6 / 14) < 0.01, 'how far through the trip part (the round button ring)');
   localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 60000, pausedMs: 0 }));
   assert.equal((await api.myActiveTrip()).status, 'completed'); // stays until the ride screen ends it
   await api.endTrip('RIDE-other');
@@ -233,6 +234,21 @@ test('a live trip: kept from booking, its status read from the clock, gone when 
   await api.findDriver(second.id);
   await api.cancelRide(second.id);
   assert.equal(await api.myActiveTrip(), null);
+});
+
+test('a sample shop order moves along by itself; the demo merchant’s own waits for the merchant', async () => {
+  const { TEST_SHOP } = await import('./fixtures.mjs'); // a sample shop here (see before())
+  const key = 'mysabak.demo.orders';
+  const before = localStorage.getItem(key);
+  const order = (id, shopId, ago) => ({ id, shop: { id: shopId, name: 'Shop' }, lines: [], subtotal: 100, status: 'placed', placedAt: Date.now() - ago });
+  localStorage.setItem(key, JSON.stringify([
+    order('S-new', TEST_SHOP.id, 5e3), order('S-cooking', TEST_SHOP.id, 50e3), order('S-old', TEST_SHOP.id, 400e3),
+    order('M-old', 'a-merchant-branch', 400e3),
+  ]));
+  const statuses = Object.fromEntries((await api.myOrders()).map((o) => [o.id, o.status]));
+  assert.deepEqual(statuses, { 'S-new': 'placed', 'S-cooking': 'preparing', 'S-old': 'delivered', 'M-old': 'placed' });
+  assert.equal((await api.orderStatus('S-cooking')).status, 'preparing');
+  if (before === null) localStorage.removeItem(key); else localStorage.setItem(key, before);
 });
 
 test('demo driver account: signs in with its password only, is approved and can go online', async () => {
