@@ -195,7 +195,7 @@ test('ride booking: a demo driver accepts, the trip reports where the driver is,
   await assert.rejects(api.findDriver('RIDE-nope'), { status: 404 });
 });
 
-test('a live trip: kept once a driver accepts, its status read from the clock, gone when ended or cancelled', async () => {
+test('a live trip: kept from booking, its status read from the clock, gone when ended or cancelled', async () => {
   const book = () => api.bookRide({
     kind: 'express', vehicle: 'motor', pickup: { lng: 123.88, lat: 10.31, label: 'A' }, dropoff: { lng: 123.89, lat: 10.32, label: 'B' },
     trip: { coords: [[123.88, 10.31], [123.89, 10.32]], minutes: 12 }, payment: 'cash', price: { fare: 90, tip: 10, total: 100 },
@@ -204,8 +204,10 @@ test('a live trip: kept once a driver accepts, its status read from the clock, g
   if (left) await api.endTrip(left.id);
   assert.equal(await api.myActiveTrip(), null);
   const { id } = await book();
+  let t = await api.myActiveTrip(); // live as soon as it's booked
+  assert.deepEqual([t.id, t.status, t.driver], [id, 'searching', null]);
   await api.findDriver(id);
-  let t = await api.myActiveTrip();
+  t = await api.myActiveTrip();
   assert.equal(t.id, id);
   assert.equal(t.kind, 'express');
   assert.equal(t.status, 'arriving');

@@ -224,22 +224,32 @@ async function startBooking() {
       price: state.price,
       ...(state.mode === 'express' ? { parcel: state.parcel } : {}),
     });
-    if (token !== bookingToken) return;
+    if (token !== bookingToken) { cancelRide(res.id).catch(() => {}); return; } // cancelled while it was sending
     state.booking = { id: res.id, demo: res.demo };
-    const driver = await findDriver(res.id);
-    if (token !== bookingToken) return;
-    state.driver = { ...driver, status: 'arriving', pos: null, eta: null };
-    state.step = 'trip';
-    render();
-    edgeGlow('reward', $('#payBtn')); // a driver accepted
-    stopTrip = onTripUpdate(res.id, onTrip);
-    trackTrip(); // the round button shows it from now on
+    trackTrip(); // the round button shows the search, and the trip after it
+    await awaitDriver(res.id, token);
   } catch (err) {
-    if (token !== bookingToken || err.status === 499) return;
-    console.warn(err);
-    toast(err.status === 404 ? 'No drivers are free nearby right now. Try again in a few minutes.' : `${errorMessage(err)} Booking didn’t go through.`);
-    backToChoose();
+    bookingFailed(err, token);
   }
+}
+
+// Booked (here, or before visiting another page): wait for a driver, then follow the trip
+async function awaitDriver(id, token) {
+  const driver = await findDriver(id);
+  if (token !== bookingToken) return;
+  state.driver = { ...driver, status: 'arriving', pos: null, eta: null };
+  state.step = 'trip';
+  render();
+  edgeGlow('reward', $('#payBtn')); // a driver accepted
+  stopTrip = onTripUpdate(id, onTrip);
+  trackTrip();
+}
+
+function bookingFailed(err, token) {
+  if (token !== bookingToken || err.status === 499) return;
+  console.warn(err);
+  toast(err.status === 404 ? 'No drivers are free nearby right now. Try again in a few minutes.' : `${errorMessage(err)} Booking didn’t go through.`);
+  backToChoose();
 }
 
 function onTrip(update) {
@@ -1110,21 +1120,25 @@ setPickup(state.pickup, { fromGPS: false, recenter: false });
 locateUser({ quiet: true });
 resumeTrip();
 
-/** A ride or parcel booked before you visited another page carries on where it is (a finished one shows its done
-    screen). Backend: myActiveTrip() is the server's live trip for this customer. */
+/** A ride or parcel booked before you visited another page carries on where it is: still looking for a driver,
+    or on its way (a finished one shows its done screen). Backend: myActiveTrip() is the server's live trip. */
 async function resumeTrip() {
   let t = null;
   try { t = await myActiveTrip(); } catch (err) { console.warn(err); }
   if (!t || state.booking) return; // nothing live, or a new booking already started here
   const b = t.booking;
+  const searching = t.status === 'searching';
   Object.assign(state, {
     mode: b.kind, vehicle: b.vehicle, payment: b.payment, price: b.price, parcel: b.parcel || null, trip: b.trip,
     pickup: { lng: b.pickup.lng, lat: b.pickup.lat }, pickupLabel: b.pickup.label,
     dest: b.dropoff.label, destPoint: { lng: b.dropoff.lng, lat: b.dropoff.lat },
-    booking: { id: t.id, demo: true }, driver: { ...t.driver, status: t.status, pos: null, eta: t.etaMinutes },
-    step: 'trip', loadingTrip: false, picking: false,
+    booking: { id: t.id, demo: true },
+    driver: searching ? null : { ...t.driver, status: t.status, pos: null, eta: t.etaMinutes },
+    step: searching ? 'search' : 'trip', loadingTrip: false, picking: false,
   });
   render();
   requestAnimationFrame(() => frame({ animate: false }));
-  stopTrip = onTripUpdate(t.id, onTrip);
+  if (!searching) { stopTrip = onTripUpdate(t.id, onTrip); return; }
+  const token = ++bookingToken;
+  awaitDriver(t.id, token).catch((err) => bookingFailed(err, token));
 }

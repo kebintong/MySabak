@@ -685,6 +685,25 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 /* The Cart step with an order: its total in the 64px circle (ui.js artInner) */
 .tab__total { color: #fff; font: 800 14px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap; }
 .tab__total--long { font-size: 11.5px; letter-spacing: -.02em; }
+/* A live ride or parcel on its step: an icon for where it's at (search, vehicle, hand, pin) over the fare */
+.tab__trip { display: grid; justify-items: center; gap: 2px; }
+.tab[data-tab="food"] .tab__trip .icon { width: 22px; height: 22px; }
+.tab__fare { color: #fff; font: 800 11px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap; }
+.tab__trip--searching .icon { animation: hunt 1.6s ease-in-out infinite; } /* the glass circles, looking */
+@keyframes hunt { 25% { transform: translate(2px, -1px); } 50% { transform: translate(0, -3px); } 75% { transform: translate(-2px, -1px); } }
+.tab__trip--arrived .icon { animation: wave .9s ease-in-out 3; transform-origin: 70% 80%; } /* the hand waves hello */
+@keyframes wave { 25% { transform: rotate(-14deg); } 75% { transform: rotate(10deg); } }
+@media (prefers-reduced-motion: reduce) { .tab__trip .icon { animation: none; } }
+/* Notches on the rim, one per step (Cart at the top, then clockwise): gold where something is live */
+.tab__notches { position: absolute; inset: 0; pointer-events: none; }
+.tab__notches i {
+  position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%;
+  background: rgba(255, 255, 255, .25);
+  transform: rotate(calc(var(--n) * 90deg)) translateY(-27px);
+  transition: background-color .25s, box-shadow .25s;
+}
+.tab__notches i.is-shown { background: rgba(255, 255, 255, .85); }
+.tab__notches i.is-live { background: var(--gold); box-shadow: 0 0 6px rgba(246, 196, 108, .9); }
 .tab__count {
   position: absolute; right: -6px; top: -6px; z-index: 1;
   min-width: 26px; height: 26px; padding: 0 5px; box-sizing: border-box; display: grid; place-items: center;
