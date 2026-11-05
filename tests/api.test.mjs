@@ -195,6 +195,44 @@ test('ride booking: a demo driver accepts, the trip reports where the driver is,
   await assert.rejects(api.findDriver('RIDE-nope'), { status: 404 });
 });
 
+test('a live trip: kept once a driver accepts, its status read from the clock, gone when ended or cancelled', async () => {
+  const book = () => api.bookRide({
+    kind: 'express', vehicle: 'motor', pickup: { lng: 123.88, lat: 10.31, label: 'A' }, dropoff: { lng: 123.89, lat: 10.32, label: 'B' },
+    trip: { coords: [[123.88, 10.31], [123.89, 10.32]], minutes: 12 }, payment: 'cash', price: { fare: 90, tip: 10, total: 100 },
+  });
+  const left = await api.myActiveTrip(); // the test above leaves its ride live
+  if (left) await api.endTrip(left.id);
+  assert.equal(await api.myActiveTrip(), null);
+  const { id } = await book();
+  await api.findDriver(id);
+  let t = await api.myActiveTrip();
+  assert.equal(t.id, id);
+  assert.equal(t.kind, 'express');
+  assert.equal(t.status, 'arriving');
+  assert.equal(t.booking.price.total, 100);
+  // 10 s of a 10 s approach + 2.5 s wait + 14 s trip, half of which was a traffic stop: arriving, 1 min left of 3
+  const key = 'mysabak.demo.activeTrip';
+  const saved = JSON.parse(localStorage.getItem(key));
+  const plan = [{ status: 'arriving', ms: 10000, eta: 3 }, { status: 'arrived', ms: 2500, eta: 0 },
+    { status: 'on_trip', ms: 14000, eta: 12 }, { status: 'completed', ms: 0, eta: 0 }];
+  localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 12000, pausedMs: 4000 }));
+  t = await api.myActiveTrip();
+  assert.deepEqual([t.status, t.etaMinutes], ['arriving', 1]);
+  localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 18500, pausedMs: 0 }));
+  t = await api.myActiveTrip(); // 6 s into the 14 s trip
+  assert.deepEqual([t.status, t.etaMinutes], ['on_trip', 7]);
+  localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 60000, pausedMs: 0 }));
+  assert.equal((await api.myActiveTrip()).status, 'completed'); // stays until the ride screen ends it
+  await api.endTrip('RIDE-other');
+  assert.ok(await api.myActiveTrip(), 'another booking id leaves it alone');
+  await api.endTrip(id);
+  assert.equal(await api.myActiveTrip(), null);
+  const second = await book();
+  await api.findDriver(second.id);
+  await api.cancelRide(second.id);
+  assert.equal(await api.myActiveTrip(), null);
+});
+
 test('demo driver account: signs in with its password only, is approved and can go online', async () => {
   const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
   const acc = DEMO_ACCOUNTS.driver;

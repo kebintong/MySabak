@@ -3,8 +3,8 @@
    Top bar + tab bar, toast, place search, tip picker and tip sheet.
    ========================================================= */
 import { CONFIG } from './config.js';
-import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut, shopMenu } from './api.js';
-import { peso as formatPeso, cleanTip, cartTotals } from './money.js';
+import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut, shopMenu, myActiveTrip } from './api.js';
+import { peso as formatPeso, cleanTip, cartTotals, isNum } from './money.js';
 import { getCart } from './cart.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -181,27 +181,38 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
       }).join('');
       foodToCart(); // first: the dial starts where the order says, without a roll
       armLoop(nav);
+      trackTrip();
     }
     return user;
   });
 }
 
-/* The order on the round button: a gold item count, and on the Cart step the total in place of the cart icon */
+/* What the round button shows besides its icons: the shop order (Cart step: its total; gold badge: the item
+   count) and a live ride or parcel (its step: the fare; gold badge: minutes until the driver, then drop-off) */
 const order = { count: 0, total: '' };
-let onOrder = () => {}; // set by armLoop: the dial follows the order
+let trip = null; // { kind:'ride'|'express', fare:'₱120'|'', status, eta:number|null }
+let onChange = () => {}; // set by armLoop: the dial follows the order and the trip
 
 /** Show the order on the round button: item count and total (e.g. "₱360"); 0 items shows the plain cart. */
 export function showOrder(count, total = '') {
-  const changed = count !== order.count;
   order.count = count;
   order.total = count ? total : '';
-  const food = $('.tab[data-tab="food"]');
-  if (food) {
-    $$('.tab__count', food).forEach((n) => n.remove());
-    if (count) $('.tab__icon', food).insertAdjacentHTML('beforeend', `<span class="tab__count" aria-hidden="true">${count}</span>`);
-    if (count && changed) pop($('.tab__count', food), 0.6);
-  }
-  onOrder();
+  onChange();
+}
+
+/** Show the customer's live ride or parcel on the round button, and keep it current while there is one.
+    The ride screen calls this when a booking starts or ends; every page calls it once on load. */
+let tripTimer = 0;
+export function trackTrip() {
+  clearTimeout(tripTimer);
+  myActiveTrip().then((t) => {
+    const live = t && t.status !== 'completed' ? t : null;
+    const p = live && live.booking.price;
+    trip = live && { kind: live.kind, status: live.status, eta: live.etaMinutes, fare: p && isNum(p.total) ? peso(p.total) : '' };
+    onChange();
+    // shortcut: polls every 5 s while a trip is live; a backend could push status changes instead
+    if (live) tripTimer = setTimeout(trackTrip, 5000);
+  }).catch(() => { /* no trip shown: the ride screen still has it */ });
 }
 
 // Every page: the count straight away, the total once the shop's menu is in (prices always come from the menu)
@@ -238,7 +249,9 @@ export function cartRows(lines) {
    On its own page a tap does nothing. A page can take over a tap (the shop opens its order sheet for Cart) by
    cancelling the 'loop:open' event, whose detail is the step's label. */
 const CART = 0;
+const RIDE = 1;
 const FOOD = 2;
+const PARCEL = 3;
 export const LOOP = [
   { label: 'Cart', href: '/pages/cart.html', icon: 'i-cart' },
   { label: 'Ride', href: '/#ride', icon: 'i-car' },
@@ -254,9 +267,9 @@ const GLIDE = 'cubic-bezier(.22, 1, .36, 1)';
 export function loopStep(path, hash, tab) {
   if (path.startsWith('/pages/cart') || path.startsWith('/pages/checkout')) return CART;
   if (tab === 'food') return FOOD;
-  if (path !== '/' && path !== '/index.html') return 0;
-  if (hash === '#parcel') return 3;
-  return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? 1 : 0;
+  if (path !== '/' && path !== '/index.html') return CART;
+  if (hash === '#parcel') return PARCEL;
+  return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? RIDE : CART;
 }
 
 /** Change in angle from prev to next, in degrees, the short way round: (-180, 180]. */
@@ -265,11 +278,30 @@ export function turnDelta(prev, next) {
   return d > 180 ? d - 360 : d;
 }
 
-// The Cart with an order shows its total (smaller when long, so ₱12,345 still fits the circle)
-const artInner = (i) => (i === CART && order.total
-  ? `<b class="tab__total${order.total.length > 6 ? ' tab__total--long' : ''}">${esc(order.total)}</b>`
+// The live trip's step: Parcel for an Express delivery, Ride otherwise
+const tripStep = () => (trip ? (trip.kind === 'express' ? PARCEL : RIDE) : -1);
+// A step's money in place of its icon: the Cart's order total, the live trip's fare ('' = the icon)
+const face = (i) => (i === CART ? order.total : i === tripStep() ? trip.fare : '');
+// A step's gold badge: the trip's minutes ("Here" once the driver is) on its step, else the order's item count
+function badge(i) {
+  if (i === tripStep()) return trip.status === 'arrived' ? 'Here' : isNum(trip.eta) ? `${trip.eta}m` : '';
+  return order.count ? String(order.count) : '';
+}
+// Words for screen readers: what the step holds right now
+function says(i) {
+  if (i === tripStep()) {
+    const t = { arriving: isNum(trip.eta) ? `driver ${trip.eta} min away` : 'driver on the way', arrived: 'driver is here',
+      on_trip: isNum(trip.eta) ? `${trip.eta} min to drop-off` : 'on the way' }[trip.status] || 'booked';
+    return `${LOOP[i].label}, ${t}${trip.fare ? `, ${trip.fare}` : ''}`;
+  }
+  if (i === CART && order.count) return `Cart, ${order.count} item${order.count === 1 ? '' : 's'}${order.total ? `, ${order.total}` : ''}`;
+  return LOOP[i].label;
+}
+// The money is smaller when long, so ₱12,345 still fits the circle
+const artInner = (i) => (face(i)
+  ? `<b class="tab__total${face(i).length > 6 ? ' tab__total--long' : ''}">${esc(face(i))}</b>`
   : icon(LOOP[i].icon));
-const loopArt = (i) => `<span class="tab__art" data-total="${esc(i === CART ? order.total : '')}">${artInner(i)}</span>`;
+const loopArt = (i) => `<span class="tab__art" data-face="${esc(face(i))}">${artInner(i)}</span>`;
 // The icon tilts with the finger between steps, so it feels attached (at most ±36°)
 const tilt = (deg) => (deg ? `rotate(${(deg * 0.4).toFixed(1)}deg)` : '');
 const LEARNED_KEY = 'mysabak.swiped'; // set after the first turn: no more hint
@@ -307,12 +339,18 @@ function armLoop(nav) {
   let rested = 0; // the rest step last time we looked: a dial still there follows the order
   let press = null; // this press: the button's centre, the last angle, degrees turned since the last step
   let swiped = false; // this press turned the button, so its click must not follow the link
+  let badged = { step: -1, text: '' }; // the badge last drawn: a new number on the same step bounces
   const name = (i) => {
     step = i;
-    const label = i === CART && order.count
-      ? `Cart, ${order.count} item${order.count === 1 ? '' : 's'}${order.total ? `, ${order.total}` : ''}` : LOOP[i].label;
+    const label = says(i);
     $('.tab__label', food).textContent = label;
     $('#loopHint').textContent = `Showing ${label}${at(i) ? '' : ', tap to open it'}. Turn it, or press the arrow keys, to pick another page.`;
+    const text = badge(i);
+    if (text === badged.text && i === badged.step) return;
+    $$('.tab__count', food).forEach((n) => n.remove());
+    if (text) box.insertAdjacentHTML('beforeend', `<span class="tab__count" aria-hidden="true">${esc(text)}</span>`);
+    if (text && badged.text && i === badged.step) pop($('.tab__count', food), 0.6);
+    badged = { step: i, text };
   };
   const paint = (i) => { roll.innerHTML = loopArt(i); name(i); rested = rest(); };
   paint(rest());
@@ -339,21 +377,21 @@ function armLoop(nav) {
     name(to);
   };
 
-  // The order changed: a dial resting where it should rolls to the new rest (first item in a shop → the Cart
-  // and its total; last one out → back to Food); a dial on the Cart just shows the new total
-  onOrder = () => {
+  // The order or the trip changed: a dial resting where it should rolls to the new rest (first item in a shop →
+  // the Cart and its total; last one out → back to Food); otherwise the step shown gets its new money and badge
+  onChange = () => {
     const was = rested;
     rested = rest();
     if (press) return;
     if (step === was && rested !== was) { turn(1, rested); return; }
-    if (step !== CART) return;
     const art = shown();
-    name(CART);
-    const before = art.dataset.total;
-    if (before === order.total) return;
-    art.dataset.total = order.total;
-    art.innerHTML = artInner(CART);
-    if (before) pop(box, 1.1); // a changed total bounces; the first one arriving on load doesn't
+    const before = art.dataset.face;
+    if (before !== face(step)) {
+      art.dataset.face = face(step);
+      art.innerHTML = artInner(step);
+      if (before && face(step)) pop(box, 1.1); // a changed total bounces; the first one arriving on load doesn't
+    }
+    name(step);
   };
 
   // Until the first turn: a second after load the button tilts, the next icon peeks in, and a bubble says so
@@ -455,6 +493,7 @@ export function filterTabs(nav, user) {
   $$('[data-tab]', nav).forEach((a) => { a.hidden = !role.tabs.includes(a.dataset.tab); });
   foodToCart();
   armLoop(nav);
+  trackTrip();
 }
 
 const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
