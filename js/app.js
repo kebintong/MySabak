@@ -24,10 +24,10 @@
 import { CONFIG } from './config.js';
 import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
-  findDriver, cancelRide, onTripUpdate, rateRide, currentUser, myTrips,
+  findDriver, cancelRide, onTripUpdate, rateRide, currentUser, myTrips, myActiveTrip, endTrip,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
-import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr } from './ui.js';
+import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr, trackTrip } from './ui.js';
 import { splitPrice, cleanTip } from './money.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -233,6 +233,7 @@ async function startBooking() {
     render();
     edgeGlow('reward', $('#payBtn')); // a driver accepted
     stopTrip = onTripUpdate(res.id, onTrip);
+    trackTrip(); // the round button shows it from now on
   } catch (err) {
     if (token !== bookingToken || err.status === 499) return;
     console.warn(err);
@@ -249,6 +250,7 @@ function onTrip(update) {
   if (changed) frame();
   if (update.status === 'completed') {
     stopTrip();
+    endTrip(state.booking.id).then(trackTrip);
     showTripDone({
       id: state.booking.id, kind: state.mode, vehicle: vehicleById(state.vehicle), driver: state.driver,
       from: fromText(), to: state.dest, distance: distanceText(), duration: durationText(),
@@ -262,6 +264,7 @@ function onTrip(update) {
 }
 
 function backToChoose() {
+  if (state.booking) endTrip(state.booking.id).then(trackTrip); // cancelled either side: no longer live
   bookingToken++;
   stopTrip();
   state.step = 'choose';
@@ -451,6 +454,7 @@ const fromText = () => (state.pickupFromGPS ? 'Current location' : state.pickupL
    Pickup + location
    ========================================================= */
 async function setPickup(point, { fromGPS = false, recenter = true } = {}) {
+  if (state.booking) return; // booked: the pickup is fixed (GPS arriving late can't move it)
   state.pickup = { lng: point.lng, lat: point.lat };
   state.pickupFromGPS = fromGPS;
   state.pickupLabel = 'Finding address…';
@@ -465,6 +469,7 @@ async function setPickup(point, { fromGPS = false, recenter = true } = {}) {
     state.pickupLabel = label || 'Pinned pickup';
   } catch (err) {
     console.warn(err);
+    if (asked !== state.pickup) return; // a newer pickup (or a resumed trip's) already has its name
     state.pickupLabel = 'Pinned pickup';
   }
   render();
@@ -1038,7 +1043,7 @@ function route() {
   el.body.classList.toggle('is-home', !ride);
   $('#map').inert = !ride; // under the home: keep it out of tab order and screen readers
   if (!ride) { renderHomeTrips(); return; }
-  setMode(link === 'parcel' ? 'express' : 'ride');
+  if (!state.booking) setMode(link === 'parcel' ? 'express' : 'ride'); // a booked trip keeps its mode
   if (link === 'moto') selectVehicle('motor');
   if (link === 'rebook') {
     const r = latestRecent();
@@ -1103,3 +1108,23 @@ initMap({
 });
 setPickup(state.pickup, { fromGPS: false, recenter: false });
 locateUser({ quiet: true });
+resumeTrip();
+
+/** A ride or parcel booked before you visited another page carries on where it is (a finished one shows its done
+    screen). Backend: myActiveTrip() is the server's live trip for this customer. */
+async function resumeTrip() {
+  let t = null;
+  try { t = await myActiveTrip(); } catch (err) { console.warn(err); }
+  if (!t || state.booking) return; // nothing live, or a new booking already started here
+  const b = t.booking;
+  Object.assign(state, {
+    mode: b.kind, vehicle: b.vehicle, payment: b.payment, price: b.price, parcel: b.parcel || null, trip: b.trip,
+    pickup: { lng: b.pickup.lng, lat: b.pickup.lat }, pickupLabel: b.pickup.label,
+    dest: b.dropoff.label, destPoint: { lng: b.dropoff.lng, lat: b.dropoff.lat },
+    booking: { id: t.id, demo: true }, driver: { ...t.driver, status: t.status, pos: null, eta: t.etaMinutes },
+    step: 'trip', loadingTrip: false, picking: false,
+  });
+  render();
+  requestAnimationFrame(() => frame({ animate: false }));
+  stopTrip = onTripUpdate(t.id, onTrip);
+}

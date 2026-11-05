@@ -308,15 +308,50 @@ export async function findDriver(bookingId) {
   await wait(3200);
   if ((demo.get('cancelled', []) || []).includes(bookingId)) throw Object.assign(new Error('Cancelled'), { status: 499 });
   const d = DEMO_DRIVERS[booking.vehicle] || DEMO_DRIVERS.sedan;
-  return { id: `DRV-${booking.vehicle}`, name: d.name, rating: d.rating, trips: d.trips, phone: null, photo: null,
+  const driver = { id: `DRV-${booking.vehicle}`, name: d.name, rating: d.rating, trips: d.trips, phone: null, photo: null,
     vehicle: { type: booking.vehicle, ...d.vehicle }, demo: true };
+  // The trip is live from here, on every page (myActiveTrip), until endTrip() or cancelRide()
+  demo.set('activeTrip', { id: bookingId, booking, driver, acceptedAt: Date.now(), pausedMs: 0, plan: null });
+  return driver;
 }
 
 /** Cancel a booking (while searching, or before pickup). DEMO: remembered in this browser. */
 export async function cancelRide(bookingId) {
   demo.set('cancelled', [bookingId, ...demo.get('cancelled', [])].slice(0, 20));
+  endTrip(bookingId);
   return { ok: true };
 }
+
+/**
+ * The customer's live Ride or Express booking (a driver accepted it), so any page can show it and the ride
+ * screen can pick it up again. null when there's none. status as onTripUpdate; 'completed' stays until endTrip().
+ * Backend: the server knows the trip's status; return it here.
+ * DEMO: worked out from the clock and the timings onTripUpdate saved.
+ * @returns {Promise<null|{id, kind:'ride'|'express', status:string, etaMinutes:number|null, booking:object, driver:object}>}
+ */
+export async function myActiveTrip() {
+  const a = demo.get('activeTrip', null);
+  if (!a) return null;
+  if (!a.plan) return { id: a.id, kind: a.booking.kind, status: 'arriving', etaMinutes: null, booking: a.booking, driver: a.driver };
+  const { i, f } = phaseAt(a.plan, Date.now() - a.acceptedAt - a.pausedMs);
+  const ph = a.plan[i];
+  return { id: a.id, kind: a.booking.kind, status: ph.status, etaMinutes: etaOf(ph, f), booking: a.booking, driver: a.driver };
+}
+
+/** The trip is over (done screen shown, or the driver cancelled): it's no longer live. */
+export async function endTrip(bookingId) {
+  const a = demo.get('activeTrip', null);
+  if (a && a.id === bookingId) demo.set('activeTrip', null);
+}
+
+// Which phase of a trip plan a clock (ms since the driver accepted) is in, and how far through it (0–1)
+function phaseAt(plan, clock) {
+  let t = Math.max(0, clock);
+  let i = 0;
+  while (i < plan.length - 1 && t >= plan[i].ms) { t -= plan[i].ms; i++; }
+  return { i, f: plan[i].ms ? t / plan[i].ms : 1 };
+}
+const etaOf = (ph, f) => (ph.eta === null ? null : Math.max(0, Math.ceil(ph.eta * (1 - f))));
 
 /**
  * Follow a booking once a driver accepted: where the driver is and what's happening.
@@ -324,12 +359,14 @@ export async function cancelRide(bookingId) {
  * status: 'arriving' → 'arrived' → 'on_trip' → 'completed' (or 'cancelled').
  * Backend: push these from your realtime channel (WebSocket, SSE, Firebase…).
  * DEMO: the driver drives the real roads to the pickup (TomTom route), waits, then follows the trip route;
- * about 25 seconds in all, plus a few random traffic stops.
+ * about 25 seconds in all, plus a few random traffic stops. The clock runs from when the driver accepted
+ * (saved by findDriver), so a ride screen opened again later picks the trip up where it is.
  * @returns {() => void}  call to stop listening
  */
 export function onTripUpdate(bookingId, onUpdate) {
-  const b = demo.get('lastBooking', null);
-  if (!b || b.id !== bookingId) return () => {};
+  const a = demo.get('activeTrip', null);
+  if (!a || a.id !== bookingId) return () => {};
+  const b = a.booking;
   const pickup = [b.pickup.lng, b.pickup.lat];
   const route = (b.trip && b.trip.coords && b.trip.coords.length > 1) ? b.trip.coords : [pickup, [b.dropoff.lng, b.dropoff.lat]];
   // The demo driver starts about 1 km away and drives the real roads to the pickup.
@@ -337,42 +374,42 @@ export function onTripUpdate(bookingId, onUpdate) {
   let stopped = false;
   let timer = 0;
   let phases = null;
-  let clock = 0;     // ms of the trip played so far; it doesn't run while the driver is stuck in traffic
-  let last = 0;
   let stuckUntil = 0;
+  let frozen = 0; // the clock while stuck: it stands still, then carries on from there
+  // ms of the trip played so far: since the driver accepted, less the time stuck in traffic
+  const clock = () => (Date.now() < stuckUntil ? frozen : Date.now() - a.acceptedAt - a.pausedMs);
   onUpdate({ status: 'arriving', driver: from, etaMinutes: null });
 
   const begin = (approach) => {
     if (stopped) return;
     const km = approach.distanceKm || 1;
-    phases = [
-      { status: 'arriving', path: approach.coords, ms: Math.min(12000, Math.max(6000, km * 6000)), eta: approach.minutes || 3 },
-      { status: 'arrived', path: [pickup], ms: 2500, eta: 0 },
-      { status: 'on_trip', path: route, ms: 14000, eta: (b.trip && b.trip.minutes) || null },
-      { status: 'completed', path: [route[route.length - 1]], ms: 0, eta: 0 },
+    // The timings are saved once (myActiveTrip reads them); a resumed trip keeps them and only redraws the paths
+    const plan = a.plan || [
+      { status: 'arriving', ms: Math.min(12000, Math.max(6000, km * 6000)), eta: approach.minutes || 3 },
+      { status: 'arrived', ms: 2500, eta: 0 },
+      { status: 'on_trip', ms: 14000, eta: (b.trip && b.trip.minutes) || null },
+      { status: 'completed', ms: 0, eta: 0 },
     ];
-    last = Date.now();
+    const paths = [approach.coords, [pickup], route, [route[route.length - 1]]];
+    phases = plan.map((p, i) => ({ ...p, path: paths[i] }));
+    if (!a.plan) { a.plan = plan; save(); }
     tick();
   };
+  const save = () => { const now = demo.get('activeTrip', null); if (now && now.id === a.id) demo.set('activeTrip', a); };
   const tick = () => {
     if (stopped) return;
     const now = Date.now();
-    if (now >= stuckUntil) clock += now - last;
-    last = now;
-    let t = clock;
-    let i = 0;
-    while (i < phases.length - 1 && t >= phases[i].ms) { t -= phases[i].ms; i++; }
+    const { i, f } = phaseAt(phases, clock());
     const ph = phases[i];
-    const f = ph.ms ? t / ph.ms : 1;
     // DEMO traffic: while driving, now and then the driver stops for 1.5–4 s (about once every 10 s)
     if (now >= stuckUntil && ph.path.length > 1 && f > 0.05 && f < 0.9 && Math.random() < 0.02) {
-      stuckUntil = now + 1500 + Math.random() * 2500;
+      const stop = 1500 + Math.random() * 2500;
+      frozen = clock();
+      stuckUntil = now + stop;
+      a.pausedMs += stop; // after the stop the clock carries on from `frozen`; myActiveTrip counts it too
+      save();
     }
-    onUpdate({
-      status: ph.status,
-      driver: pointAlong(ph.path, f),
-      etaMinutes: ph.eta === null ? null : Math.max(0, Math.ceil(ph.eta * (1 - f))),
-    });
+    onUpdate({ status: ph.status, driver: pointAlong(ph.path, f), etaMinutes: etaOf(ph, f) });
     if (ph.status !== 'completed') timer = setTimeout(tick, 200);
   };
   const toPickup = { lng: pickup[0], lat: pickup[1] };
