@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Trips · mysabak</title>
+  <title>Trips &amp; Orders · mysabak</title>
   <meta name="theme-color" content="#5b2596">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
@@ -31,9 +31,15 @@
       <div class="content__inner">
 
         <header class="page-head">
-          <h1 class="page-title">Trips</h1>
+          <h1 class="page-title">Trips &amp; Orders</h1>
           <p class="lede">Your rides, deliveries and shop orders.</p>
         </header>
+
+        <!-- A ride or food order on its way (the gold count on the Trips & Orders tab) -->
+        <section class="card glow-border" id="ongoingCard" aria-labelledby="ongoingTitle" hidden>
+          <h2 class="card__title" id="ongoingTitle">Ongoing</h2>
+          <ul class="list" id="ongoingList"></ul>
+        </section>
 
         <section class="card glow-border" aria-labelledby="ridesTitle">
           <h2 class="card__title" id="ridesTitle">Rides and deliveries</h2>

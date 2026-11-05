@@ -3,7 +3,7 @@
    Top bar + tab bar, toast, place search, tip picker and tip sheet.
    ========================================================= */
 import { CONFIG } from './config.js';
-import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut, shopMenu, myActiveTrip } from './api.js';
+import { searchPlaces, placeLocation, sendTip, errorMessage, currentUser, signOut, shopMenu, myActiveTrip, myOrders } from './api.js';
 import { peso as formatPeso, cleanTip, cartTotals, isNum } from './money.js';
 import { getCart } from './cart.js';
 
@@ -104,7 +104,7 @@ export function mountMagic() {
 /* ---------- Top bar + tab bar ---------- */
 export const TABS = [
   { id: 'home', label: 'Home', icon: 'i-home', href: '/' },
-  { id: 'trips', label: 'Trips', icon: 'i-clock', href: '/pages/trips.html' },
+  { id: 'trips', label: 'Trips & Orders', icon: 'i-clock', href: '/pages/trips.html' },
   { id: 'food', label: 'Food', icon: 'i-food', href: '/pages/shops.html' }, // the round middle button
   { id: 'wallet', label: 'Wallet', icon: 'i-wallet', href: '/pages/wallet.html' },
   { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html' },
@@ -187,11 +187,12 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
   });
 }
 
-/* What the round button shows besides its icons: the shop order (Cart step: its total; gold badge: the item
-   count) and a live ride or parcel (its step: an icon for where it's at over the fare; gold badge: minutes until
-   the driver, then to drop-off). Gold notches on the rim mark every step with something live. */
+/* What the round button shows besides its icons: the shop order (Cart step: its total) and a live ride or parcel
+   (a gold ring round the rim, filling as it goes). One gold badge holds the ride's minutes and the cart's count,
+   taking turns when there are both. Food orders on their way show on the Trips & Orders tab instead. */
 const order = { count: 0, total: '' };
-let trip = null; // { kind:'ride'|'express', vehicle, fare:'₱120'|'', status, eta:number|null }
+let trip = null; // { kind:'ride'|'express', fare:'₱120'|'', status, progress:0–1, eta:number|null }
+let ongoing = 0; // live rides plus food orders on their way: the Trips & Orders tab's count
 let onChange = () => {}; // set by armLoop: the dial follows the order and the trip
 
 /** Show the order on the round button: item count and total (e.g. "₱360"); 0 items shows the plain cart. */
@@ -201,20 +202,33 @@ export function showOrder(count, total = '') {
   onChange();
 }
 
-/** Show the customer's live ride or parcel on the round button, and keep it current while there is one.
-    The ride screen calls this when a booking starts or ends; every page calls it once on load. */
+/** Show the customer's live ride or parcel on the round button and count what's ongoing on the Trips & Orders tab,
+    and keep both current while anything is. The ride screen calls this when a booking starts or ends; every page
+    calls it once on load. */
+const DONE = ['delivered', 'cancelled'];
 let tripTimer = 0;
 export function trackTrip() {
   clearTimeout(tripTimer);
-  myActiveTrip().then((t) => {
+  Promise.all([myActiveTrip(), myOrders()]).then(([t, orders]) => {
     const live = t && t.status !== 'completed' ? t : null;
     const p = live && live.booking.price;
-    trip = live && { kind: live.kind, vehicle: live.booking.vehicle, status: live.status, eta: live.etaMinutes,
+    trip = live && { kind: live.kind, status: live.status, progress: live.progress || 0, eta: live.etaMinutes,
       fare: p && isNum(p.total) ? peso(p.total) : '' };
+    ongoing = (live ? 1 : 0) + orders.filter((o) => !DONE.includes(o.status)).length;
     onChange();
-    // shortcut: polls while a trip is live (every 1 s while finding a driver, then 5 s); a backend could push instead
-    if (live) tripTimer = setTimeout(trackTrip, live.status === 'searching' ? 1000 : 5000);
-  }).catch(() => { /* no trip shown: the ride screen still has it */ });
+    showOngoing();
+    // shortcut: polls while anything is ongoing (1 s finding a driver, 5 s on a ride, 15 s for food); a backend could push
+    if (live || ongoing) tripTimer = setTimeout(trackTrip, live ? (live.status === 'searching' ? 1000 : 5000) : 15000);
+  }).catch(() => { /* nothing shown: the ride screen and the order page still have it */ });
+}
+
+// The Trips & Orders tab: a gold count of rides and food orders on their way
+function showOngoing() {
+  const tab = $('.tab[data-tab="trips"]');
+  if (!tab) return;
+  $$('.tab__ongoing', tab).forEach((n) => n.remove());
+  if (ongoing) $('.tab__icon', tab).insertAdjacentHTML('beforeend', `<span class="tab__ongoing" aria-hidden="true">${ongoing}</span>`);
+  tab.setAttribute('aria-label', ongoing ? `Trips & Orders, ${ongoing} ongoing` : 'Trips & Orders');
 }
 
 // Every page: the count straight away, the total once the shop's menu is in (prices always come from the menu)
@@ -282,18 +296,21 @@ export function turnDelta(prev, next) {
 
 // The live trip's step: Parcel for an Express delivery, Ride otherwise
 const tripStep = () => (trip ? (trip.kind === 'express' ? PARCEL : RIDE) : -1);
-// Something live on a step: an order on the Cart, the trip on its step (a gold notch on the rim)
+// Something live on a step: an order on the Cart, the trip on its step (screen readers hear the other one too)
 const isLive = (i) => (i === CART && order.count > 0) || i === tripStep();
-// What a step looks like right now, as a key: its art is redrawn (with a bounce) when this changes
-const face = (i) => (i === CART ? order.total : i === tripStep() ? `${trip.status}|${trip.fare}` : '');
-// The trip's icon for where it's at: finding a driver, the booked vehicle on its way, the driver here, off to the pin
-const TRIP_ICON = { searching: 'i-search', arrived: 'i-hand', on_trip: 'i-pin' };
-const tripIcon = () => TRIP_ICON[trip.status] || (CONFIG.vehicles.find((v) => v.id === trip.vehicle) || { icon: 'i-car' }).icon;
-// A step's gold badge: the trip's minutes ("Here" once the driver is) on its step, else the order's item count
-function badge(i) {
-  if (i === tripStep()) return trip.status === 'arrived' ? 'Here' : isNum(trip.eta) ? `${trip.eta}m` : '';
-  return order.count ? String(order.count) : '';
+// A step's money in place of its icon: the Cart's order total ('' = the icon; the trip's step keeps its icon)
+const face = (i) => (i === CART ? order.total : '');
+// The one gold badge: the ride's minutes ("Here" once the driver is) and the cart's count, the shown step's first.
+// Alone it's just its text; two take turns, each with its icon
+function badgeItems(i) {
+  const ride = trip && (trip.status === 'arrived' ? 'Here' : isNum(trip.eta) ? `${trip.eta}m` : '');
+  const items = ride ? [{ icon: trip.kind === 'express' ? 'i-box' : 'i-car', text: ride }] : [];
+  if (order.count) items[i === CART ? 'unshift' : 'push']({ icon: 'i-cart', text: String(order.count) });
+  return items;
 }
+// The ride's ring: a short arc circling while finding a driver, then filling through each part of the trip
+const RING = 232.5; // its circumference (r = 37)
+const ringPart = () => ({ searching: 0.2, arrived: 1 }[trip.status] ?? Math.max(0.04, trip.progress));
 // Words for screen readers: what the step holds right now
 function says(i) {
   if (i === tripStep()) {
@@ -304,14 +321,10 @@ function says(i) {
   if (i === CART && order.count) return `Cart, ${order.count} item${order.count === 1 ? '' : 's'}${order.total ? `, ${order.total}` : ''}`;
   return LOOP[i].label;
 }
-// The trip: its status icon over the fare. The order: its total, smaller when long so ₱12,345 still fits the circle
-function artInner(i) {
-  if (i === tripStep()) {
-    return `<span class="tab__trip tab__trip--${trip.status}">${icon(tripIcon())}${trip.fare ? `<b class="tab__fare">${esc(trip.fare)}</b>` : ''}</span>`;
-  }
-  if (i === CART && order.total) return `<b class="tab__total${order.total.length > 6 ? ' tab__total--long' : ''}">${esc(order.total)}</b>`;
-  return icon(LOOP[i].icon);
-}
+// The money is smaller when long, so ₱12,345 still fits the circle
+const artInner = (i) => (face(i)
+  ? `<b class="tab__total${face(i).length > 6 ? ' tab__total--long' : ''}">${esc(face(i))}</b>`
+  : icon(LOOP[i].icon));
 const loopArt = (i) => `<span class="tab__art" data-face="${esc(face(i))}">${artInner(i)}</span>`;
 // The icon tilts with the finger between steps, so it feels attached (at most ±36°)
 const tilt = (deg) => (deg ? `rotate(${(deg * 0.4).toFixed(1)}deg)` : '');
@@ -338,9 +351,15 @@ function armLoop(nav) {
   const box = $('.tab__icon', food);
   box.insertAdjacentHTML('afterbegin', '<span class="tab__roll"></span>'); // keeps the count, if it's in already
   const roll = $('.tab__roll', box);
-  // One notch per step around the rim (Cart at the top, then clockwise like the turn): gold where something's live
-  box.insertAdjacentHTML('beforeend', `<span class="tab__notches" aria-hidden="true">${LOOP.map((_, n) => `<i style="--n:${n}"></i>`).join('')}</span>`);
-  const notches = $$('.tab__notches i', box);
+  // The live ride's ring round the rim, whichever step is shown
+  box.insertAdjacentHTML('beforeend', '<svg class="tab__ring" viewBox="0 0 80 80" aria-hidden="true"><circle class="tab__ring-track" cx="40" cy="40" r="37"/><circle class="tab__ring-bar" cx="40" cy="40" r="37"/></svg>');
+  const ring = $('.tab__ring', box);
+  const drawRing = () => {
+    ring.classList.toggle('is-on', Boolean(trip));
+    if (!trip) return;
+    ring.dataset.status = trip.status;
+    $('.tab__ring-bar', ring).style.strokeDasharray = `${(RING * ringPart()).toFixed(1)} 240`;
+  };
   food.insertAdjacentHTML('beforeend', '<span class="sr-only" id="loopHint" aria-live="polite"></span>');
   food.setAttribute('aria-describedby', 'loopHint');
   const page = () => loopStep(location.pathname, location.hash, nav.dataset.tabs);
@@ -353,7 +372,7 @@ function armLoop(nav) {
   let rested = 0; // the rest step last time we looked: a dial still there follows the order
   let press = null; // this press: the button's centre, the last angle, degrees turned since the last step
   let swiped = false; // this press turned the button, so its click must not follow the link
-  let badged = { step: -1, text: '' }; // the badge last drawn: a new number on the same step bounces
+  let badged = { step: -1, key: '' }; // the badge last drawn: a new number on the same step bounces
   const name = (i) => {
     step = i;
     const label = says(i);
@@ -361,13 +380,18 @@ function armLoop(nav) {
     // The other live step (an order while a ride is shown, or the ride while the Cart is) is named too
     const also = LOOP.map((_, k) => k).filter((k) => k !== i && isLive(k)).map(says);
     $('#loopHint').textContent = `Showing ${label}${at(i) ? '' : ', tap to open it'}.${also.length ? ` Also: ${also.join('; ')}.` : ''} Turn it, or press the arrow keys, to pick another page.`;
-    notches.forEach((n, k) => { n.classList.toggle('is-live', isLive(k)); n.classList.toggle('is-shown', k === i); });
-    const text = badge(i);
-    if (text === badged.text && i === badged.step) return;
+    drawRing();
+    const items = badgeItems(i);
+    const key = items.map((b) => b.icon + b.text).join(' ');
+    if (key === badged.key && i === badged.step) return;
     $$('.tab__count', food).forEach((n) => n.remove());
-    if (text) box.insertAdjacentHTML('beforeend', `<span class="tab__count" aria-hidden="true">${esc(text)}</span>`);
-    if (text && badged.text && i === badged.step) pop($('.tab__count', food), 0.6);
-    badged = { step: i, text };
+    if (items.length === 1) box.insertAdjacentHTML('beforeend', `<span class="tab__count" aria-hidden="true">${esc(items[0].text)}</span>`);
+    if (items.length > 1) {
+      box.insertAdjacentHTML('beforeend', `<span class="tab__count is-turning" aria-hidden="true">${items.map((b, k) =>
+        `<span class="tab__slide" style="animation-delay:${k * 2.5}s">${icon(b.icon)}${esc(b.text)}</span>`).join('')}</span>`);
+    }
+    if (items.length && badged.key && i === badged.step) pop($('.tab__count', food), 0.6);
+    badged = { step: i, key };
   };
   const paint = (i) => { roll.innerHTML = loopArt(i); name(i); rested = rest(); };
   paint(rest());
