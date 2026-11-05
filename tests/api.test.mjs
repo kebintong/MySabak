@@ -223,7 +223,6 @@ test('a live trip: kept from booking, its status read from the clock, gone when 
   localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 18500, pausedMs: 0 }));
   t = await api.myActiveTrip(); // 6 s into the 14 s trip
   assert.deepEqual([t.status, t.etaMinutes], ['on_trip', 7]);
-  assert.ok(Math.abs(t.progress - 6 / 14) < 0.01, 'how far through the trip part (the round button ring)');
   localStorage.setItem(key, JSON.stringify({ ...saved, plan, acceptedAt: Date.now() - 60000, pausedMs: 0 }));
   assert.equal((await api.myActiveTrip()).status, 'completed'); // stays until the ride screen ends it
   await api.endTrip('RIDE-other');

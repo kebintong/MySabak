@@ -703,20 +703,8 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   97% { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: none; }
 }
-/* The live ride's ring round the rim: a short arc circling while finding a driver, gold as the driver comes,
-   full and pulsing once they're here, purple on the way to the drop-off (ui.js drawRing) */
-.tab__ring { position: absolute; left: -8px; top: -8px; width: 80px; height: 80px; transform: rotate(-90deg); pointer-events: none; display: none; }
-.tab__ring.is-on { display: block; }
-.tab__ring circle { fill: none; stroke-width: 4; stroke-linecap: round; }
-.tab__ring-track { stroke: rgba(236, 228, 246, .9); }
-.tab__ring-bar { stroke: var(--gold); transition: stroke-dasharray .6s var(--ease-out); }
-.tab__ring[data-status="on_trip"] .tab__ring-bar { stroke: #a061e0; }
-.tab__ring[data-status="searching"] { animation: dial-ring-spin 1.2s linear infinite; }
-.tab__ring[data-status="arrived"] .tab__ring-bar { animation: dial-ring-pulse 1.4s ease-in-out infinite; }
-@keyframes dial-ring-spin { from { transform: rotate(-90deg); } to { transform: rotate(270deg); } }
-@keyframes dial-ring-pulse { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) {
-  .tab__slide, .tab__ring, .tab__ring-bar { animation: none !important; }
+  .tab__slide { animation: none !important; }
   .tab__slide:first-child { opacity: 1; }
 }
 /* Trips & Orders: a gold count of rides and food orders on their way (ui.js showOngoing) */
