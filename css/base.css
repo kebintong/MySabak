@@ -845,7 +845,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 /* Tab bar: a floating dock */
 .dock {
     height: 84px;
-    padding: 0 12px 0 10px;
+    padding: 0 11px; /* even, so the round button sits on the dock's centre notch */
     border-radius: 28px;
     background: rgba(255, 255, 255, 0.94);
     box-shadow: var(--shadow-dock);
@@ -855,7 +855,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .tabs { flex: 0 0 auto; gap: 4px; }
 .dock .tabs { align-self: stretch; }
 /* not on .dock.tabs (content pages): that would stretch the whole bar */
-.tab { flex: 0 0 64px; gap: 3px; align-self: stretch; justify-content: center; }
+.tab { flex: 0 0 76px; gap: 3px; align-self: stretch; justify-content: center; } /* one width for all, fitting "Trips & Orders", so the round button stays centred */
 /* full height: gold indicator sits on the dock edge */
 .tab__icon { width: 52px; height: 40px; border-radius: 20px; }
 .tab__icon .icon { width: 24px; height: 24px; }
@@ -1359,6 +1359,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .spin:focus-visible { outline: none; }
 .spin:focus-visible svg path { stroke: var(--navy); stroke-width: 3; }
 .you-dot { width: 18px; height: 18px; }
+/* The driver or rider on a shop map (Trips & Orders cards, shop-map.js setRider): the mascot in a white disc */
+.rider-mk { width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--brand), 0 4px 10px rgba(23, 18, 43, .3); display: grid; place-items: center; pointer-events: none; }
+.rider-mk img { width: 30px; height: 30px; object-fit: contain; }
 /* MapLibre positions markers (absolute) */
 .you-dot__ring { position: absolute; inset: -14px; border-radius: 50%; background: rgba(91, 37, 150, .16); }
 .you-dot__dot { position: absolute; inset: 0; border-radius: 50%; background: var(--brand); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(23, 18, 43, .3); }
@@ -1702,12 +1705,6 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .dest-flag path { fill: var(--navy); stroke: #fff; stroke-width: 2.2; }
 .dest-flag rect { fill: #fff; }
 .dest-flag .spin__label { opacity: 1; }
-.timeline li { position: relative; padding: 0 0 18px 34px; font-size: 15px; color: var(--sub); }
-.timeline li::before {
-  content: ""; position: absolute; left: 0; top: 1px;
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 2px solid var(--line-brand); background: var(--surface);
-}
 /* Install instructions sheet */
 .install__head { display: flex; align-items: center; gap: 14px; }
 .install__head img { border-radius: 14px; flex-shrink: 0; box-shadow: var(--shadow-sm); }
