@@ -6,7 +6,7 @@
 .sales-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 14px 0 8px; border-radius: 999px;
   background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; }
 .sales-back .icon { width: 18px; height: 18px; stroke: #fff; }
-.sales-back:hover { background: rgba(255, 255, 255, .22); }
+.sales-back:hover, .sales-back:focus-visible { background: rgba(255, 255, 255, .22); color: #fff; } /* not the purple link hover */
 .sales-title { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 20px; }
 .sales-controls { display: flex; flex-wrap: wrap; gap: 10px; }
 .page--merchant .sales-seg { background: rgba(255, 255, 255, .14); }
@@ -32,10 +32,12 @@
 @media (min-width: 1000px) {
 .sgrid { grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); }
 }
-.schart { display: flex; align-items: flex-end; gap: clamp(2px, calc(60px / var(--n, 7)), 10px); height: 220px; overflow-x: auto; }
-.schart__col { flex: 1; min-width: 14px; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .schart__plot { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.schart__bar { width: 100%; max-width: 36px; height: var(--h); border-radius: 7px 7px 3px 3px; background: var(--line-brand);
+/* One column per hour or day, the same gap between every bar (4px phones, 6px tablets, 8px desktop): each bar fills its
+   column, so Daily, Weekly and Monthly all keep even spacing and solid bars */
+.schart { display: grid; grid-template-columns: repeat(var(--n, 7), minmax(0, 1fr)); align-items: end; gap: 4px; height: 220px; }
+.schart__col { min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.schart__bar { width: 100%; height: var(--h); border-radius: 4px 4px 2px 2px; background: var(--line-brand);
   transform-origin: bottom; animation: bar-grow .45s ease-out backwards; animation-delay: calc(var(--i, 0) * 25ms + 80ms); transition: background-color .15s; }
 .schart__col.is-now .schart__bar, .schart__col:hover .schart__bar { background: var(--accent); }
 .schart__label { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
@@ -48,4 +50,11 @@
 @media (max-width: 520px) {
 .schart { height: 180px; }
 .schart__label { font-size: 10px; }
+}
+@media (min-width: 600px) {
+.schart { gap: 6px; }
+.schart__bar { border-radius: 6px 6px 3px 3px; }
+}
+@media (min-width: 1000px) {
+.schart { gap: 8px; }
 }

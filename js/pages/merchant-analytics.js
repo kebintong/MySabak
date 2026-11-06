@@ -10,7 +10,7 @@ const params = new URLSearchParams(location.search);
 const RANGES = {
   day: { title: 'Daily sales', sub: 'Today so far', vs: 'vs yesterday by now', chart: 'Sales by hour' },
   week: { title: 'Weekly sales', sub: 'The last 7 days', vs: 'vs the 7 days before', chart: 'Sales by day' },
-  month: { title: 'Monthly sales', sub: new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }), vs: 'vs last month', chart: 'Sales by day' },
+  month: { title: 'Monthly sales', sub: new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }), vs: 'vs the same days last month', chart: 'Sales by day' },
 };
 let range = RANGES[params.get('range')] ? params.get('range') : 'day';
 let branch = params.get('branch') || 'all';
