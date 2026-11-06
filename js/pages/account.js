@@ -3,7 +3,7 @@
 import { clientSignIn } from '../api.js';
 import { $, $$, mountChrome, toast, wireSignInForm, ROLES } from '../ui.js';
 
-mountChrome({ signIn: false, roles: ['client'] }).then((user) => {
+mountChrome({ roles: ['client'] }).then((user) => {
   if (user && user.role !== 'client') return; // being sent to their own home
   if (!user) { $('#signedOut').hidden = false; return; }
   $('#firstName').textContent = String(user.name).split(/\s+/)[0];

@@ -95,8 +95,9 @@
 .count__now small { font-size: 14px; font-weight: 400; color: var(--sub); }
 .count__total { font-size: 14px; color: var(--sub); }
 .count__extra { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 14px; font-weight: 600; color: var(--sub); text-decoration: none; }
-a.count__extra { color: var(--brand-deep); }
-a.count__extra:hover { text-decoration: underline; }
+a.count__extra { display: flex; align-items: center; gap: 2px; color: var(--brand-deep); }
+a.count__extra .icon { stroke: var(--brand-deep); transition: transform .2s var(--ease-out); }
+a.count__extra:hover .icon { transform: translateX(2px); }
 .count__extra--good { color: var(--good); }
 @media (min-width: 760px) {
 .counts { grid-template-columns: repeat(3, minmax(0, 1fr)); }

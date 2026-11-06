@@ -163,3 +163,16 @@ test('POS: a counter sale is priced from the menu, needs enough cash, and counts
   await api.viewBranch(TALISAY);
   await assert.rejects(api.posSale({ items: [{ id: 'rice', qty: 1 }], payment: 'gcash' }), { status: 403 }, 'view only');
 });
+
+test('sales: the period before comes as a running total beside the chart, and month means the same days of last month', async () => {
+  await api.merchantSignIn(OWNER());
+  for (const range of ['day', 'week', 'month']) {
+    const s = await api.merchantSales({ range, branchId: 'demo-kitchen' });
+    assert.equal(s.compare.length, s.series.length, range);
+    assert.ok(s.compare.every((v, i) => i === 0 || v >= s.compare[i - 1]), `${range}: a running total only goes up`);
+  }
+  const week = await api.merchantSales({ range: 'week', branchId: 'demo-kitchen' });
+  assert.equal(week.compare[week.compare.length - 1], week.previous, 'the line ends on last week’s total');
+  const month = await api.merchantSales({ range: 'month', branchId: 'demo-kitchen' });
+  assert.equal(month.compare[month.compare.length - 1], month.previous);
+});

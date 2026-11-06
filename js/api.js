@@ -1341,7 +1341,8 @@ export async function merchantHome() {
  * @param {{range:'day'|'week'|'month', branchId?:string}} q
  * @returns {Promise<{range, branchId, branches:Array<{id,name}>|null, total, previous, orders, average, cancelled,
  *   cancelledAmount, series:Array<{label:string, value:number, now?:boolean}>, top:Array<{name, qty, sales}>,
- *   (previous: the period before; for 'day', yesterday up to the same hour)
+ *   (previous: the period before (for 'day', yesterday up to the same hour; for 'month', the same days of last month);
+ *   compare: the period before as a running total, one value per point of series)
  *   cancelledList:Array<{id, customer, amount, at}>, channels:{online, counter}, sampleHistory:boolean}>}
  *   channels: sales of the orders in this browser, online vs counter (POS)
  */
@@ -1377,8 +1378,19 @@ export async function merchantSales({ range = 'day', branchId = 'all' } = {}) {
   }
   let total = 0;
   for (let d = 0; d < days; d += 1) total += sum(d);
-  let previous = 0;
-  for (let d = days; d < days * 2; d += 1) previous += sum(d);
+  // The period before, oldest day first: yesterday; the 7 days before; the same days of last month
+  const lastMonthDays = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+  const before = range === 'month'
+    ? Array.from({ length: Math.min(days, lastMonthDays) }, (_, k) => days + lastMonthDays - (k + 1))
+    : Array.from({ length: days }, (_, k) => days * 2 - 1 - k);
+  const beforeSales = before.map(sum);
+  let previous = beforeSales.reduce((n, v) => n + v, 0);
+  // The chart's dashed line: the period before as a running total, one point per point of `series`.
+  // Today's hours: yesterday's day spread evenly over the hours (no hour-by-hour history yet).
+  let run = 0;
+  const compare = range === 'day'
+    ? series.map((_, i) => Math.round((previous * (i + 1)) / series.length))
+    : series.map((_, i) => (run += beforeSales[i] || 0));
   // Today is compared with yesterday up to this hour, not with all of yesterday
   if (range === 'day') previous = Math.round(previous * Math.min(1, Math.max(0, (today.getHours() + today.getMinutes() / 60 - open) / (close - open))));
   const pastTotal = total - salesOf(inRange);
@@ -1402,6 +1414,7 @@ export async function merchantSales({ range = 'day', branchId = 'all' } = {}) {
     cancelled: cancelledReal.length + Math.round(pastOrders * 0.03),
     cancelledAmount: cancelledReal.reduce((n, o) => n + o.subtotal, 0) + Math.round(pastOrders * 0.03) * 95,
     series,
+    compare,
     top: [...top.values()].sort((a, b) => b.sales - a.sales).slice(0, 5),
     cancelledList: cancelledReal.map((o) => ({ id: o.id, customer: o.customer || 'Customer', amount: o.subtotal, at: o.placedAt })),
     channels: { online: salesOf(real.filter((o) => o.channel !== 'counter')), counter: salesOf(real.filter((o) => o.channel === 'counter')) },

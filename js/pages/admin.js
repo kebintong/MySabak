@@ -1,7 +1,7 @@
 /* Admin overview (pages/admin.html): live counts of riders, drivers and merchants, applications waiting for
    review, and today's numbers. */
 import { adminOverview, adminApplications, errorMessage } from '../api.js';
-import { $, esc, toast } from '../ui.js';
+import { $, esc, toast, icon } from '../ui.js';
 import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, initials, since, tag, wireTips } from './admin-common.js';
 
 mountAdmin().then((user) => {
@@ -26,7 +26,7 @@ async function load() {
       <span class="stat-l">${label}</span>
       <span class="count__now">${num(now)} <small>${word}</small></span>
       <span class="count__total">${total}</span>
-      ${href ? `<a class="count__extra" href="${href}">${extra} →</a>` : `<span class="count__extra${good ? ' count__extra--good' : ''}">${extra}</span>`}
+      ${href ? `<a class="count__extra" href="${href}">${extra}${icon('i-chevron', 'icon--sm')}</a>` : `<span class="count__extra${good ? ' count__extra--good' : ''}">${extra}</span>`}
     </article>`;
   const r = o.riders; const d = o.drivers; const m = o.merchants;
   $('#counts').innerHTML = card('Riders', r.online, 'online', `${num(r.registered)} registered`, `▲ ${num(r.joinedToday)} joined today`, null, true,

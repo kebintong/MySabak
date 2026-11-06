@@ -3,7 +3,7 @@
 import { merchantHome, merchantSignIn } from '../api.js';
 import { $, $$, mountChrome, toast, wireSignInForm } from '../ui.js';
 
-mountChrome({ signIn: false }); // this page is the sign-in form
+mountChrome(); // this page is the sign-in form
 
 // Already signed in on this device → straight to the dashboard
 merchantHome().then(() => location.replace('/pages/merchant-home.html')).catch(() => {});

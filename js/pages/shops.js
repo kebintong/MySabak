@@ -8,7 +8,7 @@ import { storefront } from '../placeholders.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
 import { $, mountChrome, esc, toast, icon } from '../ui.js';
 
-mountChrome({ signIn: false, roles: ['client'] }); // no Sign in button here: customers sign in from Ride or Account
+mountChrome({ roles: ['client'] });
 
 const DESKTOP = window.matchMedia('(min-width: 900px)');
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');

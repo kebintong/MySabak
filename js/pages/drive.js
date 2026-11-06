@@ -2,7 +2,7 @@
 import { driverStatus, driverSignIn } from '../api.js';
 import { $, $$, mountChrome, toast, wireSignInForm } from '../ui.js';
 
-mountChrome({ signIn: false }); // this page is the sign-in form
+mountChrome(); // this page is the sign-in form
 
 // Already signed in on this device → straight to the driver home
 driverStatus().then((d) => { if (d.signedIn) location.replace('/pages/driver.html'); });

@@ -31,9 +31,8 @@ export function mountHead({ kicker = '', onChange = () => {} } = {}) {
           <p class="mhero__meta" data-h="meta"></p>
         </div>
       </div>
-      <div class="mhero__open">
-        <span class="live" data-h="badge"><span class="live__dot" aria-hidden="true"></span><span data-h="label">Open</span></span>
-        <span data-h="hint">Accepting orders</span>
+      <div class="maccept">
+        <span class="maccept__text"><b data-h="label">Accepting orders</b><span data-h="hint">Customers can order now</span></span>
         <button type="button" class="switch" data-h="switch" role="switch" aria-checked="true" aria-label="Accepting orders"><span></span></button>
       </div>
     </div>
@@ -44,9 +43,10 @@ export function mountHead({ kicker = '', onChange = () => {} } = {}) {
   function renderOpen() {
     el('switch').setAttribute('aria-checked', String(home.open));
     el('switch').disabled = !home.canAct;
-    el('hint').textContent = home.open ? 'Accepting orders' : 'Not taking orders';
-    el('label').textContent = home.open ? 'Open' : 'Closed';
-    el('badge').classList.toggle('is-closed', !home.open);
+    el('label').textContent = home.open ? 'Accepting orders' : 'Not taking orders';
+    el('hint').textContent = !home.canAct ? 'View only: take over to change it'
+      : home.open ? 'Customers can order now' : 'Customers can’t order until you turn this on';
+    el('switch').closest('.maccept').classList.toggle('is-off', !home.open);
   }
 
   function render(h) {

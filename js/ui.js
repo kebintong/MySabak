@@ -145,19 +145,18 @@ export const ROLES = {
 
 /**
  * Fill <header data-topbar> and <nav data-tabs="shops"> on a page, and start offline support.
- * @param {{signIn?:boolean, roles?:string[]}} opts  signIn: false hides the Sign in button (the profile still
- *   shows when signed in). roles: who may use this page ('guest', 'client', 'driver', 'merchant'); anyone else
- *   is sent to their own home.
+ * @param {{roles?:string[]}} opts  roles: who may use this page ('guest', 'client', 'driver', 'merchant'); anyone
+ *   else is sent to their own home.
  * @returns {Promise<object|null>} the signed-in user
  */
-export function mountChrome({ signIn = true, roles = null } = {}) {
+export function mountChrome({ roles = null } = {}) {
   const top = $('[data-topbar]');
   if (top) {
     top.innerHTML = `
       <a class="brand" href="/" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="150" height="35"></a>
       <div class="topbar__actions">
         <button type="button" class="btn btn--ghost btn--install" data-install hidden>${icon('i-download')}<span class="mobile-only">Install</span><span class="desktop-only">Install app</span></button>
-        <a class="btn btn--dark" href="/pages/account.html" data-account hidden>Sign in</a>
+        <span data-account hidden></span>
       </div>`;
     setupInstall($('[data-install]', top));
   }
@@ -166,7 +165,7 @@ export function mountChrome({ signIn = true, roles = null } = {}) {
   mountMagic();
   return currentUser().catch(() => null).then((user) => {
     if (guardRole(user, roles)) return user;
-    if (top) mountAccount($('[data-account]', top), user, { signIn });
+    if (top) mountAccount($('[data-account]', top), user);
     const nav = $('[data-tabs]');
     if (nav) {
       const active = nav.dataset.tabs;
@@ -536,9 +535,9 @@ const merchantMenu = () => [
   ['i-pencil', 'Management', '/pages/merchant-manage.html'],
 ];
 
-export function mountAccount(link, user, { signIn = true } = {}) {
+export function mountAccount(link, user) {
   if (!link) return;
-  if (!user) { link.hidden = !signIn; return; }
+  if (!user) { link.remove(); return; } // signed out: the Account tab is the way in, so no Sign in button here
   const role = ROLES[user.role];
   const first = String(user.name || role.label).split(/\s+/)[0];
   const wrap = document.createElement('div');
@@ -551,7 +550,11 @@ export function mountAccount(link, user, { signIn = true } = {}) {
     <div class="profile__menu" role="menu" hidden>
       <div class="profile__who">
         <span class="profile__ava profile__ava--lg" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
-        <div><b>${esc(user.name || role.label)}</b><span>${esc(user.branch ? `Branch account · ${user.branch}` : role.label)}${user.email ? ` · ${esc(user.email)}` : ''}</span></div>
+        <div class="profile__id">
+          <span class="profile__line"><b>${esc(user.name || role.label)}</b><span class="profile__role">${esc(user.branch ? 'Branch' : role.label)}</span></span>
+          ${user.branch ? `<span class="profile__sub">${esc(user.branch)} branch</span>` : ''}
+          ${user.email ? `<span class="profile__sub profile__email">${esc(user.email)}</span>` : ''}
+        </div>
       </div>
       ${(user.role === 'merchant' ? merchantMenu() : [[role.homeIcon, role.homeLabel, role.home]])
     .map(([ic, label, href]) => `<a class="profile__item" role="menuitem" href="${href}">${icon(ic)}${esc(label)}</a>`).join('')}

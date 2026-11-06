@@ -73,7 +73,7 @@
 
 /* ---------- Requests: one big card, the rest as service cards ---------- */
 .dreq { margin-top: -84px; position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; }
-.dreq__title { margin: 0 4px; font: 70018px var(--font-display); color: #fff; }
+.dreq__title { margin: 0 4px; font: 700 18px var(--font-display); color: #fff; }
 .page--driver.has-job .dreq__title { visibility: hidden; }
 #jobList { display: flex; flex-direction: column; gap: 12px; }
 .dtone--lilac { background: #f2e9fa url("/assets/images/v3/glow-lilac.svg") right -50px top -30px / 260px 230px no-repeat; }
@@ -181,7 +181,8 @@
 .dpromo:hover { color: #fff; }
 .dpromo__kicker { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 .dpromo__value { font: 800 24px var(--font-display); }
-.dpromo__link { font-size: 13.5px; font-weight: 700; color: var(--gold); }
+.dpromo__link { display: inline-flex; align-items: center; gap: 2px; font-size: 13.5px; font-weight: 700; color: var(--gold); }
+.dpromo__link .icon { stroke: var(--gold); }
 
 .page--driver .card { border: 0; border-radius: 22px; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14); }
 .page--driver .card__title { font-size: 18px; font-weight: 700; color: var(--ink); }
