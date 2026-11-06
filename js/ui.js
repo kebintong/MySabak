@@ -110,7 +110,6 @@ export const TABS = [
   { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html' },
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
   { id: 'merchant', label: 'Dashboard', icon: 'i-store', href: '/pages/merchant-home.html' },
-  { id: 'merchantPos', label: 'POS', icon: 'i-receipt', href: '/pages/merchant-pos.html' },
   { id: 'merchantStats', label: 'Analytics', icon: 'i-chart', href: '/pages/merchant-analytics.html' },
   { id: 'merchantManage', label: 'Manage', icon: 'i-pencil', href: '/pages/merchant-manage.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
@@ -133,7 +132,7 @@ export const ROLES = {
     home: '/pages/driver.html', homeLabel: 'Driver home', homeIcon: 'i-wheel', signIn: '/pages/drive.html',
   },
   merchant: {
-    label: 'Merchant', tabs: ['merchant', 'merchantPos', 'merchantStats', 'merchantManage'],
+    label: 'Merchant', tabs: ['merchant', 'merchantStats', 'merchantManage'],
     home: '/pages/merchant-home.html', homeLabel: 'Shop dashboard', homeIcon: 'i-store', signIn: '/pages/merchant.html',
   },
   // Signs in on the customer form; not shown on any sign-in switch.
@@ -530,7 +529,6 @@ const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).m
 /** A merchant's pages, in the profile menu (the same order as the tab bar). */
 const merchantMenu = () => [
   ['i-store', 'Dashboard', '/pages/merchant-home.html'],
-  ['i-receipt', 'POS', '/pages/merchant-pos.html'],
   ['i-chart', 'Analytics', '/pages/merchant-analytics.html'],
   ['i-pencil', 'Management', '/pages/merchant-manage.html'],
 ];

@@ -1,4 +1,4 @@
-/* POS (pages/merchant-pos.html?tab=new|cooking|ready#online): sell at the branch on screen.
+/* POS (/pos?tab=new|cooking|ready#online, file pos.html): sell at the branch on screen.
    Counter sale: tap menu items into the ticket (sizes picked on the card), take cash (change shown) or GCash,
    Charge → posSale() → receipt. Online orders: New / Preparing / Ready columns (tabs on phones) with Accept,
    Start preparing and Ready for pickup; finished ones fold away under "Done today". */

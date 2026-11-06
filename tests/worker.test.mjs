@@ -32,6 +32,14 @@ test('app files are served from the assets', async () => {
   assert.equal(calls.length, 0);
 });
 
+test('the old POS address redirects to /pos', async () => {
+  for (const path of ['/pages/merchant-pos.html?tab=new', '/pages/merchant-pos?tab=new']) {
+    const res = await call(path);
+    assert.equal(res.status, 301);
+    assert.equal(res.headers.get('location'), `${SITE}/pos?tab=new`);
+  }
+});
+
 test('adds the key on the way to TomTom', async () => {
   const res = await call('/api/tomtom/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1&map=basic_street-light', { headers: sameSite });
   assert.equal(res.status, 200);
