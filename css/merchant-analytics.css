@@ -173,7 +173,7 @@
 .schart__bar {
   width: 100%;
   height: var(--h);
-  border-radius: 16px 16px 14px 14px;
+  border-radius: 10px 10px 10px 10px;
   background: var(--line-brand);
   transform-origin: bottom;
   animation: bar-grow .45s ease-out backwards;
