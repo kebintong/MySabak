@@ -353,7 +353,7 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 
 /* ---------- Fields (Registrations fix reason, Management forms and search) ---------- */
 .afield { display: flex; flex-direction: column; gap: 6px; }
-.afield__label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.afield__label { font-size: 14px; font-weight: 500; color: var(--ink); }
 .afield__hint { font-size: 12px; color: var(--sub); display: flex; justify-content: space-between; gap: 8px; }
 .page--admin .input, .page--admin .select, .page--admin .textarea {
   min-height: 44px; border: 1px solid #dccbef; border-radius: var(--r-ctl); background: #fff; font-size: 16px; color: var(--ink);

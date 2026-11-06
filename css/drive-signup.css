@@ -25,7 +25,8 @@
 }
 
 .auth-card__head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-.auth-card__badge { width: 52px; height: 52px; border-radius: 16px; background: var(--tint); display: flex; align-items: center; justify-content: center; }
+.auth-card__badge { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
+.auth-card__badge .icon { width: 34px; height: 34px; }
 .auth-card__title { margin: 4px 0 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--navy); }
 .auth-alt {
   display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
@@ -34,7 +35,8 @@
   font-size: 14px; color: var(--muted);
 }
 .view__title { margin: 0; font-size: 18px; font-weight: 700; color: var(--navy); }
-.choice__icon { width: 52px; height: 52px; border-radius: 16px; background: var(--tint); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.choice__icon { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.choice__icon .icon { width: 30px; height: 30px; }
 .choice__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .choice__name { font-size: 16px; font-weight: 700; color: var(--ink); }
 .choice__hint { font-size: 13.5px; line-height: 1.4; color: var(--sub); }
@@ -59,7 +61,8 @@
 .bring__list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
 .wizard__nav .button { text-decoration: none; }
 .view--done { align-items: flex-start; }
-.done__icon { width: 56px; height: 56px; border-radius: 50%; background: #e6f5e9; display: flex; align-items: center; justify-content: center; }
+.done__icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
+.done__icon .icon { width: 44px; height: 44px; }
 /* Sign-up steps */
 .wizard__steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .wizard__steps li.is-current { color: var(--navy); }

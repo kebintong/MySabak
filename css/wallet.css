@@ -5,7 +5,7 @@
 .wpays { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .wpay { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 6px; text-align: center; }
 .wpay + .wpay { border-left: 1px solid var(--line-brand); }
-.wpay__icon { flex: none; width: 48px; height: 48px; border-radius: 16px; background: var(--tint); display: grid; place-items: center; }
+.wpay__icon { flex: none; width: 48px; height: 48px; display: grid; place-items: center; }
 .wpay__text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .wpay__name { font-size: 14px; font-weight: 700; color: var(--ink); }
 .wpay__hint { font-size: 12px; line-height: 1.35; color: var(--sub); }

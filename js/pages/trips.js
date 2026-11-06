@@ -79,7 +79,7 @@ function foodCard(o) {
     key: o.id, iconId: 'i-food', tone: 'food', at: FOOD_STEP[o.status] ?? 0, steps: FOOD_STEPS,
     title: o.shop.name, sub: stepName(o.status), label: `${o.shop.name} order, ${stepName(o.status).toLowerCase()}`,
     end: `<span class="lcard__price lcard__price--big">${pesoOr(o.subtotal)}</span>`,
-    more: `<a class="lcard__link" href="/pages/order.html?id=${encodeURIComponent(o.id)}">Track order and receipt${icon('i-chevron', 'icon--sm')}</a>`,
+    more: `<a class="button button--block lcard__go" href="/pages/order.html?id=${encodeURIComponent(o.id)}">${icon('i-pin')}Track order and receipt</a>`,
   });
 }
 

@@ -128,8 +128,8 @@
 .mopen__foot .hot-btn { flex: 1; min-width: 0; min-height: 50px; }
 .ogroup { padding: 14px 0; border-top: 1px solid var(--line); }
 .ogroup__head { margin-bottom: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.ogroup__name { font-size: 15px; font-weight: 800; color: var(--ink); }
-.ogroup__rule { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
+.ogroup__name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.ogroup__rule { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
 .ogroup__rule.is-warn { color: var(--hot); }
 .ogroup__hint { margin: 8px 0 0; font-size: 12.5px; color: var(--sub); }
 .ochips { display: flex; flex-wrap: wrap; gap: 8px; }

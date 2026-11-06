@@ -73,7 +73,7 @@
 
 /* ---------- Requests: one big card, the rest as service cards ---------- */
 .dreq { margin-top: -84px; position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; }
-.dreq__title { margin: 0 4px; font: 800 18px var(--font-display); color: #fff; }
+.dreq__title { margin: 0 4px; font: 70018px var(--font-display); color: #fff; }
 .page--driver.has-job .dreq__title { visibility: hidden; }
 #jobList { display: flex; flex-direction: column; gap: 12px; }
 .dtone--lilac { background: #f2e9fa url("/assets/images/v3/glow-lilac.svg") right -50px top -30px / 260px 230px no-repeat; }
@@ -164,10 +164,9 @@
 }
 .dtile + .dtile { border-left: 1px solid var(--line); }
 .dtile:hover { color: var(--brand-deep); }
-.dtile__icon { width: 44px; height: 44px; border-radius: 14px; background: var(--tint); display: grid; place-items: center; transition: transform .2s var(--spring); }
-.dtile__icon--peach { background: #fdf3df; }
+.dtile__icon { width: 44px; height: 44px; display: grid; place-items: center; transition: transform .2s var(--spring); }
 .dtile:hover .dtile__icon { transform: scale(1.08); }
-.dtile__icon .icon { width: 22px; height: 22px; stroke: var(--brand-deep); }
+.dtile__icon .icon { width: 28px; height: 28px; stroke: var(--brand-deep); }
 .dtile__icon--peach .icon { stroke: #b5640f; }
 .dpromo {
   position: relative; overflow: hidden; min-height: 96px; padding: 16px 20px; border-radius: 22px; color: #fff; text-decoration: none;
@@ -180,12 +179,12 @@
     linear-gradient(152deg, #1e0638 13%, #4a1680 60%, #7b3fbf);
 }
 .dpromo:hover { color: #fff; }
-.dpromo__kicker { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.dpromo__kicker { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 .dpromo__value { font: 800 24px var(--font-display); }
 .dpromo__link { font-size: 13.5px; font-weight: 700; color: var(--gold); }
 
 .page--driver .card { border: 0; border-radius: 22px; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14); }
-.page--driver .card__title { font-size: 18px; font-weight: 800; color: var(--ink); }
+.page--driver .card__title { font-size: 18px; font-weight: 700; color: var(--ink); }
 .dtrips { scroll-margin-top: 90px; }
 .dpayout { padding: 14px 0 0; margin-top: 8px; border-top: 1px solid var(--line); }
 
@@ -206,7 +205,7 @@
   box-shadow: 0 16px 40px rgba(20, 8, 42, .35);
 }
 .dturn[hidden], .dturn__then[hidden] { display: none; }
-.dturn__icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 16px; background: rgba(255, 255, 255, .14); display: grid; place-items: center; }
+.dturn__icon { width: 52px; height: 52px; flex-shrink: 0; display: grid; place-items: center; }
 .dturn__icon svg { width: 30px; height: 30px; stroke: var(--gold); fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .dturn__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .dturn__text b { font: 800 24px var(--font-display); color: var(--gold); }

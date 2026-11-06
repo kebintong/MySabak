@@ -39,10 +39,9 @@
 }
 .lcard__head:active { transform: scale(.985); }
 .lcard__head:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; border-radius: 20px; }
-.lcard__icon { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--tint); display: grid; place-items: center; }
-.lcard__icon .icon { width: 22px; height: 22px; stroke: var(--brand-deep); }
+.lcard__icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; }
+.lcard__icon .icon { width: 28px; height: 28px; stroke: var(--brand-deep); }
 .lcard--ride .lcard__icon .icon { animation: ring-drive 2.4s ease-in-out infinite; }
-.lcard--food .lcard__icon { background: #fdf3df; }
 .lcard--food .lcard__icon .icon { stroke: #b5640f; animation: ring-wiggle 2.4s ease-in-out infinite; }
 @keyframes ring-drive { 0%, 60%, 100% { transform: translateX(0); } 30% { transform: translateX(2px); } 45% { transform: translateX(-1px); } }
 @keyframes ring-wiggle { 0%, 60%, 100% { transform: rotate(0); } 20% { transform: rotate(-8deg); } 40% { transform: rotate(6deg); } }
@@ -86,13 +85,11 @@
 .lcard__wait { margin: 14px 0 0; font-size: 14px; color: var(--sub); }
 .lcard__go { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
 .lcard__go .icon { width: 18px; height: 18px; --pin-fill: #fff; --pin-dot: var(--brand-deep); }
-.lcard__link { margin-top: 12px; align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 14px; font-weight: 700; color: var(--brand-deep); text-decoration: none; }
-.lcard__link .icon { stroke: var(--brand-deep); }
 
 /* Start something: book a ride or order food */
 .tquick { display: flex; flex-direction: column; gap: 10px; }
 .tquick[hidden] { display: none; }
-.tquick__title { margin: 4px 0 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); }
+.tquick__title { margin: 4px 0 0; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); }
 .tquick__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tquick__go {
   height: 52px; border-radius: 16px; background: var(--tint); color: var(--brand-deep); text-decoration: none;

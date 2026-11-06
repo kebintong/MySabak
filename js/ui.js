@@ -257,21 +257,21 @@ export function cartRows(lines) {
 }
 
 /* ---------- The round button: a dial of pages ----------
-   It shows where you are: Ride, Food, Parcel, or the Cart (the Cart page, checkout, and every page outside the
-   loop). With an order, the Cart shows its total, and the food pages rest on it. Turn a finger round it (or
-   press → / ←): each quarter turn rolls one icon on, clockwise Cart → Ride → Food → Parcel → Cart, back the
+   It shows where you are: Ride, Parcel, the Cart (the Cart page and checkout), or Food (the food pages and every
+   other page). With an order, the Cart shows its total, and the food pages rest on it. Turn a finger round it (or
+   press → / ←): each quarter turn rolls one icon on, clockwise Food → Ride → Parcel → Cart → Food, back the
    other way. Turning never leaves the page; a tap opens the icon shown (Food, with an order: that order's shop).
    On its own page a tap does nothing. A page can take over a tap (the shop opens its order sheet for Cart) by
    cancelling the 'loop:open' event, whose detail is the step's label. */
-const CART = 0;
+const FOOD = 0;
 const RIDE = 1;
-const FOOD = 2;
-const PARCEL = 3;
+const PARCEL = 2;
+const CART = 3;
 export const LOOP = [
-  { label: 'Cart', href: '/pages/cart.html', icon: 'i-cart' },
-  { label: 'Ride', href: '/#ride', icon: 'i-car' },
   { label: 'Food', href: '/pages/shops.html', icon: 'i-food' },
+  { label: 'Ride', href: '/#ride', icon: 'i-car' },
   { label: 'Parcel', href: '/#parcel', icon: 'i-box' },
+  { label: 'Cart', href: '/pages/cart.html', icon: 'i-cart' },
 ];
 const QUARTER = 90; // degrees of turn per icon
 const DEAD = 12; // px round the centre where the angle jumps about: ignored
@@ -281,10 +281,9 @@ const GLIDE = 'cubic-bezier(.22, 1, .36, 1)';
 /** Which LOOP step a page shows. tab: the tab bar's data-tabs (the food, cart and checkout pages say 'food'). */
 export function loopStep(path, hash, tab) {
   if (path.startsWith('/pages/cart') || path.startsWith('/pages/checkout')) return CART;
-  if (tab === 'food') return FOOD;
-  if (path !== '/' && path !== '/index.html') return CART;
+  if (tab === 'food' || (path !== '/' && path !== '/index.html')) return FOOD;
   if (hash === '#parcel') return PARCEL;
-  return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? RIDE : CART;
+  return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? RIDE : FOOD;
 }
 
 /** Change in angle from prev to next, in degrees, the short way round: (-180, 180]. */
@@ -352,8 +351,8 @@ function armLoop(nav) {
   const page = () => loopStep(location.pathname, location.hash, nav.dataset.tabs);
   // Where the dial rests: this page's step, but the food pages rest on the Cart (and its total) with an order
   const rest = () => (page() === FOOD && order.count ? CART : page());
-  // On that step's own page? Checkout and pages outside the loop show the Cart but aren't the Cart page
-  const at = (i) => i === page() && (i !== CART || location.pathname.startsWith('/pages/cart'));
+  // On that step's own page? Checkout shows the Cart but isn't the Cart page; other pages show Food but aren't the food pages
+  const at = (i) => i === page() && (i === CART ? location.pathname.startsWith('/pages/cart') : i !== FOOD || nav.dataset.tabs === 'food');
   const shown = () => roll.lastElementChild; // older icons may still be rolling out before it
   let step = 0;
   let rested = 0; // the rest step last time we looked: a dial still there follows the order

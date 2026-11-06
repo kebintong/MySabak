@@ -69,7 +69,7 @@
 /* Delivery: label left, value right, like the lines above */
 .odet { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .odet li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
-.odet span { color: var(--sub); font-weight: 600; }
+.odet span { color: var(--sub); font-weight: 500; }
 .odet b { color: var(--ink); font-weight: 700; text-align: right; }
 
 .ticket__id {

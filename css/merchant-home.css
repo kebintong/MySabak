@@ -36,7 +36,7 @@
 
 /* ---------- Cards on cream; the orders card rises into the sky ---------- */
 .page--merchant .card { border: 0; border-radius: 24px; box-shadow: var(--shadow-card); }
-.page--merchant .card__title { font-size: 19px; font-weight: 800; color: var(--ink); }
+.page--merchant .card__title { font-size: 19px; font-weight: 700; color: var(--ink); }
 .page--merchant .mcards { margin-top: -82px; position: relative; }
 .mhero__open .switch:disabled { opacity: .55; cursor: not-allowed; }
 .mbtn { min-height: 40px; padding: 0 16px; font-size: 14px; }
@@ -54,7 +54,7 @@
 .ocols__tabs { display: none; }
 .ocols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ocol, .ocol:not(.is-active) { display: flex; padding: 14px; background: var(--field); }
-.ocol__head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 800; color: var(--ink); }
+.ocol__head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 .ocol__head b { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; display: grid; place-items: center; background: var(--brand); color: #fff; font-size: 12.5px; }
 }
 .mlist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
@@ -90,7 +90,7 @@
 .mshop__head .card__title { margin: 0; }
 .mshop__photo { aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--tint); }
 .mshop__photo img, .mshop__photo svg { width: 100%; height: 100%; object-fit: cover; display: block; }
-.mshop__name { margin: 0; font-size: 17px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+.mshop__name { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 .mshop__about { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
 
 /* ---------- The owner viewing another branch ---------- */
@@ -122,11 +122,11 @@
 .branch.is-open { background: #fff; border-color: var(--line); box-shadow: 0 0 0 2px var(--line-brand), var(--shadow-card); }
 .branch__head { width: 100%; min-height: 64px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; border-radius: 16px; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
 .branch__head:focus-visible { outline: 3px solid rgba(91, 37, 150, .45); outline-offset: 2px; }
-.branch__pin { width: 38px; height: 38px; flex-shrink: 0; border-radius: 12px; display: grid; place-items: center; background: var(--tint); }
-.branch__pin .icon { width: 20px; height: 20px; stroke: var(--brand); }
+.branch__pin { width: 38px; height: 38px; flex-shrink: 0; display: grid; place-items: center; }
+.branch__pin .icon { width: 24px; height: 24px; stroke: var(--brand); }
 .branch__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .branch__name { font-size: 15px; font-weight: 700; }
-.branch__name small { margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: var(--gold); font-size: 11px; font-weight: 800; color: var(--ink); vertical-align: 2px; }
+.branch__name small { margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: var(--gold); font-size: 11px; font-weight: 700; color: var(--ink); vertical-align: 2px; }
 .branch__area { font-size: 13px; color: var(--muted); }
 .branch__state { flex-shrink: 0; padding: 3px 10px; border-radius: 999px; background: #e3f3e8; font-size: 12.5px; font-weight: 700; color: var(--ok, #1e7a44); }
 .branch__state.is-off { background: var(--chip-close); color: var(--muted); }
@@ -173,7 +173,7 @@
 .ptile:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
 .ptile:active { transform: scale(.98); }
 .ptile__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.ptile__label { font-size: 13px; font-weight: 700; color: var(--muted); }
+.ptile__label { font-size: 13px; font-weight: 500; color: var(--muted); }
 .ptile__value { font: 800 23px var(--font-body); font-variant-numeric: tabular-nums; }
 .ptile__delta { font-size: 12.5px; font-weight: 700; color: var(--ok, #1e7a44); }
 .ptile__delta.is-down { color: #b4410c; }
@@ -185,7 +185,7 @@
 .mood--busy { background: #fff6e2; }
 .mood--slow { background: #fff0e8; }
 .mood__emoji { font-size: 38px; line-height: 1; display: inline-block; align-self: flex-start; animation: mood-bob 3s ease-in-out infinite; }
-.mood__title { margin: 6px 0 0; font: 800 19px/1.25 var(--font-body); color: var(--ink); }
+.mood__title { margin: 6px 0 0; font: 70019px/1.25 var(--font-body); color: var(--ink); }
 .mood__text { margin: 0; font-size: 14.5px; line-height: 1.45; color: var(--sub); }
 .mood__nums { margin: 6px 0 0; align-self: flex-start; padding: 5px 11px; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 700; color: var(--brand-deep); }
 @keyframes mood-bob { 50% { transform: translateY(-4px) rotate(-6deg); } }
@@ -248,7 +248,7 @@
 .nowcount { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; border-radius: 16px; background: var(--field); color: var(--sub); text-decoration: none; transition: transform .2s var(--spring); }
 .nowcount:hover { transform: translateY(-2px); }
 .nowcount b { font: 800 28px var(--font-body); color: var(--muted); font-variant-numeric: tabular-nums; }
-.nowcount span { font-size: 13px; font-weight: 700; }
+.nowcount span { font-size: 13px; font-weight: 500; }
 .nowcount.is-on { background: var(--tint); color: var(--brand-deep); }
 .nowcount.is-on b { color: var(--brand-deep); }
 .nowlist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
@@ -263,7 +263,7 @@
 .bglance__row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: var(--field); }
 .bglance__row.is-on { background: var(--tint); }
 .bglance__name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
-.bglance__name small { padding: 1px 7px; border-radius: 999px; background: var(--gold); font-size: 11px; font-weight: 800; color: var(--ink); }
+.bglance__name small { padding: 1px 7px; border-radius: 999px; background: var(--gold); font-size: 11px; font-weight: 700; color: var(--ink); }
 .bglance__name > span { flex-basis: 100%; font-size: 13px; color: var(--muted); }
 .bglance__num { display: flex; flex-direction: column; align-items: flex-end; font-size: 12.5px; color: var(--muted); }
 .bglance__num b { font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }

@@ -17,7 +17,7 @@
 /* Totals */
 .sstats { margin-top: -62px; position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .sstat { display: flex; flex-direction: column; gap: 3px; padding: 16px 18px; border-radius: 20px; background: #fff; box-shadow: var(--shadow-card); animation: m-in .3s ease-out backwards; }
-.sstat span { font-size: 13px; font-weight: 600; color: var(--muted); }
+.sstat span { font-size: 13px; font-weight: 500; color: var(--muted); }
 .sstat b { font: 800 24px var(--font-body); color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .sstat i { font-style: normal; font-size: 12.5px; font-weight: 700; color: var(--ok, #1e7a44); }
 .sstat i.is-down { color: #b4410c; }
