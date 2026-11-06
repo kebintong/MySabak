@@ -1,9 +1,11 @@
-/* Trips & Orders (pages/trips.html): a switch between Ongoing (rides and food orders on their way, each a row with a
-   small progress ring), Rides (Ride / Express bookings, to Rebook) and Food (shop orders). */
+/* Trips & Orders (pages/trips.html): a switch between Ongoing (rides and food orders on their way, each a live card
+   that opens in place: a live map, its four steps, and the driver or the order's link), Rides (Ride / Express bookings,
+   to Rebook) and Food (shop orders). */
 import { CONFIG } from '../config.js';
-import { myTrips, myOrders, myActiveTrip, ORDER_STEPS } from '../api.js';
+import { myTrips, myOrders, myActiveTrip, orderStatus, orderRoute, onTripUpdate, shopMenu, ORDER_STEPS } from '../api.js';
 import { isNum } from '../money.js';
 import { $, $$, mountChrome, esc, when, pesoOr, icon } from '../ui.js';
+import { shopMap } from '../shop-map.js';
 
 mountChrome({ roles: ['client'] });
 
@@ -12,11 +14,12 @@ const DONE = ['delivered', 'cancelled'];
 const vehicleName = (id) => (CONFIG.vehicles.find((v) => v.id === id) || { name: id }).name;
 const stepName = (id) => (ORDER_STEPS.find((s) => s.id === id) || { name: id }).name;
 
-// What a live ride is doing, and how far along it is: four steps, the current one half done
+// What a live ride is doing, and which of its four steps it's on
 const TRIP_WORDS = { searching: 'Finding a driver', arriving: 'Driver on the way', arrived: 'Your driver is here', on_trip: 'On the way to the drop-off' };
 const TRIP_STEP = { searching: 0, arriving: 0, arrived: 1, on_trip: 2 };
 const FOOD_STEP = { placed: 0, accepted: 0, preparing: 1, ready: 1, picked_up: 2 };
-const RING = 144.5; // the row ring's circumference (r = 23)
+const RIDE_STEPS = ['Driver coming', 'Picked up', 'On the way', 'Arrived'];
+const FOOD_STEPS = ['Placed', 'Preparing', 'On the way', 'Delivered'];
 
 let rides = [];
 let orders = [];
@@ -24,38 +27,132 @@ let live = null; // the live ride or parcel
 let show = 'ongoing';
 let drawn = ''; // the list on screen: redrawn only when it changes, so rows don't slide in again on every refresh
 let timer = 0;
+let open = null; // the card shown open: 'ride' or a food order's id (one at a time)
 
-/* ---------- Rows ---------- */
-// A row for something on its way: its icon in a small ring showing how far along it is
-function liveRow({ href, label, iconId, tone, at, title, sub, end }) {
-  const dash = (RING * ((at + 0.5) / 4)).toFixed(1);
-  return `<li><a class="lrow" href="${href}" aria-label="${esc(label)}">
-    <span class="lrow__ring lrow__ring--${tone}" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/><circle class="lrow__arc" cx="26" cy="26" r="23" style="--dash:${dash}"/><circle class="lrow__glint" cx="26" cy="26" r="23"/></svg>${icon(iconId)}</span>
-    <span class="lrow__text"><b>${esc(title)}</b><span>${esc(sub)}</span></span>
-    <span class="lrow__end">${end}</span>
-    ${icon('i-chevron', 'lrow__go')}
-  </a></li>`;
+/* ---------- Live cards ---------- */
+// Four segments: done ones purple, the current one gold
+const bar = (at) => `<span class="lcard__bar" aria-hidden="true">${[0, 1, 2, 3].map((i) => `<i${i < at ? ' class="is-done"' : i === at ? ' class="is-now"' : ''}></i>`).join('')}</span>`;
+const stepRow = (names, at) => `<span class="lcard__steps">${names.map((n, i) => `<span${i === at ? ' class="is-on"' : ''}>${n}</span>`).join('')}</span>`;
+
+// A card for something on its way: tap the top to open it (a live map, its steps, then `more`)
+function liveCard({ key, iconId, tone, at, steps, title, sub, end, label, more }) {
+  const isOpen = open === key;
+  return `<li class="lcard lcard--${tone}${isOpen ? ' is-open' : ''}">
+    <button type="button" class="lcard__head" data-card="${esc(key)}" aria-expanded="${isOpen}" aria-label="${esc(label)}">
+      <span class="lcard__icon" aria-hidden="true">${icon(iconId)}</span>
+      <span class="lcard__text"><b>${esc(title)}</b><span>${esc(sub)}</span></span>
+      <span class="lcard__end">${end}</span>${icon('i-chevron', 'lcard__chev')}
+    </button>
+    ${isOpen ? `<div class="lcard__body">
+      <div class="lcard__map map"><div class="map__canvas" data-map-slot></div></div>
+      ${bar(at)}${stepRow(steps, at)}${more}
+    </div>` : bar(at)}
+  </li>`;
 }
 
-function rideRow(t) {
+const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+function rideCard(t) {
   const express = t.kind === 'express';
   const b = t.booking;
+  const d = t.driver;
   const words = TRIP_WORDS[t.status] || 'Booked';
   const time = t.status === 'arrived' ? 'Here' : t.status !== 'searching' && isNum(t.etaMinutes) ? `${t.etaMinutes} min` : '';
-  return liveRow({
-    href: `/#${express ? 'parcel' : 'ride'}`, iconId: express ? 'i-box' : 'i-car', tone: 'ride', at: TRIP_STEP[t.status] ?? 0,
+  // Call and Chat show for the demo but don't do anything yet
+  const driver = d ? `<div class="lcard__driver">
+      <span class="lcard__ava" aria-hidden="true">${esc(initials(d.name))}</span>
+      <span class="lcard__who"><b>${esc(d.name)} · ${esc(vehicleName(d.vehicle.type))}</b><span>${esc(`${d.vehicle.color} ${d.vehicle.model}`)} · ${esc(d.vehicle.plate)}</span></span>
+      <button type="button" class="lcard__act" aria-label="Call ${esc(d.name)}">${icon('i-phone')}</button>
+      <button type="button" class="lcard__act" aria-label="Chat with ${esc(d.name)}">${icon('i-chat')}</button>
+    </div>` : '<p class="lcard__wait">Finding a driver near you…</p>';
+  return liveCard({
+    key: 'ride', iconId: express ? 'i-box' : 'i-car', tone: 'ride', at: TRIP_STEP[t.status] ?? 0, steps: RIDE_STEPS,
     title: `${express ? 'Parcel' : 'Ride'} to ${b.dropoff.label}`, sub: `${words} · ${vehicleName(b.vehicle)}`,
     label: `${express ? 'Parcel' : 'Ride'} to ${b.dropoff.label}, ${words.toLowerCase()}${time ? `, ${time}` : ''}`,
-    end: `${time ? `<span class="lrow__eta">${esc(time)}</span>` : ''}<span class="lrow__price">${pesoOr(b.price && b.price.total, '[FARE]')}</span>`,
+    end: time ? `<span class="lcard__eta">${esc(time)}</span>` : `<span class="lcard__price">${pesoOr(b.price && b.price.total, '[FARE]')}</span>`,
+    more: `${driver}<a class="button button--block lcard__go" href="/#${express ? 'parcel' : 'ride'}">${icon('i-pin')}Track ${express ? 'parcel' : 'ride'}</a>`,
   });
 }
 
-function foodRow(o) {
-  return liveRow({
-    href: `/pages/order.html?id=${encodeURIComponent(o.id)}`, iconId: 'i-food', tone: 'food', at: FOOD_STEP[o.status] ?? 0,
+function foodCard(o) {
+  return liveCard({
+    key: o.id, iconId: 'i-food', tone: 'food', at: FOOD_STEP[o.status] ?? 0, steps: FOOD_STEPS,
     title: o.shop.name, sub: stepName(o.status), label: `${o.shop.name} order, ${stepName(o.status).toLowerCase()}`,
-    end: `<span class="lrow__price lrow__price--big">${pesoOr(o.subtotal)}</span>`,
+    end: `<span class="lcard__price lcard__price--big">${pesoOr(o.subtotal)}</span>`,
+    more: `<a class="lcard__link" href="/pages/order.html?id=${encodeURIComponent(o.id)}">Track order and receipt${icon('i-chevron', 'icon--sm')}</a>`,
   });
+}
+
+/* ---------- The open card's live map ---------- */
+// Made once per open card and moved into each redraw of the list, so it keeps its place and doesn't reload
+let mapNow = null; // { sig, el, api, stop }
+const PADDING = () => ({ top: 56, bottom: 24, left: 40, right: 40 }); // room above for the pins and their labels
+
+function closeMap() {
+  if (!mapNow) return;
+  mapNow.stop();
+  if (mapNow.api.map) mapNow.api.map.remove();
+  mapNow = null;
+}
+
+// The ride: your pickup, the drop-off, the trip's route, and the driver moving along it
+function rideMap(el, t) {
+  const m = shopMap(el, { cooperative: true, padding: PADDING });
+  const b = t.booking;
+  const route = b.trip && b.trip.coords && b.trip.coords.length > 1 ? b.trip.coords : [[b.pickup.lng, b.pickup.lat], [b.dropoff.lng, b.dropoff.lat]];
+  m.setUser(b.pickup);
+  m.setDest(b.dropoff, 'Drop-off');
+  m.setRoute(route);
+  m.fit(route);
+  const stop = t.driver ? onTripUpdate(t.id, (u) => m.setRider(u.status === 'completed' ? null : u.driver)) : () => {};
+  return { api: m, stop };
+}
+
+// The food order: the shop, you, the roads between, and the rider gliding along once it's picked up
+function foodMap(el, o) {
+  const m = shopMap(el, { cooperative: true, padding: PADDING });
+  let stopped = false;
+  let poll = 0;
+  (async () => {
+    const shop = await shopMenu(o.shop.id).catch(() => null);
+    const to = o.address && typeof o.address.lng === 'number' ? o.address : null;
+    if (stopped) return;
+    if (shop) { m.setShops([shop]); m.setActive(shop.id); }
+    if (to) m.setDest(to, 'You');
+    const ends = [shop, to].filter(Boolean).map((p) => [p.lng, p.lat]);
+    if (ends.length) m.fit(ends);
+    if (shop && to) {
+      const coords = await orderRoute(o).catch(() => ends);
+      if (stopped) return;
+      m.setRoute(coords);
+      m.fit(coords);
+    }
+    // shortcut: re-reads the order every 2 s while the card is open; a backend could push rider positions instead
+    const tick = async () => {
+      try { const x = await orderStatus(o.id); if (!stopped) m.moveRider(x.rider || null); } catch (_) { /* try again */ }
+      if (!stopped) poll = setTimeout(tick, 2000);
+    };
+    tick();
+  })();
+  return { api: m, stop: () => { stopped = true; clearTimeout(poll); } };
+}
+
+function placeMap() {
+  const slot = $('[data-map-slot]');
+  if (!slot) { closeMap(); return; }
+  const isRide = open === 'ride';
+  const thing = isRide ? live : orders.find((o) => o.id === open);
+  const sig = isRide ? `ride:${live.id}:${Boolean(live.driver)}` : `food:${open}`; // a driver found: the map starts following them
+  if (!mapNow || mapNow.sig !== sig) {
+    closeMap();
+    const el = document.createElement('div');
+    el.className = 'map__canvas';
+    slot.replaceWith(el);
+    mapNow = { sig, el, ...(isRide ? rideMap(el, thing) : foodMap(el, thing)) };
+    return;
+  }
+  slot.replaceWith(mapNow.el);
+  mapNow.api.resize();
 }
 
 const pastRide = (t) => `<li class="recent__row">${icon(t.kind === 'express' ? 'i-box' : 'i-car', 'icon--lg')}
@@ -78,7 +175,8 @@ function draw() {
   $('#ongoingN').hidden = !count;
   let html;
   if (show === 'ongoing') {
-    html = count ? [...(live ? [rideRow(live)] : []), ...cooking.map(foodRow)].join('') : empty('Nothing on its way right now.');
+    if (open && !(open === 'ride' ? live : cooking.some((o) => o.id === open))) open = null; // it arrived or was delivered
+    html = count ? [...(live ? [rideCard(live)] : []), ...cooking.map(foodCard)].join('') : empty('Nothing on its way right now.');
   } else if (show === 'rides') {
     const past = rides.filter((t) => !live || t.id !== live.id);
     html = past.length ? past.map(pastRide).join('') : empty('No rides yet. Your rides and deliveries show up here.');
@@ -87,13 +185,25 @@ function draw() {
     html = done.length ? done.map(pastOrder).join('') : empty('No food orders yet. Your past orders show up here.');
   }
   $('#quick').hidden = show !== 'ongoing';
+  if (show !== 'ongoing') open = null;
   if (html === drawn) return;
   drawn = html;
   const list = $('#tripsList');
   list.className = `tlist tlist--${show}`;
   list.innerHTML = html;
   [...list.children].forEach((li, i) => li.style.setProperty('--i', Math.min(i, 8)));
+  placeMap();
 }
+
+// Tap a card's top to open it (and close the one that was open), or to close it
+$('#tripsList').addEventListener('click', (e) => {
+  const head = e.target.closest('[data-card]');
+  if (!head) return;
+  open = open === head.dataset.card ? null : head.dataset.card;
+  drawn = ''; // the open card changed: draw again even if nothing else did
+  draw();
+  if (open) { const card = $('[data-card].lcard__head[aria-expanded="true"]'); if (card) card.closest('.lcard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+});
 
 $('.tswitch').addEventListener('click', (e) => {
   const b = e.target.closest('[data-show]');

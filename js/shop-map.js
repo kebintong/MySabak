@@ -51,6 +51,8 @@ export function shopMap(container, { interactive = true, cooperative = false, on
   let you = null;
   let dest = null;
   let rider = null;
+  let riderAt = null; // where the rider is drawn now
+  let glide = 0;
 
   map.on('style.load', () => {
     ready = true;
@@ -136,6 +138,20 @@ export function shopMap(container, { interactive = true, cooperative = false, on
       }
       rider.setLngLat([point.lng, point.lat]).addTo(map);
     },
+    /** The rider glides to a new position over `ms`, a frame at a time, instead of jumping (null hides it). */
+    moveRider(point, ms = 2000) {
+      cancelAnimationFrame(glide);
+      const from = riderAt;
+      riderAt = point;
+      if (!point || !from || REDUCED_MOTION.matches) { api.setRider(point); return; }
+      const t0 = performance.now();
+      const frame = (now) => {
+        const f = Math.min(1, (now - t0) / ms);
+        api.setRider({ lng: from.lng + (point.lng - from.lng) * f, lat: from.lat + (point.lat - from.lat) * f });
+        if (f < 1) glide = requestAnimationFrame(frame);
+      };
+      glide = requestAnimationFrame(frame);
+    },
     /** Route line from the customer to the shop ([lng, lat] pairs; null clears it). */
     setRoute(coords) { route = coords && coords.length > 1 ? coords : null; drawRoute(); },
     /** Fit these points ([lng, lat]) in view. */
@@ -153,7 +169,7 @@ export function shopMap(container, { interactive = true, cooperative = false, on
 
 function stub() {
   const noop = () => {};
-  return { map: null, setShops: noop, setActive: noop, setUser: noop, setDest: noop, setRider: noop, setRoute: noop, fit: noop, resize: noop };
+  return { map: null, setShops: noop, setActive: noop, setUser: noop, setDest: noop, setRider: noop, moveRider: noop, setRoute: noop, fit: noop, resize: noop };
 }
 
 /**

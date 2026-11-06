@@ -2,7 +2,7 @@
    order as a receipt ticket (status, progress, lines, delivery) and a tip for mysabak. */
 import { CONFIG } from '../config.js';
 import { orderStatus, myTips, shopMenu, orderRoute, ORDER_STEPS } from '../api.js';
-import { $, $$, mountChrome, esc, peso, pesoOr, params, when, openTipSheet, pop, calm } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, pesoOr, params, when, openTipSheet, pop } from '../ui.js';
 import { shopMap } from '../shop-map.js';
 
 mountChrome({ roles: ['client'] });
@@ -83,27 +83,13 @@ async function render(order) {
 }
 
 // The map: drawn once (shop pin, drop-off, the line between). The rider glides to each new position over GLIDE ms,
-// a frame at a time, so it moves smoothly between refreshes instead of jumping.
+// so it moves smoothly between refreshes instead of jumping.
 const GLIDE = 2000;
 let map = null;
 let mapping = null;
-let rider = null; // where the rider is drawn now
-let glide = 0;
 async function drawMap(order) {
   if (!mapping) mapping = setUpMap(order);
-  if (!(await mapping)) return;
-  const next = order.rider || null;
-  cancelAnimationFrame(glide);
-  if (!next || !rider || calm()) { rider = next; map.setRider(next); return; }
-  const from = rider;
-  const t0 = performance.now();
-  const frame = (now) => {
-    const f = Math.min(1, (now - t0) / GLIDE);
-    rider = { lng: from.lng + (next.lng - from.lng) * f, lat: from.lat + (next.lat - from.lat) * f };
-    map.setRider(rider);
-    if (f < 1) glide = requestAnimationFrame(frame);
-  };
-  glide = requestAnimationFrame(frame);
+  if (await mapping) map.moveRider(order.rider || null, GLIDE);
 }
 async function setUpMap(order) {
   const to = order.address && typeof order.address.lng === 'number' ? order.address : null;

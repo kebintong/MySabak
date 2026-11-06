@@ -27,43 +27,67 @@
 .tlist > li { animation: trow-in .35s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 45ms); }
 @keyframes trow-in { from { opacity: 0; transform: translateY(8px); } }
 
-/* Ongoing: a row each, its icon in a small ring of how far along it is */
-.lrow {
-  display: flex; align-items: center; gap: 14px; padding: 14px 12px; border-radius: 20px;
-  background: var(--surface); color: inherit; text-decoration: none;
+/* Ongoing: a live card each. Its top opens it in place: a live map, the four steps, then the driver (ride) or the
+   order's link (food). One open at a time. */
+.lcard {
+  border-radius: 20px; background: var(--surface); overflow: hidden;
   box-shadow: 0 1px 2px rgba(41, 10, 69, .06), 0 8px 24px rgba(41, 10, 69, .08);
-  transition: transform .15s var(--ease-out);
 }
-.lrow:active { transform: scale(.985); }
-.lrow:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-/* The ring: the arc fills to how far along it is when the row appears, a small glint keeps circling while it's live,
-   and the icon moves a little (the car drives, the fork and spoon wiggle) */
-.lrow__ring { position: relative; width: 52px; height: 52px; flex: none; display: grid; place-items: center; }
-.lrow__ring svg:not(.icon) { position: absolute; inset: 0; width: 52px; height: 52px; transform: rotate(-90deg); }
-.lrow__ring circle { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke: #ece4f6; }
-.lrow__ring .lrow__arc { stroke: #a061e0; stroke-dasharray: var(--dash) 160; animation: ring-fill .9s var(--ease-out) .15s backwards; }
-.lrow__ring--food .lrow__arc { stroke: var(--gold); }
-@keyframes ring-fill { from { stroke-dasharray: 0 160; } }
-.lrow__ring .lrow__glint { stroke: #a061e0; stroke-dasharray: 8 136.5; animation: ring-glint 2.6s linear 1s infinite backwards; }
-.lrow__ring--food .lrow__glint { stroke: var(--gold); }
-@keyframes ring-glint { from { stroke-dashoffset: 0; opacity: 0; } 10%, 55% { opacity: .6; } 75%, to { stroke-dashoffset: -144.5; opacity: 0; } }
-.lrow__ring .icon { width: 22px; height: 22px; stroke: var(--brand-deep); }
-.lrow__ring--ride .icon { animation: ring-drive 2.4s ease-in-out infinite; }
-.lrow__ring--food .icon { animation: ring-wiggle 2.4s ease-in-out infinite; }
+.lcard__head {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 14px 10px; border: 0; background: none;
+  color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform .15s var(--ease-out);
+}
+.lcard__head:active { transform: scale(.985); }
+.lcard__head:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; border-radius: 20px; }
+.lcard__icon { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--tint); display: grid; place-items: center; }
+.lcard__icon .icon { width: 22px; height: 22px; stroke: var(--brand-deep); }
+.lcard--ride .lcard__icon .icon { animation: ring-drive 2.4s ease-in-out infinite; }
+.lcard--food .lcard__icon { background: #fdf3df; }
+.lcard--food .lcard__icon .icon { stroke: #b5640f; animation: ring-wiggle 2.4s ease-in-out infinite; }
 @keyframes ring-drive { 0%, 60%, 100% { transform: translateX(0); } 30% { transform: translateX(2px); } 45% { transform: translateX(-1px); } }
 @keyframes ring-wiggle { 0%, 60%, 100% { transform: rotate(0); } 20% { transform: rotate(-8deg); } 40% { transform: rotate(6deg); } }
-.lrow__go { transition: transform .2s var(--ease-out); }
-.lrow:hover .lrow__go, .lrow:active .lrow__go { transform: translateX(3px); }
-.lrow__eta { animation: eta-in .4s var(--ease-out) .3s backwards; }
+.lcard__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lcard__text b { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lcard__text span { font-size: 13px; color: var(--sub); }
+.lcard__end { display: flex; align-items: center; }
+.lcard__eta { padding: 5px 9px; border-radius: 999px; background: var(--gold); color: var(--ink); font-size: 13px; font-weight: 800; white-space: nowrap; animation: eta-in .4s var(--ease-out) .3s backwards; }
 @keyframes eta-in { from { opacity: 0; transform: scale(.7); } }
-.lrow__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.lrow__text b { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lrow__text span { font-size: 13px; color: var(--sub); }
-.lrow__end { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.lrow__eta { padding: 5px 8px; border-radius: 999px; background: var(--gold); color: var(--ink); font-size: 13px; font-weight: 800; white-space: nowrap; }
-.lrow__price { font-size: 13px; font-weight: 700; color: var(--sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.lrow__price--big { font-size: 15px; font-weight: 800; color: var(--ink); }
-.lrow__go { width: 16px; height: 16px; flex: none; stroke: var(--sub); }
+.lcard__price { font-size: 13px; font-weight: 700; color: var(--sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lcard__price--big { font-size: 15px; font-weight: 800; color: var(--ink); }
+.lcard__chev { width: 16px; height: 16px; flex: none; stroke: var(--sub); transform: rotate(90deg); transition: transform .25s var(--ease-out); }
+.lcard.is-open .lcard__chev { transform: rotate(-90deg); }
+
+/* Four steps: done purple, the current one gold */
+.lcard__bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 0 14px 14px; }
+.lcard__bar i { height: 4px; border-radius: 2px; background: #ece4f6; }
+.lcard__bar i.is-done { background: var(--brand); }
+.lcard__bar i.is-now { background: var(--gold); }
+.lcard__body .lcard__bar { padding: 12px 0 0; }
+.lcard__steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 6px; font-size: 11.5px; color: var(--sub); }
+.lcard__steps span:nth-child(2) { text-align: center; }
+.lcard__steps span:nth-child(3) { text-align: center; }
+.lcard__steps span:last-child { text-align: right; }
+.lcard__steps .is-on { color: var(--brand-deep); font-weight: 700; }
+
+/* Open: the live map (shop-map.js; the drawn map shows until it loads), then the rest */
+.lcard__body { padding: 0 14px 14px; display: flex; flex-direction: column; animation: lcard-open .3s var(--ease-out); }
+@keyframes lcard-open { from { opacity: 0; transform: translateY(-6px); } }
+.lcard__map.map {
+  position: relative; inset: auto; height: 170px; border-radius: 16px; overflow: hidden;
+  background: url("/assets/images/map-bg.svg") center / cover no-repeat, var(--map-ground);
+}
+.lcard__driver { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.lcard__ava { width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--brand-deep); color: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 800; }
+.lcard__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lcard__who b { font-size: 14px; color: var(--ink); }
+.lcard__who span { font-size: 12.5px; color: var(--sub); }
+.lcard__act { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--tint); display: grid; place-items: center; cursor: pointer; }
+.lcard__act .icon { width: 20px; height: 20px; stroke: var(--brand-deep); }
+.lcard__wait { margin: 14px 0 0; font-size: 14px; color: var(--sub); }
+.lcard__go { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.lcard__go .icon { width: 18px; height: 18px; --pin-fill: #fff; --pin-dot: var(--brand-deep); }
+.lcard__link { margin-top: 12px; align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 14px; font-weight: 700; color: var(--brand-deep); text-decoration: none; }
+.lcard__link .icon { stroke: var(--brand-deep); }
 
 /* Start something: book a ride or order food */
 .tquick { display: flex; flex-direction: column; gap: 10px; }
@@ -81,8 +105,7 @@
 a.btn-soft { text-decoration: none; } /* "View" is a link styled as the Rebook button */
 
 @media (prefers-reduced-motion: reduce) {
-  .tlist > li, .lrow__ring .lrow__arc, .lrow__ring .icon, .lrow__eta { animation: none; }
-  .lrow__ring .lrow__glint { display: none; }
-  .tswitch button, .lrow, .lrow__go, .tquick__go { transition: none; }
-  .tswitch button:active, .lrow:active, .tquick__go:active, .lrow:hover .lrow__go, .lrow:active .lrow__go { transform: none; }
+  .tlist > li, .lcard__icon .icon, .lcard__eta, .lcard__body { animation: none; }
+  .tswitch button, .lcard__head, .lcard__chev, .tquick__go { transition: none; }
+  .tswitch button:active, .lcard__head:active, .tquick__go:active { transform: none; }
 }
