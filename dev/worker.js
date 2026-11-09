@@ -28,6 +28,8 @@ export default {
     if (url.pathname === '/api/health') return health(env);
     // Old address of the app (it used to live at /html/)
     if (url.pathname === '/html' || url.pathname.startsWith('/html/')) return Response.redirect(`${url.origin}/`, 301);
+    // Old address of the POS (bookmarks, installed apps); the browser keeps any #online
+    if (/^\/pages\/merchant-pos(\.html)?$/.test(url.pathname)) return Response.redirect(`${url.origin}/pos${url.search}`, 301);
     return env.ASSETS.fetch(request);
   },
 };

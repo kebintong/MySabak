@@ -22,7 +22,7 @@ function renderNow() {
   const count = (statuses) => home.orders.filter((o) => statuses.includes(o.status)).length;
   const steps = [['New', count(['placed']), 'new'], ['Preparing', count(['accepted', 'preparing']), 'cooking'], ['Ready', count(['ready']), 'ready']];
   $('#nowCounts').innerHTML = steps.map(([label, n, tab]) =>
-    `<a class="nowcount${n ? ' is-on' : ''}" href="/pages/merchant-pos.html?tab=${tab}#online"><b>${n}</b><span>${label}</span></a>`).join('');
+    `<a class="nowcount${n ? ' is-on' : ''}" href="/pos?tab=${tab}#online"><b>${n}</b><span>${label}</span></a>`).join('');
   const waiting = home.orders.filter((o) => o.status === 'placed').slice(0, 3);
   const counter = home.counter.reduce((n, o) => n + o.subtotal, 0);
   $('#nowList').innerHTML = (waiting.length
