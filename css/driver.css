@@ -105,7 +105,7 @@
   display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto 1fr; column-gap: 6px;
   grid-template-areas: "kind kind" "from from" "fare art";
   font: inherit; color: var(--ink); text-align: left; cursor: pointer;
-  transition: transform .15s var(--spring), box-shadow .2s;
+  transition: transform .15s var(--spring), box-shadow .2s var(--ease-out);
 }
 .dmini:hover { box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
 .dmini:active { transform: scale(.97); }

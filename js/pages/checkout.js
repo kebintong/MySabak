@@ -36,7 +36,7 @@ function setPeek(id, text) {
   if (el.textContent === text) return;
   const first = !el.textContent;
   el.textContent = text;
-  if (!first && !calm()) el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+  if (!first && !calm()) el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.16, 1, .3, 1)' });
 }
 
 function renderLines() {

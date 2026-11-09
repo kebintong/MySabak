@@ -16,28 +16,42 @@ export const pesoOr = (n, placeholder = '[AMOUNT]') => (typeof n === 'number' ? 
 export const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // A small "that changed" pop, for values and buttons
 export const pop = (n, from = 1.25) => {
-  if (n && !calm()) n.animate([{ transform: `scale(${from})` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+  if (n && !calm()) n.animate([{ transform: `scale(${from})` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.16, 1, .3, 1)' });
 };
-/** Count a number up to the value an element shows (₱1,225, 30, 24%), e.g. when a total first appears.
-    Screen readers get the final value once; the counting digits are hidden from them. Text-only elements. */
-export function countUp(n, ms = 650) {
-  const text = n ? n.textContent : '';
-  const m = text.match(/\d[\d,]*(\.\d+)?/);
-  if (!m || calm()) return;
-  const to = Number(m[0].replace(/,/g, ''));
-  const dp = m[1] ? m[1].length - 1 : 0;
-  const pre = text.slice(0, m.index);
-  const post = text.slice(m.index + m[0].length);
-  const fmt = (v) => pre + v.toLocaleString('en-PH', { minimumFractionDigits: dp, maximumFractionDigits: dp }) + post;
-  n.innerHTML = `<span aria-hidden="true" style="font: inherit; color: inherit; letter-spacing: inherit">${esc(fmt(0))}</span><span class="sr-only">${esc(text)}</span>`;
-  const shown = n.firstChild;
-  const t0 = performance.now();
-  const step = (now) => {
-    const f = Math.min(1, (now - t0) / ms);
-    shown.textContent = f < 1 ? fmt(to * (1 - (1 - f) ** 3)) : text; // ease out, end on the exact text
-    if (f < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
+/**
+ * Rolling digits (an odometer): each digit rolls to its value, blurs while it's fast, goes a little past and snaps
+ * back; the digits land right to left. `from`: the value shown before (its text), so a change rolls from there and
+ * digits that stay the same stay still; none = from 0. The number takes its final width at once.
+ * Screen readers get the final text once; the reels are hidden from them. For text-only elements.
+ */
+export function rollNumber(n, from = null) {
+  if (!n) return;
+  const text = n.textContent;
+  n.dataset.value = text; // the value as text, for the next roll's `from`
+  if (calm()) return;
+  const digits = (t) => [...String(t || '')].filter((c) => /\d/.test(c)).reverse(); // ones first
+  const before = digits(from);
+  const after = [...text].filter((c) => /\d/.test(c));
+  let i = after.length; // digits left to place, counted from the right
+  n.innerHTML = `<span class="roll" aria-hidden="true">${[...text].map((c) => (/\d/.test(c)
+    ? `<span class="roll__d"><span class="roll__reel">${'0123456789'.split('').map((d) => `<span>${d}</span>`).join('')}</span></span>`
+    : `<span>${esc(c)}</span>`)).join('')}</span><span class="sr-only">${esc(text)}</span>`;
+  const reels = [...n.querySelectorAll('.roll__reel')];
+  reels.forEach((reel, k) => {
+    i -= 1; // this reel's place from the right (0 = ones)
+    const to = Number(after[k]);
+    const at = Number(before[i] || 0);
+    const y = (d) => `translateY(${(-d * 1.1).toFixed(3)}em)`;
+    reel.style.transform = y(to);
+    if (to === at && from !== null) return; // unchanged digits stay still
+    const past = to + (to >= at ? 0.16 : -0.16);
+    reel.animate([
+      { transform: y(at), filter: 'blur(0)', easing: 'cubic-bezier(.45, 0, .25, 1)' },
+      { transform: y(at + (to - at) * 0.78), filter: 'blur(1.1px)', offset: 0.5, easing: 'cubic-bezier(.2, .65, .3, 1)' },
+      { transform: y(past), filter: 'blur(.2px)', offset: 0.8, easing: 'cubic-bezier(.3, 0, .25, 1)' },
+      { transform: y(to), filter: 'blur(0)' },
+    ], { duration: 720, delay: i * 90, fill: 'backwards' });
+  });
 }
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

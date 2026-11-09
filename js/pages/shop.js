@@ -17,7 +17,7 @@ const pic = (item) => (item.image ? `<img src="${esc(item.image)}" alt="">` : it
 const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 /* ---------- Motion ---------- */
-const MOVE = { duration: 260, easing: 'cubic-bezier(.2, .8, .2, 1)' }; // same curve as --ease-out
+const MOVE = { duration: 260, easing: 'cubic-bezier(.16, 1, .3, 1)' }; // same curve as --ease-out
 
 // Glide the menu to its new layout after `change`, instead of letting the cards jump
 function reflow(change) {

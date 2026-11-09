@@ -3,7 +3,7 @@
    Mood board and, for the owner, every branch today. Selling is on POS; branches, shop and menu on Management. */
 import { merchantSales, errorMessage } from '../api.js';
 import { moodFor } from '../mood.js';
-import { $, $$, mountChrome, esc, peso, when, icon, countUp } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, when, icon, rollNumber } from '../ui.js';
 import { loadHome, mountHead } from './merchant-common.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -21,8 +21,10 @@ const ago = (ts) => {
 function renderNow() {
   const count = (statuses) => home.orders.filter((o) => statuses.includes(o.status)).length;
   const steps = [['New', count(['placed']), 'new'], ['Preparing', count(['accepted', 'preparing']), 'cooking'], ['Ready', count(['ready']), 'ready']];
+  const was = $$('#nowCounts b').map((b) => b.dataset.value ?? null); // roll from what was shown
   $('#nowCounts').innerHTML = steps.map(([label, n, tab]) =>
     `<a class="nowcount${n ? ' is-on' : ''}" href="/pos?tab=${tab}#online"><b>${n}</b><span>${label}</span></a>`).join('');
+  $$('#nowCounts b').forEach((b, i) => rollNumber(b, was[i] ?? null));
   const waiting = home.orders.filter((o) => o.status === 'placed').slice(0, 3);
   const counter = home.counter.reduce((n, o) => n + o.subtotal, 0);
   $('#nowList').innerHTML = (waiting.length
@@ -41,6 +43,21 @@ const RANGES = {
 let range = 'day';
 const hour12 = (label) => label.replace(/(\d+)([ap])$/, (_, h, ap) => `${h} ${ap === 'a' ? 'AM' : 'PM'}`);
 
+// A smooth line through the points that never overshoots them (monotone cubic), as an SVG path
+function smoothPath(pts) {
+  const d = pts.slice(1).map(([x1, y1], i) => (y1 - pts[i][1]) / (x1 - pts[i][0] || 1));
+  const m = pts.map((_, i) => (i === 0 ? d[0] : i === pts.length - 1 ? d[i - 1] : d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2));
+  return pts.reduce((path, [x1, y1], i) => {
+    if (!i) return `M${x1.toFixed(1)},${y1.toFixed(1)}`;
+    const [x0, y0] = pts[i - 1];
+    const h = (x1 - x0) / 3;
+    return `${path} C${(x0 + h).toFixed(1)},${(y0 + (m[i - 1] || 0) * h).toFixed(1)} ${(x1 - h).toFixed(1)},${(y1 - (m[i] || 0) * h).toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`;
+  }, '');
+}
+const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z"/></svg>';
+
+/* Aurora: a glowing line from purple to gold over a soft aurora fill with a few sparkles, the period before as a
+   trail of dots, and a gold star at now */
 function salesChart(s) {
   const W = 300;
   const H = 120;
@@ -54,7 +71,11 @@ function salesChart(s) {
   const x = (i) => (i / n) * W;
   const y = (v) => H - 4 - (v / max) * (H - 14);
   const pts = (arr) => arr.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-  const area = `M0,${H - 4} L${pts(mine).split(' ').join(' L')} L${x(upTo).toFixed(1)},${H - 4} Z`;
+  const line = mine.length > 1 ? smoothPath(mine.map((v, i) => [x(i), y(v)])) : `M0,${y(mine[0] || 0)}`;
+  const area = `${line} L${x(upTo).toFixed(1)},${H - 4} L0,${H - 4} Z`;
+  // Sparkles in the aurora: under a few of the points, halfway down to the base
+  const sparkles = mine.map((v, i) => [i, v]).filter(([i, v]) => i > 0 && i < upTo && v > 0 && i % 3 === 1).slice(0, 4)
+    .map(([i, v], k) => `<span class="schart2__spark" style="left:${((x(i) / W) * 100).toFixed(2)}%;top:${(((y(v) + H - 4) / 2 / H) * 100).toFixed(2)}%;--k:${k}">${STAR}</span>`).join('');
   // A few labels along the bottom: hours, weekdays, or dates
   const every = s.range === 'day' ? 3 : s.range === 'week' ? 1 : 7;
   const ticks = s.series.map((p, i) => ((i % every === 0 || i === s.series.length - 1)
@@ -62,12 +83,18 @@ function salesChart(s) {
   return `<div class="schart2">
     <div class="schart2__plot">
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Sales so far as a running total, with the period before as a dashed line">
+        <defs>
+          <linearGradient id="auroraLine" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#7b3fbf"/><stop offset=".7" stop-color="#c59af0"/><stop offset="1" stop-color="#f6c46c"/></linearGradient>
+          <linearGradient id="auroraFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c59af0" stop-opacity=".5"/><stop offset="1" stop-color="#f1eaf8" stop-opacity="0"/></linearGradient>
+          <filter id="auroraGlow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="3.5"/></filter>
+        </defs>
         <line x1="0" y1="${H - 4}" x2="${W}" y2="${H - 4}" class="schart2__base"/>
         <polyline points="${pts(s.compare)}" class="schart2__before"/>
         <path d="${area}" class="schart2__area"/>
-        <polyline points="${pts(mine)}" class="schart2__line"/>
-      </svg>
-      <span class="schart2__now" style="left:${((upTo / n) * 100).toFixed(2)}%;top:${((y(mine[upTo]) / H) * 100).toFixed(2)}%"><i></i><b>Now</b></span>
+        <path d="${line}" class="schart2__glow"/>
+        <path d="${line}" class="schart2__line"/>
+      </svg>${sparkles}
+      <span class="schart2__now" style="left:${((upTo / n) * 100).toFixed(2)}%;top:${((y(mine[upTo]) / H) * 100).toFixed(2)}%"><i></i>${STAR}<b>Now</b></span>
     </div>
     <div class="schart2__ticks" aria-hidden="true">${ticks}</div>
     <div class="schart2__key"><span><i class="is-mine"></i>${s.range === 'day' ? 'Today' : s.range === 'week' ? 'This week' : 'This month'}</span><span><i class="is-before"></i>${s.range === 'day' ? 'Yesterday' : s.range === 'week' ? 'Last week' : 'Last month'}</span></div>
@@ -77,6 +104,7 @@ function salesChart(s) {
 async function renderSales() {
   const id = home.branch.id;
   $$('#salesRange [data-range]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.range === range)));
+  const was = $('.sales__value') ? $('.sales__value').dataset.value ?? null : null; // switching period: roll from it
   try {
     const s = await merchantSales({ range, branchId: id });
     const r = RANGES[range];
@@ -86,7 +114,7 @@ async function renderSales() {
     $('#sales').innerHTML = `<div class="sales__head"><b class="sales__value">${peso(s.total)}</b>${delta}</div>
       ${salesChart(s)}
       <a class="quietlink" href="/pages/merchant-analytics.html?range=${range}&amp;branch=${encodeURIComponent(id)}">See all sales${icon('i-chevron')}</a>`;
-    countUp($('.sales__value'));
+    rollNumber($('.sales__value'), was);
   } catch (err) { $('#sales').innerHTML = `<p class="empty">${esc(errorMessage(err))}</p>`; }
 }
 $('#salesRange').addEventListener('click', (e) => {

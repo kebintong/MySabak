@@ -96,7 +96,8 @@
 }
 
 .sstat b {
-  font: 800 24px var(--font-body);
+  font: 800 24px/1.1 var(--font-body);
+  letter-spacing: -.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -175,14 +176,41 @@
   border-radius: 10px;
   background: var(--line-brand);
   transform-origin: bottom;
-  animation: bar-grow .45s ease-out backwards;
+  animation: bar-grow .55s var(--ease-out) backwards;
   animation-delay: calc(var(--i, 0) * 25ms + 80ms);
-  transition: background-color .15s;
+  transition: background-color .15s var(--ease-out);
 }
 
-.schart__col.is-now .schart__bar,
+/* Aurora (to match the Dashboard line): soft lilac bars, purple under the pointer, now in gold with a star on top */
+.schart__bar {
+  position: relative;
+  background: linear-gradient(180deg, #c59af0, #efe4f9);
+}
+
 .schart__col:hover .schart__bar {
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent), #b58ce6);
+}
+
+.schart__col.is-now .schart__bar {
+  background: linear-gradient(180deg, var(--gold), #e3933f);
+  box-shadow: 0 0 14px rgba(246, 196, 108, .65);
+}
+
+.schart__col.is-now .schart__bar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  width: 13px;
+  height: 13px;
+  translate: -50% 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f6c46c' d='M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 3px rgba(246, 196, 108, .9));
+  animation: m-twinkle 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schart__col.is-now .schart__bar::before { animation: none; }
 }
 
 .schart__label {

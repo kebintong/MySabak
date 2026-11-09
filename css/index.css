@@ -253,7 +253,7 @@ body:not([data-state="request"]) .map-controls {
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
-  transition: background-color .15s, color .15s, box-shadow .15s;
+  transition: background-color .15s var(--ease-out), color .15s var(--ease-out), box-shadow .15s var(--ease-out);
 }
 
 .mode__btn[aria-checked="true"] {
@@ -475,7 +475,7 @@ body:not([data-state="request"]) .map-controls {
   gap: 6px;
   flex-shrink: 0;
   white-space: nowrap;
-  transition: background-color .15s, border-color .15s, transform .18s var(--ease-out);
+  transition: background-color .15s var(--ease-out), border-color .15s var(--ease-out), transform .18s var(--ease-out);
 }
 
 .glass-chip:hover {
@@ -528,7 +528,7 @@ body:not([data-state="request"]) .map-controls {
   background: #f2e9fa url("/assets/images/v3/glow-lilac.svg") -4px 12px / 170px 160px no-repeat;
   color: var(--ink);
   text-decoration: none;
-  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .15s;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .15s var(--ease-out);
 }
 
 .svc:hover {
@@ -646,7 +646,7 @@ body:not([data-state="request"]) .map-controls {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  transition: background-color .15s;
+  transition: background-color .15s var(--ease-out);
 }
 
 .quick__item+.quick__item {
@@ -1115,7 +1115,7 @@ body.is-loading .choose__summary {
   border-radius: 16px;
   background: #fff;
   cursor: pointer;
-  transition: border-color .15s, background-color .15s;
+  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out);
 }
 
 .paymethod__text {
