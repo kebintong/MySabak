@@ -104,7 +104,7 @@ function rideMap(el, t) {
   m.setDest(b.dropoff, 'Drop-off');
   m.setRoute(route);
   m.fit(route);
-  const stop = t.driver ? onTripUpdate(t.id, (u) => m.setRider(u.status === 'completed' ? null : u.driver, { car: b.vehicle !== 'motor' })) : () => {};
+  const stop = t.driver ? onTripUpdate(t.id, (u) => m.setRider(u.status === 'completed' ? null : u.driver)) : () => {};
   return { api: m, stop };
 }
 

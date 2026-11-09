@@ -11,7 +11,7 @@
 
 /* ---------- Night sky header (the page head of .page--head-sky, edge to edge) ---------- */
 .page--merchant .mhead { gap: 20px; padding-bottom: 84px; color: #fff; }
-.mhero { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; animation: m-in .3s ease-out backwards; }
+.mhero { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
 .mhero__shop { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .mhero__ava {
   width: 56px; height: 56px; flex-shrink: 0; border-radius: 16px; overflow: hidden; display: grid; place-items: center;
@@ -97,7 +97,7 @@
 /* ---------- The owner viewing another branch ---------- */
 .mview {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 14px 12px 18px;
-  border-radius: 18px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); color: #fff; animation: m-in .3s ease-out backwards;
+  border-radius: 18px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); color: #fff;
 }
 .mview p { margin: 0; font-size: 14.5px; color: #e2d0f4; }
 .mview b { color: var(--gold); }
@@ -106,7 +106,7 @@
 
 /* ---------- Management · Preview analytics · Mood board (option B) ---------- */
 .mcards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
-.dcard { display: flex; flex-direction: column; gap: 12px; animation: m-in .3s ease-out backwards; }
+.dcard { display: flex; flex-direction: column; gap: 12px; }
 .dcard .card__title { margin: 0; }
 @media (min-width: 760px) {
 .mcards { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
@@ -318,4 +318,29 @@ button.bglance__row:hover .bglance__go { transform: translateX(2px); }
 @media (min-width: 760px) {
 .mcards--manage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
 .mcards--manage .mshop { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- Motion: every load and every move between merchant pages ---------- */
+/* Between merchant pages: a quick crossfade; the tab bar stays put */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
+.page--merchant .dock { view-transition-name: mdock; }
+/* Then the page rises in: the header's content first, then each card in turn (--enter is its place) */
+.mdash .mhead > *, .mdash .card, .mdash .sstat {
+  animation: m-in .42s var(--ease-out) backwards;
+  animation-delay: calc(var(--enter, 0) * 70ms);
+}
+.sstats > :nth-child(1) { --enter: 1; }
+.sstats > :nth-child(2) { --enter: 2; }
+.sstats > :nth-child(3) { --enter: 3; }
+.sstats > :nth-child(4) { --enter: 4; }
+/* The shop picture pops, the sales line draws itself left to right, and its Now dot lands last */
+.mhero__ava { animation: m-pop .45s var(--spring) 80ms backwards; }
+.schart2__plot svg { animation: m-wipe .8s var(--ease-out) .25s backwards; }
+.schart2__now i, .schart2__now b { animation: m-pop .4s var(--spring) .95s backwards; }
+@keyframes m-pop { from { opacity: 0; transform: scale(.7); } }
+@keyframes m-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .mdash .mhead > *, .mdash .card, .mdash .sstat, .mhero__ava, .schart2__plot svg, .schart2__now i, .schart2__now b { animation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
 }

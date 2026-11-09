@@ -34,7 +34,7 @@
           <header class="page-head mhead" data-mhead></header>
 
           <div class="mcards mcards--manage">
-            <section class="card dcard" id="management" aria-labelledby="mgmtTitle">
+            <section class="card dcard" id="management" aria-labelledby="mgmtTitle" style="--enter: 1">
               <h2 class="card__title card__title--row" id="mgmtTitle">Branches <span class="muted small" id="mgmtCount"></span></h2>
               <ul class="blist" id="branchList"></ul>
               <div class="badd" id="addBranch" hidden>
@@ -57,7 +57,7 @@
               </div>
             </section>
             <!-- What customers see at every branch: photo, name, description; Edit (owner) opens the shop sheet -->
-          <section class="card dcard mshop" aria-labelledby="shopCardTitle">
+          <section class="card dcard mshop" aria-labelledby="shopCardTitle" style="--enter: 2">
             <div class="mshop__photo" id="shopPhoto"></div>
             <div class="mshop__text">
               <div class="mshop__head"><h2 class="card__title" id="shopCardTitle">Your shop</h2><button type="button" class="button button--ghost mbtn" id="editShop">Edit shop</button></div>
@@ -70,7 +70,7 @@
           </div>
 
           <!-- Products: picture, short description, variant prices, Edit, Available switch -->
-          <section class="card products" aria-labelledby="menuTitle">
+          <section class="card products" aria-labelledby="menuTitle" style="--enter: 3">
             <div class="products__head">
               <h2 class="card__title" id="menuTitle">Your products <span class="muted small" id="menuCount"></span></h2>
               <div class="fchips products__filter" id="menuFilter" role="group" aria-label="Show products in"></div>

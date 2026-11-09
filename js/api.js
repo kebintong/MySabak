@@ -1261,7 +1261,7 @@ function sampleOrders(branchId) {
 }
 /** A branch's orders: the ones customers placed in this browser and its SAMPLE ones, newest first. */
 const ordersOf = (branchId) => [
-  ...demo.get('orders', []).filter((o) => o.shop.id === branchId),
+  ...demo.get('orders', []).filter((o) => o.shop.id === branchId).map(demoOrder),
   ...demo.get('posSales', []).filter((o) => o.shop.id === branchId), // counter sales (channel 'counter')
   ...sampleOrders(branchId),
 ]
@@ -1545,7 +1545,8 @@ export async function updateMerchantOrder(orderId, actionId) {
   const stored = demo.get(key, []);
   const orders = inSample && !main ? stored[id] : stored;
   const order = orders.find((o) => o.id === orderId);
-  const action = (MERCHANT_ACTIONS[order.status] || []).find((a) => a.id === actionId);
+  const now = inSample ? order.status : demoOrder(order).status; // where the demo timeline has it
+  const action = (MERCHANT_ACTIONS[now] || []).find((a) => a.id === actionId);
   if (!action) throw Object.assign(new Error('That step isn’t possible now.'), { status: 409 });
   order.status = action.to;
   demo.set(key, stored);
@@ -1672,16 +1673,20 @@ export async function myOrders() {
 // DEMO: no real shop or rider works a sample shop's order, so it moves along with time since it was placed
 // (the demo merchant's own branches move theirs from the merchant pages, so those are left as stored)
 const DEMO_ORDER_TIMES = [['accepted', 20e3], ['preparing', 40e3], ['ready', 150e3], ['picked_up', 180e3], ['delivered', 360e3]];
+const DEMO_STEPS = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'];
+// DEMO: every order runs DEMO_ORDER_TIMES from when it was placed: the shop accepts and cooks, then a rider picks it
+// up and rides it over. The demo merchant's buttons (updateMerchantOrder) can move their own orders ahead of the
+// timeline, never back; a declined (cancelled) order stays cancelled.
 function demoOrder(o) {
-  const shop = SHOPS.find((s) => s.id === o.shop.id);
-  if (o.status !== 'placed' || !shop) return o;
+  const shop = SHOPS.find((s) => s.id === o.shop.id) || branches().find((b) => b.id === o.shop.id);
+  if (!shop || o.status === 'cancelled') return o;
   const age = Date.now() - o.placedAt;
-  const reached = DEMO_ORDER_TIMES.filter(([, ms]) => age >= ms).pop();
-  if (!reached) return o;
-  if (reached[0] !== 'picked_up' || !o.address) return { ...o, status: reached[0] };
+  const timed = (DEMO_ORDER_TIMES.filter(([, ms]) => age >= ms).pop() || ['placed'])[0];
+  const status = DEMO_STEPS.indexOf(timed) > DEMO_STEPS.indexOf(o.status) ? timed : o.status;
+  if (status !== 'picked_up' || !o.address) return status === o.status ? o : { ...o, status };
   // On the way: the rider rides the order's road route (orderRoute), or a straight line, picked up → delivered
   const path = demo.get('orderRoutes', {})[o.id] || [[shop.lng, shop.lat], [o.address.lng, o.address.lat]];
-  return { ...o, status: 'picked_up', rider: pointAlong(path, (age - 180e3) / (360e3 - 180e3)) };
+  return { ...o, status, rider: pointAlong(path, (age - 180e3) / (360e3 - 180e3)) };
 }
 
 /**

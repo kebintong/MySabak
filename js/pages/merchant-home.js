@@ -3,7 +3,7 @@
    Mood board and, for the owner, every branch today. Selling is on POS; branches, shop and menu on Management. */
 import { merchantSales, errorMessage } from '../api.js';
 import { moodFor } from '../mood.js';
-import { $, $$, mountChrome, esc, peso, when, icon } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, when, icon, countUp } from '../ui.js';
 import { loadHome, mountHead } from './merchant-common.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -86,6 +86,7 @@ async function renderSales() {
     $('#sales').innerHTML = `<div class="sales__head"><b class="sales__value">${peso(s.total)}</b>${delta}</div>
       ${salesChart(s)}
       <a class="quietlink" href="/pages/merchant-analytics.html?range=${range}&amp;branch=${encodeURIComponent(id)}">See all sales${icon('i-chevron')}</a>`;
+    countUp($('.sales__value'));
   } catch (err) { $('#sales').innerHTML = `<p class="empty">${esc(errorMessage(err))}</p>`; }
 }
 $('#salesRange').addEventListener('click', (e) => {

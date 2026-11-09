@@ -87,7 +87,6 @@
   border-radius: 20px;
   background: #fff;
   box-shadow: var(--shadow-card);
-  animation: m-in .3s ease-out backwards;
 }
 
 .sstat span {

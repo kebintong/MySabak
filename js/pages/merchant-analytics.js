@@ -2,7 +2,7 @@
    cancelled orders for today, the last 7 days or this month. The owner picks a branch or All branches;
    a branch account sees its own branch. The dashboard's Preview analytics tiles open this page. */
 import { merchantSales, errorMessage } from '../api.js';
-import { $, mountChrome, esc, peso, toast } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, toast, countUp } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
 
@@ -67,6 +67,7 @@ async function load() {
     history.replaceState(null, '', `?range=${range}&branch=${encodeURIComponent(branch)}`);
     $('#sales').hidden = false;
     render(s);
+    $$('#stats .sstat b').forEach((b) => countUp(b));
   } catch (err) {
     if (err.status === 401) { location.replace('/pages/merchant.html'); return; }
     if (err.status === 404 && branch !== 'all') { branch = 'all'; load(); return; } // that branch is gone

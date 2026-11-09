@@ -14,6 +14,11 @@ const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const DESKTOP = window.matchMedia('(min-width: 900px)');
 const TT_HOSTS = /^https:\/\/([a-d]\.)?api\.tomtom\.com/;
 
+// The rider on a scooter from above, heading up (Rider A: the mascot's top hat as the head). The viewBox is centred
+// on the rider (32, 50) so it turns about its middle. Used for every driver and rider on the maps.
+export const RIDER_SVG = '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="58" rx="20" ry="36" fill="#170730" opacity=".18"/><path d="M32 2 L22 -16 H42 Z" fill="#ffe29a" opacity=".35"/><rect x="27" y="4" width="10" height="16" rx="5" fill="#1b0b2e"/><rect x="27" y="80" width="10" height="17" rx="5" fill="#1b0b2e"/><path d="M20 22 C20 14 26 10 32 10 C38 10 44 14 44 22 L46 76 C46 86 40 92 32 92 C24 92 18 86 18 76 Z" fill="#6a2fb0"/><path d="M24 18 C26 14 29 13 32 13 C35 13 38 14 40 18" fill="none" stroke="#f6c46c" stroke-width="3" stroke-linecap="round"/><rect x="29" y="11" width="6" height="4" rx="2" fill="#ffe29a"/><path d="M22 64 H42 V82 C42 86 38 88 32 88 C26 88 22 86 22 82 Z" fill="#2a1240"/><rect x="12" y="23" width="40" height="5" rx="2.5" fill="#1b0b2e"/><rect x="8" y="22" width="8" height="7" rx="3.5" fill="#f6c46c"/><rect x="48" y="22" width="8" height="7" rx="3.5" fill="#f6c46c"/><path d="M18 52 C16 44 14 36 12 28" fill="none" stroke="#3a0f6a" stroke-width="7" stroke-linecap="round"/><path d="M46 52 C48 44 50 36 52 28" fill="none" stroke="#3a0f6a" stroke-width="7" stroke-linecap="round"/><rect x="14" y="44" width="36" height="22" rx="11" fill="#4a1680"/><circle cx="32" cy="50" r="15" fill="#1b0b2e"/><circle cx="32" cy="50" r="10.5" fill="#f6c46c"/><circle cx="32" cy="50" r="8" fill="#2c1747"/><path d="M27.5 46.5 A6 6 0 0 1 36 45.5" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round"/></svg>';
+/** Compass heading from a to b in degrees (0 = north, 90 = east), to turn the rider the way it's going. */
+export const heading = (a, b) => (Math.atan2((b.lng - a.lng) * Math.cos((b.lat * Math.PI) / 180), b.lat - a.lat) * 180) / Math.PI;
 export const zoomIn = () => map && map.zoomIn();
 export const zoomOut = () => map && map.zoomOut();
 
@@ -128,6 +133,7 @@ export function initMap(ctx) {
   markers.origin = new maplibregl.Marker({ element: document.getElementById('mkOrigin'), anchor: 'center' }).setLngLat(state.pickup).addTo(map);
   markers.dest = new maplibregl.Marker({ element: document.getElementById('mkDest'), anchor: 'bottom' }).setLngLat(state.pickup);
   markers.time = new maplibregl.Marker({ element: document.getElementById('mkTime'), anchor: 'bottom', offset: [0, -10] }).setLngLat(state.pickup);
+  document.querySelector('#mkDriver .mk__rider').innerHTML = RIDER_SVG;
   markers.driver = new maplibregl.Marker({ element: document.getElementById('mkDriver'), anchor: 'center' }).setLngLat(state.pickup);
   markers.driver.getElement().addEventListener('animationend', (e) => { if (e.animationName === 'mascot-pop') e.currentTarget.classList.remove('is-pop'); });
 
@@ -425,7 +431,7 @@ function moveDriver(pos) {
     driverAnim.from = null;
     driverAnim.to = pos;
     driverAnim.last = now;
-    el.classList.add('is-pop'); // the mascot pops up where the driver accepted
+    el.classList.add('is-pop'); // the rider pops up where the driver accepted
     el.dataset.motion = 'stop';
     markers.driver.setLngLat([pos.lng, pos.lat]).addTo(map);
     return;
@@ -434,7 +440,7 @@ function moveDriver(pos) {
   if (driverAnim.to.lng === pos.lng && driverAnim.to.lat === pos.lat) { el.dataset.motion = 'stop'; return; }
   el.dataset.motion = 'run';
   const from = driverNow(now);
-  if (Math.abs(pos.lng - from.lng) > 1e-7) el.classList.toggle('is-west', pos.lng < from.lng);
+  el.style.setProperty('--heading', `${heading(from, pos)}deg`); // the map doesn't rotate, so north is up
   Object.assign(driverAnim, { from, to: pos, start: now, dur: Math.min(2000, Math.max(120, now - driverAnim.last)), last: now });
   if (REDUCED_MOTION.matches) { markers.driver.setLngLat([pos.lng, pos.lat]); return; }
   cancelAnimationFrame(driverAnim.raf);

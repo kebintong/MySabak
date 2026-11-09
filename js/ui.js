@@ -18,6 +18,27 @@ export const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').
 export const pop = (n, from = 1.25) => {
   if (n && !calm()) n.animate([{ transform: `scale(${from})` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' });
 };
+/** Count a number up to the value an element shows (₱1,225, 30, 24%), e.g. when a total first appears.
+    Screen readers get the final value once; the counting digits are hidden from them. Text-only elements. */
+export function countUp(n, ms = 650) {
+  const text = n ? n.textContent : '';
+  const m = text.match(/\d[\d,]*(\.\d+)?/);
+  if (!m || calm()) return;
+  const to = Number(m[0].replace(/,/g, ''));
+  const dp = m[1] ? m[1].length - 1 : 0;
+  const pre = text.slice(0, m.index);
+  const post = text.slice(m.index + m[0].length);
+  const fmt = (v) => pre + v.toLocaleString('en-PH', { minimumFractionDigits: dp, maximumFractionDigits: dp }) + post;
+  n.innerHTML = `<span aria-hidden="true" style="font: inherit; color: inherit; letter-spacing: inherit">${esc(fmt(0))}</span><span class="sr-only">${esc(text)}</span>`;
+  const shown = n.firstChild;
+  const t0 = performance.now();
+  const step = (now) => {
+    const f = Math.min(1, (now - t0) / ms);
+    shown.textContent = f < 1 ? fmt(to * (1 - (1 - f) ** 3)) : text; // ease out, end on the exact text
+    if (f < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const ICONS = '/assets/images/icons.svg';

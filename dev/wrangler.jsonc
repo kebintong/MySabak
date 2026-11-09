@@ -7,7 +7,7 @@
   "name": "mysabak",
   "main": "worker.js",
   // Rebuilds dist/ before deploying, and during `dev` when these change
-  "build": { "command": "node dev/build.mjs", "watch_dir": ["index.html", "manifest.webmanifest", "sw.js", "pages", "assets", "css", "js"] },
+  "build": { "command": "node dev/build.mjs", "watch_dir": ["../index.html", "../pos.html", "../manifest.webmanifest", "../sw.js", "../pages", "../assets", "../css", "../js"] },
   "compatibility_date": "2025-10-01",
   "assets": {
     "directory": "../dist", // built by build.mjs

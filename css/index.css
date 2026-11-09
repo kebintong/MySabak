@@ -1325,8 +1325,8 @@ body.is-loading .choose__summary {
 }
 
 /* Driver on the map */
-/* Driver on the map: the mascot, for every vehicle. Stages come from map.js:
-   .is-pop (driver accepted), data-motion="run" | "stop" (traffic), .is-arrived (at the pickup) */
+/* Driver on the map: the rider icon from above, for every vehicle, turned to the road (--heading, from map.js).
+   Stages come from map.js: .is-pop (driver accepted), data-motion="run" | "stop" (traffic), .is-arrived (at the pickup) */
 .mk--driver {
   width: 52px;
   height: 52px;
@@ -1334,45 +1334,31 @@ body.is-loading .choose__summary {
   pointer-events: none;
 }
 
-.mk__mascot {
+.mk__rider {
   display: block;
   width: 100%;
   height: 100%;
-  transform-origin: 50% 85%;
-  filter: drop-shadow(0 4px 5px rgba(23, 18, 43, .35));
+  rotate: var(--heading, 0deg);
+  transition: rotate .4s var(--ease-out);
 }
 
-.mk--driver.is-west .mk__mascot {
-  scale: -1 1;
+.mk__rider svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 3px 4px rgba(23, 18, 43, .35));
 }
 
-/* Running: bobs and leans forward, speed lines behind */
-.mk--driver[data-motion="run"] .mk__mascot {
-  animation: mascot-run .36s ease-in-out infinite;
+/* Riding: a light engine hum */
+.mk--driver[data-motion="run"] .mk__rider {
+  animation: rider-hum .3s ease-in-out infinite;
 }
 
-.mk--driver[data-motion="run"]:not(.is-arrived)::before {
-  left: -14px;
-  top: 18px;
-  width: 14px;
-  height: 13px;
-  opacity: 1;
-  background:
-    linear-gradient(var(--brand), var(--brand)) 2px 0 / 12px 2.5px no-repeat,
-    linear-gradient(var(--brand), var(--brand)) 0 5px / 9px 2.5px no-repeat,
-    linear-gradient(var(--brand), var(--brand)) 4px 10px / 10px 2.5px no-repeat;
-  border-radius: 2px;
-  animation: speed-lines .36s linear infinite;
-}
-
-.mk--driver.is-west[data-motion="run"]:not(.is-arrived)::before {
-  left: auto;
-  right: -14px;
-  scale: -1 1;
-}
+@keyframes rider-hum { 50% { transform: scale(1.04); } }
 
 /* Stopped in traffic: settles and breathes, a "…" bubble over it */
-.mk--driver[data-motion="stop"] .mk__mascot {
+.mk--driver[data-motion="stop"] .mk__rider {
   animation: mascot-idle 1.4s ease-in-out infinite;
 }
 
@@ -1392,7 +1378,7 @@ body.is-loading .choose__summary {
 }
 
 /* Arrived: hops, with a gold ring */
-.mk--driver.is-arrived .mk__mascot {
+.mk--driver.is-arrived .mk__rider {
   animation: mascot-hop .9s var(--ease-out) infinite;
 }
 
@@ -1405,7 +1391,7 @@ body.is-loading .choose__summary {
 }
 
 /* Pop up when the driver accepts */
-.mk--driver.is-pop .mk__mascot {
+.mk--driver.is-pop .mk__rider {
   animation: mascot-pop .55s var(--spring) both;
 }
 

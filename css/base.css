@@ -1362,11 +1362,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .spin:focus-visible { outline: none; }
 .spin:focus-visible svg path { stroke: var(--navy); stroke-width: 3; }
 .you-dot { width: 18px; height: 18px; }
-/* The driver or rider on a shop map (Trips & Orders cards, shop-map.js setRider): the mascot in a white disc */
-.rider-mk { width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--brand), 0 4px 10px rgba(23, 18, 43, .3); display: grid; place-items: center; pointer-events: none; }
-.rider-mk img { width: 30px; height: 30px; object-fit: contain; }
-.rider-mk--scooter { width: 28px; height: 58px; border-radius: 0; background: none; box-shadow: none; }
-.rider-mk--scooter svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 2px 3px rgba(23, 18, 43, .35)); }
+/* The driver or rider on a shop map (Trips & Orders cards, order page; shop-map.js setRider): the rider icon */
+.rider-mk { width: 28px; height: 58px; pointer-events: none; }
+.rider-mk svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 2px 3px rgba(23, 18, 43, .35)); }
 /* MapLibre positions markers (absolute) */
 .you-dot__ring { position: absolute; inset: -14px; border-radius: 50%; background: rgba(91, 37, 150, .16); }
 .you-dot__dot { position: absolute; inset: 0; border-radius: 50%; background: var(--brand); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(23, 18, 43, .3); }
@@ -1591,13 +1589,11 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 @keyframes radar { from { transform: scale(.15); opacity: .9; } to { transform: scale(1); opacity: 0; } }
 /* face the way it's going; `scale` stacks with the animations' transform */
 .mk--driver::before, .mk--driver::after { content: ""; position: absolute; pointer-events: none; opacity: 0; transition: opacity .2s; }
-@keyframes mascot-run { 0%, 100% { transform: translateY(0) rotate(7deg); } 50% { transform: translateY(-5px) rotate(3deg); } }
-@keyframes speed-lines { from { transform: translateX(3px); opacity: .9; } to { transform: translateX(-3px); opacity: .3; } }
 @keyframes mascot-idle { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, .95); } }
 @keyframes mascot-hop { 0%, 60%, 100% { transform: translateY(0) scale(1); } 25% { transform: translateY(-10px) scale(.97, 1.04); } 45% { transform: translateY(0) scale(1.06, .93); } }
 @keyframes mascot-pop { 0% { transform: translateY(12px) scale(0); opacity: 0; } 70% { transform: translateY(-4px) scale(1.15); opacity: 1; } 100% { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-.mk--driver .mk__mascot, .mk--driver::before { animation: none !important; }
+.mk--driver .mk__rider, .mk--driver::before { animation: none !important; }
 }
 
 .trip__steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }

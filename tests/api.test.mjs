@@ -235,17 +235,23 @@ test('a live trip: kept from booking, its status read from the clock, gone when 
   assert.equal(await api.myActiveTrip(), null);
 });
 
-test('a sample shop order moves along by itself; the demo merchant’s own waits for the merchant', async () => {
+test('demo shop orders move along by themselves; the merchant can move theirs ahead, never back', async () => {
   const { TEST_SHOP } = await import('./fixtures.mjs'); // a sample shop here (see before())
+  const { DEMO_ACCOUNTS } = await import('../js/demo-data.js');
+  const MINE = DEMO_ACCOUNTS.merchant.shop.id; // the demo merchant's main branch
   const key = 'mysabak.demo.orders';
   const before = localStorage.getItem(key);
   const order = (id, shopId, ago) => ({ id, shop: { id: shopId, name: 'Shop' }, lines: [], subtotal: 100, status: 'placed', placedAt: Date.now() - ago });
   localStorage.setItem(key, JSON.stringify([
     order('S-new', TEST_SHOP.id, 5e3), order('S-cooking', TEST_SHOP.id, 50e3), order('S-old', TEST_SHOP.id, 400e3),
-    order('M-old', 'a-merchant-branch', 400e3),
+    order('M-old', MINE, 400e3), { ...order('M-ready', MINE, 50e3), status: 'ready' },
+    { ...order('M-declined', MINE, 400e3), status: 'cancelled' }, order('X-gone', 'no-such-shop', 400e3),
   ]));
   const statuses = Object.fromEntries((await api.myOrders()).map((o) => [o.id, o.status]));
-  assert.deepEqual(statuses, { 'S-new': 'placed', 'S-cooking': 'preparing', 'S-old': 'delivered', 'M-old': 'placed' });
+  assert.deepEqual(statuses, {
+    'S-new': 'placed', 'S-cooking': 'preparing', 'S-old': 'delivered',
+    'M-old': 'delivered', 'M-ready': 'ready', 'M-declined': 'cancelled', 'X-gone': 'placed',
+  });
   assert.equal((await api.orderStatus('S-cooking')).status, 'preparing');
   // Halfway between picked up (3 min) and delivered (6 min): the rider is halfway from the shop to the address
   const home = { lng: TEST_SHOP.lng + 0.02, lat: TEST_SHOP.lat + 0.01, label: 'Home' };

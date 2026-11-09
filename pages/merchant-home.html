@@ -35,13 +35,13 @@
 
           <!-- Right now · Sales · Mood board; they rise into the sky -->
           <div class="mcards">
-            <section class="card dcard dcard--now" aria-labelledby="nowTitle">
+            <section class="card dcard dcard--now" aria-labelledby="nowTitle" style="--enter: 1">
               <h2 class="card__title" id="nowTitle">Right now</h2>
               <div class="nowcounts" id="nowCounts"></div>
               <ul class="nowlist" id="nowList" aria-live="polite"></ul>
               <a class="button button--block nowpos" href="/pos"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg>Open POS</a>
             </section>
-            <section class="card dcard" aria-labelledby="salesTitle">
+            <section class="card dcard" aria-labelledby="salesTitle" style="--enter: 2">
               <div class="card__title--row">
                 <h2 class="card__title" id="salesTitle">Sales</h2>
                 <div class="sseg" role="tablist" aria-label="Period" id="salesRange">
@@ -52,14 +52,14 @@
               </div>
               <div class="sales" id="sales" aria-live="polite"></div>
             </section>
-            <section class="card dcard" aria-labelledby="moodTitle">
+            <section class="card dcard" aria-labelledby="moodTitle" style="--enter: 3">
               <h2 class="card__title card__title--row" id="moodTitle">Mood board <span class="muted small">Today</span></h2>
               <div class="mood" id="mood" aria-live="polite"></div>
             </section>
           </div>
 
           <!-- Owner: every branch at a glance -->
-          <section class="card" id="branchesToday" aria-labelledby="branchesTitle" hidden>
+          <section class="card" id="branchesToday" aria-labelledby="branchesTitle" style="--enter: 4" hidden>
             <h2 class="card__title card__title--row" id="branchesTitle">Branches today <span class="card__aside" id="branchCount"></span></h2>
             <ul class="bglance" id="branchGlance"></ul>
             <a class="quietlink" href="/pages/merchant-manage.html">Manage branches<svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a>
