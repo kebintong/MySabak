@@ -82,14 +82,21 @@
 .mdone .mlist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* ---------- Shop card: photo beside the text from 760px ---------- */
-.mshop { display: grid; gap: 14px; }
-@media (min-width: 760px) {
-.mshop { grid-template-columns: minmax(220px, 340px) minmax(0, 1fr); align-items: start; gap: 22px; }
-}
-.mshop__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+/* ---------- Shop card: heading and Edit on top, the picture across the card, then the name and description ---------- */
+.mshop { gap: 14px; }
+.mshop__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .mshop__head .card__title { margin: 0; }
-.mshop__photo { aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--tint); }
+.mshop__edit {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px 0 12px;
+  border: 1px solid var(--line-brand); border-radius: 999px; background: #fff; color: var(--brand-deep);
+  font: 700 14px var(--font-body); cursor: pointer;
+  transition: background-color .15s var(--ease-out), border-color .15s var(--ease-out), transform .15s var(--spring);
+}
+.mshop__edit .icon { width: 16px; height: 16px; stroke: var(--brand-deep); }
+.mshop__edit:hover { background: var(--tint); border-color: var(--brand); }
+.mshop__edit:active { transform: scale(.96); }
+.mshop__edit[hidden] { display: none; }
+.mshop__photo { width: 100%; aspect-ratio: 2 / 1; border-radius: 16px; overflow: hidden; background: var(--tint); box-shadow: inset 0 0 0 1px rgba(41, 10, 69, .06); }
 .mshop__photo img, .mshop__photo svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mshop__name { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 .mshop__about { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
@@ -233,7 +240,12 @@
 .products__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
 .products__head .card__title { margin: 0; display: flex; align-items: baseline; gap: 10px; }
 .products .fchips { margin: 0; padding: 0; flex-wrap: wrap; overflow: visible; }
-.products .fchip { height: 36px; padding: 0 14px; background: #fff; color: var(--sub); font-weight: 700; }
+/* Phones: one row that swipes sideways, out to the card's edges, instead of a lone chip on a second row */
+@media (max-width: 759.98px) {
+.products__filter { flex: 0 0 calc(100% + 36px); }
+.products .fchips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px; scroll-padding-inline: 18px; }
+}
+.products .fchip { height: 36px; padding: 0 14px; border: 1px solid var(--line-brand); box-shadow: none; background: #fff; color: var(--sub); font-weight: 700; }
 .products .fchip:hover { border-color: var(--brand); color: var(--brand-deep); }
 .products .fchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .pgrid { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
@@ -325,7 +337,6 @@ button.bglance__row:hover .bglance__go { transform: translateX(2px); }
 /* ---------- Management page: branches beside the shop card ---------- */
 @media (min-width: 760px) {
 .mcards--manage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
-.mcards--manage .mshop { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---------- Motion: every load and every move between merchant pages ---------- */
