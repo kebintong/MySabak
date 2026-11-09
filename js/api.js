@@ -1340,7 +1340,7 @@ export async function merchantHome() {
  * today, the top items and the cancelled list come from the orders in this browser.
  * @param {{range:'day'|'week'|'month', branchId?:string}} q
  * @returns {Promise<{range, branchId, branches:Array<{id,name}>|null, total, previous, orders, average, cancelled,
- *   cancelledAmount, series:Array<{label:string, value:number, now?:boolean}>, top:Array<{name, qty, sales}>,
+ *   cancelledAmount, series:Array<{label:string, when:string, value:number, now?:boolean}>, top:Array<{name, qty, sales}>,
  *   (previous: the period before (for 'day', yesterday up to the same hour; for 'month', the same days of last month);
  *   compare: the period before as a running total, one value per point of series)
  *   cancelledList:Array<{id, customer, amount, at}>, channels:{online, counter}, sampleHistory:boolean}>}
@@ -1366,14 +1366,15 @@ export async function merchantSales({ range = 'day', branchId = 'all' } = {}) {
     series = [];
     for (let h = open; h < close; h += 1) {
       const value = salesOf(inRange.filter((o) => new Date(o.placedAt).getHours() === h));
-      series.push({ label: `${((h + 11) % 12) + 1}${h < 12 ? 'a' : 'p'}`, value, now: h === today.getHours() });
+      series.push({ label: `${((h + 11) % 12) + 1}${h < 12 ? 'a' : 'p'}`, when: `${((h + 11) % 12) + 1} ${h < 12 ? 'AM' : 'PM'}`, value, now: h === today.getHours() });
     }
   } else {
     series = Array.from({ length: days }, (_, i) => {
       const daysAgo = days - 1 - i;
       const d = new Date(midnight(daysAgo));
       const label = range === 'week' ? (daysAgo ? d.toLocaleDateString('en-PH', { weekday: 'short' }) : 'Today') : String(d.getDate());
-      return { label, value: sum(daysAgo), now: daysAgo === 0 };
+      const when = d.toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric' }); // "Monday, Nov 9"
+      return { label, when, value: sum(daysAgo), now: daysAgo === 0 };
     });
   }
   let total = 0;
@@ -1407,7 +1408,9 @@ export async function merchantSales({ range = 'day', branchId = 'all' } = {}) {
   return {
     range,
     branchId: ctx.role === 'branch' ? ctx.branch.id : branchId,
-    branches: ctx.role === 'owner' ? all.map(({ id, name }) => ({ id, name })) : null,
+    branches: ctx.role === 'owner'
+      ? all.map((b) => ({ id: b.id, name: b.name, main: !!b.main, total: Array.from({ length: days }, (_, d) => daySales(b, d)).reduce((n, v) => n + v, 0) }))
+      : null,
     total, previous,
     orders: count,
     average: count ? Math.round(total / count) : 0,

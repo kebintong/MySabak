@@ -44,7 +44,13 @@
                   <button type="button" class="seg__btn" role="tab" data-range="week">Weekly</button>
                   <button type="button" class="seg__btn" role="tab" data-range="month">Monthly</button>
                 </div>
-                <label class="sales-branch" id="branchWrap" hidden><span class="sr-only">Branch</span><select class="input" id="branchSelect"></select></label>
+                <!-- Branch picker: a button on the sky opens a menu of branches with their sales (merchant-analytics.js) -->
+                <div class="bpick" id="branchWrap" hidden>
+                  <button type="button" class="bpick__btn" id="branchBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="branchList">
+                    <span class="bpick__btnic" id="branchIcon"></span><span class="sr-only">Branch: </span><span id="branchName">All branches</span><svg class="icon bpick__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
+                  </button>
+                  <ul class="bpick__menu" id="branchList" role="listbox" aria-label="Branch" tabindex="-1" hidden></ul>
+                </div>
               </div>
             </div>
           </header>
@@ -54,7 +60,7 @@
           <div class="sgrid">
             <section class="card" aria-labelledby="chartTitle" style="--enter: 5">
               <h2 class="card__title" id="chartTitle">Sales</h2>
-              <div class="schart" id="chart" role="img"></div>
+              <div class="schart" id="chart" role="group"></div>
               <p class="card__foot" id="sampleNote" hidden>Days before today are sample numbers until the server keeps real sales history.</p>
             </section>
             <div class="stack">

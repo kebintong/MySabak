@@ -2,7 +2,7 @@
    cancelled orders for today, the last 7 days or this month. The owner picks a branch or All branches;
    a branch account sees its own branch. The dashboard's Preview analytics tiles open this page. */
 import { merchantSales, errorMessage } from '../api.js';
-import { $, $$, mountChrome, esc, peso, toast, rollNumber } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, toast, rollNumber, icon } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
 
@@ -30,12 +30,8 @@ function render(s) {
   $('#salesSub').textContent = `${r.sub}${s.branches ? ` · ${s.branchId === 'all' ? 'All branches' : `${name} branch`}` : ''}`;
   $('#rangeTabs').querySelectorAll('[data-range]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.range === range)));
 
-  const wrap = $('#branchWrap');
-  wrap.hidden = !s.branches;
-  if (s.branches) {
-    $('#branchSelect').innerHTML = [{ id: 'all', name: 'All branches' }, ...s.branches]
-      .map((b) => `<option value="${esc(b.id)}"${b.id === s.branchId ? ' selected' : ''}>${esc(b.id === 'all' ? b.name : `${b.name} branch`)}</option>`).join('');
-  }
+  $('#branchWrap').hidden = !s.branches;
+  if (s.branches) renderBranches(s);
 
   const split = s.channels.online + s.channels.counter ? `<small>Online ${peso(s.channels.online)} · Counter ${peso(s.channels.counter)}</small>` : '';
   $('#stats').innerHTML = stat('Sales', peso(s.total), change(s.total, s.previous) + (range === 'day' ? split : ''))
@@ -47,9 +43,11 @@ function render(s) {
   const max = Math.max(...s.series.map((p) => p.value), 1);
   const chart = $('#chart');
   chart.style.setProperty('--n', s.series.length);
-  chart.setAttribute('aria-label', `${r.chart}: ${s.series.map((p) => `${p.label} ${peso(p.value)}`).join(', ')}`);
-  chart.innerHTML = s.series.map((p, i) => `<div class="schart__col${p.now ? ' is-now' : ''}" style="--h:${Math.max(3, (p.value / max) * 100)}%;--i:${i}" title="${esc(p.label)}: ${peso(p.value)}">
-      <span class="schart__plot"><span class="schart__bar"></span></span><span class="schart__label">${range === 'month' && i % 5 && !p.now ? '' : esc(p.label)}</span></div>`).join('');
+  chart.setAttribute('aria-label', r.chart);
+  chart.classList.remove('has-pick');
+  // Each bar is a button: hover (desktop), a tap or keyboard focus shows its night tag with the exact sale
+  chart.innerHTML = s.series.map((p, i) => `<button type="button" class="schart__col${p.now ? ' is-now' : ''}" style="--h:${Math.max(3, (p.value / max) * 100)}%;--i:${i}" aria-label="${esc(p.when)}: ${peso(p.value)}">
+      <span class="schart__plot"><span class="schart__bar"></span><span class="schart__tip" aria-hidden="true"><b>${peso(p.value)}</b><span>${esc(p.when)}</span></span></span><span class="schart__label" aria-hidden="true">${range === 'month' && i % 5 && !p.now ? '' : esc(p.label)}</span></button>`).join('');
   $('#sampleNote').hidden = !s.sampleHistory;
 
   $('#topList').innerHTML = s.top.length
@@ -82,6 +80,74 @@ $('#rangeTabs').addEventListener('click', (e) => {
   range = b.dataset.range;
   load();
 });
-$('#branchSelect').addEventListener('change', (e) => { branch = e.target.value; load(); });
+/* ---------- A bar's exact sale: a tap keeps its tag showing; tap it again, elsewhere, or press Escape to let go ---------- */
+function pickBar(col) {
+  const chart = $('#chart');
+  $$('.schart__col.is-pick', chart).forEach((c) => { if (c !== col) c.classList.remove('is-pick'); });
+  const on = !!col && col.classList.toggle('is-pick');
+  chart.classList.toggle('has-pick', on);
+}
+$('#chart').addEventListener('click', (e) => pickBar(e.target.closest('.schart__col')));
+document.addEventListener('click', (e) => { if (!e.target.closest('#chart')) pickBar(null); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') pickBar(null); });
+
+/* ---------- Branch menu: a listbox (arrow keys, Home/End, Enter or Space to pick, Escape to close) ---------- */
+const PERIOD = { day: 'today', week: 'last 7 days', month: 'this month' };
+const branchBtn = $('#branchBtn');
+const branchList = $('#branchList');
+const optEls = () => $$('.bpick__opt', branchList);
+let activeOpt = 0;
+
+function renderBranches(s) {
+  const together = s.branches.reduce((n, b) => n + b.total, 0);
+  const opts = [{ id: 'all', name: 'All branches', sub: `${s.branches.length} branches · ${peso(together)} ${PERIOD[range]}`, icon: 'i-layers' },
+    ...s.branches.map((b) => ({ id: b.id, name: b.name, sub: `${b.main ? 'Main · ' : ''}${peso(b.total)} ${PERIOD[range]}`, icon: 'i-store' }))];
+  branchList.innerHTML = opts.map((o) => `<li class="bpick__opt" role="option" id="bopt-${esc(o.id)}" data-id="${esc(o.id)}" aria-selected="${o.id === s.branchId}">
+      <span class="bpick__ic">${icon(o.icon)}</span><span class="bpick__txt"><b>${esc(o.name)}</b><span>${esc(o.sub)}</span></span>${icon('i-check', 'bpick__check')}</li>`).join('');
+  const now = opts.find((o) => o.id === s.branchId) || opts[0];
+  $('#branchName').textContent = now.name;
+  $('#branchIcon').innerHTML = icon(now.icon);
+}
+function setActive(i) {
+  const els = optEls();
+  activeOpt = (i + els.length) % els.length;
+  els.forEach((el, k) => el.classList.toggle('is-active', k === activeOpt));
+  branchList.setAttribute('aria-activedescendant', els[activeOpt].id);
+  els[activeOpt].scrollIntoView({ block: 'nearest' });
+}
+function openBranches() {
+  branchList.hidden = false;
+  branchBtn.setAttribute('aria-expanded', 'true');
+  setActive(Math.max(0, optEls().findIndex((el) => el.getAttribute('aria-selected') === 'true')));
+  branchList.focus({ preventScroll: true });
+}
+function closeBranches(focusButton = true) {
+  if (branchList.hidden) return;
+  branchList.hidden = true;
+  branchBtn.setAttribute('aria-expanded', 'false');
+  if (focusButton) branchBtn.focus();
+}
+function chooseBranch(id) {
+  closeBranches();
+  if (id !== branch) { branch = id; load(); }
+}
+branchBtn.addEventListener('click', () => (branchList.hidden ? openBranches() : closeBranches()));
+branchBtn.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openBranches(); }
+});
+branchList.addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (k === 'ArrowDown') setActive(activeOpt + 1);
+  else if (k === 'ArrowUp') setActive(activeOpt - 1);
+  else if (k === 'Home') setActive(0);
+  else if (k === 'End') setActive(-1);
+  else if (k === 'Enter' || k === ' ') chooseBranch(optEls()[activeOpt].dataset.id);
+  else if (k === 'Escape') closeBranches();
+  else if (k === 'Tab') { closeBranches(false); return; } else return;
+  e.preventDefault();
+});
+branchList.addEventListener('click', (e) => { const o = e.target.closest('.bpick__opt'); if (o) chooseBranch(o.dataset.id); });
+branchList.addEventListener('pointermove', (e) => { const o = e.target.closest('.bpick__opt'); if (o) setActive(optEls().indexOf(o)); });
+document.addEventListener('click', (e) => { if (!e.target.closest('.bpick')) closeBranches(false); });
 
 load();
