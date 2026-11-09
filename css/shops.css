@@ -12,16 +12,25 @@
 .srows { list-style: none; margin: 0; padding: 0; }
 .srows > li + li { border-top: 1px solid var(--line); }
 .srow {
-  display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 14px; align-items: center;
   width: 100%; padding: 10px 8px; border: 0; border-radius: 14px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
   transition: background-color .15s;
 }
 .srow:hover { background: #fff; color: inherit; }
 .srow.is-picked { background: var(--tint); }
 .srow__img { width: 58px; height: 58px; border-radius: 14px; overflow: hidden; display: block; }
-.srow__body { min-width: 0; display: flex; flex-direction: column; font-size: 12px; color: var(--sub); }
-.srow__name { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.srow__km { font-size: 14px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.srow__body { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--sub); }
+.srow__name { font-size: 16px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow__km { align-self: start; padding-top: 2px; font-size: 13.5px; font-weight: 600; color: var(--sub); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Facts with an icon each, spaced (no "·"); the status on its own line: green while open, amber with the opening time */
+.srow__facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-weight: 400; color: var(--sub); }
+.srow__facts > span, .srow__status { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.srow__facts .icon, .srow__status .icon { width: 14px; height: 14px; stroke: var(--muted); }
+.srow__status { font-weight: 600; color: var(--sub); }
+.srow__status.is-open { color: var(--ok, #1e7a44); }
+.srow__status.is-open .icon { stroke: var(--ok, #1e7a44); }
+.srow__status.is-shut { color: #9a5b0a; }
+.srow__status.is-shut .icon { stroke: #9a5b0a; }
 /* Food: the Browse button beside the search, and the Browse view it opens over the map
    (categories as tiles, the nearest shops under them) */
 .finder__searchrow { display: flex; align-items: center; gap: 8px; }

@@ -102,5 +102,6 @@ export function openState(shop, date = new Date()) {
   const from = minutesOf(shop.opensAt);
   const to = minutesOf(shop.closesAt);
   const open = from <= to ? now >= from && now < to : now >= from || now < to; // closesAt past midnight
-  return { open, text: open ? `Open · closes ${label(shop.closesAt)}` : `Closed · opens ${label(shop.opensAt)}` };
+  const at = label(open ? shop.closesAt : shop.opensAt);
+  return { open, at, text: open ? `Open until ${label(shop.closesAt)}` : `Closed, opens ${label(shop.opensAt)}` };
 }

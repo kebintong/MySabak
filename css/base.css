@@ -1365,6 +1365,8 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 /* The driver or rider on a shop map (Trips & Orders cards, shop-map.js setRider): the mascot in a white disc */
 .rider-mk { width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--brand), 0 4px 10px rgba(23, 18, 43, .3); display: grid; place-items: center; pointer-events: none; }
 .rider-mk img { width: 30px; height: 30px; object-fit: contain; }
+.rider-mk--scooter { width: 28px; height: 58px; border-radius: 0; background: none; box-shadow: none; }
+.rider-mk--scooter svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 2px 3px rgba(23, 18, 43, .35)); }
 /* MapLibre positions markers (absolute) */
 .you-dot__ring { position: absolute; inset: -14px; border-radius: 50%; background: rgba(91, 37, 150, .16); }
 .you-dot__dot { position: absolute; inset: 0; border-radius: 50%; background: var(--brand); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(23, 18, 43, .3); }
@@ -1514,17 +1516,10 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22); transition: background-color .15s;
 }
 .shop-back:hover { background: rgba(255, 255, 255, .26); }
-/* phones: the title sits by the picture, the chips run full width */
+/* phones: the title sits by the picture */
 .shop-info__title { min-width: 0; }
 .shop-info__name { margin: 0; font-size: 22px; line-height: 1.15; font-weight: 700; color: #fff; }
 .shop-info__addr { margin: 3px 0 0; font-size: 13px; line-height: 1.4; color: #e2d0f4; }
-.shop-info__facts span, .shop-info__link {
-  padding: 6px 11px; border-radius: 16px; font-size: 13px; font-weight: 500; color: #fff;
-  background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22);
-}
-.shop-info__facts [hidden], .shop-info__link[hidden] { display: none; }
-.shop-info__facts .is-closed { color: #fff; }
-.shop-info__link .icon { stroke: #fff; --pin-fill: #fff; --pin-dot: #5b2596; }
 .shop-hero__map { display: none; }
 .menu-tabs::-webkit-scrollbar { display: none; }
 .msec__title span { font: 500 12px var(--font-body); color: var(--sub); }
@@ -1550,8 +1545,8 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .ochip small { font-size: 12px; font-weight: 500; color: var(--sub); }
 @media (min-width: 900px) {
 /* Night sky header: picture, name and chips in a row, the route map on the right */
-.shop-sky { padding: calc(96px + var(--safe-t)) 24px 88px; }
-.shop-sky::after { bottom: 92px; }
+.shop-sky { padding: calc(96px + var(--safe-t)) 24px 84px; }
+.shop-sky::after { bottom: 96px; }
 .shop-sky__inner { grid-template-columns: 44px 88px minmax(0, 1fr) 260px; gap: 12px 16px; align-items: start; }
 .shop-back { grid-column: auto; }
 .shop-info__name { font-size: 34px; }
@@ -1705,8 +1700,11 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .jobcard__route li::before { content: ""; position: absolute; left: 2px; top: 4px; width: 9px; height: 9px; border-radius: 50%; border: 2.5px solid var(--kind, var(--brand)); background: #fff; }
 .dest-flag { width: 30px; height: 40px; }
 .dest-flag svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 3px 3px rgba(23, 18, 43, .3)); }
-.dest-flag path { fill: var(--navy); stroke: #fff; stroke-width: 2.2; }
-.dest-flag rect { fill: #fff; }
+.dest-flag path { fill: var(--navy); stroke: #fff; stroke-width: 2.2; vector-effect: non-scaling-stroke; }
+.dest-flag circle { fill: #fff; }
+/* On the order and trip maps every pin stays one size (30 × 40); only the shops map grows the picked one */
+.omap .spin.is-active svg, .lcard__map .spin.is-active svg { transform: none; }
+.omap .spin.is-active .spin__label, .lcard__map .spin.is-active .spin__label { bottom: calc(100% + 4px); }
 .dest-flag .spin__label { opacity: 1; }
 /* Install instructions sheet */
 .install__head { display: flex; align-items: center; gap: 14px; }

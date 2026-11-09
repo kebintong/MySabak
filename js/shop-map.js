@@ -14,6 +14,8 @@ const EMPTY = { type: 'FeatureCollection', features: [] };
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// The rider on a scooter from above, heading up (Rider A); turned to the road on the map
+const RIDER_SVG = '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="58" rx="20" ry="36" fill="#170730" opacity=".18"/><path d="M32 2 L22 -16 H42 Z" fill="#ffe29a" opacity=".35"/><rect x="27" y="4" width="10" height="16" rx="5" fill="#1b0b2e"/><rect x="27" y="80" width="10" height="17" rx="5" fill="#1b0b2e"/><path d="M20 22 C20 14 26 10 32 10 C38 10 44 14 44 22 L46 76 C46 86 40 92 32 92 C24 92 18 86 18 76 Z" fill="#6a2fb0"/><path d="M24 18 C26 14 29 13 32 13 C35 13 38 14 40 18" fill="none" stroke="#f6c46c" stroke-width="3" stroke-linecap="round"/><rect x="29" y="11" width="6" height="4" rx="2" fill="#ffe29a"/><path d="M22 64 H42 V82 C42 86 38 88 32 88 C26 88 22 86 22 82 Z" fill="#2a1240"/><rect x="12" y="23" width="40" height="5" rx="2.5" fill="#1b0b2e"/><rect x="8" y="22" width="8" height="7" rx="3.5" fill="#f6c46c"/><rect x="48" y="22" width="8" height="7" rx="3.5" fill="#f6c46c"/><path d="M18 52 C16 44 14 36 12 28" fill="none" stroke="#3a0f6a" stroke-width="7" stroke-linecap="round"/><path d="M46 52 C48 44 50 36 52 28" fill="none" stroke="#3a0f6a" stroke-width="7" stroke-linecap="round"/><rect x="14" y="44" width="36" height="22" rx="11" fill="#4a1680"/><circle cx="32" cy="50" r="15" fill="#1b0b2e"/><circle cx="32" cy="50" r="10.5" fill="#f6c46c"/><circle cx="32" cy="50" r="8" fill="#2c1747"/><path d="M27.5 46.5 A6 6 0 0 1 36 45.5" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round"/></svg>';
 const PIN_SVG = '<svg viewBox="0 0 730 965" aria-hidden="true"><path d="M365 0C566.584 6.67149e-05 730 163.416 730 365C730 409.184 722.147 451.533 707.765 490.731C707.145 492.418 706.789 494.187 706.43 495.948C705.799 499.045 704.547 502.116 702.589 505.01C701.877 506.061 701.272 507.181 700.772 508.349C682.355 551.432 655.889 590.253 623.264 622.922C622.343 623.843 621.508 624.847 620.778 625.926L406.394 942.792C386.564 972.1 343.399 972.101 323.569 942.792L109.108 625.813C108.379 624.736 107.547 623.735 106.629 622.815C74.0992 590.215 47.6995 551.497 29.3061 508.536C28.7922 507.336 28.1696 506.184 27.438 505.102L24.208 500.328C22.0607 497.154 20.8736 493.74 20.5119 490.338C20.2022 487.427 19.9894 484.471 19.0538 481.697C6.698 445.055 0 405.81 0 365C0 163.416 163.416 0 365 0Z"/><circle cx="364.483" cy="368.5" r="205.5"/></svg>'; // the Location Fill pin
 
 /**
@@ -52,6 +54,7 @@ export function shopMap(container, { interactive = true, cooperative = false, on
   let dest = null;
   let rider = null;
   let riderAt = null; // where the rider is drawn now
+  let riderLast = null; // the last position drawn, to turn the rider the way it's going
   let glide = 0;
 
   map.on('style.load', () => {
@@ -116,7 +119,7 @@ export function shopMap(container, { interactive = true, cooperative = false, on
       }
       you.setLngLat([point.lng, point.lat]).addTo(map);
     },
-    /** A drop-off flag (null hides it). */
+    /** The drop-off (or "You") pin: the same Location Fill pin as the shops, in navy (null hides it). */
     setDest(point, label = 'Drop-off') {
       if (!point) { if (dest) dest.remove(); dest = null; return; }
       if (!dest) {
@@ -124,18 +127,25 @@ export function shopMap(container, { interactive = true, cooperative = false, on
         el.className = 'dest-flag';
         dest = new maplibregl.Marker({ element: el, anchor: 'bottom' });
       }
-      dest.getElement().innerHTML = `<svg viewBox="0 0 30 40" aria-hidden="true"><path d="M15 39C12 34 2 27 2 15a13 13 0 0 1 26 0c0 12-10 19-13 24Z"/><rect x="10" y="10" width="10" height="10" rx="2"/></svg><span class="spin__label">${esc(label)}</span>`;
+      dest.getElement().innerHTML = `${PIN_SVG}<span class="spin__label">${esc(label)}</span>`;
       dest.setLngLat([point.lng, point.lat]).addTo(map);
     },
-    /** The driver or rider on their way, as the mascot (null hides it). */
-    setRider(point) {
-      if (!point) { if (rider) rider.remove(); rider = null; return; }
+    /** The driver or rider on their way (null hides it): a rider on a scooter, facing the way it's going;
+        `car: true` (a Sedan or SUV ride) shows the mascot badge instead. */
+    setRider(point, { car = false } = {}) {
+      if (!point) { if (rider) rider.remove(); rider = null; riderLast = null; return; }
       if (!rider) {
         const el = document.createElement('div');
-        el.className = 'rider-mk';
-        el.innerHTML = '<img src="/assets/images/mascot.svg" alt="">';
-        rider = new maplibregl.Marker({ element: el, anchor: 'center' });
+        el.className = car ? 'rider-mk' : 'rider-mk rider-mk--scooter';
+        el.innerHTML = car ? '<img src="/assets/images/mascot.svg" alt="">' : RIDER_SVG;
+        rider = new maplibregl.Marker({ element: el, anchor: 'center', rotationAlignment: car ? 'viewport' : 'map' });
       }
+      const last = riderLast;
+      if (!car && last && (Math.abs(point.lng - last.lng) > 1e-7 || Math.abs(point.lat - last.lat) > 1e-7)) {
+        const dx = (point.lng - last.lng) * Math.cos((point.lat * Math.PI) / 180);
+        rider.setRotation((Math.atan2(dx, point.lat - last.lat) * 180) / Math.PI); // degrees clockwise from north
+      }
+      riderLast = point;
       rider.setLngLat([point.lng, point.lat]).addTo(map);
     },
     /** The rider glides to a new position over `ms`, a frame at a time, instead of jumping (null hides it). */

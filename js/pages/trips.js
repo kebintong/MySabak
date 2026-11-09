@@ -61,13 +61,13 @@ function rideCard(t) {
   // Call and Chat show for the demo but don't do anything yet
   const driver = d ? `<div class="lcard__driver">
       <span class="lcard__ava" aria-hidden="true">${esc(initials(d.name))}</span>
-      <span class="lcard__who"><b>${esc(d.name)} · ${esc(vehicleName(d.vehicle.type))}</b><span>${esc(`${d.vehicle.color} ${d.vehicle.model}`)} · ${esc(d.vehicle.plate)}</span></span>
+      <span class="lcard__who"><b>${esc(d.name)}</b><span>${esc(`${d.vehicle.color} ${d.vehicle.model}, ${d.vehicle.plate}`)}</span></span>
       <button type="button" class="lcard__act" aria-label="Call ${esc(d.name)}">${icon('i-phone')}</button>
       <button type="button" class="lcard__act" aria-label="Chat with ${esc(d.name)}">${icon('i-chat')}</button>
     </div>` : '<p class="lcard__wait">Finding a driver near you…</p>';
   return liveCard({
     key: 'ride', iconId: express ? 'i-box' : 'i-car', tone: 'ride', at: TRIP_STEP[t.status] ?? 0, steps: RIDE_STEPS,
-    title: `${express ? 'Parcel' : 'Ride'} to ${b.dropoff.label}`, sub: `${words} · ${vehicleName(b.vehicle)}`,
+    title: words, sub: `To ${b.dropoff.label}`,
     label: `${express ? 'Parcel' : 'Ride'} to ${b.dropoff.label}, ${words.toLowerCase()}${time ? `, ${time}` : ''}`,
     end: time ? `<span class="lcard__eta">${esc(time)}</span>` : `<span class="lcard__price">${pesoOr(b.price && b.price.total, '[FARE]')}</span>`,
     more: `${driver}<a class="button button--block lcard__go" href="/#${express ? 'parcel' : 'ride'}">${icon('i-pin')}Track ${express ? 'parcel' : 'ride'}</a>`,
@@ -77,8 +77,8 @@ function rideCard(t) {
 function foodCard(o) {
   return liveCard({
     key: o.id, iconId: 'i-food', tone: 'food', at: FOOD_STEP[o.status] ?? 0, steps: FOOD_STEPS,
-    title: o.shop.name, sub: stepName(o.status), label: `${o.shop.name} order, ${stepName(o.status).toLowerCase()}`,
-    end: `<span class="lcard__price lcard__price--big">${pesoOr(o.subtotal)}</span>`,
+    title: stepName(o.status), sub: `${o.shop.name}, ${pesoOr(o.subtotal)}`, label: `${o.shop.name} order, ${stepName(o.status).toLowerCase()}`,
+    end: '',
     more: `<a class="button button--block lcard__go" href="/pages/order.html?id=${encodeURIComponent(o.id)}">${icon('i-pin')}Track order and receipt</a>`,
   });
 }
@@ -104,7 +104,7 @@ function rideMap(el, t) {
   m.setDest(b.dropoff, 'Drop-off');
   m.setRoute(route);
   m.fit(route);
-  const stop = t.driver ? onTripUpdate(t.id, (u) => m.setRider(u.status === 'completed' ? null : u.driver)) : () => {};
+  const stop = t.driver ? onTripUpdate(t.id, (u) => m.setRider(u.status === 'completed' ? null : u.driver, { car: b.vehicle !== 'motor' })) : () => {};
   return { api: m, stop };
 }
 

@@ -47,14 +47,18 @@
           </section>
 
           <article class="ticket" aria-labelledby="shopName">
-            <span class="stamp" id="stamp"><span class="stamp__live" aria-hidden="true"></span><span id="stampText" role="status"></span></span>
             <div>
               <h2 class="ticket__shop" id="shopName"></h2>
               <p class="ticket__meta" id="orderMeta"></p>
             </div>
-            <p class="ticket__now" id="nowSub"></p>
-            <div class="segs" id="segs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-            <div class="osteps" id="steps" aria-hidden="true"><span>Placed</span><span>Preparing</span><span>On the way</span><span>Delivered</span></div>
+            <!-- Four steps on a line: done ones filled purple, the current one ringed gold -->
+            <ol class="osteps" id="steps">
+              <li><i><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></i><span>Placed</span></li>
+              <li><i><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pot"/></svg></i><span>Preparing</span></li>
+              <li><i><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-motor"/></svg></i><span>On the way</span></li>
+              <li><i><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-home"/></svg></i><span>Delivered</span></li>
+            </ol>
+            <p class="ticket__now" id="nowSub" role="status"></p>
             <div class="cut" aria-hidden="true"></div>
             <dl class="orc" id="receipt"></dl>
             <div class="cut" aria-hidden="true"></div>

@@ -45,17 +45,18 @@ function renderInfo() {
     $('#branchPick').addEventListener('change', (e) => { location.href = `/pages/shop.html?id=${encodeURIComponent(e.target.value)}`; });
   }
   $('#shopAva').innerHTML = shop.image ? `<img src="${esc(shop.image)}" alt="">` : storefront(shop);
+  // Three facts, each a value over its label (the distance shows once the route is known)
   const o = openState(shop);
+  const fact = (value, label, cls = '') => `<div class="shop-fact${cls}"><b>${value}</b><span>${label}</span></div>`;
   $('#shopFacts').innerHTML = [
-    shop.rating ? `<span>★ ${shop.rating.toFixed(1)}</span>` : '',
-    `<span>${esc(shop.hours)}</span>`,
-    shop.accepting === false ? '<span class="is-closed">Not taking orders now</span>'
-      : o ? `<span class="${o.open ? 'is-open' : 'is-closed'}">${o.open ? 'Open now' : 'Closed now'}</span>` : '',
-    '<span id="shopKm" hidden></span>',
+    shop.rating ? fact(`<i aria-hidden="true">★</i>${shop.rating.toFixed(1)}`, 'Rating') : '',
+    shop.accepting === false ? fact('Paused', 'Not taking orders', ' is-shut')
+      : o ? fact(esc(o.at), o.open ? 'Open until' : 'Closed, opens', o.open ? ' is-open' : ' is-shut') : fact(esc(shop.hours), 'Hours'),
+    '<div class="shop-fact" id="shopKm" hidden><b></b><span>From you</span></div>',
   ].join('');
   $('#directions').href = `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
   const phone = $('#phone');
-  if (shop.phone) { phone.href = `tel:${shop.phone.replace(/[^\d+]/g, '')}`; phone.lastChild.textContent = shop.phone; } else phone.hidden = true;
+  if (shop.phone) { phone.href = `tel:${shop.phone.replace(/[^\d+]/g, '')}`; phone.title = shop.phone; } else phone.hidden = true;
   $('#shopAbout').textContent = shop.about || '';
   $('#shopAbout').hidden = !shop.about;
 }
@@ -77,7 +78,7 @@ async function startMap() {
   frame = () => hero.fit(trip.coords.concat([[me.lng, me.lat], [shop.lng, shop.lat]]), { maxZoom: 15.5 });
   frame();
   const kmEl = $('#shopKm');
-  kmEl.textContent = `${trip.distanceKm.toFixed(1)} km`;
+  kmEl.firstChild.textContent = `${trip.distanceKm.toFixed(1)} km`;
   kmEl.hidden = false;
   if (trip.minutes) {
     $('#eta').textContent = `~${trip.minutes} min ride to you`;
@@ -117,7 +118,7 @@ function renderMenu() {
   watchSections();
 }
 
-// Tabs are glass on the night sky; once they stick to the top they need a solid look
+// Once the tabs stick to the top they get a shadow, so the menu reads as passing under them
 const tabsEl = $('#menuTabs');
 $('#content').addEventListener('scroll', () => {
   tabsEl.classList.toggle('is-stuck', tabsEl.getBoundingClientRect().top <= parseFloat(getComputedStyle(tabsEl).top) + 1);

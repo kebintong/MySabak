@@ -30,22 +30,15 @@
     <header class="topbar" data-topbar></header>
 
     <main class="content" id="content">
-      <!-- Night sky header (Figma draft A): who the shop is and how far, the menu tabs sit at its bottom edge -->
+      <!-- Night sky header: who the shop is; a white card over its bottom edge holds the facts and actions -->
       <header class="shop-sky" data-sky>
         <div class="shop-sky__inner">
           <a class="shop-back" href="/pages/shops.html" aria-label="Back to shops"><svg class="icon icon--lg icon--white" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg></a>
           <span class="shop-info__ava" id="shopAva" aria-hidden="true"></span>
-          <div class="shop-info__body">
-            <div class="shop-info__title">
-              <h1 class="shop-info__name" id="shopName">Shop</h1>
-              <p class="shop-info__addr" id="shopAddr"></p>
-              <p class="shop-about" id="shopAbout"></p>
-            </div>
-            <p class="shop-info__facts" id="shopFacts"></p>
-            <div class="shop-info__actions">
-              <a class="shop-info__link" id="directions" href="#" target="_blank" rel="noopener"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Get directions</a>
-              <a class="shop-info__link" id="phone" href="#"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg><span></span></a>
-            </div>
+          <div class="shop-info__title">
+            <h1 class="shop-info__name" id="shopName">Shop</h1>
+            <p class="shop-info__addr" id="shopAddr"></p>
+            <p class="shop-about" id="shopAbout"></p>
           </div>
           <!-- Desktop: small route map. Phones: just the ride time -->
           <div class="shop-hero">
@@ -54,6 +47,14 @@
           </div>
         </div>
       </header>
+
+      <section class="shop-card" aria-label="About this shop">
+        <div class="shop-facts" id="shopFacts"></div>
+        <div class="shop-card__actions">
+          <a class="shop-card__btn" id="directions" href="#" target="_blank" rel="noopener"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Get directions</a>
+          <a class="shop-card__btn" id="phone" href="#"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg>Call shop</a>
+        </div>
+      </section>
 
       <div class="shop-layout">
 

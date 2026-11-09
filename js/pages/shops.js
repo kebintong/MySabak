@@ -23,8 +23,10 @@ const thumb = (s) => (s.image ? `<img src="${esc(s.image)}" alt="">` : storefron
 const km = (s) => (s.km != null ? `${s.km.toFixed(1)} km` : '');
 const openLine = (s) => {
   const o = openState(s);
-  return o ? `<span class="${o.open ? 'is-open' : 'is-closed'}">${esc(o.text)}</span>` : `<span>${esc(s.hours)}</span>`;
+  return `<span class="srow__status${o ? (o.open ? ' is-open' : ' is-shut') : ''}">${icon('i-clock')}${esc(o ? o.text : s.hours)}</span>`;
 };
+// Where it is and what it sells, each with its icon (no "·" between them)
+const facts = (s, more = '') => `<span class="srow__facts"><span>${icon('i-pin')}${esc(s.area)}</span>${more}</span>`;
 
 /* Space the panels cover, so pins stay where you can see them */
 function mapPadding() {
@@ -44,14 +46,14 @@ function renderPicked() {
   const s = shops.find((x) => x.id === picked);
   $('#picked').innerHTML = s ? `<article class="picked" aria-label="Selected shop">
       <span class="picked__img">${thumb(s)}</span>
-      <div class="picked__body"><h3>${esc(s.name)}</h3><span>${esc(s.area)}${s.km != null ? ` · ${km(s)}` : ''}</span>${openLine(s)}</div>
+      <div class="picked__body"><h3>${esc(s.name)}</h3>${facts(s, s.km != null ? `<span>${esc(km(s))}</span>` : '')}${openLine(s)}</div>
       <a class="picked__go" href="${shopUrl(s)}">Menu</a></article>` : '';
 }
 
 const shopRow = (s, mark = true, i = 0) => `<li style="--i:${Math.min(i, 8)}"><button type="button" class="srow${mark && s.id === picked ? ' is-picked' : ''}"${mark ? ` aria-pressed="${s.id === picked}"` : ''} data-id="${esc(s.id)}">
     <span class="srow__img">${thumb(s)}</span>
     <span class="srow__body"><span class="srow__name">${esc(s.name)}</span>
-      <span class="srow__sub">${esc(s.area)} · ${esc(categoryName(s.category))} · ${s.items} items</span>${openLine(s)}</span>
+      ${facts(s, `<span>${icon('i-tag')}${esc(categoryName(s.category))}</span>`)}${openLine(s)}</span>
     <span class="srow__km">${km(s)}</span></button></li>`;
 
 function renderList() {

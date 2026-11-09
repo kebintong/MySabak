@@ -241,10 +241,6 @@
   .schart {
     gap: 6px;
   }
-
-  .schart__bar {
-    border-radius: 6px 6px 3px 3px;
-  }
 }
 
 @media (min-width: 1000px) {

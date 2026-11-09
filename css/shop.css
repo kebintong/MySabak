@@ -1,35 +1,55 @@
 /* mysabak · shop styles. Loaded after base.css. */
 
 .shop-info__ava { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; display: block; }
-.shop-info__body { display: contents; }
 .shop-about { display: none; margin: 3px 0 0; font-size: 14px; line-height: 1.4; color: #e2d0f4; }
-.shop-info__facts, .shop-info__actions { grid-column: 1 / -1; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.shop-info__facts .is-open { color: #8fe0aa; }
-.shop-info__link { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; transition: background-color .15s; }
-.shop-info__link:hover { color: #fff; background: rgba(255, 255, 255, .26); }
+/* The facts card over the sky's bottom edge: rating, open until, distance split by thin lines, then the actions */
+.shop-card {
+  position: relative; z-index: 1; margin: -52px 0 0; padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  border-radius: 20px; background: #fff; box-shadow: var(--shadow-card);
+}
+.shop-facts { display: flex; }
+.shop-fact { flex: 1; min-width: 0; padding: 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.shop-fact + .shop-fact { border-left: 1px solid var(--line-brand); }
+.shop-fact[hidden] { display: none; }
+.shop-fact b { display: inline-flex; align-items: center; line-height: 1.25; font-size: 17px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.shop-fact b i { margin-right: 3px; font-style: normal; color: #e8a33a; }
+.shop-fact span { font-size: 12.5px; font-weight: 500; color: var(--sub); }
+.shop-fact.is-open b { color: var(--ok, #1e7a44); }
+.shop-fact.is-shut b { color: #9a5b0a; }
+.shop-card__actions { display: flex; gap: 10px; }
+.shop-card__btn {
+  flex: 1; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--tint); color: var(--brand-deep); font-size: 14.5px; font-weight: 700; text-decoration: none; white-space: nowrap;
+  transition: background-color .15s;
+}
+.shop-card__btn:hover { background: var(--line-brand); color: var(--brand-deep); }
+.shop-card__btn[hidden] { display: none; }
+.shop-card__btn .icon { stroke: var(--brand-deep); --pin-fill: var(--brand-deep); --pin-dot: var(--tint); }
 .shop-hero { position: absolute; top: 7px; right: 0; isolation: isolate; }
 .shop-hero .spin__label { display: none; }
 /* the header names it */
 .shop-hero__canvas { position: absolute; inset: 0; }
-.shop-hero__eta { display: block; padding: 7px 12px; border-radius: 14px; background: #14082a; color: #ffd15c; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.shop-hero__eta { display: block; padding: 9px 14px; border-radius: 999px; background: rgba(14, 2, 32, .55); color: #ffd15c; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .shop-hero__eta[hidden] { display: none; }
-.is-missing .shop-main, .is-missing .shop-info__actions, .is-missing .shop-info__ava, .is-missing .shop-hero { display: none; }
+.is-missing .shop-main, .is-missing .shop-card, .is-missing .shop-info__ava, .is-missing .shop-hero { display: none; }
 .shop-layout { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; }
+/* Menu sections as underlined tabs on a white bar, not pills: they no longer look like the facts */
 .menu-tabs {
   position: sticky; top: 0; z-index: 3;
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: -68px calc(-1 * var(--gutter)) 20px; padding: 8px var(--gutter);
+  display: flex; gap: 22px; overflow-x: auto; scrollbar-width: none;
+  margin: 16px calc(-1 * var(--gutter)) 12px; padding: 0 var(--gutter);
+  background: #fff; border-bottom: 1px solid var(--line-brand); transition: box-shadow .2s;
 }
-.menu-tabs.is-stuck { background: var(--shop-bg); }
+.menu-tabs.is-stuck { box-shadow: 0 6px 16px rgba(41, 10, 69, .08); }
 .menu-tab {
-  flex: none; padding: 8px 15px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px;
-  background: rgba(255, 255, 255, .14); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap;
-  transition: background-color .15s, color .15s, border-color .15s;
+  flex: none; height: 48px; display: flex; align-items: center;
+  border-bottom: 3px solid transparent; color: var(--sub); font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap;
+  transition: color .15s, border-color .15s;
 }
-.menu-tab:hover { background: rgba(255, 255, 255, .26); color: #fff; }
-.menu-tab.is-active { background: #fff; border-color: #fff; color: var(--brand-deep); font-weight: 700; }
-.is-stuck .menu-tab { background: #fff; border-color: var(--line-brand); color: var(--ink); }
-.is-stuck .menu-tab.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.menu-tab:hover { color: var(--ink); }
+.menu-tab.is-active { color: var(--brand-deep); font-weight: 700; border-bottom-color: var(--accent); }
 .msec { scroll-margin-top: 54px; padding-top: 12px; }
 .msec__title { margin: 6px 2px 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px; font-weight: 700; color: var(--ink); }
 .msec__row {
@@ -143,14 +163,18 @@
 .ochip[aria-pressed="true"] small { color: rgba(255, 255, 255, .8); }
 @media (min-width: 900px) {
 .shop-info__ava { width: 88px; height: 88px; border-radius: 22px; }
-.shop-info__body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .shop-about { display: block; }
 .shop-hero { position: relative; top: auto; right: auto; height: 132px; border-radius: 20px; overflow: hidden; border: 2px solid rgba(255, 255, 255, .5); background: var(--map-ground); }
 .shop-hero__eta { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 5px 10px; }
 .shop-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
 /* Stuck tabs sit under the logo; the strip covers what scrolls past above them */
-.menu-tabs { top: 84px; margin: -76px 0 36px; padding: 8px 0; overflow: visible; flex-wrap: wrap; }
-.menu-tabs.is-stuck::before { content: ""; position: absolute; inset: -84px -8px 0; background: var(--shop-bg); z-index: -1; }
+.menu-tabs { top: 84px; margin: 20px 0 16px; padding: 0 20px; border: 1px solid var(--line-brand); border-radius: 16px; flex-wrap: wrap; gap: 0 26px; }
+.menu-tabs.is-stuck::before { content: ""; position: absolute; inset: -85px -9px 100%; background: var(--shop-bg); z-index: -1; }
+/* The facts card: as wide as the menu, facts on the left, actions on the right */
+.shop-card { width: 100%; max-width: 1120px; margin: -56px auto 0; padding: 16px 20px; flex-direction: row; align-items: center; gap: 24px; }
+.shop-facts { flex: 1; max-width: 520px; }
+.shop-card__actions { margin-left: auto; }
+.shop-card__btn { flex: none; padding: 0 20px; }
 .msec { scroll-margin-top: 150px; }
 .msec__row { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; padding: 2px 0 14px; }
 .mcard { padding: 14px; }

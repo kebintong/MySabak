@@ -1,7 +1,7 @@
 /* Your order (pages/order.html?id=…): a live map of the delivery (shop, drop-off, the rider gliding along), then the
    order as a receipt ticket (status, progress, lines, delivery) and a tip for mysabak. */
 import { CONFIG } from '../config.js';
-import { orderStatus, myTips, shopMenu, orderRoute, ORDER_STEPS } from '../api.js';
+import { orderStatus, myTips, shopMenu, orderRoute } from '../api.js';
 import { $, $$, mountChrome, esc, peso, pesoOr, params, when, openTipSheet, pop } from '../ui.js';
 import { shopMap } from '../shop-map.js';
 
@@ -37,7 +37,7 @@ const NOW = {
   delivered: 'Delivered. Enjoy!',
   cancelled: 'This order was cancelled.',
 };
-// The ticket's four segments: Placed, Preparing, On the way, Delivered (4 = all done)
+// The ticket's four steps: Placed, Preparing, On the way, Delivered (4 = all done)
 const SEG = { placed: 0, accepted: 0, preparing: 1, ready: 1, picked_up: 2, delivered: 4 };
 const ENDED = ['delivered', 'cancelled'];
 
@@ -47,22 +47,21 @@ async function render(order) {
   const tipTotal = tips.reduce((n, t) => n + t.amount, 0);
   const method = CONFIG.shopPaymentMethods.find((m) => m.id === order.payment);
 
-  // The stamp: the exact status, blinking while it's live; a new status gives it a small bounce
-  const step = ORDER_STEPS.find((s) => s.id === order.status);
-  $('#stampText').textContent = order.status === 'cancelled' ? 'Cancelled' : step ? step.name : order.status;
-  $('#stamp').className = `stamp${ENDED.includes(order.status) ? ` is-${order.status}` : ''}`;
-  if (shownStatus && shownStatus !== order.status) pop($('#stamp'), 1.12);
-  shownStatus = order.status;
-
   $('#shopName').textContent = order.shop.name;
-  $('#orderMeta').textContent = [when(order.placedAt), method ? method.name : order.payment].filter(Boolean).join(' · ');
+  const paid = order.payment === 'cash' ? 'cash on delivery' : `paid with ${method ? method.name : order.payment}`;
+  $('#orderMeta').textContent = `Ordered ${when(order.placedAt)}, ${paid}`;
   $('#nowSub').textContent = NOW[order.status] || '';
   $('#orderId').textContent = order.id;
 
-  // Progress: done segments fill purple, the current one half gold (cancelled: none)
+  // Progress: done steps fill purple, the current one is ringed gold (cancelled: none); a new step gives a small bounce
   const at = order.status === 'cancelled' ? -1 : SEG[order.status] ?? 0;
-  $$('#segs span').forEach((s, i) => { s.className = i < at ? 'is-done' : i === at ? 'is-now' : ''; });
-  $$('#steps span').forEach((s, i) => s.classList.toggle('is-on', i === Math.min(at, 3)));
+  $$('#steps li').forEach((s, i) => {
+    s.className = i < at ? 'is-done' : i === at ? 'is-now' : '';
+    if (i === at) s.setAttribute('aria-current', 'step'); else s.removeAttribute('aria-current');
+  });
+  $('#steps').style.setProperty('--done', Math.max(0, Math.min(at, 3)) / 3);
+  if (shownStatus && shownStatus !== order.status && at >= 0 && at < 4) pop($$('#steps i')[at], 1.12);
+  shownStatus = order.status;
 
   const fee = order.deliveryFee;
   const total = order.subtotal + (typeof fee === 'number' ? fee : 0) + tipTotal;

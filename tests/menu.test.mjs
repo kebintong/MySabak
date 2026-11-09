@@ -37,9 +37,9 @@ test('the same item, picks and note make the same cart line', () => {
 test('open now uses Cebu time, including hours past midnight', () => {
   const shop = { opensAt: '09:00', closesAt: '21:00' };
   const at = (hhmm) => new Date(`2026-10-13T${hhmm}:00+08:00`);
-  assert.deepEqual(openState(shop, at('08:59')), { open: false, text: 'Closed · opens 9 AM' });
-  assert.deepEqual(openState(shop, at('20:30')), { open: true, text: 'Open · closes 9 PM' });
+  assert.deepEqual(openState(shop, at('08:59')), { open: false, at: '9 AM', text: 'Closed, opens 9 AM' });
+  assert.deepEqual(openState(shop, at('20:30')), { open: true, at: '9 PM', text: 'Open until 9 PM' });
   assert.equal(openState({ opensAt: '18:00', closesAt: '02:30' }, at('01:00')).open, true);
-  assert.equal(openState({ opensAt: '18:00', closesAt: '02:30' }, at('03:00')).text, 'Closed · opens 6 PM');
+  assert.equal(openState({ opensAt: '18:00', closesAt: '02:30' }, at('03:00')).text, 'Closed, opens 6 PM');
   assert.equal(openState({}, at('10:00')), null);
 });

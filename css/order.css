@@ -19,35 +19,26 @@
   position: relative; display: flex; flex-direction: column; gap: 14px; padding: 20px 20px 18px;
   background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px rgba(41, 10, 69, .14);
 }
-.stamp {
-  align-self: flex-start; display: flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px;
-  background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 800; line-height: 1; letter-spacing: .08em; text-transform: uppercase;
-}
-.stamp__live { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); animation: stamp-blink 1.4s ease-in-out infinite; }
-@keyframes stamp-blink { 50% { opacity: .25; } }
-.stamp.is-delivered { background: #e3f3e8; color: #1e6b3c; }
-.stamp.is-cancelled { background: var(--field); color: var(--sub); }
-.stamp.is-delivered .stamp__live, .stamp.is-cancelled .stamp__live { display: none; }
-.ticket__shop { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.15; color: var(--ink); }
-.ticket__meta { margin: 4px 0 0; font-size: 13px; font-weight: 500; color: var(--sub); }
-.ticket__now { margin: -4px 0 0; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); }
+.ticket__shop { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.15; color: var(--ink); }
+.ticket__meta { margin: 4px 0 0; font-size: 13.5px; font-weight: 400; color: var(--sub); }
+.ticket__now { margin: 0; font-size: 14px; font-weight: 400; line-height: 1.4; color: var(--sub); }
 
-/* Progress: four segments that fill in; the current one half gold, gently breathing */
-.segs { display: flex; gap: 4px; }
-.segs span { position: relative; flex: 1; height: 5px; border-radius: 3px; background: #ece4f6; overflow: hidden; }
-.segs span::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; background: #7b3fbf;
-  transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease-out), background-color .3s;
+/* Progress: four round steps on a line that fills purple up to the current one (ringed gold) */
+.osteps { position: relative; margin: 4px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.osteps::before, .osteps::after { content: ""; position: absolute; left: 12.5%; right: 12.5%; top: 21px; height: 3px; border-radius: 2px; background: #ece4f6; }
+.osteps::after { background: var(--accent); transform: scaleX(var(--done, 0)); transform-origin: left; transition: transform .6s var(--ease-out); }
+.osteps li { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.osteps i {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: #fff; box-shadow: 0 0 0 2px #ece4f6; transition: background-color .3s, box-shadow .3s;
 }
-.segs .is-done::after { transform: scaleX(1); animation: seg-fill .6s var(--ease-out) backwards; }
-.segs .is-now::after { transform: scaleX(.55); background: var(--gold); animation: seg-fill .6s var(--ease-out) backwards, seg-breathe 1.8s ease-in-out .6s infinite; }
-.segs span:nth-child(2)::after { animation-delay: 120ms, .72s; }
-.segs span:nth-child(3)::after { animation-delay: 240ms, .84s; }
-.segs span:nth-child(4)::after { animation-delay: 360ms, .96s; }
-@keyframes seg-fill { from { transform: scaleX(0); } }
-@keyframes seg-breathe { 50% { opacity: .55; } }
-.osteps { display: flex; justify-content: space-between; gap: 6px; margin-top: -6px; font-size: 11px; font-weight: 600; color: var(--sub); }
-.osteps .is-on { color: var(--brand-deep); font-weight: 800; }
+.osteps .icon { width: 22px; height: 22px; stroke: #b8a9c9; --icon-fill: #b8a9c9; transition: stroke .3s; }
+.osteps span { font-size: 12px; font-weight: 500; line-height: 1.25; color: var(--sub); }
+.osteps .is-done i { background: var(--accent); box-shadow: none; }
+.osteps .is-done .icon { stroke: #fff; --icon-fill: #fff; }
+.osteps .is-now i { box-shadow: 0 0 0 3px var(--gold); }
+.osteps .is-now .icon { stroke: var(--gold-deep, #a8670c); --icon-fill: var(--gold-deep, #a8670c); }
+.osteps .is-now span { font-weight: 700; color: var(--ink); }
 
 /* The tear line: dashed, with a notch punched out of each side */
 .cut { position: relative; height: 0; margin: 4px -20px; border-top: 2px dashed #e6dcef; }
@@ -89,8 +80,7 @@
 .otip:active { transform: scale(.97); }
 
 @media (prefers-reduced-motion: reduce) {
-  .order > *, .orc__line, .segs span::after { animation: none; }
-  .stamp__live { animation: none; }
-  .segs span::after, .otip { transition: none; }
+  .order > *, .orc__line { animation: none; }
+  .osteps::after, .otip { transition: none; }
   .otip:active { transform: none; }
 }
