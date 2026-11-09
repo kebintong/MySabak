@@ -1,7 +1,7 @@
-/* mysabak · driver styles. Loaded after base.css.
-   Draft Q: Home's night sky (today's earnings in gold, the online pill like the search pill, glass chips),
-   the nearest request as the big lilac Ride-style card, the others as lilac/peach service cards,
-   shortcuts like Schedule · Multi-stop · Vouchers, the promo card, and a full-screen map for navigation. */
+/* mysabak · driver styles. Loaded after base.css (also by the Trips page, pages/driver-trips.html).
+   The night sky: who's driving, today's earnings, then one big Go online button. The nearest request as the big
+   lilac card, the others as lilac/peach service cards; the last 7 days, round shortcuts, trips by day, the payout;
+   and a full-screen map for navigation. */
 
 .page--driver .content__inner--full { max-width: 1080px; }
 @media (min-width: 900px) {
@@ -25,51 +25,68 @@
 }
 /* width: 100%: auto margins in the head's flex column would shrink it to its content and pull it off the cards' edge */
 .dsky__inner { position: relative; z-index: 1; width: 100%; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-.dsky__who { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14px; color: #e2d0f4; }
-.dsky__who b { color: #fff; }
-.dsky__today { margin: 0; font: 800 52px/1 var(--font-display); letter-spacing: -.03em; color: var(--gold); font-variant-numeric: tabular-nums; }
-.dsky__today small { font-size: 18px; font-weight: 600; letter-spacing: 0; color: #fff; }
-.dsky__chips { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.dsky__chips > span {
-  padding: 6px 12px; border-radius: 16px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22);
-  font-size: 13px; font-weight: 600; color: #fff;
+/* Who's driving: name in bold with a gold check when approved, the vehicle and plate under it */
+.dwho { display: flex; align-items: center; gap: 12px; }
+.dwho__ava {
+  width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .28); font: 700 15px var(--font-body); color: #fff;
 }
-.dsky__chips b { color: var(--gold); }
+.dwho__text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dwho__name { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #fff; }
+.dwho__ok { width: 18px; height: 18px; flex: none; border-radius: 50%; background: var(--gold); display: grid; place-items: center; }
+.dwho__ok .icon { width: 12px; height: 12px; stroke: var(--ink); stroke-width: 3; }
+.dwho__car { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: #e2d0f4; }
+.dwho__car .icon { width: 15px; height: 15px; flex: none; stroke: #e2d0f4; }
+
+/* Today's earnings, then two plain stats split by a thin line (not pills: they aren't buttons) */
+.dsum { display: flex; flex-direction: column; gap: 14px; }
+.dearn { margin: 0; display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
+.dearn__label { font-size: 13px; font-weight: 500; color: #e2d0f4; }
+.dearn__value { font: 800 52px/1.05 var(--font-body); letter-spacing: -.02em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.dstats { display: flex; max-width: 320px; }
+.dstats p { flex: 1; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.dstats p + p { padding-left: 16px; border-left: 1px solid rgba(255, 255, 255, .22); }
+.dstats b { font: 800 20px/1.1 var(--font-body); letter-spacing: -.02em; color: #fff; font-variant-numeric: tabular-nums; }
+.dstats span { font-size: 12.5px; font-weight: 500; color: #e2d0f4; }
+
+/* Going online: the one big action, its status in words above it */
+.dgo { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; }
+.dgo__status { margin: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: #e2d0f4; }
+.dgo__status b { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #fff; }
+.dgo__dot { position: relative; width: 9px; height: 9px; flex: none; border-radius: 50%; background: #b8a9c9; }
+.is-online .dgo__dot { background: #3fd17f; }
+.is-online .dgo__dot::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid #3fd17f; animation: ping 1.6s var(--ease-out) infinite; }
+.dgo__btn {
+  width: 100%; min-height: 56px; padding: 0 22px; border: 0; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: linear-gradient(180deg, #1e9e5a, #167a45); color: #fff; font: 700 17px var(--font-body); cursor: pointer;
+  box-shadow: 0 8px 22px rgba(22, 122, 69, .45), inset 0 1px 0 rgba(255, 255, 255, .25);
+  transition: transform .15s var(--spring), filter .15s var(--ease-out), background-color .2s var(--ease-out);
+}
+.dgo__btn .icon { width: 20px; height: 20px; stroke: #fff; stroke-width: 2.4; }
+.dgo__btn:hover { filter: brightness(1.07); }
+.dgo__btn:active { transform: scale(.98); }
+.dgo__btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.dgo__btn.is-on { background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .3); box-shadow: none; }
+.dgo__btn:disabled { background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18); box-shadow: none; color: #c9b6e2; cursor: default; filter: none; transform: none; }
+.dgo__btn:disabled .icon { stroke: #c9b6e2; }
 @media (max-width: 379.98px) {
 .page--driver .dsky { padding-bottom: 84px; }
-.dsky__inner { gap: 10px; }
-.dsky__today { font-size: 42px; }
-.onpill { padding-left: 14px; gap: 10px; }
-.onpill__go { padding: 11px 13px; }
+.dearn__value { font-size: 44px; }
 }
 @media (max-height: 520px) and (max-width: 899.98px) {
 .page--driver .dsky { padding-bottom: 80px; }
-.dsky__today { font-size: 38px; }
+.dearn__value { font-size: 40px; }
 }
+/* Desktop: name and earnings on the left, going online as a glass panel on the right */
 @media (min-width: 900px) {
 .page--driver .dsky { padding-bottom: 120px; }
-.dsky__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); align-items: end; column-gap: 28px; }
-.dsky__who, .dsky__today, .dsky__chips { grid-column: 1; }
-.page--driver .onpill { grid-column: 2; grid-row: 2 / span 2; }
-.dsky__today { font-size: 64px; }
+.dsky__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); align-items: end; gap: 18px 40px; }
+.dwho, .dsum { grid-column: 1; }
+.dsum { flex-direction: row; align-items: flex-end; gap: 40px; }
+.dstats { width: 300px; padding-bottom: 8px; }
+.dearn__value { font-size: 64px; }
+.dgo { grid-column: 2; grid-row: 1 / span 2; padding: 20px; border-radius: 22px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); }
 }
-
-/* Online, as Home's white search pill */
-.onpill {
-  width: 100%; max-width: 520px; min-height: 56px; padding: 6px 6px 6px 18px; display: flex; align-items: center; gap: 12px;
-  border: 0; border-radius: 999px; background: #fff; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
-  box-shadow: 0 10px 30px rgba(20, 8, 42, .3);
-}
-.onpill__dot { position: relative; width: 11px; height: 11px; flex-shrink: 0; border-radius: 50%; background: #b9b3c9; }
-.onpill.is-on .onpill__dot { background: #2f9e55; }
-.onpill.is-on .onpill__dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #2f9e55; animation: ping 1.6s var(--ease-out) infinite; }
-.onpill__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.onpill__text b { font-size: 15px; color: var(--ink); }
-.onpill__text small { font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.onpill__go { flex-shrink: 0; padding: 12px 16px; border-radius: 999px; background: #2f9e55; color: #fff; font-size: 13.5px; font-weight: 800; }
-.onpill.is-on .onpill__go { background: var(--tint); color: var(--brand-deep); }
-.onpill:disabled { cursor: default; }
-.onpill:disabled .onpill__go { background: var(--field); color: var(--sub); }
 
 /* ---------- Requests: one big card, the rest as service cards ---------- */
 .dreq { margin-top: -84px; position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; }
@@ -120,6 +137,10 @@
 .dhero:only-child { grid-column: 1 / -1; }
 .dmini__art { width: 88px; }
 }
+.dempty--quiet { flex-direction: row !important; align-items: center; gap: 14px !important; padding: 16px 18px !important; background: #fff; }
+.dempty--quiet p { margin: 0; font-size: 14px; color: var(--sub); }
+.dempty__ic { width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--tint); display: grid; place-items: center; }
+.dempty__ic .icon { width: 20px; height: 20px; stroke: var(--brand-deep); }
 .dempty {
   grid-column: 1 / -1; padding: 22px 18px; border-radius: 22px; display: flex; flex-direction: column; gap: 6px;
   box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14);
@@ -149,45 +170,97 @@
 .activejob__gmaps { flex: 0 0 auto; background: rgba(255, 255, 255, .78); }
 .activejob .trip__cancel { flex-basis: auto; align-self: center; }
 
-/* ---------- Shortcuts (like Schedule · Multi-stop · Vouchers) and the promo card ---------- */
-.dmore { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-@media (min-width: 600px) {
-.dmore { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-}
 @media (min-width: 600px) and (max-width: 899.98px) {
 .dminis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-.dtiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: 22px; background: #fff; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14); }
-.dtile {
-  min-height: 96px; padding: 14px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  border: 0; background: none; font: 700 14px var(--font-body); color: var(--ink); text-decoration: none; cursor: pointer;
-}
-.dtile + .dtile { border-left: 1px solid var(--line); }
-.dtile:hover { color: var(--brand-deep); }
-.dtile__icon { width: 44px; height: 44px; display: grid; place-items: center; transition: transform .2s var(--spring); }
-.dtile:hover .dtile__icon { transform: scale(1.08); }
-.dtile__icon .icon { width: 28px; height: 28px; stroke: var(--brand-deep); }
-.dtile__icon--peach .icon { stroke: #b5640f; }
-.dpromo {
-  position: relative; overflow: hidden; min-height: 96px; padding: 16px 20px; border-radius: 22px; color: #fff; text-decoration: none;
-  display: flex; flex-direction: column; justify-content: center; gap: 2px;
-  background:
-    url("/assets/images/v3/twinkle-d.svg") right 34px top 20px / 20px no-repeat,
-    url("/assets/images/v3/twinkle-d.svg") right 96px bottom 22px / 12px no-repeat,
-    radial-gradient(circle at 70% 24%, #fff 0 1px, transparent 2px), radial-gradient(circle at 88% 72%, #fff 0 1.5px, transparent 2.5px),
-    radial-gradient(70% 120% at 90% 0%, rgba(190, 120, 255, .4), transparent 70%),
-    linear-gradient(152deg, #1e0638 13%, #4a1680 60%, #7b3fbf);
-}
-.dpromo:hover { color: #fff; }
-.dpromo__kicker { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
-.dpromo__value { font: 800 24px var(--font-display); }
-.dpromo__link { display: inline-flex; align-items: center; gap: 2px; font-size: 13.5px; font-weight: 700; color: var(--gold); }
-.dpromo__link .icon { stroke: var(--gold); }
 
+/* ---------- The last 7 days, shortcuts, trips, payout. Desktop: the trips beside the rest ---------- */
+.dgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 900px) {
+.dgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "week trips" "round trips" "pay trips"; align-items: start; gap: 16px 20px; }
+.dweek { grid-area: week; }
+.dround { grid-area: round; }
+.dtrips { grid-area: trips; }
+.dpay { grid-area: pay; }
+}
 .page--driver .card { border: 0; border-radius: 22px; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14); }
-.page--driver .card__title { font-size: 18px; font-weight: 700; color: var(--ink); }
-.dtrips { scroll-margin-top: 90px; }
-.dpayout { padding: 14px 0 0; margin-top: 8px; border-top: 1px solid var(--line); }
+.page--driver .card__title { font-size: 17px; font-weight: 700; color: var(--ink); }
+/* the tab bar floats over the bottom of the page: room so it never covers the last line */
+.page--driver .dhome > .finder__note { margin-bottom: 72px; }
+
+/* The last 7 days: the total, the change, a bar a day (today in gold) */
+.dweek { display: flex; flex-direction: column; gap: 12px; }
+.dweek__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dweek__sum { display: flex; flex-direction: column; gap: 2px; }
+.dweek__title { margin: 0; font-size: 13px; font-weight: 600; color: var(--sub); }
+.dweek__value { font: 800 26px/1.1 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dweek__delta { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #e3f3e8; color: #1e7a44; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.dweek__delta .icon { width: 14px; height: 14px; stroke: currentColor; }
+.dweek__delta.is-down { background: #fbe9df; color: #b4410c; }
+.dweek__delta[hidden] { display: none; }
+.dweek__bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; height: 92px; }
+.dweek__col { min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+.dweek__col i { width: 100%; height: max(6px, calc(var(--h) * .66)); border-radius: 8px; background: linear-gradient(180deg, #c59af0, #efe4f9); transform-origin: bottom; animation: bar-grow .55s var(--ease-out) backwards; }
+.dweek__col.is-zero i { background: var(--line); }
+.dweek__col.is-now i { background: linear-gradient(180deg, var(--gold), #e3933f); box-shadow: 0 0 12px rgba(246, 196, 108, .55); }
+.dweek__col > span { font-size: 11.5px; font-weight: 500; color: var(--sub); white-space: nowrap; }
+.dweek__col.is-now > span { font-weight: 700; color: var(--ink); }
+
+/* Shortcuts as round buttons */
+.dround { display: flex; justify-content: space-around; padding: 2px 0; }
+.dround__btn {
+  min-width: 72px; padding: 0; border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font: 600 13px var(--font-body); color: var(--ink); text-decoration: none; cursor: pointer;
+}
+.dround__ic {
+  position: relative; width: 52px; height: 52px; border-radius: 50%; background: #fff; display: grid; place-items: center;
+  box-shadow: 0 4px 12px rgba(41, 10, 69, .1); transition: transform .2s var(--spring), box-shadow .2s var(--ease-out);
+}
+.dround__ic .icon { width: 22px; height: 22px; stroke: var(--brand-deep); --pin-fill: var(--brand-deep); --pin-dot: #fff; }
+.dround__btn:hover { color: var(--brand-deep); }
+.dround__btn:hover .dround__ic { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(41, 10, 69, .14); }
+.dround__btn:focus-visible { outline: none; }
+.dround__btn:focus-visible .dround__ic { box-shadow: 0 0 0 3px var(--gold); }
+.dround__btn[data-needs] .dround__ic::after { content: ""; position: absolute; top: 2px; right: 2px; width: 11px; height: 11px; border-radius: 50%; background: #e3933f; border: 2px solid #fff; }
+
+/* Trips grouped by day (js/trip-list.js): a type icon, the distance, the time, the fare */
+.dtrips { display: flex; flex-direction: column; gap: 4px; }
+.dtrips__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.dtrips__head .card__title { margin: 0; }
+.dtrips__note { font-size: 12.5px; color: var(--sub); }
+.dtrips__note[hidden] { display: none; }
+.tdays, .tday__list { margin: 0; padding: 0; list-style: none; }
+.tday__head { margin: 0; padding: 10px 0 2px; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--sub); }
+.trow { min-height: 60px; display: flex; align-items: center; gap: 12px; }
+.trow + .trow { border-top: 1px solid var(--line); }
+.trow__ic { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--tint); display: grid; place-items: center; }
+.trow__ic .icon { width: 19px; height: 19px; stroke: var(--brand-deep); }
+.trow__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.trow__main b { font-size: 15px; font-weight: 700; color: var(--ink); }
+.trow__main b span { font-weight: 400; color: var(--sub); }
+.trow__main > span { font-size: 13px; color: var(--sub); }
+.trow__fare { font: 800 15px var(--font-body); letter-spacing: -.01em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dtrips__all {
+  margin-top: 10px; min-height: 48px; border-radius: 16px; background: var(--tint); color: var(--brand-deep); text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 6px; font: 700 15px var(--font-body); transition: background-color .15s var(--ease-out);
+}
+.dtrips__all:hover { background: var(--line-brand); color: var(--brand-deep); }
+.dtrips__all .icon { width: 16px; height: 16px; stroke: var(--brand-deep); }
+.dtrips__all[hidden] { display: none; }
+
+/* Payout: its own card, with the thing to do as a button */
+.page--driver .dpay { display: flex; align-items: center; gap: 12px; padding: 16px 18px; }
+.dpay__ic { width: 44px; height: 44px; flex: none; border-radius: 14px; background: #fdf0dc; display: grid; place-items: center; }
+.dpay__ic .icon { width: 20px; height: 20px; stroke: #c26a12; }
+.dpay__text { flex: 1; min-width: 0; }
+.dpay__text h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+.dpay__text p { margin: 2px 0 0; font-size: 13px; color: var(--sub); }
+.dpay__btn {
+  flex: none; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--accent); color: #fff;
+  font: 700 14px var(--font-body); cursor: pointer; transition: filter .15s var(--ease-out), transform .15s var(--spring);
+}
+.dpay__btn:hover { filter: brightness(1.08); }
+.dpay__btn:active { transform: scale(.96); }
 
 /* ---------- Full-screen map: all requests, a route preview, or navigation ---------- */
 .dmapview { position: fixed; inset: 0; z-index: 80; background: var(--map-ground); animation: fade-in .2s var(--ease-out); }
@@ -240,3 +313,24 @@
 }
 
 .badge--ok { background: #e6f5e9; color: #2f7a3f; }
+
+/* ---------- Trips page (pages/driver-trips.html): type chips, trips by day, numbered pages ---------- */
+.page--driver .content__inner:has(#tripList) { padding-bottom: 88px; } /* room above the floating tab bar */
+.tfilter .fchip { height: 36px; border: 1px solid var(--line-brand); box-shadow: none; background: #fff; color: var(--sub); }
+.tfilter .fchip:hover { border-color: var(--brand); color: var(--brand-deep); }
+.tfilter .fchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tfilter .fchip span { margin-left: 2px; font-weight: 500; opacity: .75; }
+.tpages { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.tpages[hidden] { display: none; }
+.tpages__nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.tpages__btn {
+  min-width: 44px; height: 44px; padding: 0 12px; border: 1px solid var(--line-brand); border-radius: 14px; background: #fff; color: var(--ink);
+  font: 700 15px var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer;
+  transition: background-color .15s var(--ease-out), border-color .15s var(--ease-out), transform .15s var(--spring);
+}
+.tpages__btn:hover:not(:disabled) { border-color: var(--brand); color: var(--brand-deep); }
+.tpages__btn:active:not(:disabled) { transform: scale(.94); }
+.tpages__btn[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tpages__btn:disabled { color: #b8a9c9; cursor: default; }
+.tpages__btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.tpages__note { margin: 0; font-size: 12.5px; color: var(--sub); }

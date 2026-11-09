@@ -30,20 +30,29 @@
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <!-- Draft Q: the home page's night sky with today's earnings and the online pill; the nearest request
-           as the big lilac card (the others below, tap one to swap); a full-screen map for routes and navigation -->
+      <!-- The night sky: who's driving, today's earnings, then going online as the one big action. Below: the
+           nearest request as the big lilac card, the last 7 days, shortcuts, the latest trips and the payout -->
       <div class="content__inner content__inner--full dhome" id="driverHome" hidden>
         <header class="page-head dsky">
           <div class="dsky__inner">
-            <p class="dsky__who">Driving as <b data-bind="firstName">driver</b> · <span data-bind="vehicle">Vehicle</span>
-              <span class="badge" data-bind="status">Approved</span></p>
-            <h1 class="dsky__today"><span data-bind="today">₱0</span> <small>today</small></h1>
-            <button type="button" class="onpill" id="onlineBtn" aria-pressed="false">
-              <span class="onpill__dot" aria-hidden="true"></span>
-              <span class="onpill__text"><b data-bind="onlineTitle">You’re offline</b><small data-bind="onlineHint">Go online to get requests near you.</small></span>
-              <span class="onpill__go" data-bind="onlineAction">Go online</span>
-            </button>
-            <p class="dsky__chips"><span data-bind="todayTrips">0 trips</span><span><b data-bind="week">₱0</b> this week</span></p>
+            <div class="dwho">
+              <span class="dwho__ava" data-bind="initials" aria-hidden="true"></span>
+              <div class="dwho__text">
+                <p class="dwho__name"><b data-bind="firstName">driver</b><span data-bind="status"></span></p>
+                <p class="dwho__car"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg><span data-bind="vehicle">Vehicle</span></p>
+              </div>
+            </div>
+            <div class="dsum">
+              <h1 class="dearn"><span class="dearn__label">Earned today</span><span class="dearn__value" data-bind="today">₱0</span></h1>
+              <div class="dstats">
+                <p><b data-bind="todayCount">0</b><span data-bind="todayLabel">trips today</span></p>
+                <p><b data-bind="week">₱0</b><span>last 7 days</span></p>
+              </div>
+            </div>
+            <div class="dgo">
+              <p class="dgo__status"><b><span class="dgo__dot" aria-hidden="true"></span><span data-bind="onlineTitle">You’re offline</span></b><span data-bind="onlineHint">Go online to get Ride, Express and Shop requests.</span></p>
+              <button type="button" class="dgo__btn" id="onlineBtn" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-power"/></svg><span data-bind="onlineAction">Go online</span></button>
+            </div>
           </div>
         </header>
 
@@ -53,27 +62,31 @@
           <div id="jobList" aria-live="polite"></div>
         </section>
 
-        <div class="dmore">
-          <nav class="dtiles" aria-label="Driver shortcuts">
-            <a class="dtile" href="#tripsCard"><span class="dtile__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></span>Trips</a>
-            <button type="button" class="dtile" id="payoutBtn"><span class="dtile__icon dtile__icon--peach"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>Payout</button>
-            <button type="button" class="dtile" id="mapBtn"><span class="dtile__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg></span>Map</button>
+        <!-- Phones: one column. Desktop: the week, shortcuts and payout on the left, the trips on the right -->
+        <div class="dgrid">
+          <section class="card dweek" aria-labelledby="weekTitle">
+            <div class="dweek__head">
+              <div class="dweek__sum"><h2 class="dweek__title" id="weekTitle">Last 7 days</h2><b class="dweek__value" data-bind="week">₱0</b></div>
+              <span class="dweek__delta" id="weekDelta" hidden></span>
+            </div>
+            <div class="dweek__bars" id="weekBars" role="img"></div>
+          </section>
+          <nav class="dround" aria-label="Driver shortcuts">
+            <a class="dround__btn" href="/pages/driver-trips.html"><span class="dround__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg></span>Trips</a>
+            <button type="button" class="dround__btn" data-payout><span class="dround__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>Payout</button>
+            <button type="button" class="dround__btn" id="mapBtn"><span class="dround__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg></span>Map</button>
           </nav>
-          <a class="dpromo" href="#tripsCard">
-            <span class="dpromo__kicker">This week</span>
-            <span class="dpromo__value"><span data-bind="week">₱0</span>, all yours</span>
-            <span class="dpromo__link">See your trips<svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
-          </a>
+          <section class="card dtrips" id="tripsCard" aria-labelledby="earnTitle">
+            <div class="dtrips__head"><h2 class="card__title" id="earnTitle">Latest trips</h2><span class="dtrips__note" id="tripsNote" hidden>Demo trips</span></div>
+            <ul class="tdays" id="trips"></ul>
+            <a class="dtrips__all" id="allTrips" href="/pages/driver-trips.html" hidden><span>See all trips</span><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a>
+          </section>
+          <section class="card dpay" aria-labelledby="payTitle">
+            <span class="dpay__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
+            <div class="dpay__text"><h2 id="payTitle">Payout method</h2><p data-bind="payout">Add GCash or a bank to get paid</p></div>
+            <button type="button" class="dpay__btn" data-payout data-bind="payoutAction">Set up</button>
+          </section>
         </div>
-
-        <section class="card dtrips" id="tripsCard" aria-labelledby="earnTitle">
-          <h2 class="card__title" id="earnTitle">Latest trips</h2>
-          <ul class="list" id="trips"></ul>
-          <div class="row dpayout">
-            <span class="file__icon"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg></span>
-            <div class="row__main"><span class="row__title">Payout method</span><span class="row__sub" data-bind="payout">Not set up yet</span></div>
-          </div>
-        </section>
         <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
       </div>
     </main>

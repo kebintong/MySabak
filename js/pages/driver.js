@@ -12,7 +12,8 @@ import {
 import { haversineKm } from '../money.js';
 import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, $$, mountChrome, toast, peso, esc, when, icon, edgeGlow } from '../ui.js';
+import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow } from '../ui.js';
+import { tripsByDay } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
 
@@ -241,7 +242,7 @@ function renderJobs() {
   let html;
   if (job) html = '';
   else if (!approved) html = '<div class="dempty dtone--lilac"><h3>Application under review</h3><p>We’ll email you when you’re approved. Then you can go online here.</p></div>';
-  else if (!online) html = '<div class="dempty dtone--lilac"><h3>You’re offline</h3><p>Go online to see Ride, Express and Shop delivery requests near you.</p></div>';
+  else if (!online) html = `<div class="dempty dempty--quiet"><span class="dempty__ic">${icon('i-receipt')}</span><p>They show up here while you’re online.</p></div>`; // the sky above already says you're offline
   else if (!shown.length) html = '<div class="dempty dtone--lilac"><p class="jobs-wait"><span class="online__pulse" aria-hidden="true"></span>Waiting for requests nearby…</p><p>They show here, nearest first.</p></div>';
   else {
     const rest = shown.filter((j) => j !== hero);
@@ -385,7 +386,7 @@ $('#mapSheet').addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mapMode) closeMap(); });
 $('#mapBtn').addEventListener('click', () => openMap(job ? 'nav' : 'all'));
-$('#payoutBtn').addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.'));
+$$('[data-payout]').forEach((b) => b.addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.')));
 
 $('#locateBtn').addEventListener('click', async () => {
   try {
@@ -427,14 +428,39 @@ async function loadEarnings() {
   const e = await driverEarnings();
   bindAll('today', peso(e.today));
   bindAll('week', peso(e.week));
-  bindAll('payout', e.payout.method || 'Not set up yet');
+  bindAll('payout', e.payout.method || 'Add GCash or a bank to get paid');
+  bindAll('payoutAction', e.payout.method ? 'Change' : 'Set up');
+  $$('.dround [data-payout]').forEach((b) => b.toggleAttribute('data-needs', !e.payout.method)); // a dot: still to do
   const midnight = new Date().setHours(0, 0, 0, 0);
   const n = e.trips.filter((t) => t.at >= midnight).length;
-  bindAll('todayTrips', `${n} trip${n === 1 ? '' : 's'} today`);
-  $('#trips').innerHTML = e.trips.length
-    ? e.trips.slice(0, 5).map((t) => `<li class="row"><div class="row__main"><span class="row__title">${esc(KIND[t.kind] ? KIND[t.kind].name : t.kind)}${t.demo ? ' <span class="badge badge--wait">Demo</span>' : ''}</span>
-        <span class="row__sub">${esc(when(t.at))} · ${t.distanceKm.toFixed(1)} km</span></div><span class="row__end">${peso(t.fare)}</span></li>`).join('')
-    : '<li class="empty">No trips yet. Go online to start earning.</li>';
+  bindAll('todayCount', String(n));
+  bindAll('todayLabel', n === 1 ? 'trip today' : 'trips today');
+  paintWeek(e.trips);
+  // The latest 5, by day; the rest on the Trips page
+  const trips = [...e.trips].sort((a, b) => b.at - a.at);
+  $('#trips').innerHTML = trips.length ? tripsByDay(trips.slice(0, 5), trips) : '<li class="empty">No trips yet. Go online to start earning.</li>';
+  $('#tripsNote').hidden = !trips.some((t) => t.demo);
+  $('#allTrips').hidden = trips.length <= 5;
+  $('#allTrips span').textContent = `See all ${trips.length} trips`;
+}
+
+// The last 7 days, a bar a day (today in gold), and the change from the 7 days before
+function paintWeek(trips) {
+  const start = (daysAgo) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - daysAgo); return d.getTime(); };
+  const dayTotal = (daysAgo) => trips.filter((t) => t.at >= start(daysAgo) && t.at < start(daysAgo - 1)).reduce((s, t) => s + t.fare, 0);
+  const days = [6, 5, 4, 3, 2, 1, 0].map((ago) => ({ ago, total: dayTotal(ago), day: new Date(start(ago)).toLocaleDateString('en-PH', { weekday: 'short' }) }));
+  const before = [13, 12, 11, 10, 9, 8, 7].reduce((s, ago) => s + dayTotal(ago), 0);
+  const now = days.reduce((s, d) => s + d.total, 0);
+  const max = Math.max(...days.map((d) => d.total), 1);
+  $('#weekBars').innerHTML = days.map((d) => `<span class="dweek__col${d.ago ? '' : ' is-now'}${d.total ? '' : ' is-zero'}" style="--h:${Math.round((d.total / max) * 100)}%"><i></i><span>${d.ago ? esc(d.day.slice(0, 1)) : 'Today'}</span></span>`).join('');
+  $('#weekBars').setAttribute('aria-label', `Earnings each day: ${days.map((d) => `${d.day} ${peso(d.total)}`).join(', ')}`);
+  const delta = $('#weekDelta');
+  delta.hidden = !before;
+  if (before) {
+    const pct = Math.round(((now - before) / before) * 100);
+    delta.className = `dweek__delta${pct < 0 ? ' is-down' : ''}`;
+    delta.innerHTML = `${icon(pct < 0 ? 'i-trend-down' : 'i-trend-up')}${Math.abs(pct)}% vs the 7 days before`;
+  }
 }
 
 /* ---------- Start ---------- */
@@ -444,10 +470,19 @@ async function start() {
   $('#driverHome').hidden = false;
   const vehicle = CONFIG.vehicles.find((v) => v.id === d.vehicle);
   bindAll('firstName', (d.name || 'driver').split(' ')[0]);
+  bindAll('initials', (d.name || 'D').split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase());
   bindAll('vehicle', [vehicle ? vehicle.name : d.vehicle, d.plate].filter(Boolean).join(' · '));
+  // Approved: a small gold check by the name. Anything else says so in words
   $$('[data-bind="status"]').forEach((s) => {
-    s.textContent = d.status === 'approved' ? 'Approved' : 'Under review';
-    s.classList.add(d.status === 'approved' ? 'badge--ok' : 'badge--wait');
+    if (d.status === 'approved') {
+      s.className = 'dwho__ok';
+      s.setAttribute('role', 'img');
+      s.setAttribute('aria-label', 'Approved driver');
+      s.innerHTML = icon('i-check');
+    } else {
+      s.className = 'badge badge--wait';
+      s.textContent = 'Under review';
+    }
   });
   approved = d.status === 'approved';
   online = approved && d.online;

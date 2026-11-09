@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="/css/support.css">
   <script type="module" src="/js/pages/support.js"></script>
 </head>
-<body class="page page--sky">
+<body class="page page--head-sky page--support">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
@@ -30,32 +30,26 @@
     <main class="content">
       <div class="content__inner">
 
-        <header class="page-head">
-          <h1 class="page-title">Support mysabak</h1>
-          <p class="lede">Drivers keep 100% of every fare. mysabak runs on your tips.</p>
+        <!-- The promise on the night sky, the three 100%s under it; this month in a card over the sky's edge -->
+        <header class="page-head ssky">
+          <p class="ssky__kicker"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg>Support mysabak</p>
+          <h1 class="ssky__title">Drivers keep <span>100%</span> of every fare.</h1>
+          <p class="ssky__lede">mysabak runs on your tips.</p>
+          <ul class="pct" aria-label="Where your money goes">
+            <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg></span><span class="pct__who"><b>Your driver</b><span>The fare</span></span><b class="pct__n">100%</b></li>
+            <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-box"/></svg></span><span class="pct__who"><b>Your rider</b><span>Shop delivery fee</span></span><b class="pct__n">100%</b></li>
+            <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg></span><span class="pct__who"><b>mysabak</b><span>Tips</span></span><b class="pct__n">100%</b></li>
+          </ul>
+          <p class="ssky__foot">No booking fees and no cut from drivers. Tips are optional and always shown on your receipt.</p>
         </header>
 
-        <section class="card" aria-labelledby="splitTitle">
-          <h2 class="card__title" id="splitTitle">Where your money goes</h2>
-          <div class="split">
-            <div class="split__item"><span class="split__who">Your driver</span><span class="split__what">The fare</span><span class="split__pct">100%</span></div>
-            <div class="split__item"><span class="split__who">Your rider</span><span class="split__what">Shop delivery fee</span><span class="split__pct">100%</span></div>
-            <div class="split__item"><span class="split__who">mysabak</span><span class="split__what">Tips</span><span class="split__pct">100%</span></div>
-          </div>
-          <p class="card__foot">No booking fees and no cut from drivers. Tips are optional and always shown on your receipt.</p>
-        </section>
-
-        <section class="card glow-border" aria-labelledby="statsTitle">
+        <section class="card sstats-card" aria-labelledby="statsTitle">
           <h2 class="card__title card__title--row" id="statsTitle">This month <span class="badge" data-bind="period">…</span></h2>
-          <div class="stats">
-            <div class="stat"><span class="stat__value" data-bind="tipsTotal">₱[AMOUNT]</span><span class="stat__label">tipped to mysabak</span></div>
-            <div class="stat"><span class="stat__value" data-bind="ordersFeeFree">[NUMBER]</span><span class="stat__label">trips and deliveries with no fees</span></div>
+          <!-- Two plain facts split by a thin line -->
+          <div class="sfacts">
+            <p><b data-bind="tipsTotal">₱[AMOUNT]</b><span>tipped to mysabak</span></p>
+            <p><b data-bind="ordersFeeFree">[NUMBER]</b><span>trips and deliveries with no fees</span></p>
           </div>
-        </section>
-
-        <section class="card" aria-labelledby="barsTitle">
-          <h2 class="card__title" id="barsTitle">What tips pay for</h2>
-          <div class="bars" id="bars"></div>
         </section>
 
         <section class="card" aria-labelledby="giveTitle">
@@ -65,6 +59,11 @@
             <p class="tip__note">This goes to mysabak, not to a driver, and it isn’t a charity donation.</p>
             <button type="button" class="button button--block" id="giveBtn" disabled>Support mysabak</button>
           </div>
+        </section>
+
+        <section class="card" aria-labelledby="barsTitle">
+          <h2 class="card__title" id="barsTitle">What tips pay for</h2>
+          <div class="bars" id="bars"></div>
         </section>
 
         <section class="card" aria-labelledby="mineTitle">
