@@ -36,8 +36,9 @@ function line(vals, w, h, lo = Math.min(...vals), hi = Math.max(...vals)) {
   return { line: d, area: `${d} L${w - 2},${h} L2,${h} Z`, last: pts[pts.length - 1], pts };
 }
 
-/* Plain and soft: one lilac line over a flat pale fill, a gold star at today */
-const aurora = (id, w, g) => `<path class="aarea" d="${g.area}"/><path class="aline" d="${g.line}"/>`;
+/* One purple line over a fill that fades from the line down to clear (css/base.css --chart), a gold star at today */
+const aurora = (id, w, g) => `<defs><linearGradient id="${id}F" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8b5cd6" stop-opacity=".32"/><stop offset="1" stop-color="#8b5cd6" stop-opacity="0"/></linearGradient></defs>
+  <path class="aarea" d="${g.area}" fill="url(#${id}F)"/><path class="aline" d="${g.line}"/>`;
 const nowStar = (g, w, h) => `<span class="anow" aria-hidden="true" style="left:${((g.last[0] / w) * 100).toFixed(2)}%;top:${((g.last[1] / h) * 100).toFixed(2)}%"><i></i>${STAR_SVG}</span>`;
 
 function render(a) {
@@ -122,7 +123,7 @@ function render(a) {
   // How riders pay: a donut with the biggest share in the middle
   const R = 58;
   const RING = 2 * Math.PI * R;
-  const PAY_COLOURS = ['#9a72d6', '#d6c3f1', '#f1cd85'];
+  const PAY_COLOURS = ['#8b5cd6', '#cdb6f2', '#eba93a'];
   const payTip = (p) => esc(`${p.share}%|${p.name}|About ${num(Math.round((w.trips * p.share) / 100))} trips this week`);
   let along = 0;
   const arcs = a.payments.map((p, i) => {

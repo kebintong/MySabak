@@ -199,9 +199,9 @@
 .dweek__delta[hidden] { display: none; }
 .dweek__bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; height: 92px; }
 .dweek__col { min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
-.dweek__col i { width: 100%; height: max(6px, calc(var(--h) * .66)); border-radius: 8px; background: linear-gradient(180deg, #c59af0, #efe4f9); transform-origin: bottom; animation: bar-grow .55s var(--ease-out) backwards; }
+.dweek__col i { width: 100%; height: max(6px, calc(var(--h) * .66)); border-radius: 8px; background: var(--bar); transform-origin: bottom; animation: bar-grow .55s var(--ease-out) backwards; }
 .dweek__col.is-zero i { background: var(--line); }
-.dweek__col.is-now i { background: linear-gradient(180deg, var(--gold), #e3933f); box-shadow: 0 0 12px rgba(246, 196, 108, .55); }
+.dweek__col.is-now i { background: var(--bar-today); }
 .dweek__col > span { font-size: 11.5px; font-weight: 500; color: var(--sub); white-space: nowrap; }
 .dweek__col.is-now > span { font-weight: 700; color: var(--ink); }
 

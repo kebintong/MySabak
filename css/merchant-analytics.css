@@ -273,22 +273,21 @@
 }
 
 .schart__col.is-pick:not(.is-now) .schart__bar {
-  background: linear-gradient(180deg, var(--accent), #b58ce6);
+  background: var(--bar-on);
 }
 
 /* Aurora (to match the Dashboard line): soft lilac bars, purple under the pointer, now in gold with a star on top */
 .schart__bar {
   position: relative;
-  background: linear-gradient(180deg, #c59af0, #efe4f9);
+  background: var(--bar);
 }
 
 .schart__col:hover .schart__bar {
-  background: linear-gradient(180deg, var(--accent), #b58ce6);
+  background: var(--bar-on);
 }
 
 .schart__col.is-now .schart__bar {
-  background: linear-gradient(180deg, var(--gold), #e3933f);
-  box-shadow: 0 0 14px rgba(246, 196, 108, .65);
+  background: var(--bar-today);
 }
 
 .schart__col.is-now .schart__bar::before {
@@ -300,7 +299,6 @@
   height: 13px;
   translate: -50% 0;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f6c46c' d='M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
-  filter: drop-shadow(0 0 3px rgba(246, 196, 108, .9));
   animation: m-twinkle 2.6s ease-in-out infinite;
 }
 

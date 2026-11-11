@@ -195,13 +195,12 @@
    line glowing from purple to gold, sparkles in the fill and a gold star at now */
 .schart2__before { fill: none; stroke: #c59af0; stroke-width: 3.5; stroke-dasharray: 0 8; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .schart2__area { fill: url(#auroraFill); }
-.schart2__glow { fill: none; stroke: url(#auroraLine); stroke-width: 7; stroke-linecap: round; opacity: .45; filter: url(#auroraGlow); vector-effect: non-scaling-stroke; }
-.schart2__line { fill: none; stroke: url(#auroraLine); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.schart2__line { fill: none; stroke: var(--chart); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .schart2__spark { position: absolute; width: 7px; height: 7px; transform: translate(-50%, -50%); pointer-events: none; }
 .schart2__spark svg { display: block; width: 100%; height: 100%; fill: #fff; animation: m-twinkle 2.6s ease-in-out infinite; animation-delay: calc(var(--k, 0) * -.7s); }
 .schart2__now { position: absolute; width: 20px; height: 20px; transform: translate(-50%, -50%); display: grid; place-items: center; pointer-events: none; }
 .schart2__now i { position: absolute; inset: -2px; border-radius: 50%; background: var(--gold); opacity: .5; animation: m-halo 2.2s var(--ease-out) infinite; }
-.schart2__now svg { position: relative; width: 18px; height: 18px; fill: var(--gold); filter: drop-shadow(0 0 4px rgba(246, 196, 108, .9)); animation: m-twinkle 2.6s ease-in-out infinite; }
+.schart2__now svg { position: relative; width: 18px; height: 18px; fill: var(--chart-gold); animation: m-twinkle 2.6s ease-in-out infinite; }
 .schart2__now b { position: absolute; left: 22px; font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; }
 .schart2__ticks { position: relative; height: 16px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
 .schart2__ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
@@ -210,7 +209,7 @@
 .schart2__key { display: flex; gap: 16px; font-size: 12.5px; color: var(--sub); }
 .schart2__key span { display: inline-flex; align-items: center; gap: 6px; }
 .schart2__key i { width: 16px; height: 3px; border-radius: 2px; }
-.schart2__key i.is-mine { background: linear-gradient(90deg, var(--accent), var(--gold)); }
+.schart2__key i.is-mine { background: var(--chart); }
 .schart2__key i.is-before { height: 3px; background: radial-gradient(circle, #c59af0 1.5px, transparent 2px) 0 50% / 6px 3px repeat-x; }
 
 /* A quiet text link with a chevron (no underline, no arrow) */

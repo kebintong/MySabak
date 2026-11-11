@@ -15,7 +15,7 @@
   --a-shadow: 0 1px 2px rgba(42, 18, 64, .05), 0 6px 20px -8px rgba(59, 26, 120, .18);
   --good: #1f6b3a; --warn: #7a5b0e; --bad: #a32020;
   /* chart colours: flat, soft, from the brand purple and gold */
-  --c-bar: #ddcdf4; --c-bar-on: #a985e0; --c-line: #9a72d6; --c-area: #f3edfb; --c-today: #f4d595; --c-today-deep: #e6ad4e;
+  --c-bar: var(--bar); --c-bar-on: var(--bar-on); --c-line: var(--chart); --c-today: var(--bar-today); --c-today-on: var(--bar-today-on); --c-today-deep: var(--chart-gold);
 }
 .page--admin .content__inner { max-width: 1240px; gap: 16px; }
 @media (min-width: 900px) {
@@ -341,7 +341,7 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 .wbar.is-today .wbar__fill { background: var(--c-today); }
 .wbar.is-today .wbar__fill::before {
   content: ""; position: absolute; left: 50%; top: -18px; width: 13px; height: 13px; translate: -50% 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f6c46c' d='M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23eba93a' d='M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
   animation: m-twinkle 2.6s ease-in-out infinite;
 }
 .wbar__d { flex: none; font-size: 12px; color: var(--sub); }
@@ -389,7 +389,6 @@ button.waitrow { width: 100%; border: 0; background: none; font: inherit; text-a
 .svcbar { transform-origin: left; animation: hbar-grow .6s var(--ease-out) .25s backwards; }
 @keyframes hbar-grow { from { transform: scaleX(0); } }
 .aline { fill: none; stroke: var(--c-line); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.aarea { fill: var(--c-area); }
 .anow { position: absolute; width: 18px; height: 18px; transform: translate(-50%, -50%); display: grid; place-items: center; pointer-events: none; animation: m-pop-scale .45s var(--spring) .95s backwards; }
 /* Today's pulse: two soft rings breathe out in turn, so there is always one leaving; the star swells gently in time */
 .anow i, .anow::before { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--c-today-deep); opacity: 0; will-change: transform, opacity; animation: a-pulse 3.2s cubic-bezier(.33, 0, .2, 1) infinite; }
@@ -413,7 +412,7 @@ button.waitrow { width: 100%; border: 0; background: none; font: inherit; text-a
 }
 .tbar[aria-pressed="true"] .tbar__fill { background: var(--c-bar-on); }
 .tbar.is-today .tbar__fill { background: var(--c-today); }
-.tbar.is-today[aria-pressed="true"] .tbar__fill { background: var(--c-today-deep); }
+.tbar.is-today[aria-pressed="true"] .tbar__fill { background: var(--c-today-on); }
 .tbar__d { font-size: 12px; font-weight: 500; color: var(--sub); }
 .tbar.is-today .tbar__d, .tbar[aria-pressed="true"] .tbar__d { font-weight: 700; color: var(--ink); }
 .tbar:focus-visible { outline: none; }
@@ -449,7 +448,8 @@ button.waitrow { width: 100%; border: 0; background: none; font: inherit; text-a
 .fbars { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
 .fbar { position: relative; height: 48px; border-radius: 14px; background: var(--tint); overflow: hidden; }
 .fbar__fill { position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: 14px; background: var(--c-bar); transform-origin: left; animation: hbar-grow .6s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 90ms + 250ms); }
-.fbar.is-last .fbar__fill { background: var(--c-today); }
+.fbar .fbar__fill { background: var(--bar-x); }
+.fbar.is-last .fbar__fill { background: var(--bar-x-today); }
 .fbar__txt { position: absolute; inset: 0; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .fbar__txt span { font-size: 14px; font-weight: 500; color: var(--ink); }
 .fbar__txt b { font: 800 17px var(--font-body); letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }

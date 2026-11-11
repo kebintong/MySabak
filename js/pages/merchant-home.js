@@ -71,14 +71,11 @@ function salesChart(s) {
     <div class="schart2__plot">
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Sales so far as a running total, with the period before as a dashed line">
         <defs>
-          <linearGradient id="auroraLine" gradientUnits="userSpaceOnUse" x1="0" x2="${x(upTo).toFixed(1)}" y1="0" y2="0"><stop offset="0" stop-color="#7b3fbf"/><stop offset=".7" stop-color="#c59af0"/><stop offset="1" stop-color="#f6c46c"/></linearGradient>
-          <linearGradient id="auroraFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c59af0" stop-opacity=".5"/><stop offset="1" stop-color="#f1eaf8" stop-opacity="0"/></linearGradient>
-          <filter id="auroraGlow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="3.5"/></filter>
+          <linearGradient id="auroraFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8b5cd6" stop-opacity=".32"/><stop offset="1" stop-color="#8b5cd6" stop-opacity="0"/></linearGradient>
         </defs>
         <line x1="0" y1="${H - 4}" x2="${W}" y2="${H - 4}" class="schart2__base"/>
         <polyline points="${pts(s.compare)}" class="schart2__before"/>
         <path d="${area}" class="schart2__area"/>
-        <path d="${line}" class="schart2__glow"/>
         <path d="${line}" class="schart2__line"/>
       </svg>${sparkles}
       <span class="schart2__now" style="left:${((upTo / n) * 100).toFixed(2)}%;top:${((y(mine[upTo]) / H) * 100).toFixed(2)}%"><i></i>${STAR}<b>Now</b></span>
