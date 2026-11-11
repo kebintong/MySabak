@@ -198,8 +198,8 @@
   translate: -50% 0;
   padding: 8px 12px;
   border-radius: 12px;
-  background: var(--ink);
-  box-shadow: 0 8px 20px rgba(23, 18, 43, .28);
+  background: var(--tip-bg);
+  box-shadow: var(--tip-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -217,13 +217,13 @@
   font-weight: 800;
   letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
-  color: var(--gold);
+  color: #fff;
 }
 
 .schart__tip span {
   font-size: 11.5px;
   font-weight: 500;
-  color: #e2d0f4;
+  color: var(--tip-text);
 }
 
 .schart__tip::after {
@@ -233,7 +233,7 @@
   top: 100%;
   translate: -50% -1px;
   border: 6px solid transparent;
-  border-top-color: var(--ink);
+  border-top-color: var(--tip-bg);
 }
 
 /* Bars near the edges: the tag leans inward so it stays on the card */

@@ -1804,7 +1804,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .profile__id { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .profile__line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .profile__line b { font-size: 15px; font-weight: 700; color: var(--navy); overflow-wrap: anywhere; }
-.profile__role { flex-shrink: 0; padding: 2px 8px; border-radius: 6px; background: var(--tint); font-size: 12px; font-weight: 600; color: var(--brand-deep); }
+.profile__role { flex-shrink: 0; display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; background: #f4f0f8; font-size: 12px; font-weight: 500; color: var(--sub); }
 .profile__sub { font-size: 13px; font-weight: 400; color: var(--sub); }
 .profile__email { overflow-wrap: anywhere; }
 .profile__item {
@@ -1813,6 +1813,10 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 .profile__item .icon { width: 20px; height: 20px; stroke: var(--muted); }
 .profile__item:hover, .profile__item:focus-visible { background: var(--tint); color: var(--brand-deep); outline: none; }
+/* the page you're on: marked, not a link to itself */
+.profile__item[aria-current="page"] { background: var(--tint); color: var(--brand-deep); }
+.profile__item[aria-current="page"] .icon { stroke: var(--brand-deep); }
+.profile__sep { height: 1px; margin: 4px 8px; background: var(--line); }
 .profile__item--out { color: #b8331d; }
 .profile__item--out .icon { stroke: #b8331d; }
 .profile__item--out:hover, .profile__item--out:focus-visible { background: #fdeeea; color: #9c2a17; }
@@ -2155,16 +2159,14 @@ b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: i
 @keyframes skel-breathe { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .skel-rows:empty, .skel-block:empty { animation: skel-in .3s ease-out .2s backwards; } }
 
-/* ---------- Charts, everywhere: one purple, fading down to clear ----------
-   Bars are solid at the top and fade to almost nothing at the base; a line sits over a fill that fades from
-   under the line to clear (the SVG gradient uses --chart). The bar being read is deeper; today is gold. */
+/* ---------- Charts, everywhere: one lively purple ----------
+   Bars are plain colours; a line sits over a fill that fades from under the line to clear (the SVG gradient
+   uses --chart). The bar being read is deeper; today is gold. */
 :root {
   --chart: #8b5cd6; --chart-gold: #eba93a;
-  --bar: linear-gradient(180deg, #8b5cd6 0%, rgba(139, 92, 214, .55) 55%, rgba(139, 92, 214, .06) 100%);
-  --bar-on: linear-gradient(180deg, #6a35c2 0%, rgba(106, 53, 194, .6) 55%, rgba(106, 53, 194, .1) 100%);
-  --bar-today: linear-gradient(180deg, #eba93a 0%, rgba(235, 169, 58, .55) 55%, rgba(235, 169, 58, .08) 100%);
-  --bar-today-on: linear-gradient(180deg, #d98c1c 0%, rgba(217, 140, 28, .6) 55%, rgba(217, 140, 28, .12) 100%);
-  /* sideways bars fade in from the start, so the words on them stay readable */
-  --bar-x: linear-gradient(90deg, rgba(139, 92, 214, .06) 0%, rgba(139, 92, 214, .5) 100%);
-  --bar-x-today: linear-gradient(90deg, rgba(235, 169, 58, .08) 0%, rgba(235, 169, 58, .6) 100%);
+  /* the card over a chart's day or bar: brand purple, a white number */
+  --tip-bg: #6a35c2; --tip-text: #e6d9fa; --tip-shadow: 0 10px 24px -6px rgba(106, 53, 194, .45);
+  --bar: #a27fe2; --bar-on: #6f3dc4; --bar-today: #eba93a; --bar-today-on: #d98c1c;
+  /* sideways bars carry words, so they stay light */
+  --bar-x: #dccbf6; --bar-x-today: #f6d99a;
 }

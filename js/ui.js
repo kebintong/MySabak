@@ -638,12 +638,11 @@ export const ava = (name, cls = '') => `<span class="${avaTone(name)}${cls ? ` $
  * The top-right account control: "Sign in" when signed out; when signed in, a profile button whose
  * dropdown holds the account's home and Sign out (Sign out lives only here).
  */
-/** A merchant's pages, in the profile menu (the same order as the tab bar). */
-const merchantMenu = () => [
-  ['i-store', 'Dashboard', '/pages/merchant-home.html'],
-  ['i-chart', 'Analytics', '/pages/merchant-analytics.html'],
-  ['i-pencil', 'Management', '/pages/merchant-manage.html'],
-];
+/** The pages in the profile menu: a driver's, merchant's or admin's own pages (as in the tab bar), or a customer's account. */
+const menuPages = (role) => (role.tabs && role !== ROLES.client
+  ? role.tabs.map((id) => TABS.find((t) => t.id === id)).map((t) => [t.icon, t.label, (role.hrefs && role.hrefs[t.id]) || t.href])
+  : [[role.homeIcon, role.homeLabel, role.home]]);
+const samePage = (href) => location.pathname.replace(/\.html$/, '') === href.replace(/\.html$/, '');
 
 export function mountAccount(link, user) {
   if (!link) return;
@@ -666,8 +665,8 @@ export function mountAccount(link, user) {
           ${user.email ? `<span class="profile__sub profile__email">${esc(user.email)}</span>` : ''}
         </div>
       </div>
-      ${(user.role === 'merchant' ? merchantMenu() : [[role.homeIcon, role.homeLabel, role.home]])
-    .map(([ic, label, href]) => `<a class="profile__item" role="menuitem" href="${href}">${icon(ic)}${esc(label)}</a>`).join('')}
+      ${menuPages(role).map(([ic, label, href]) => `<a class="profile__item" role="menuitem" href="${href}"${samePage(href) ? ' aria-current="page"' : ''}>${icon(ic)}${esc(label)}</a>`).join('')}
+      <div class="profile__sep" role="separator"></div>
       <button type="button" class="profile__item profile__item--out" role="menuitem" data-signout>${icon('i-power')}Sign out</button>
     </div>`;
   link.replaceWith(wrap);

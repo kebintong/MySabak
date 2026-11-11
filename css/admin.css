@@ -230,17 +230,17 @@ details.astable summary { cursor: pointer; font-weight: 600; color: var(--brand-
 /* ---------- Details on hover / tap (wireTips, wirePoints in admin-common.js) ---------- */
 .ctip {
   position: fixed; left: 0; top: 0; z-index: 1100; min-width: 184px; max-width: min(280px, calc(100vw - 16px));
-  padding: 8px 12px; border-radius: var(--r-ctl, 12px); background: #1e0638; color: #e2d0f4; box-shadow: 0 8px 24px rgba(30, 6, 56, .3);
+  padding: 8px 12px; border-radius: var(--r-ctl, 12px); background: var(--tip-bg); color: var(--tip-text); box-shadow: var(--tip-shadow);
   display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.45; font-variant-numeric: tabular-nums; pointer-events: none;
   /* moved only with transform (set by admin-common.js), so moving it never makes the page re-lay itself out */
   opacity: 0; visibility: hidden; will-change: transform, opacity;
   transition: opacity .18s var(--ease-out), visibility 0s linear .18s;
 }
 .ctip.is-on { opacity: 1; visibility: visible; transition: opacity .16s var(--ease-out); }
-/* The night tag, as on the merchant bars: the value in gold, a point down to what it describes */
-.ctip b { color: var(--gold); font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
-.ctip::after { content: ""; position: absolute; left: var(--cx, 50%); top: 100%; translate: -50% -1px; border: 6px solid transparent; border-top-color: #1e0638; }
-.ctip.is-below::after { top: auto; bottom: 100%; translate: -50% 1px; border-top-color: transparent; border-bottom-color: #1e0638; }
+/* The purple tag, as on the merchant bars: the value in white, a point down to what it describes */
+.ctip b { color: #fff; font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+.ctip::after { content: ""; position: absolute; left: var(--cx, 50%); top: 100%; translate: -50% -1px; border: 6px solid transparent; border-top-color: var(--tip-bg); }
+.ctip.is-below::after { top: auto; bottom: 100%; translate: -50% 1px; border-top-color: transparent; border-bottom-color: var(--tip-bg); }
 [data-tip] { cursor: default; }
 [data-tip]:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
 /* Line charts: a dot riding the line and a thin guide line under the pointer */

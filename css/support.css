@@ -5,7 +5,7 @@
 .bar__top { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 500; color: var(--ink); }
 .bar__top span:last-child { font-weight: 800; font-variant-numeric: tabular-nums; }
 .bar__track { height: 8px; margin-top: 6px; border-radius: 999px; background: var(--tint); overflow: hidden; }
-.bar__fill { height: 100%; width: var(--w, 0%); border-radius: inherit; background: linear-gradient(90deg, rgba(139, 92, 214, .3), var(--chart)); }
+.bar__fill { height: 100%; width: var(--w, 0%); border-radius: inherit; background: var(--chart); }
 .bar--unknown .bar__fill { width: 100%; background: repeating-linear-gradient(90deg, var(--line-brand) 0 8px, transparent 8px 14px); }
 /* Where your money goes: a row each, an icon, who and what, then 100% */
 .pct { margin: 0; padding: 0; list-style: none; }
