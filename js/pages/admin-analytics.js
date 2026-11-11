@@ -78,9 +78,12 @@ function render(a) {
   // One aurora bar a day (the total); point at or tap one to split it by service underneath
   const days = a.tripsPerDay;
   const lastDay = days.length - 1;
-  const longDay = (i) => (i === lastDay ? 'Today so far' : new Date(Date.now() - (lastDay - i) * 86400e3).toLocaleDateString('en-PH', { weekday: 'long' }));
+  // the real weekday of each bar (the sample data's own day names don't follow the calendar)
+  const weekday = (i, form) => new Date(Date.now() - (lastDay - i) * 86400e3).toLocaleDateString('en-PH', { weekday: form });
+  const longDay = (i) => (i === lastDay ? 'Today so far' : weekday(i, 'long'));
+  const shortDay = (i) => (i === lastDay ? 'Today' : weekday(i, 'short'));
   $('#trips').innerHTML = days.map((d, i) => `<button type="button" class="tbar${i === lastDay ? ' is-today' : ''}" data-i="${i}" style="--i:${i};--h:${Math.round((totals[i] / max) * 100)}%" aria-label="${esc(longDay(i))}: ${num(totals[i])} trips" aria-pressed="false">
-    <span class="tbar__plot"><span class="tbar__fill"></span></span><span class="tbar__d">${esc(d.day)}</span></button>`).join('');
+    <span class="tbar__plot"><span class="tbar__fill"></span></span><span class="tbar__d">${esc(shortDay(i))}</span></button>`).join('');
   let pickedDay = -1;
   const pickDay = (i) => {
     if (i === pickedDay) return;
@@ -97,7 +100,7 @@ function render(a) {
   $('#trips').addEventListener('pointerover', (e) => { if (barAt(e) && e.pointerType === 'mouse') pickDay(Number(barAt(e).dataset.i)); });
   pickDay(lastDay);
   $('#tripsTable').innerHTML = `<thead><tr><th>Day</th>${SERVICES.map((s) => `<th class="num">${s.name}</th>`).join('')}<th class="num">Total</th></tr></thead>
-    <tbody>${a.tripsPerDay.map((d, i) => `<tr><td>${d.day}</td>${SERVICES.map((s) => `<td class="num">${num(d[s.id])}</td>`).join('')}<td class="num"><b>${num(totals[i])}</b></td></tr>`).join('')}</tbody>`;
+    <tbody>${a.tripsPerDay.map((d, i) => `<tr><td>${esc(shortDay(i))}</td>${SERVICES.map((s) => `<td class="num">${num(d[s.id])}</td>`).join('')}<td class="num"><b>${num(totals[i])}</b></td></tr>`).join('')}</tbody>`;
 
   // Tips per day: one line on a fixed ₱0–₱10,000 scale
   const tips = a.tipsPerDay;

@@ -106,7 +106,7 @@ function render() {
   $('#rbulk').hidden = !nRej;
   $('#rbulk').innerHTML = !nRej ? '' : state.confirm === 'all'
     ? `<div class="confirm"><p>${nRej === 1 ? `Delete the rejected ${noun.slice(0, -1)}` : `Delete all ${nRej} rejected ${noun}`} and the papers they sent? This can’t be undone.</p>
-        <div class="actions"><button type="button" class="button button--danger cta" data-del-all>Delete ${nRej}</button><button type="button" class="button button--ghost cta" data-del-cancel>Cancel</button></div></div>`
+        <div class="actions"><button type="button" class="button button--danger-solid cta" data-del-all>${nRej === 1 ? 'Delete' : 'Delete all'}</button><button type="button" class="button button--ghost cta" data-del-cancel>Cancel</button></div></div>`
     : `<p class="rbulk__line">${nRej} rejected ${nRej === 1 ? noun.slice(0, -1) : noun}</p><button type="button" class="button button--danger cta rbulk__btn" data-del-ask="all">${icon('i-trash')}${nRej === 1 ? 'Delete' : 'Delete all'}</button>`;
   // the one applicant made in this browser stands out from the samples
   $('#rows').innerHTML = page.length ? page.map((a, i) => `<li style="--i:${Math.min(i, 8)}"><button type="button" class="regrow" data-id="${esc(a.id)}" aria-current="${Boolean(cur && cur.id === a.id)}">
@@ -178,7 +178,7 @@ function renderReview(a) {
       </div>` : ''}
     ${a.status === 'rejected' && !done ? (state.confirm === a.id
     ? `<div class="confirm"><p>Delete ${esc(nameOf(a))} and the papers they sent? This can’t be undone.</p>
-        <div class="actions"><button type="button" class="button button--danger cta" data-del-one>Delete applicant</button><button type="button" class="button button--ghost cta" data-del-cancel>Cancel</button></div></div>`
+        <div class="actions"><button type="button" class="button button--danger-solid cta" data-del-one>Delete applicant</button><button type="button" class="button button--ghost cta" data-del-cancel>Cancel</button></div></div>`
     : `<div class="actions"><button type="button" class="button button--danger cta" data-del-ask="${esc(a.id)}">${icon('i-trash')}Delete applicant</button>
         <span class="actions__hint">Removes their details and papers.</span></div>`) : ''}
     ${done ? notice(done.status, esc(done.text), ' role="status"') : ''}`;

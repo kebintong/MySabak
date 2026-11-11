@@ -136,7 +136,7 @@ function renderProfile(u) {
         <select class="select" id="offReason">${OFF_REASONS.map((r) => `<option>${esc(r)}</option>`).join('')}</select>
         <span class="afield__hint">Kept on the account so other admins can see why.</span></div>
       <p>${esc(label(u))} will be signed out and can’t sign in${u.role === 'driver' ? ' or take trips' : u.role === 'merchant' ? ' or take orders' : ' or book'} until you turn it back on.</p>
-      <div class="actions"><button type="button" class="button button--danger cta" data-confirm-off${state.busy ? ' disabled' : ''}>Turn off account</button>
+      <div class="actions"><button type="button" class="button button--danger-solid cta" data-confirm-off${state.busy ? ' disabled' : ''}>Turn off account</button>
         <button type="button" class="button button--ghost cta" data-cancel>Cancel</button></div></div>`;
   } else {
     actions = `<div class="actions">

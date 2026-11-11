@@ -400,8 +400,8 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   gap: 5px;
   flex-shrink: 0;
 }
-.btn-soft:hover { background: var(--brand-deep); color: #fff; }
-.btn-soft:hover .icon { stroke: #fff; }
+/* light buttons keep their colours on hover: a slightly deeper lilac, no glow (only main buttons get those) */
+.btn-soft:hover { background: #e8daf7; color: var(--brand-deep); }
 .vehicles { display: flex; flex-direction: column; gap: 10px; }
 /* Figma "Card/Ride Option": hover tints with a gold edge; the picked one gets the purple ring and a shine sweep */
 .vehicle {
@@ -1096,7 +1096,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 .button .icon { stroke: #fff; }
 .button--ghost { background: var(--tint); color: var(--brand-deep); }
-.button--ghost:hover { background: #e8daf7; color: var(--brand-deep); }
+.button--ghost:hover { background: #e8daf7; color: var(--brand-deep); box-shadow: none; }
 .button--ghost .icon { stroke: var(--brand-deep); }
 .button--block { width: 100%; }
 .demo-note {
@@ -1943,9 +1943,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .roll { display: inline-flex; }
 /* Inside a card's number: the reels take the number's own type, not the card's small grey label style */
 b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: inherit; }
-.roll__d { display: inline-block; height: 1.1em; overflow: hidden; }
+.roll__d { display: inline-block; height: var(--rh, 1.1em); overflow: hidden; }
 .roll__reel { display: flex; flex-direction: column; }
-.roll__reel > span { display: block; height: 1.1em; line-height: 1.1; font-style: normal; text-align: center; }
+.roll__reel > span { display: block; height: var(--rh, 1.1em); line-height: var(--rh, 1.1); font-style: normal; text-align: center; }
 /* A dropdown menu (ui.js listMenu): a glass button on the sky, a white menu of options */
 .bpick {
   position: relative;

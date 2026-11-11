@@ -97,6 +97,8 @@
 }
 .tquick__go .icon { width: 20px; height: 20px; stroke: var(--brand-deep); }
 .tquick__go:active { transform: scale(.96); }
+.tquick__go:not(.tquick__go--main):hover { background: #e8daf7; }
+.tquick__go--main:hover { background: var(--accent-deep); }
 
 a.btn-soft { text-decoration: none; } /* "View" is a link styled as the Rebook button */
 

@@ -37,11 +37,15 @@ export function rollNumber(n, from = null) {
     ? `<span class="roll__d"><span class="roll__reel">${'0123456789'.split('').map((d) => `<span>${d}</span>`).join('')}</span></span>`
     : `<span>${c === " " ? "&nbsp;" : esc(c)}</span>`)).join('')}</span><span class="sr-only">${esc(text)}</span>`;
   const reels = [...n.querySelectorAll('.roll__reel')];
+  // A digit's step in whole pixels: 1.1em is often a fraction (17.6px at 16px), which left some digits (a 3 at
+  // -52.8px) half a pixel off their neighbours (a 0 at 0px)
+  const step = Math.round(parseFloat(getComputedStyle(n).fontSize) * 1.1) || 18;
+  n.firstElementChild.style.setProperty('--rh', `${step}px`);
   reels.forEach((reel, k) => {
     i -= 1; // this reel's place from the right (0 = ones)
     const to = Number(after[k]);
     const at = Number(before[i] || 0);
-    const y = (d) => `translateY(${(-d * 1.1).toFixed(3)}em)`;
+    const y = (d) => `translateY(${-d * step}px)`;
     reel.style.transform = y(to);
     if (to === at && from !== null) return; // unchanged digits stay still
     const past = to + (to >= at ? 0.16 : -0.16);

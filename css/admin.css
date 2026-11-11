@@ -67,6 +67,10 @@
 .page--admin .button { min-height: 44px; padding: 0 18px; font-size: 14px; font-weight: 600; }
 .button--danger { background: #fff !important; color: var(--bad); border: 1px solid #f3c5c5; }
 .button--danger:hover { color: var(--bad); background: #fff5f5 !important; box-shadow: none; }
+/* the last step of a delete or turn-off: solid red, so it's clearly the one that acts */
+.button--danger-solid { background: #b42318 !important; color: #fff; border: 0; }
+.button--danger-solid:hover { background: #961b12 !important; color: #fff; box-shadow: 0 6px 16px -6px rgba(180, 35, 24, .5); }
+.button--danger-solid:focus-visible { outline: 2px solid #b42318; outline-offset: 2px; }
 .page--admin .button:focus-visible, .seg__btn:focus-visible, .regrow:focus-visible, .ulink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 /* Notes: a grey panel, the status icon, a bold first sentence, then plain text */
