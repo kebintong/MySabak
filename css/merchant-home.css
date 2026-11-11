@@ -205,8 +205,6 @@
 .schart2__now i { position: absolute; inset: -2px; border-radius: 50%; background: var(--gold); opacity: .5; animation: m-halo 2.2s var(--ease-out) infinite; }
 .schart2__now svg { position: relative; width: 18px; height: 18px; fill: var(--gold); filter: drop-shadow(0 0 4px rgba(246, 196, 108, .9)); animation: m-twinkle 2.6s ease-in-out infinite; }
 .schart2__now b { position: absolute; left: 22px; font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-@keyframes m-twinkle { 50% { opacity: .6; transform: scale(.75); } }
-@keyframes m-halo { from { opacity: .55; transform: scale(.5); } to { opacity: 0; transform: scale(1.9); } }
 .schart2__ticks { position: relative; height: 16px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
 .schart2__ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .schart2__ticks span:first-child { transform: none; }
@@ -353,19 +351,9 @@ button.bglance__row:hover .bglance__go { transform: translateX(2px); }
 .mhero__ava { animation: m-pop .45s var(--spring) 80ms backwards; }
 .schart2__plot svg { animation: m-wipe .8s var(--ease-out) .25s backwards; }
 .schart2__now { animation: m-pop-scale .45s var(--spring) .95s backwards; }
-@keyframes m-pop-scale { from { opacity: 0; scale: .4; } }
 @keyframes m-pop { from { opacity: 0; transform: scale(.7); } }
-@keyframes m-rise { from { opacity: 0; transform: translateY(14px); filter: blur(8px); } }
-/* Rolling digits (ui.js rollNumber): one reel of 0-9 per digit, showing one at a time */
-.roll { display: inline-flex; }
-/* Inside a card's number: the reels take the number's own type, not the card's small grey label style */
-b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: inherit; }
-.roll__d { display: inline-block; height: 1.1em; overflow: hidden; }
-.roll__reel { display: flex; flex-direction: column; }
-.roll__reel > span { display: block; height: 1.1em; line-height: 1.1; font-style: normal; text-align: center; }
 /* The line under a total comes in once the digits have landed, out of a blur */
 .sales__delta, .sstat > i { animation: m-rise .4s var(--ease-out) .7s backwards; }
-@keyframes m-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @media (prefers-reduced-motion: reduce) {
   .mdash .mhead > *, .mdash .card, .mdash .sstat, .mhero__ava, .schart2__plot svg, .schart2__now, .schart2__now i, .schart2__now svg, .schart2__spark svg,
   .sales__delta, .sstat > i { animation: none; }

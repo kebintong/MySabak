@@ -35,8 +35,11 @@
           </div>
         </header>
 
-        <div class="mgmt rise" id="mgmt">
-          <section class="card ulist" aria-labelledby="usersTitle">
+        <!-- Status tiles: the count of each, and a tap filters the list -->
+        <section class="stiles rise" id="stiles" role="group" aria-label="Filter by status"></section>
+
+        <div class="mgmt" id="mgmt">
+          <section class="card ulist" aria-labelledby="usersTitle" style="--enter: 1">
             <div class="ulist__head">
               <h2 class="card__title" id="usersTitle">Accounts</h2>
               <div class="mtools">
@@ -45,35 +48,24 @@
                   <input class="input" type="search" id="q" placeholder="Search name, shop, email or mobile" autocomplete="off">
                 </label>
                 <div class="seg seg--stack" role="group" aria-label="Role" id="roles"></div>
-                <label class="sr-only" for="statusFilter">Status</label>
-                <select class="select" id="statusFilter">
-                  <option value="">Any status</option>
-                  <option value="active">Active</option>
-                  <option value="pending">Pending review</option>
-                  <option value="deactivated">Deactivated</option>
-                </select>
               </div>
               <p class="ucount" id="ucount" aria-live="polite"></p>
             </div>
-            <div class="utablewrap"><table class="utable">
-              <thead><tr><th scope="col">Account</th><th scope="col" class="col-role">Role</th><th scope="col" class="col-area">Area</th>
-                <th scope="col" class="col-joined">Joined</th><th scope="col" class="col-seen">Last active</th><th scope="col">Status</th></tr></thead>
-              <tbody id="urows"></tbody>
-            </table></div>
+            <div id="urows"></div>
             <div class="ulist__foot"><button type="button" class="button button--ghost cta" id="more" hidden>Show more</button></div>
           </section>
 
-          <article class="card uprof" id="uprof" aria-live="polite"></article>
+          <article class="card uprof" id="uprof" aria-live="polite" style="--enter: 2"></article>
         </div>
 
         <div class="agrid agrid--even">
-          <section class="card" aria-labelledby="linksTitle">
+          <section class="card" aria-labelledby="linksTitle" style="--enter: 3">
             <h2 class="card__title" id="linksTitle">Sign-up links</h2>
             <p class="lede small">Send these to people who want to join. Each opens the right sign-up page on this site.</p>
             <ul class="links" id="links"></ul>
           </section>
 
-          <section class="card" aria-labelledby="actTitle">
+          <section class="card" aria-labelledby="actTitle" style="--enter: 4">
             <h2 class="card__title card__title--row" id="actTitle">Registration activity <a class="card__link" href="/pages/admin-registrations.html">Review</a></h2>
             <p class="lede small" id="actLine"></p>
             <div class="tablewrap"><table class="atable" id="activity"></table></div>

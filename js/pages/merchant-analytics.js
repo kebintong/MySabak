@@ -2,7 +2,7 @@
    cancelled orders for today, the last 7 days or this month. The owner picks a branch or All branches;
    a branch account sees its own branch. The dashboard's Preview analytics tiles open this page. */
 import { merchantSales, errorMessage } from '../api.js';
-import { $, $$, mountChrome, esc, peso, toast, rollNumber, icon } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, toast, rollNumber, icon, listMenu } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
 
@@ -91,63 +91,18 @@ $('#chart').addEventListener('click', (e) => pickBar(e.target.closest('.schart__
 document.addEventListener('click', (e) => { if (!e.target.closest('#chart')) pickBar(null); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') pickBar(null); });
 
-/* ---------- Branch menu: a listbox (arrow keys, Home/End, Enter or Space to pick, Escape to close) ---------- */
+/* ---------- Branch menu ---------- */
 const PERIOD = { day: 'today', week: 'last 7 days', month: 'this month' };
-const branchBtn = $('#branchBtn');
-const branchList = $('#branchList');
-const optEls = () => $$('.bpick__opt', branchList);
-let activeOpt = 0;
+const branchMenu = listMenu($('#branchBtn'), $('#branchList'), (id) => { branch = id; load(); });
 
 function renderBranches(s) {
   const together = s.branches.reduce((n, b) => n + b.total, 0);
   const opts = [{ id: 'all', name: 'All branches', sub: `${s.branches.length} branches · ${peso(together)} ${PERIOD[range]}`, icon: 'i-layers' },
     ...s.branches.map((b) => ({ id: b.id, name: b.name, sub: `${b.main ? 'Main · ' : ''}${peso(b.total)} ${PERIOD[range]}`, icon: 'i-store' }))];
-  branchList.innerHTML = opts.map((o) => `<li class="bpick__opt" role="option" id="bopt-${esc(o.id)}" data-id="${esc(o.id)}" aria-selected="${o.id === s.branchId}">
-      <span class="bpick__ic">${icon(o.icon)}</span><span class="bpick__txt"><b>${esc(o.name)}</b><span>${esc(o.sub)}</span></span>${icon('i-check', 'bpick__check')}</li>`).join('');
+  branchMenu.set(opts, s.branchId);
   const now = opts.find((o) => o.id === s.branchId) || opts[0];
   $('#branchName').textContent = now.name;
   $('#branchIcon').innerHTML = icon(now.icon);
 }
-function setActive(i) {
-  const els = optEls();
-  activeOpt = (i + els.length) % els.length;
-  els.forEach((el, k) => el.classList.toggle('is-active', k === activeOpt));
-  branchList.setAttribute('aria-activedescendant', els[activeOpt].id);
-  els[activeOpt].scrollIntoView({ block: 'nearest' });
-}
-function openBranches() {
-  branchList.hidden = false;
-  branchBtn.setAttribute('aria-expanded', 'true');
-  setActive(Math.max(0, optEls().findIndex((el) => el.getAttribute('aria-selected') === 'true')));
-  branchList.focus({ preventScroll: true });
-}
-function closeBranches(focusButton = true) {
-  if (branchList.hidden) return;
-  branchList.hidden = true;
-  branchBtn.setAttribute('aria-expanded', 'false');
-  if (focusButton) branchBtn.focus();
-}
-function chooseBranch(id) {
-  closeBranches();
-  if (id !== branch) { branch = id; load(); }
-}
-branchBtn.addEventListener('click', () => (branchList.hidden ? openBranches() : closeBranches()));
-branchBtn.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openBranches(); }
-});
-branchList.addEventListener('keydown', (e) => {
-  const k = e.key;
-  if (k === 'ArrowDown') setActive(activeOpt + 1);
-  else if (k === 'ArrowUp') setActive(activeOpt - 1);
-  else if (k === 'Home') setActive(0);
-  else if (k === 'End') setActive(-1);
-  else if (k === 'Enter' || k === ' ') chooseBranch(optEls()[activeOpt].dataset.id);
-  else if (k === 'Escape') closeBranches();
-  else if (k === 'Tab') { closeBranches(false); return; } else return;
-  e.preventDefault();
-});
-branchList.addEventListener('click', (e) => { const o = e.target.closest('.bpick__opt'); if (o) chooseBranch(o.dataset.id); });
-branchList.addEventListener('pointermove', (e) => { const o = e.target.closest('.bpick__opt'); if (o) setActive(optEls().indexOf(o)); });
-document.addEventListener('click', (e) => { if (!e.target.closest('.bpick')) closeBranches(false); });
 
 load();

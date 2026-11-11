@@ -1,8 +1,8 @@
 /* Admin overview (pages/admin.html): live counts of riders, drivers and merchants, applications waiting for
    review, and today's numbers. */
 import { adminOverview, adminApplications, errorMessage } from '../api.js';
-import { $, esc, toast, icon } from '../ui.js';
-import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, initials, since, tag, wireTips } from './admin-common.js';
+import { $, $$, esc, toast, icon, rollNumber } from '../ui.js';
+import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, ava, since, tag, wireTips } from './admin-common.js';
 
 mountAdmin().then((user) => {
   if (!user) return;
@@ -24,7 +24,7 @@ async function load() {
   const card = (label, now, word, total, extra, href, good, tip) => `
     <article class="count" tabindex="0" data-tip="${esc(tip)}">
       <span class="stat-l">${label}</span>
-      <span class="count__now">${num(now)} <small>${word}</small></span>
+      <span class="count__now"><b class="count__n">${num(now)}</b> <small>${word}</small></span>
       <span class="count__total">${total}</span>
       ${href ? `<a class="count__extra" href="${href}">${extra}${icon('i-chevron', 'icon--sm')}</a>` : `<span class="count__extra${good ? ' count__extra--good' : ''}">${extra}</span>`}
     </article>`;
@@ -40,19 +40,19 @@ async function load() {
 
   // The newest applications still waiting, drivers and shops together
   const waiting = [...drivers, ...shops].filter((a) => a.status === 'review').sort((a, b) => b.appliedAt - a.appliedAt).slice(0, 5);
-  $('#waitList').innerHTML = waiting.length ? waiting.map((a) => {
+  $('#waitList').innerHTML = waiting.length ? waiting.map((a, i) => {
     const name = a.kind === 'drivers' ? a.name : a.shop;
     const what = a.kind === 'drivers' ? `Driver · ${VEHICLE[a.vehicle] || a.vehicle} · ${a.city}` : `Shop · ${a.category} · ${a.area}`;
-    return `<li><a class="waitrow" href="/pages/admin-registrations.html?kind=${a.kind}&id=${encodeURIComponent(a.id)}">
-      <span class="ava" aria-hidden="true">${esc(initials(name))}</span>
+    return `<li style="--i:${i}"><a class="waitrow" href="/pages/admin-registrations.html?kind=${a.kind}&id=${encodeURIComponent(a.id)}">
+      ${ava(name)}
       <span class="row__main"><span class="row__title">${esc(name)}</span><span class="row__sub">${esc(what)} · ${esc(since(a.appliedAt))}</span></span>
       ${tag('review', STATUS.review.label)}</a></li>`;
   }).join('') : '<li class="empty">No one is waiting for review.</li>';
 
   const t = o.today;
-  $('#today').innerHTML = `<div><span class="today__n">${num(t.trips)}</span><span class="today__l">trips and orders</span></div>
-    <div><span class="today__n">₱${num(t.tips)}</span><span class="today__l">tips to mysabak</span></div>
-    <div><span class="today__n">${minSec(t.avgPickupSec)}</span><span class="today__l">average pickup</span></div>`;
+  $('#today').innerHTML = `<div><b class="today__n">${num(t.trips)}</b><span class="today__l">trips and orders</span></div>
+    <div><b class="today__n">₱${num(t.tips)}</b><span class="today__l">tips to mysabak</span></div>
+    <div><b class="today__n">${minSec(t.avgPickupSec)}</b><span class="today__l">average pickup</span></div>`;
   const total = SERVICES.reduce((s, x) => s + t.byService[x.id], 0) || 1;
   $('#svcbar').setAttribute('aria-label', `Trips by service: ${SERVICES.map((s) => `${s.name} ${t.byService[s.id]}`).join(', ')}`);
   $('#svcbar').innerHTML = SERVICES.map((s) => `<span style="flex:${t.byService[s.id]};background:${s.color}" tabindex="0"
@@ -70,8 +70,9 @@ async function load() {
   $('#wtipsBars').innerHTML = w.values.map((v, i) => {
     const today = i === w.values.length - 1;
     const label = today ? 'Today so far' : w.days[i];
-    return `<div class="wbar${today ? ' is-today' : ''}" tabindex="0" data-tip="${label}|₱${num(v)} in tips|${Math.round((v / sum) * 100)}% of the week">
+    return `<div class="wbar${today ? ' is-today' : ''}" tabindex="0" style="--i:${i}" data-tip="₱${num(v)}|${label}|${Math.round((v / sum) * 100)}% of the week">
       <span class="wbar__fill" style="height:${Math.max(6, Math.round((v / max) * 100))}%"></span><span class="wbar__d">${esc(w.days[i])}</span></div>`;
   }).join('');
   $('#wtipsBars').setAttribute('aria-label', `Tips per day: ${w.values.map((v, i) => `${w.days[i]} ₱${num(v)}`).join(', ')}`);
+  $$('.count__n, .today__n, #wtipsTotal').forEach((b) => rollNumber(b));
 }

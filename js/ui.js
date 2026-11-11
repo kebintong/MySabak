@@ -35,7 +35,7 @@ export function rollNumber(n, from = null) {
   let i = after.length; // digits left to place, counted from the right
   n.innerHTML = `<span class="roll" aria-hidden="true">${[...text].map((c) => (/\d/.test(c)
     ? `<span class="roll__d"><span class="roll__reel">${'0123456789'.split('').map((d) => `<span>${d}</span>`).join('')}</span></span>`
-    : `<span>${esc(c)}</span>`)).join('')}</span><span class="sr-only">${esc(text)}</span>`;
+    : `<span>${c === " " ? "&nbsp;" : esc(c)}</span>`)).join('')}</span><span class="sr-only">${esc(text)}</span>`;
   const reels = [...n.querySelectorAll('.roll__reel')];
   reels.forEach((reel, k) => {
     i -= 1; // this reel's place from the right (0 = ones)
@@ -52,6 +52,72 @@ export function rollNumber(n, from = null) {
       { transform: y(to), filter: 'blur(0)' },
     ], { duration: 720, delay: i * 90, fill: 'backwards' });
   });
+}
+/** A smooth line through [x, y] points that never overshoots them (monotone cubic), as an SVG path. */
+export function smoothPath(pts) {
+  const d = pts.slice(1).map(([x1, y1], i) => (y1 - pts[i][1]) / (x1 - pts[i][0] || 1));
+  const m = pts.map((_, i) => (i === 0 ? d[0] : i === pts.length - 1 ? d[i - 1] : d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2));
+  return pts.reduce((path, [x1, y1], i) => {
+    if (!i) return `M${x1.toFixed(1)},${y1.toFixed(1)}`;
+    const [x0, y0] = pts[i - 1];
+    const h = (x1 - x0) / 3;
+    return `${path} C${(x0 + h).toFixed(1)},${(y0 + (m[i - 1] || 0) * h).toFixed(1)} ${(x1 - h).toFixed(1)},${(y1 - (m[i] || 0) * h).toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`;
+  }, '');
+}
+export const STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z"/></svg>';
+
+/**
+ * A dropdown menu on a button: a listbox (arrow keys, Home/End, Enter or Space to pick, Escape to close).
+ * Call .set(options, currentId) to fill it; options are { id, name, sub, icon }.
+ * onPick(id) runs when a different option is chosen.
+ */
+export function listMenu(button, list, onPick) {
+  const rows = () => $$('.bpick__opt', list);
+  let active = 0;
+  let current = null;
+  const setActive = (i) => {
+    const els = rows();
+    active = (i + els.length) % els.length;
+    els.forEach((el, k) => el.classList.toggle('is-active', k === active));
+    list.setAttribute('aria-activedescendant', els[active].id);
+    els[active].scrollIntoView({ block: 'nearest' });
+  };
+  const open = () => {
+    list.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    setActive(Math.max(0, rows().findIndex((el) => el.getAttribute('aria-selected') === 'true')));
+    list.focus({ preventScroll: true });
+  };
+  const close = (focusButton = true) => {
+    if (list.hidden) return;
+    list.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+    if (focusButton) button.focus();
+  };
+  const choose = (id) => { close(); if (id !== current) onPick(id); };
+  button.addEventListener('click', () => (list.hidden ? open() : close()));
+  button.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); } });
+  list.addEventListener('keydown', (e) => {
+    const k = e.key;
+    if (k === 'ArrowDown') setActive(active + 1);
+    else if (k === 'ArrowUp') setActive(active - 1);
+    else if (k === 'Home') setActive(0);
+    else if (k === 'End') setActive(-1);
+    else if (k === 'Enter' || k === ' ') choose(rows()[active].dataset.id);
+    else if (k === 'Escape') close();
+    else if (k === 'Tab') { close(false); return; } else return;
+    e.preventDefault();
+  });
+  list.addEventListener('click', (e) => { const o = e.target.closest('.bpick__opt'); if (o) choose(o.dataset.id); });
+  list.addEventListener('pointermove', (e) => { const o = e.target.closest('.bpick__opt'); if (o) setActive(rows().indexOf(o)); });
+  document.addEventListener('click', (e) => { if (!list.parentElement.contains(e.target)) close(false); });
+  return {
+    set(options, id) {
+      current = id;
+      list.innerHTML = options.map((o) => `<li class="bpick__opt" role="option" id="${esc(list.id)}-${esc(o.id)}" data-id="${esc(o.id)}" aria-selected="${o.id === id}">
+      <span class="bpick__ic">${icon(o.icon)}</span><span class="bpick__txt"><b>${esc(o.name)}</b><span>${esc(o.sub)}</span></span>${icon('i-check', 'bpick__check')}</li>`).join('');
+    },
+  };
 }
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

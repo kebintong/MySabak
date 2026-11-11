@@ -3,7 +3,7 @@
    Mood board and, for the owner, every branch today. Selling is on POS; branches, shop and menu on Management. */
 import { merchantSales, errorMessage } from '../api.js';
 import { moodFor } from '../mood.js';
-import { $, $$, mountChrome, esc, peso, when, icon, rollNumber } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, when, icon, rollNumber, smoothPath, STAR_SVG as STAR } from '../ui.js';
 import { loadHome, mountHead } from './merchant-common.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -43,19 +43,6 @@ const RANGES = {
 let range = 'day';
 const hour12 = (label) => label.replace(/(\d+)([ap])$/, (_, h, ap) => `${h} ${ap === 'a' ? 'AM' : 'PM'}`);
 
-// A smooth line through the points that never overshoots them (monotone cubic), as an SVG path
-function smoothPath(pts) {
-  const d = pts.slice(1).map(([x1, y1], i) => (y1 - pts[i][1]) / (x1 - pts[i][0] || 1));
-  const m = pts.map((_, i) => (i === 0 ? d[0] : i === pts.length - 1 ? d[i - 1] : d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2));
-  return pts.reduce((path, [x1, y1], i) => {
-    if (!i) return `M${x1.toFixed(1)},${y1.toFixed(1)}`;
-    const [x0, y0] = pts[i - 1];
-    const h = (x1 - x0) / 3;
-    return `${path} C${(x0 + h).toFixed(1)},${(y0 + (m[i - 1] || 0) * h).toFixed(1)} ${(x1 - h).toFixed(1)},${(y1 - (m[i] || 0) * h).toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`;
-  }, '');
-}
-const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z"/></svg>';
-
 /* Aurora: a glowing line from purple to gold over a soft aurora fill with a few sparkles, the period before as a
    trail of dots, and a gold star at now */
 function salesChart(s) {
@@ -84,7 +71,7 @@ function salesChart(s) {
     <div class="schart2__plot">
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Sales so far as a running total, with the period before as a dashed line">
         <defs>
-          <linearGradient id="auroraLine" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#7b3fbf"/><stop offset=".7" stop-color="#c59af0"/><stop offset="1" stop-color="#f6c46c"/></linearGradient>
+          <linearGradient id="auroraLine" gradientUnits="userSpaceOnUse" x1="0" x2="${x(upTo).toFixed(1)}" y1="0" y2="0"><stop offset="0" stop-color="#7b3fbf"/><stop offset=".7" stop-color="#c59af0"/><stop offset="1" stop-color="#f6c46c"/></linearGradient>
           <linearGradient id="auroraFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c59af0" stop-opacity=".5"/><stop offset="1" stop-color="#f1eaf8" stop-opacity="0"/></linearGradient>
           <filter id="auroraGlow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="3.5"/></filter>
         </defs>

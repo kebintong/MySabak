@@ -37,23 +37,22 @@
 
         <section class="kpis6 rise" aria-label="This week" id="kpis"></section>
 
-        <section class="card" aria-labelledby="growTitle">
+        <section class="card" aria-labelledby="growTitle" style="--enter: 4">
           <h2 class="card__title" id="growTitle">Who’s on mysabak</h2>
           <p class="lede small">Last 30 days. Each line has its own scale. Point at or tap a line for that day.</p>
           <div class="multis" id="growth"></div>
         </section>
 
         <div class="agrid agrid--even">
-          <section class="card" aria-labelledby="tripsTitle">
+          <section class="card" aria-labelledby="tripsTitle" style="--enter: 5">
             <h2 class="card__title card__title--row" id="tripsTitle">Trips per day <span class="muted small" id="tripsTotal"></span></h2>
-            <p class="tiphint">Point at or tap a day for each service.</p>
-            <ul class="legend" id="tripsLegend"></ul>
-            <div class="stack7" id="trips"></div>
-            <div class="stack7__days" id="tripDays"></div>
+            <p class="tiphint">Point at or tap a day to see each service.</p>
+            <div class="tbars" id="trips" role="group" aria-label="Trips each day"></div>
+            <div class="tsplit" id="tripSplit" aria-live="polite"></div>
             <details class="astable"><summary>Show as a table</summary><div class="tablewrap"><table class="atable" id="tripsTable"></table></div></details>
           </section>
 
-          <section class="card" aria-labelledby="tipsTitle">
+          <section class="card" aria-labelledby="tipsTitle" style="--enter: 6">
             <h2 class="card__title card__title--row" id="tipsTitle">Tips to mysabak, per day <span class="muted small" id="tips30"></span></h2>
             <p class="lede small">Our only income. Drivers keep 100% of fares and shops 100% of item prices.</p>
             <p class="tiphint">Point at or tap the line for a day.</p>
@@ -63,20 +62,21 @@
             <div class="axisrow"><span id="tipsFrom">30 days ago</span><b id="tipsToday"></b></div>
           </section>
 
-          <section class="card" aria-labelledby="payTitle">
+          <section class="card" aria-labelledby="payTitle" style="--enter: 7">
             <h2 class="card__title" id="payTitle">How riders pay</h2>
-            <p class="tiphint">Share of this week’s trips. Point at or tap a bar.</p>
-            <div class="hbars" id="payments"></div>
+            <p class="tiphint">Share of this week’s trips.</p>
+            <div class="pdonut" id="payments"></div>
           </section>
 
-          <section class="card" aria-labelledby="funnelTitle">
+          <section class="card" aria-labelledby="funnelTitle" style="--enter: 7">
             <h2 class="card__title" id="funnelTitle">New drivers, last 30 days</h2>
             <p class="tiphint">From applying to a first trip. Point at or tap a step.</p>
-            <div class="hbars" id="funnel"></div>
+            <div class="fbars" id="funnel"></div>
+            <p class="fnote" id="funnelNote"></p>
           </section>
         </div>
 
-        <section class="card" aria-labelledby="areasTitle">
+        <section class="card" aria-labelledby="areasTitle" style="--enter: 8">
           <h2 class="card__title" id="areasTitle">Areas this week</h2>
           <div class="tablewrap"><table class="atable" id="areas"></table></div>
         </section>

@@ -1906,3 +1906,199 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 [data-sky] > :not(.skyfx) { position: relative; z-index: 1; }
 .page--sky .page-head__back { color: #e2d0f4; } .page--sky .page-head__back .icon { stroke: #e2d0f4; }
+
+/* ---------- Shared motion: rising out of a blur, rolling digits, the aurora chart's star, dropdown menus ---------- */
+@keyframes m-pop-scale { from { opacity: 0; scale: .4; } }
+@keyframes m-rise { from { opacity: 0; transform: translateY(14px); filter: blur(8px); } }
+@keyframes m-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes m-twinkle { 50% { opacity: .6; transform: scale(.75); } }
+@keyframes m-halo { from { opacity: .55; transform: scale(.5); } to { opacity: 0; transform: scale(1.9); } }
+/* Rolling digits (ui.js rollNumber): one reel of 0-9 per digit, showing one at a time */
+.roll { display: inline-flex; }
+/* Inside a card's number: the reels take the number's own type, not the card's small grey label style */
+b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: inherit; }
+.roll__d { display: inline-block; height: 1.1em; overflow: hidden; }
+.roll__reel { display: flex; flex-direction: column; }
+.roll__reel > span { display: block; height: 1.1em; line-height: 1.1; font-style: normal; text-align: center; }
+/* A dropdown menu (ui.js listMenu): a glass button on the sky, a white menu of options */
+.bpick {
+  position: relative;
+  z-index: 6;
+}
+
+.bpick[hidden] {
+  display: none;
+}
+
+.bpick__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  min-width: 190px;
+  padding: 0 12px 0 7px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .14);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font: 700 15px var(--font-body);
+  cursor: pointer;
+  transition: background-color .15s var(--ease-out), border-color .15s var(--ease-out);
+}
+
+.bpick__btn:hover,
+.bpick__btn[aria-expanded="true"] {
+  background: rgba(255, 255, 255, .22);
+  border-color: rgba(255, 255, 255, .45);
+}
+
+.bpick__btn:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.bpick__btnic {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .2);
+  display: grid;
+  place-items: center;
+}
+
+.bpick__btnic .icon {
+  width: 18px;
+  height: 18px;
+  stroke: #fff;
+}
+
+.bpick__chev {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  stroke: #fff;
+  rotate: 90deg;
+  transition: rotate .25s var(--ease-out);
+}
+
+.bpick__btn[aria-expanded="true"] .bpick__chev {
+  rotate: -90deg;
+}
+
+.bpick__menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  width: max(100%, 300px);
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  box-sizing: border-box;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(23, 18, 43, .28), 0 2px 6px rgba(23, 18, 43, .12);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transform-origin: top left;
+  animation: bpick-in .3s var(--ease-out);
+}
+
+.bpick__menu[hidden] {
+  display: none;
+}
+
+.bpick__menu:focus {
+  outline: none;
+}
+
+@keyframes bpick-in {
+  from { opacity: 0; translate: 0 -6px; scale: .97; }
+}
+
+.bpick__opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background-color .15s var(--ease-out);
+}
+
+.bpick__opt.is-active {
+  background: var(--tint);
+}
+
+.bpick__menu:focus-visible .bpick__opt.is-active {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.bpick__ic {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--tint);
+  display: grid;
+  place-items: center;
+}
+
+.bpick__ic .icon {
+  width: 18px;
+  height: 18px;
+  stroke: var(--brand-deep);
+}
+
+.bpick__opt[aria-selected="true"] .bpick__ic {
+  background: linear-gradient(135deg, var(--accent), #a77ee0);
+}
+
+.bpick__opt[aria-selected="true"] .bpick__ic .icon {
+  stroke: #fff;
+}
+
+.bpick__txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bpick__txt b {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.bpick__txt span {
+  font-size: 12.5px;
+  color: var(--sub);
+}
+
+.bpick__check {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  stroke: var(--accent);
+  stroke-width: 2.6;
+  visibility: hidden;
+}
+
+.bpick__opt[aria-selected="true"] .bpick__check {
+  visibility: visible;
+}
+
+@media (min-width: 760px) {
+  .bpick__menu {
+    left: auto;
+    right: 0;
+    transform-origin: top right;
+  }
+}

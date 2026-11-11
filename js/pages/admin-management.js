@@ -2,8 +2,8 @@
    one account's profile (edit details, send a password reset, turn the account off or back on), the sign-up links to
    share, and how registrations are going. ?id= opens one account. */
 import { adminUsers, adminUpdateUser, adminSetUserStatus, adminPasswordReset, adminApplications, errorMessage } from '../api.js';
-import { $, esc, icon, toast } from '../ui.js';
-import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, initials, since, day, num, tag, wireTips } from './admin-common.js';
+import { $, esc, icon, toast, rollNumber } from '../ui.js';
+import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, ava, since, day, num, tag, wireTips } from './admin-common.js';
 
 const ROLES = [['', 'All'], ['rider', 'Riders'], ['driver', 'Drivers'], ['merchant', 'Merchants']];
 const OFF_REASONS = ['Asked to close their account', 'Repeated complaints from riders', 'Fake or duplicate account', 'Papers expired', 'Payment problems'];
@@ -44,7 +44,8 @@ const matches = (u) => {
   const digits = q.replace(/\D/g, '');
   return [u.name, u.shop, u.email, u.area].some((x) => x && x.toLowerCase().includes(q)) || (digits.length >= 3 && u.phone.includes(digits));
 };
-const shown = () => state.users.filter(matches);
+// waiting accounts first (a stable sort: newest first within each group)
+const shown = () => state.users.filter(matches).sort((a, b) => (b.status === 'pending') - (a.status === 'pending'));
 const current = () => state.users.find((u) => u.id === state.sel) || (state.open ? null : shown()[0]) || null;
 
 function render() {
@@ -53,25 +54,38 @@ function render() {
     const n = state.users.filter((u) => !id || u.role === id).length;
     return `<button type="button" class="seg__btn" data-role="${id}" aria-pressed="${state.role === id}"><span>${name}</span><span class="seg__n">${n}</span></button>`;
   }).join('');
+  renderTiles();
   const list = shown();
   const cur = current();
-  $('#ucount').textContent = list.length === state.users.length ? `${num(list.length)} accounts, newest first` : `Showing ${num(list.length)} of ${num(state.users.length)} accounts`;
+  $('#ucount').textContent = list.length === state.users.length ? `${num(list.length)} accounts, waiting first` : `Showing ${num(list.length)} of ${num(state.users.length)} accounts`;
   // the open account stays in view even when it's past the rows shown
-  const rows = list.slice(0, state.limit);
+  const waitAll = list.filter((u) => u.status === 'pending');
+  const otherAll = list.filter((u) => u.status !== 'pending');
+  const per = waitAll.length && otherAll.length ? state.limit / 2 : state.limit; // both groups get a share of the first view
+  const rows = [...waitAll.slice(0, per), ...otherAll.slice(0, per)];
   if (cur && !rows.includes(cur) && list.includes(cur)) rows.push(cur);
-  $('#more').hidden = list.length <= state.limit;
-  $('#more').textContent = `Show ${Math.min(PAGE, list.length - state.limit)} more`;
-  $('#urows').innerHTML = rows.length ? rows.map((u) => {
-    const st = ACCOUNT[u.status];
-    return `<tr aria-current="${Boolean(cur && cur.id === u.id)}">
-      <td><div class="ucell"><span class="ava" aria-hidden="true">${esc(initials(label(u)))}</span>
-        <span class="row__main"><button type="button" class="ulink row__title" data-id="${esc(u.id)}">${esc(label(u))}</button>
-        <span class="row__sub">${esc(subLabel(u))}</span>
-        <span class="row__sub m-only">${ROLE[u.role]} · ${esc(u.area)} · active ${esc(since(u.lastActiveAt))}</span></span></div></td>
-      <td class="col-role">${ROLE[u.role]}</td><td class="col-area">${esc(u.area)}</td>
-      <td class="col-joined">${day(u.joinedAt)}</td><td class="col-seen">${esc(since(u.lastActiveAt))}</td>
-      <td>${tag(st.tag, st.label)}</td></tr>`;
-  }).join('') : `<tr><td colspan="6" class="empty">No accounts match. <button type="button" class="ulink card__link" data-clear>Clear the search</button></td></tr>`;
+  $('#more').hidden = waitAll.length <= per && otherAll.length <= per;
+  $('#more').textContent = 'Show more';
+  // Who needs a decision first, with a Review button; everyone else quiet below
+  const row = (u, i) => {
+    const pending = u.status === 'pending';
+    const end = pending ? `<a class="urow__go" href="/pages/admin-registrations.html?kind=${u.application.kind}&tab=${u.application.status}&id=${encodeURIComponent(u.id)}">Review</a>`
+      : u.status === 'deactivated' ? tag('rejected', 'Turned off') : icon('i-chevron', 'urow__chev');
+    return `<li class="urow" style="--i:${Math.min(i, 8)}" aria-current="${Boolean(cur && cur.id === u.id)}">${ava(label(u))}
+      <span class="row__main"><button type="button" class="ulink row__title" data-id="${esc(u.id)}">${esc(label(u))}</button><span class="row__sub">${esc(subLabel(u))}</span></span>
+      <span class="urow__meta"><span>${ROLE[u.role]} · ${esc(u.area)}</span><span>${esc(since(u.lastActiveAt))}</span></span>
+      <span class="urow__end">${end}</span></li>`;
+  };
+  const group = (title, aside, members) => (members.length ? `<section class="ugroup"><h3 class="ugroup__head"><span>${title}</span><span>${aside}</span></h3><ul class="ugroup__list">${members.map(row).join('')}</ul></section>` : '');
+  const waiting = rows.filter((u) => u.status === 'pending');
+  const others = rows.filter((u) => u.status !== 'pending');
+  const waitN = waitAll.length;
+  const otherN = otherAll.length;
+  const otherTitle = state.status === 'active' ? 'Active' : state.status === 'deactivated' ? 'Turned off' : 'Everyone else';
+  $('#urows').innerHTML = rows.length ? group('Needs your review', `${num(waitN)} waiting`, waiting) + group(otherTitle, `${num(otherN)} account${otherN === 1 ? '' : 's'}`, others)
+    : `<p class="empty ugroup__empty">No accounts match. <button type="button" class="ulink card__link" data-clear>Clear the search</button></p>`;
+  $('#urows').classList.toggle('is-first', !state.drawn); // rows rise in on the first draw only, not on every filter
+  state.drawn = true;
   $('#mgmt').classList.toggle('is-open', state.open && Boolean(cur));
   renderProfile(cur);
 }
@@ -90,7 +104,7 @@ function renderProfile(u) {
   ];
   const back = `<button type="button" class="back" data-back>${icon('i-back')}All accounts</button>`;
   const head = `<div class="review__head">
-      <span class="ava ava--lg" aria-hidden="true">${esc(initials(label(u)))}</span>
+      ${ava(label(u), true)}
       <div class="review__who"><h2 class="review__name">${esc(label(u))}</h2>
         <p class="review__meta">${ROLE[u.role]}${u.demoLogin ? ' · demo login' : ''}${u.sample ? ' · sample' : ''}</p></div>
       ${tag(st.tag, st.label)}</div>`;
@@ -186,7 +200,7 @@ function renderActivity() {
   const waiting = state.users.filter((u) => u.status === 'pending').length;
   $('#actLine').textContent = `${week.length} new sign-ups in the last 7 days · ${waiting} still waiting for review.`;
   $('#newest').innerHTML = state.users.slice(0, 4).map((u) => `<li><button type="button" class="waitrow ulink-row" data-id="${esc(u.id)}">
-      <span class="ava" aria-hidden="true">${esc(initials(label(u)))}</span>
+      ${ava(label(u))}
       <span class="row__main"><span class="row__title">${esc(label(u))}</span><span class="row__sub">${ROLE[u.role]} · joined ${esc(since(u.joinedAt))}</span></span>
       ${tag(ACCOUNT[u.status].tag, ACCOUNT[u.status].label)}</button></li>`).join('');
 }
@@ -205,7 +219,25 @@ $('#q').addEventListener('input', (e) => {
   clearTimeout(typing);
   typing = setTimeout(() => { Object.assign(state, { q: e.target.value, open: false, sel: null, mode: 'view' }); resetPage(); render(); }, 120);
 });
-$('#statusFilter').addEventListener('change', (e) => { Object.assign(state, { status: e.target.value, open: false, sel: null, mode: 'view' }); resetPage(); render(); });
+const TILES = [['', 'All accounts', ''], ['pending', 'Waiting', ' is-wait'], ['active', 'Active', ' is-good'], ['deactivated', 'Turned off', ' is-off']];
+// Drawn once and then only updated, so the tiles don't rise in again on every filter
+function renderTiles() {
+  const host = $('#stiles');
+  if (!host.children.length) host.innerHTML = TILES.map(([id, name, tone]) => `<button type="button" class="stile${tone}" data-status="${id}"><b></b><span>${name}</span></button>`).join('');
+  [...host.children].forEach((t) => {
+    const n = num(state.users.filter((u) => (!state.role || u.role === state.role) && (!t.dataset.status || u.status === t.dataset.status)).length);
+    t.setAttribute('aria-pressed', String(state.status === t.dataset.status));
+    const b = t.firstChild;
+    if (b.dataset.value === n) return;
+    const from = b.dataset.value ?? null;
+    b.textContent = n;
+    rollNumber(b, from);
+  });
+}
+$('#stiles').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-status]');
+  if (t && t.dataset.status !== state.status) { Object.assign(state, { status: t.dataset.status, open: false, sel: null, mode: 'view' }); resetPage(); render(); }
+});
 $('#roles').addEventListener('click', (e) => {
   const b = e.target.closest('[data-role]');
   if (b) { Object.assign(state, { role: b.dataset.role, open: false, sel: null, mode: 'view' }); resetPage(); render(); }
@@ -213,7 +245,7 @@ $('#roles').addEventListener('click', (e) => {
 $('#urows').addEventListener('click', (e) => {
   if (e.target.closest('[data-clear]')) {
     Object.assign(state, { q: '', role: '', status: '' });
-    $('#q').value = ''; $('#statusFilter').value = '';
+    $('#q').value = '';
     render();
     return;
   }
@@ -225,7 +257,7 @@ $('#newest').addEventListener('click', (e) => {
   const b = e.target.closest('[data-id]');
   if (!b) return;
   Object.assign(state, { q: '', role: '', status: '' });
-  $('#q').value = ''; $('#statusFilter').value = '';
+  $('#q').value = '';
   pick(b.dataset.id);
   $('#mgmt').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });

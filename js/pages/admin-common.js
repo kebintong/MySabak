@@ -39,14 +39,21 @@ export const tag = (kind, label) => `<span class="tag tag--${kind}">${label}</sp
 export const minSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 export const num = (n) => Number(n).toLocaleString('en-PH');
 export const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-/** How long ago, roughly: "6 h", "2 d". */
+/** A round avatar: initials on a colour picked from the name, so the same person always looks the same. */
+export const ava = (name, big = false) => `<span class="ava ava--t${[...String(name)].reduce((n, c) => n + c.charCodeAt(0), 0) % 5}${big ? ' ava--lg' : ''}" aria-hidden="true">${escT(initials(name))}</span>`;
+/** How long ago, in words: "30 secs", "4 mins", "1 hr", "2 days". */
 export const ago = (ts) => {
-  const h = Math.max(0, Math.round((Date.now() - ts) / 3600e3));
-  return h < 1 ? 'just now' : h < 48 ? `${h} h` : `${Math.round(h / 24)} d`;
+  const s = Math.floor((Date.now() - ts) / 1000);
+  const say = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  if (s < 1) return 'just now';
+  if (s < 60) return say(s, 'sec');
+  if (s < 3600) return say(Math.floor(s / 60), 'min');
+  if (s < 48 * 3600) return say(Math.floor(s / 3600), 'hr');
+  return say(Math.floor(s / 86400), 'day');
 };
 /** A calendar date: "Nov 4" this year, "Nov 4, 2025" before. */
 export const day = (ts) => new Date(ts).toLocaleDateString('en-PH', { day: 'numeric', month: 'short', ...(new Date(ts).getFullYear() === new Date().getFullYear() ? {} : { year: 'numeric' }) });
-/** "6 h ago", or "just now". */
+/** "6 hrs ago", or "just now". */
 export const since = (ts) => (ago(ts) === 'just now' ? 'just now' : `${ago(ts)} ago`);
 
 /* ---------- Details on hover, tap or focus ----------
@@ -116,6 +123,8 @@ export function showTip(lines, at, owner) {
   const cx = (r.left + r.right) / 2;
   T.tx = Math.max(8, Math.min(innerWidth - T.w - 8, cx - T.w / 2));
   T.ty = r.top - T.h - 10 >= 8 ? r.top - T.h - 10 : r.bottom + 10;
+  box.style.setProperty('--cx', `${Math.round(Math.max(14, Math.min(T.w - 14, cx - T.tx)))}px`); // the tag's point stays on what it describes
+  box.classList.toggle('is-below', T.ty > r.top);
   // glide within one chart (bar to bar, along a line); a different chart gets a fresh card in place
   const sameChart = T.on && T.owner && owner && (T.owner === owner || T.owner.parentElement === owner.parentElement);
   const appearing = !sameChart;

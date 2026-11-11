@@ -2,8 +2,8 @@
    papers, tick the three checks, then approve, send back to fix (with a reason), or reject.
    ?kind=drivers|merchants picks the list, &tab=review|fix|approved|rejected the status and &id= opens one applicant. */
 import { adminApplications, adminDecide, errorMessage } from '../api.js';
-import { $, $$, esc, icon, toast, edgeGlow } from '../ui.js';
-import { mountAdmin, STATUS, VEHICLE, initials, ago, since, tag, openSheet } from './admin-common.js';
+import { $, $$, esc, icon, toast, edgeGlow, calm } from '../ui.js';
+import { mountAdmin, STATUS, VEHICLE, ava, ago, since, tag, openSheet } from './admin-common.js';
 
 const KINDS = {
   drivers: {
@@ -44,7 +44,7 @@ const params = new URLSearchParams(location.search);
 const state = {
   kind: KINDS[params.get('kind')] ? params.get('kind') : 'drivers',
   tab: TABS.includes(params.get('tab')) ? params.get('tab') : 'review', sel: params.get('id'), open: Boolean(params.get('id')),
-  lists: { drivers: [], merchants: [] }, checks: {}, fixOpen: false, fixPick: 0, fixNote: '', done: null,
+  lists: { drivers: [], merchants: [] }, checks: {}, fixOpen: false, fixPick: 0, fixNote: '', done: null, paper: 0, drawn: false,
 };
 
 mountAdmin().then((user) => {
@@ -86,12 +86,14 @@ function render() {
   }).join('');
   const cur = current();
   // the one applicant made in this browser stands out from the samples
-  $('#rows').innerHTML = shown().length ? shown().map((a) => `<li><button type="button" class="regrow" data-id="${esc(a.id)}" aria-current="${Boolean(cur && cur.id === a.id)}">
-      <span class="ava" aria-hidden="true">${esc(initials(nameOf(a)))}</span>
+  $('#rows').innerHTML = shown().length ? shown().map((a, i) => `<li style="--i:${Math.min(i, 8)}"><button type="button" class="regrow" data-id="${esc(a.id)}" aria-current="${Boolean(cur && cur.id === a.id)}">
+      ${ava(nameOf(a))}
       <span class="row__main"><span class="row__title">${esc(nameOf(a))}</span>
         <span class="row__sub">${esc(a.kind === 'drivers' ? VEHICLE[a.vehicle] || a.vehicle : a.category)} · ${esc(a.kind === 'drivers' ? a.city : a.area)} · ${esc(ago(a.appliedAt))}</span></span>
       ${a.sample ? '' : tag('plain', 'This browser')}</button></li>`).join('')
     : '<li class="empty">Nothing here right now.</li>';
+  $('#rows').classList.toggle('is-first', !state.drawn); // rows rise in on the first draw only
+  state.drawn = true;
   $('#reg').classList.toggle('is-reviewing', state.open && Boolean(cur));
   renderReview(cur);
 }
@@ -107,14 +109,16 @@ function renderReview(a) {
     ? [['Vehicle', VEHICLE[a.vehicle] || a.vehicle], ['Model · year', `${a.model} · ${a.year}`], ['Plate', a.plate], ['License no.', a.licenseNumber]]
     : [['Category', a.category], ['Owner', a.owner], ['Address', a.address], ['Products', a.products], ['Registered as', a.registeredAs]];
   const papers = a.kind === 'drivers'
-    ? [['License', a.papers.license], ['OR/CR', a.papers.orcr], ['Selfie', a.papers.selfie]]
-    : [[a.registeredAs === 'SEC' ? 'SEC papers' : 'DTI papers', a.papers.registration], ['Business permit', a.papers.permit], ['Owner’s ID', a.papers.ownerId], ['Shop photo', a.papers.shopPhoto]];
+    ? [['License', a.papers.license, 0], ['OR/CR', a.papers.orcr, 1], ['Selfie', a.papers.selfie, 2]]
+    : [[a.registeredAs === 'SEC' ? 'SEC papers' : 'DTI papers', a.papers.registration, null], ['Business permit', a.papers.permit, 1], ['Owner’s ID', a.papers.ownerId, 0], ['Shop photo', a.papers.shopPhoto, 2]]; // [name, state, which check it goes with]
   const canDecide = a.status === 'review' || a.status === 'fix';
   const done = state.done && state.done.id === a.id ? state.done : null;
+  const canCheck = canDecide && !done;
+  const on = Math.min(state.paper, papers.length - 1);
   box.innerHTML = `
     <button type="button" class="back" data-back>${icon('i-back')}All ${k.label.toLowerCase()}</button>
     <div class="review__head">
-      <span class="ava ava--lg" aria-hidden="true">${esc(initials(nameOf(a)))}</span>
+      ${ava(nameOf(a), true)}
       <div class="review__who">
         <h2 class="review__name">${esc(nameOf(a))}</h2>
         <p class="review__meta">Applied ${esc(since(a.appliedAt))} · ${esc(a.phone)} · ${esc(a.email)}</p>
@@ -124,15 +128,16 @@ function renderReview(a) {
     ${a.status === 'fix' && a.reason && !done ? `<p class="notice notice--fix">Sent back: “${esc(a.reason)}”</p>` : ''}
     <dl class="facts">${facts.map(([dt, dd]) => `<div><dt>${dt}</dt><dd>${esc(dd)}</dd></div>`).join('')}</dl>
     <section aria-labelledby="papersTitle">
-      <h3 class="subtitle" id="papersTitle">Papers</h3>
-      <div class="papers">${papers.map(([name, st]) => `<button type="button" class="paper" data-paper="${esc(name)}" data-state="${st}" aria-label="${esc(name)}: ${PAPER[st] || st}. Open details">
-        <span class="paper__img">${a.sample ? 'Sample: no photo' : `Photo of ${esc(name)}`}<br><span class="paper__open">Tap for details</span></span>
-        <span class="figcap"><strong>${esc(name)}</strong>${tag(PAPER_TAG[st] || 'rejected', PAPER[st] || st)}</span></button>`).join('')}</div>
+      <h3 class="subtitle" id="papersTitle">${canCheck ? 'Check each paper' : 'Papers'}</h3>
+      <!-- Phones and portrait tablets: one big paper at a time, these switch it. Desktop and landscape: every paper beside its check -->
+      <div class="rthumbs" role="group" aria-label="Choose a paper">${papers.map(([name, , c], i) => `<button type="button" class="rthumb" data-show="${i}" aria-pressed="${i === on}">${c !== null && ticked[c] ? icon('i-check') : ''}<span>${esc(name)}</span></button>`).join('')}</div>
+      <div class="ritems">${papers.map(([name, st, c], i) => `<div class="ritem${i === on ? ' is-on' : ''}${c !== null && ticked[c] ? ' is-ticked' : ''}">
+        <button type="button" class="paper" data-paper="${esc(name)}" data-state="${st}" aria-label="${esc(name)}: ${PAPER[st] || st}. Open details">
+          <span class="paper__img">${a.sample ? 'Sample: no photo' : `Photo of ${esc(name)}`}<br><span class="paper__open">Tap for details</span></span></button>
+        <div class="ritem__side"><span class="ritem__name"><strong>${esc(name)}</strong>${tag(PAPER_TAG[st] || 'rejected', PAPER[st] || st)}</span>
+          ${canCheck && c !== null ? `<label class="rcheck"><input type="checkbox" data-check="${c}"${ticked[c] ? ' checked' : ''}><span>${esc(k.checks[c])}</span></label>` : ''}</div></div>`).join('')}</div>
     </section>
     ${canDecide && !done ? `
-      <fieldset class="checks"><legend>Before approving, check</legend>
-        ${k.checks.map((c, i) => `<label><input type="checkbox" data-check="${i}"${ticked[i] ? ' checked' : ''}>${esc(c)}</label>`).join('')}
-      </fieldset>
       ${state.fixOpen ? `<div class="fixbox">
         <div class="afield"><label class="afield__label" for="fixReason">What needs fixing</label>
           <select class="select" id="fixReason">${k.reasons.map((r, i) => `<option${i === state.fixPick ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select>
@@ -145,7 +150,7 @@ function renderReview(a) {
         <button type="button" class="button cta" data-decide="approved"${allTicked ? '' : ' disabled'}>${k.approve}</button>
         <button type="button" class="button button--ghost cta" data-decide="fix">${state.fixOpen ? 'Send back to fix' : 'Ask to fix papers'}</button>
         <button type="button" class="button button--danger cta" data-decide="rejected">Reject</button>
-        <span class="actions__hint">${allTicked ? 'Ready to approve.' : 'Tick all three checks to approve.'}</span>
+        <span class="actions__hint">${allTicked ? 'Ready to approve.' : `${ticked.filter(Boolean).length} of 3 checked`}</span>
       </div>` : ''}
     ${done ? `<p class="notice notice--${done.status}" role="status">${esc(done.text)}</p>` : ''}`;
 }
@@ -168,7 +173,7 @@ $('#kinds').addEventListener('click', (e) => {
 $('#rows').addEventListener('click', (e) => {
   const b = e.target.closest('[data-id]');
   if (!b) return;
-  Object.assign(state, { sel: b.dataset.id, open: true, fixOpen: false, done: null });
+  Object.assign(state, { sel: b.dataset.id, open: true, fixOpen: false, done: null, paper: 0 });
   render();
   if (matchMedia('(max-width: 899px)').matches) $('.content').scrollTo({ top: 0 });
 });
@@ -213,6 +218,13 @@ function openPaper(a, name, st) {
 
 $('#review').addEventListener('click', async (e) => {
   if (e.target.closest('[data-back]')) { Object.assign(state, { open: false, fixOpen: false }); render(); return; }
+  const show = e.target.closest('[data-show]');
+  if (show) {
+    state.paper = Number(show.dataset.show);
+    renderReview(current());
+    if (!calm()) $('.ritem.is-on').animate([{ opacity: 0, transform: 'translateY(8px)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 320, easing: 'cubic-bezier(.16, 1, .3, 1)' });
+    return;
+  }
   const p = e.target.closest('[data-paper]');
   if (p) { const a = current(); if (a) openPaper(a, p.dataset.paper, p.dataset.state); return; }
   const b = e.target.closest('[data-decide]');
