@@ -369,35 +369,50 @@ export function mountMagic() {
 
 /* ---------- Light mode, for computers that struggle ----------
    Some PCs (older graphics, battery saver, graphics acceleration turned off) drop frames on the blurred entrances,
-   the moving night sky and the breathing glows. If a page's first 1.5 seconds (its entrance) drop many frames, it
-   switches to light mode: <html class="lite">, the same look with those effects held still (css/base.css).
-   Remembered on this device. ?lite=1 or ?lite=0 in any address turns it on or off by hand. */
-const LITE_KEY = 'mysabak.lite';
+   the moving night sky and the breathing glows. Light mode (<html class="lite">, css/base.css) keeps the same look
+   with those effects held still.
+   How it decides: it never measures while a page loads (loading drops frames on any computer). Once a page has
+   settled (1 s after it loads), it watches 2 s of the moving sky. A computer has to struggle on two separate pages
+   in a row before light mode turns on; a smooth page resets the count. Remembered on this device.
+   ?lite=1 or ?lite=0 in any address turns it on or off by hand (and stops the automatic check). */
+const LITE_KEY = 'mysabak.lite2'; // (the first version, 'mysabak.lite', judged during loading and is ignored now)
+const STRIKES_KEY = 'mysabak.liteStrikes';
+/** Did these frame times (ms between frames) struggle? Slow on average (under ~38 fps) and many long frames. */
+export function framesStruggle(gaps) {
+  if (gaps.length < 30) return false; // too little to judge
+  const avg = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+  const slow = gaps.filter((g) => g > 34).length / gaps.length; // 34 ms: two frames missed at 60 Hz
+  return avg > 26 && slow > 0.3;
+}
 export function watchSmoothness() {
   const html = document.documentElement;
-  let saved = null;
-  try {
-    const asked = new URLSearchParams(location.search).get('lite');
-    if (asked === '1' || asked === '0') localStorage.setItem(LITE_KEY, asked);
-    saved = localStorage.getItem(LITE_KEY);
-  } catch (_) { /* storage off: decide again on each page */ }
-  if (saved === '1' || (navigator.hardwareConcurrency || 8) <= 2) { html.classList.add('lite'); return; }
-  if (saved === '0' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const until = performance.now() + 1500;
-  let last = 0;
-  let frames = 0;
-  let slow = 0;
-  const tick = (now) => {
-    if (document.visibilityState !== 'visible') return; // a hidden tab says nothing about this device
-    if (last) { frames += 1; if (now - last > 34) slow += 1; } // 34 ms: two frames missed at 60 Hz
-    last = now;
-    if (now < until) { requestAnimationFrame(tick); return; }
-    if (frames >= 20 && slow / frames > 0.25) {
-      html.classList.add('lite');
-      try { localStorage.setItem(LITE_KEY, '1'); } catch (_) { /* this page only */ }
-    }
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) { /* storage off: this page only */ } },
   };
-  requestAnimationFrame(tick);
+  try { localStorage.removeItem('mysabak.lite'); } catch (_) { /* nothing to tidy */ }
+  const asked = new URLSearchParams(location.search).get('lite');
+  if (asked === '1' || asked === '0') { store.set(LITE_KEY, asked === '1' ? 'on' : 'off'); store.set(STRIKES_KEY, '0'); }
+  const saved = store.get(LITE_KEY);
+  if (saved === 'on' || saved === 'auto' || (navigator.hardwareConcurrency || 8) <= 2) { html.classList.add('lite'); return; }
+  if (saved === 'off' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const measure = () => {
+    const gaps = [];
+    let last = 0;
+    const until = performance.now() + 2000;
+    const tick = (now) => {
+      if (document.visibilityState !== 'visible') return; // a hidden tab says nothing about this device
+      if (last) gaps.push(now - last);
+      last = now;
+      if (now < until) { requestAnimationFrame(tick); return; }
+      const strikes = framesStruggle(gaps) ? Number(store.get(STRIKES_KEY) || 0) + 1 : 0;
+      store.set(STRIKES_KEY, String(strikes));
+      if (strikes >= 2) { store.set(LITE_KEY, 'auto'); html.classList.add('lite'); }
+    };
+    requestAnimationFrame(tick);
+  };
+  const settled = () => setTimeout(measure, 1000);
+  if (document.readyState === 'complete') settled(); else addEventListener('load', settled, { once: true });
 }
 if (typeof document !== 'undefined') watchSmoothness();
 
