@@ -235,6 +235,37 @@ body:not([data-state="request"]) .map-controls {
   background: var(--chip-close);
 }
 
+/* Use my current location, beside the pickup */
+.route__btn--locate {
+  width: 34px;
+  height: 34px;
+  background: var(--tint);
+  cursor: pointer;
+  transition: background-color .15s var(--ease-out);
+}
+
+.route__btn--locate .icon {
+  width: 18px;
+  height: 18px;
+  stroke: var(--brand-deep);
+}
+
+.route__btn--locate:hover {
+  background: #e8daf7;
+}
+
+.route__pickup .route__input {
+  font-size: 16px;
+}
+
+.suggest__item--gps .icon {
+  stroke: var(--brand-deep);
+}
+
+.suggest__item--gps .suggest__title {
+  color: var(--brand-deep);
+}
+
 .panel__hint {
   margin: -4px 0 0;
   font-size: 13px;

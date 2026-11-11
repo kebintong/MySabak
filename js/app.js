@@ -426,6 +426,7 @@ const el = {
   vehicles: $('.vehicles'),
   destInputs: $$('[data-dest]'),
   dest: $('#dest'),
+  pickupIn: $('#pickupIn'),
   pickOnMap: $('#pickOnMap'),
   toast: $('#toast'),
 };
@@ -465,14 +466,15 @@ const fromText = () => (state.pickupFromGPS ? 'Current location' : state.pickupL
 /* =========================================================
    Pickup + location
    ========================================================= */
-async function setPickup(point, { fromGPS = false, recenter = true } = {}) {
+async function setPickup(point, { fromGPS = false, recenter = true, label = '' } = {}) {
   if (state.booking) return; // booked: the pickup is fixed (GPS arriving late can't move it)
   state.pickup = { lng: point.lng, lat: point.lat };
   state.pickupFromGPS = fromGPS;
-  state.pickupLabel = 'Finding address…';
+  state.pickupLabel = label || 'Finding address…';
   render();
   if (recenter && state.step === 'request') frame();
   if (state.step === 'choose') refreshTrip();
+  if (label) return; // a searched place already has its name
 
   const asked = state.pickup;
   try {
@@ -575,6 +577,8 @@ function render() {
   setBind('pickup', state.pickupLabel);
   setBind('from', fromText());
   setBind('fromShort', fromText());
+  if (document.activeElement !== el.pickupIn) el.pickupIn.value = fromText();
+  el.pickupIn.readOnly = Boolean(state.booking); // booked: the pickup is fixed
   setBind('dropoff', state.dest || '[Drop-off place]');
   setBind('distance', distanceText());
   setBind('duration', durationText());
@@ -760,7 +764,12 @@ async function submitSearch(input) {
    ========================================================= */
 const suggest = new Map(); // input -> { list, items, active, timer, ctrl }
 
-function setupSuggest(input) {
+/**
+ * @param {HTMLInputElement} input
+ * @param {(place:object) => void} choose  what a picked suggestion does
+ * @param {() => object[]} pinned  suggestions always shown first (the pickup's "Use my current location")
+ */
+function setupSuggest(input, choose = chooseSuggestion, pinned = () => []) {
   const list = document.getElementById(input.getAttribute('aria-controls'));
   const s = { list, items: [], active: -1, timer: null, ctrl: null };
   suggest.set(input, s);
@@ -768,21 +777,21 @@ function setupSuggest(input) {
   input.addEventListener('input', () => {
     clearTimeout(s.timer);
     const text = input.value.trim();
-    if (text.length < 3) { closeSuggest(input); return; }
+    if (text.length < 3) { if (pinned().length) renderSuggest(input, pinned(), ''); else closeSuggest(input); return; }
     s.timer = setTimeout(async () => {
       if (s.ctrl) s.ctrl.abort();
       s.ctrl = new AbortController();
-      renderSuggest(input, [], 'Searching…', { loading: true });
+      renderSuggest(input, pinned(), 'Searching…', { loading: true });
       try {
         const places = await searchPlaces(text, state.pickup, { signal: s.ctrl.signal });
         if (input.value.trim() !== text) return;
-        renderSuggest(input, places, places.length
+        renderSuggest(input, [...pinned(), ...places], places.length
           ? (places.far ? 'Nothing nearby matched, so these are farther away.' : '')
           : 'No places found. Try another name, or “Pick on map”.');
       } catch (err) {
         if (err.name === 'AbortError') return;
         console.warn(err);
-        renderSuggest(input, [], errorMessage(err));
+        renderSuggest(input, pinned(), errorMessage(err));
       }
     }, 300);
   });
@@ -799,7 +808,7 @@ function setupSuggest(input) {
       paintActive(input);
     } else if (e.key === 'Enter' && s.active >= 0) {
       e.preventDefault();
-      chooseSuggestion(s.items[s.active]);
+      choose(s.items[s.active]);
     } else if (e.key === 'Escape') {
       closeSuggest(input);
     }
@@ -811,7 +820,7 @@ function setupSuggest(input) {
   list.addEventListener('mousedown', (e) => e.preventDefault());
   list.addEventListener('click', (e) => {
     const li = e.target.closest('[data-index]');
-    if (li) chooseSuggestion(s.items[Number(li.dataset.index)]);
+    if (li) choose(s.items[Number(li.dataset.index)]);
   });
 }
 
@@ -822,8 +831,8 @@ function renderSuggest(input, items, message, { loading = false } = {}) {
   const id = s.list.id;
   s.list.classList.toggle('is-loading', loading);
   s.list.innerHTML = items.map((p, i) => `
-    <li class="suggest__item" role="option" id="${id}-${i}" data-index="${i}" aria-selected="false" style="--i:${i}">
-      <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-pin"/></svg>
+    <li class="suggest__item${p.gps ? ' suggest__item--gps' : ''}" role="option" id="${id}-${i}" data-index="${i}" aria-selected="false" style="--i:${i}">
+      <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#${p.gps ? 'i-locate' : 'i-pin'}"/></svg>
       <span class="suggest__text">
         <span class="suggest__title"></span>
         <span class="suggest__sub"></span>
@@ -865,7 +874,23 @@ function closeSuggest(input) {
   input.setAttribute('aria-expanded', 'false');
   input.removeAttribute('aria-activedescendant');
 }
-const closeAllSuggest = () => el.destInputs.forEach(closeSuggest);
+const closeAllSuggest = () => [...el.destInputs, el.pickupIn].forEach(closeSuggest);
+
+/* ---------- The pickup: search a place, or use my current location ---------- */
+const GPS_ITEM = { gps: true, title: 'Use my current location', subtitle: 'Find me with GPS' };
+async function choosePickup(place) {
+  if (!place) return;
+  closeSuggest(el.pickupIn);
+  el.pickupIn.blur();
+  if (place.gps) { locateUser(); return; }
+  try {
+    const loc = await placeLocation(place);
+    setPickup(loc, { label: place.title });
+  } catch (err) {
+    console.warn(err);
+    toast(`${errorMessage(err)} Try another result.`);
+  }
+}
 
 async function chooseSuggestion(place) {
   if (!place) return;
@@ -895,6 +920,16 @@ function toast(msg) {
 /* =========================================================
    Events
    ========================================================= */
+setupSuggest(el.pickupIn, choosePickup, () => [GPS_ITEM]);
+// Focus: select the current pickup so typing replaces it, and offer "Use my current location"
+el.pickupIn.addEventListener('focus', () => {
+  if (el.pickupIn.readOnly) return;
+  el.pickupIn.select();
+  renderSuggest(el.pickupIn, [GPS_ITEM], '');
+});
+// Left without picking: show the pickup's name again
+el.pickupIn.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== el.pickupIn) el.pickupIn.value = fromText(); }, 180));
+
 el.destInputs.forEach((input) => {
   setupSuggest(input);
   input.addEventListener('input', () => {
@@ -904,6 +939,7 @@ el.destInputs.forEach((input) => {
 
 $('#searchForm').addEventListener('submit', (e) => {
   e.preventDefault();
+  if (document.activeElement === el.pickupIn) { el.dest.focus(); return; } // Enter in the pickup: on to the drop-off
   if (state.step === 'request') submitSearch(el.dest);
 });
 

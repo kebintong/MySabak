@@ -13,7 +13,7 @@ mountChrome({ roles: ['client'] });
 const DESKTOP = window.matchMedia('(min-width: 900px)');
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 let near = { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };
-let category = ''; // '' = none picked: every shop is listed, none is pinned
+let category = new URLSearchParams(location.search).get('cat') || ''; // '' = none picked: every shop is listed, none is pinned
 let shops = [];
 let picked = null; // id of the shop shown in the preview card
 let timer;
@@ -80,6 +80,7 @@ function showPins() {
 async function load({ fit = false } = {}) {
   const res = await listShops({ near, category: category || 'all', q: $('#shopSearch').value });
   categories = res.categories;
+  if (category && !categories.some((c) => c.id === category && c.id !== 'all')) { category = ''; return load({ fit }); } // an unknown ?cat=
   shops = res.shops;
   if (!shops.some((s) => s.id === picked)) picked = null;
   $('#categories').innerHTML = categories.filter((c) => c.id !== 'all')

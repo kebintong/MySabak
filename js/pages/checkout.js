@@ -141,7 +141,7 @@ async function start() {
       const items = getCart().lines.map(({ id, qty, picks, note }) => ({ id, qty, picks, note }));
       const { id } = await placeOrder({ shopId: shop.id, items, address, notes: (data.get('notes') || '').trim(), payment: data.get('payment') });
       clearCart();
-      glowNext('reward', btn);
+      glowNext('reward');
       location.href = `/pages/order.html?id=${encodeURIComponent(id)}`;
     } catch (err) {
       toast(err.status === 400 ? err.message : errorMessage(err));

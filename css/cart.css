@@ -3,3 +3,37 @@
 .cart-shop { font-size: 14px; font-weight: 700; color: var(--brand); text-decoration: none; }
 .cart-shop:hover { text-decoration: underline; }
 .cart-total { margin-top: 12px; }
+
+/* Empty cart: a picture and a question, the kinds of shop as icons, the last shop again, then Browse */
+.cempty { display: flex; flex-direction: column; gap: 16px; }
+.cempty[hidden] { display: none; }
+.cempty__top { display: flex; align-items: center; gap: 14px; }
+.cempty__art { width: 76px; height: 60px; flex: none; object-fit: contain; }
+.cempty__title { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink); }
+.cempty__line { margin: 2px 0 0; font-size: 14px; color: var(--sub); }
+.cempty__cats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.cempty__cat {
+  min-width: 0; padding: 10px 4px 8px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-decoration: none; color: var(--ink); font-size: 12.5px; font-weight: 600; text-align: center;
+  transition: background-color .15s var(--ease-out), transform .15s var(--spring);
+}
+.cempty__icwrap { width: 48px; height: 48px; border-radius: 16px; background: var(--tint); display: grid; place-items: center; transition: background-color .15s var(--ease-out); }
+.cempty__ic { width: 24px; height: 24px; fill: none; stroke: var(--brand-deep); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cempty__cat:hover .cempty__icwrap { background: #e8daf7; }
+.cempty__cat:active { transform: scale(.95); }
+.cempty__cat:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.cempty__again {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line-brand);
+  text-decoration: none; color: var(--ink); transition: background-color .15s var(--ease-out);
+}
+.cempty__again[hidden] { display: none; }
+.cempty__again:hover { background: #faf6fd; }
+.cempty__again > .icon { width: 20px; height: 20px; flex: none; stroke: var(--brand-deep); }
+.cempty__again > span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cempty__again b { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cempty__again b + span { font-size: 13px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cempty__chev { width: 18px; height: 18px; flex: none; stroke: var(--muted); }
+/* phones: one row that scrolls sideways, so all five kinds stay on a line */
+@media (max-width: 459.98px) { .cempty__cats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 74px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px; } .cempty__cats::-webkit-scrollbar { display: none; } }
+/* Your orders: numbered pages under the list */
+.cpages:not(:empty) { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }

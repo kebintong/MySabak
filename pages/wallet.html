@@ -15,6 +15,7 @@
   <meta name="apple-mobile-web-app-title" content="mysabak">
   <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
   <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <script>try{if(sessionStorage.getItem('mysabak.glow'))document.documentElement.classList.add('arriving')}catch(e){}</script>
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/wallet.css">
   <script type="module" src="/js/pages/wallet.js"></script>

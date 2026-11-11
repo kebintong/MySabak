@@ -23,6 +23,7 @@
 
   <!-- Map: MapLibre GL JS draws TomTom's map style -->
   <link rel="preconnect" href="https://api.tomtom.com">
+  <script>try{if(sessionStorage.getItem('mysabak.glow'))document.documentElement.classList.add('arriving')}catch(e){}</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/index.css">
@@ -93,10 +94,13 @@
         <button type="button" class="ride__back" id="rideBack" aria-label="Back"><svg class="icon icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-back"/></svg></button>
         <form class="route" id="searchForm" autocomplete="off">
           <h1 class="sr-only" data-bind="askTitle">Saan tayo?</h1>
-          <button type="button" class="route__row route__pickup" data-pickup aria-label="Pickup: use my location">
+          <div class="route__row route__pickup">
             <span class="route__dot" aria-hidden="true"></span>
-            <span class="route__text"><span class="route__label">Pickup</span><span class="route__value" data-bind="from">Current location</span></span>
-          </button>
+            <label class="route__text" for="pickupIn"><span class="route__label">Pickup</span>
+              <input id="pickupIn" class="route__input" type="text" placeholder="Search a pickup place" enterkeyhint="next"
+                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pickupSuggest"></label>
+            <button type="button" class="route__btn route__btn--locate" data-pickup aria-label="Use my current location" title="Use my current location"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-locate"/></svg></button>
+          </div>
           <span class="route__sep" aria-hidden="true"></span>
           <div class="route__row route__drop">
             <span class="route__dot route__dot--drop" aria-hidden="true"></span>
@@ -107,6 +111,7 @@
             <button type="submit" class="route__btn route__btn--go" data-show="request" aria-label="See rides"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></button>
           </div>
           <ul class="suggest" id="suggest" role="listbox" aria-label="Suggested places" hidden></ul>
+          <ul class="suggest" id="pickupSuggest" role="listbox" aria-label="Pickup places" hidden></ul>
         </form>
       </div>
 

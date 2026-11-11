@@ -198,24 +198,161 @@ export function edgeGlow(kind = 'arrive', from = null) {
   setTimeout(() => { glow.remove(); document.body.classList.remove('is-glowing'); }, 1800);
 }
 
-// Tabs (and a few buttons) load a new page, so the glow plays on arrival: it is remembered for the next page
+// Tabs (and a few buttons) load a new page, so the arrival plays on the next page: it is remembered for it
 const GLOW_KEY = 'mysabak.glow';
-const angleOf = (el) => {
-  const r = el.getBoundingClientRect();
-  return Math.round((Math.atan2(r.left + r.width / 2 - innerWidth / 2, -(r.top + r.height / 2 - innerHeight / 2)) * 180) / Math.PI);
-};
-/** Play the edge glow on the next page this tab opens (e.g. after placing an order). */
-export function glowNext(kind = 'arrive', from = null) {
-  try { sessionStorage.setItem(GLOW_KEY, JSON.stringify({ kind, angle: from ? angleOf(from) : 180 })); } catch (_) { /* storage off: no glow */ }
+/** Play the arrival (the wand spark) on the next page this tab opens (e.g. after placing an order). */
+export function glowNext(kind = 'arrive') {
+  try { sessionStorage.setItem(GLOW_KEY, JSON.stringify({ kind })); } catch (_) { /* storage off: no spark */ }
 }
+
+/* ---------- The arrival: a wand spark ----------
+   A gold star squashes into the tab you tapped, springs out, glides up on one arc with a comet tail and falling
+   dust, slows into the page title, blooms, rings and throws a few sparks, and the title glows. Moonlight climbs both
+   side edges at the star's pace and the top edge blooms above the title when it lands. The page's content
+   materialises meanwhile (css/base.css .arriving). Only transform and opacity move, so the graphics card does the
+   work. Light mode and "reduce motion": a single soft twinkle at the title.
+   The head of each page sets <html class="arriving"> before it draws (so content doesn't flash first). */
+const STAR_PATH = 'M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z';
+const starEl = (size, fill, core = false) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}"><path d="${STAR_PATH}" fill="${fill}"/>${core ? `<path d="${STAR_PATH}" fill="#fff" transform="translate(7 7) scale(.42)"/>` : ''}</svg>`;
+/** Where the spark lands: just after the page title's last letter, or near the top middle. */
+function landingPoint() {
+  const title = [...document.querySelectorAll('.page-title, main h1, .mhero__name, .dwho__name')]
+    .find((el) => { const r = el.getBoundingClientRect(); return r.width && r.height && r.bottom > 0 && r.top < innerHeight; });
+  if (!title) return { x: innerWidth / 2, y: Math.min(120, innerHeight * 0.18), title: null };
+  const range = document.createRange();
+  range.selectNodeContents(title);
+  const rects = [...range.getClientRects()].filter((r) => r.width);
+  const r = rects[rects.length - 1] || title.getBoundingClientRect();
+  return { x: Math.min(innerWidth - 16, r.right + 10), y: r.top + r.height * 0.42, title };
+}
+export function wandArrive() {
+  const end = landingPoint();
+  const tab = document.querySelector('.tab.is-active');
+  const tr = tab && tab.getBoundingClientRect();
+  const sx = tr && tr.width ? tr.left + tr.width / 2 : innerWidth / 2;
+  const sy = tr && tr.height ? tr.top + tr.height * 0.4 : innerHeight - 40;
+  const layer = document.createElement('div');
+  layer.className = 'wand';
+  layer.setAttribute('aria-hidden', 'true');
+  document.body.append(layer);
+  const clear = () => { layer.remove(); document.documentElement.classList.remove('arriving'); };
+  // Light mode / reduce motion: one soft twinkle where it would land
+  if (calm() || document.documentElement.classList.contains('lite')) {
+    layer.innerHTML = `<span class="wand__star" style="left:${end.x}px;top:${end.y}px">${starEl(18, '#ffd36b')}</span>`;
+    layer.firstElementChild.animate([{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1)', offset: 0.35 }, { opacity: 0, transform: 'scale(.6)' }],
+      { duration: 700, easing: 'ease-out', fill: 'both' });
+    setTimeout(clear, 900);
+    return;
+  }
+  // one arc from the tab to the title: out to the side, then up and over
+  const W = innerWidth;
+  const dy = sy - end.y;
+  const c1 = [Math.max(16, sx - 0.18 * W), sy - 0.31 * dy];
+  const c2 = [Math.min(W - 20, end.x + 0.45 * W), end.y + 0.34 * dy];
+  const path = `M${sx.toFixed(1)} ${sy.toFixed(1)} C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+  const bez = (t, k) => ((1 - t) ** 3) * [sx, sy][k] + 3 * ((1 - t) ** 2) * t * c1[k] + 3 * (1 - t) * t * t * c2[k] + (t ** 3) * [end.x, end.y][k];
+  const pts = Array.from({ length: 201 }, (_, i) => [bez(i / 200, 0), bez(i / 200, 1)]);
+  const lens = [0];
+  for (let i = 1; i < pts.length; i += 1) lens.push(lens[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const along = (f) => pts[lens.findIndex((l) => l >= f * lens[200])] || pts[200];
+  // the flight's timing curve, and when (as a share of the flight) the star has gone a share of the way
+  const E = [0.3, 0.6, 0.25, 1];
+  const b3 = (s, a, b) => 3 * (1 - s) * (1 - s) * s * a + 3 * (1 - s) * s * s * b + s ** 3;
+  const whenAt = (f) => { let s = 0; while (s < 1 && b3(s, E[1], E[3]) < f) s += 0.002; return b3(s, E[0], E[2]); };
+  const T0 = 120; const FLY = 520; const LAND = T0 + FLY; const END = LAND + 520;
+  const at = (ms) => ms / END;
+  const ease = `cubic-bezier(${E.join(',')})`;
+  const GHOSTS = 7;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const DUST = ['#ffd97a', '#ffffff', '#d7b8ff', '#f6c46c'];
+  const dust = Array.from({ length: 24 }, (_, i) => {
+    const f = 0.06 + (i / 24) * 0.9;
+    const [x, y] = along(f);
+    return { x: x + rand(-6, 6), y: y + rand(-6, 6), born: T0 + FLY * whenAt(f), life: rand(850, 1450), size: Math.round(rand(3, 9)), dx: rand(-11, 11), dy: rand(16, 46), tw: rand(0.35, 0.65), c: DUST[i % 4] };
+  });
+  layer.innerHTML = dust.map((p) => (p.size >= 7
+    ? `<span class="wand__dust wand__dust--star" style="left:${p.x}px;top:${p.y}px;color:${p.c}">${starEl(p.size, p.c)}</span>`
+    : `<span class="wand__dust" style="left:${p.x}px;top:${p.y}px;width:${p.size}px;height:${p.size}px;background:${p.c};color:${p.c}"></span>`)).join('')
+    + Array.from({ length: 12 }, (_, i) => `<span class="wand__dust wand__spark" style="left:${end.x}px;top:${end.y}px;width:${i % 3 ? 3 : 5}px;height:${i % 3 ? 3 : 5}px;background:${i % 3 ? '#fff' : '#ffd97a'};color:#ffd97a"></span>`).join('')
+    + `<span class="wand__ring" style="left:${end.x}px;top:${end.y}px"></span><span class="wand__flare" style="left:${end.x}px;top:${end.y}px"></span>`
+    + Array.from({ length: GHOSTS }, (_, g) => `<span class="wand__ghost" style="offset-path:path('${path}')"><span style="opacity:${(0.55 * (1 - g / GHOSTS)).toFixed(2)};transform:scale(${(0.9 - g * 0.07).toFixed(2)})">${starEl(22, g % 2 ? '#e9d4ff' : '#ffd36b')}</span></span>`).join('')
+    + `<span class="wand__head" style="offset-path:path('${path}')">${starEl(24, '#ffd36b', true)}</span>`;
+  // Moonlight sides: a soft light climbs each side edge with the star, the top edge blooms above the title on landing.
+  // The edge band fades to clear inward (css .wand__edge), so there is never a line.
+  layer.insertAdjacentHTML('afterbegin', `<div class="wand__edge"><span class="wand__side"></span><span class="wand__side wand__side--r"></span><span class="wand__top" style="left:${end.x}px"></span></div>`);
+  const SIDE = LAND + 500;
+  layer.querySelectorAll('.wand__side').forEach((n) => n.animate([
+    { opacity: 0, transform: `translateY(${sy}px)` },
+    { opacity: 1, transform: `translateY(${sy - 10}px)`, offset: T0 / SIDE, easing: ease },
+    { opacity: 1, transform: `translateY(${end.y}px)`, offset: LAND / SIDE, easing: 'ease-out' },
+    { opacity: 0, transform: `translateY(${Math.max(0, end.y - 30)}px)` },
+  ], { duration: SIDE, fill: 'both' }));
+  layer.querySelector('.wand__top').animate([
+    { opacity: 0, transform: 'scaleX(.3)', easing: 'cubic-bezier(.16,1,.3,1)' },
+    { opacity: 1, transform: 'scaleX(1)', offset: 0.24, easing: 'cubic-bezier(.45,0,.25,1)' },
+    { opacity: 0, transform: 'scaleX(1.25)' },
+  ], { duration: 1030, delay: LAND - 30, fill: 'both' });
+  // the star: squash into the tab, stretch out, glide and spin, squash on landing, bloom, fade
+  const flight = (landing) => [
+    { offset: 0, offsetDistance: '0%', opacity: 0, transform: 'translateY(0) scale(.3) rotate(0deg)', easing: 'cubic-bezier(.3,.7,.4,1)' },
+    { offset: at(70), offsetDistance: '0%', opacity: 1, transform: 'translateY(5px) scale(1.35,.7) rotate(0deg)', easing: 'cubic-bezier(.5,0,.5,1)' },
+    { offset: at(T0), offsetDistance: '0%', opacity: 1, transform: 'translateY(-3px) scale(.85,1.2) rotate(0deg)', easing: ease },
+    ...landing,
+  ];
+  layer.querySelector('.wand__head').animate(flight([
+    { offset: at(LAND), offsetDistance: '100%', opacity: 1, transform: 'translateY(0) scale(1) rotate(300deg)', easing: 'cubic-bezier(.3,.7,.4,1)' },
+    { offset: at(LAND + 70), offsetDistance: '100%', opacity: 1, transform: 'scale(1.3,.78) rotate(312deg)', easing: 'cubic-bezier(.2,.8,.3,1)' },
+    { offset: at(LAND + 200), offsetDistance: '100%', opacity: 1, transform: 'scale(2.1) rotate(330deg)', easing: 'cubic-bezier(.4,0,.6,1)' },
+    { offset: 1, offsetDistance: '100%', opacity: 0, transform: 'scale(.4) rotate(380deg)' },
+  ]), { duration: END, fill: 'both' });
+  layer.querySelectorAll('.wand__ghost').forEach((g, i) => g.animate(flight([
+    { offset: at(LAND - 60), offsetDistance: '96%', opacity: 1, transform: 'scale(1) rotate(290deg)' },
+    { offset: at(LAND + 40), offsetDistance: '100%', opacity: 0, transform: 'scale(.6) rotate(310deg)' },
+    { offset: 1, offsetDistance: '100%', opacity: 0, transform: 'scale(.6)' },
+  ]), { duration: END, delay: (i + 1) * 16, fill: 'both' }));
+  // dust: grows in, falls a little faster as it goes, sways, twinkles once, fades
+  layer.querySelectorAll('.wand__dust:not(.wand__spark)').forEach((n, i) => {
+    const p = dust[i];
+    n.animate([
+      { opacity: 0, transform: 'translate(0,0) scale(.5)', easing: 'cubic-bezier(.2,.8,.3,1)' },
+      { opacity: 1, transform: `translate(${p.dx * 0.08}px,${p.dy * 0.04}px) scale(1)`, offset: 130 / p.life, easing: 'cubic-bezier(.45,0,.75,.6)' },
+      { opacity: 0.3, transform: `translate(${p.dx * 0.45}px,${p.dy * 0.3}px) scale(.85)`, offset: p.tw },
+      { opacity: 1, transform: `translate(${p.dx * 0.6}px,${p.dy * 0.45}px) scale(1.05)`, offset: p.tw + 0.1 },
+      { opacity: 0, transform: `translate(${p.dx}px,${p.dy}px) scale(.25)` },
+    ], { duration: p.life, delay: p.born, fill: 'both' });
+  });
+  // the landing: sparks burst and fall, a thin ring spreads, a warm flare blooms
+  layer.querySelectorAll('.wand__spark').forEach((n, i) => {
+    const a = (i / 12) * Math.PI * 2 + rand(0, 0.35);
+    const r = rand(24, 58);
+    const [dx, dyy] = [Math.cos(a) * r, Math.sin(a) * r];
+    const life = rand(520, 780);
+    n.animate([
+      { opacity: 0, transform: 'translate(0,0) scale(.5)', easing: 'cubic-bezier(.16,1,.3,1)' },
+      { opacity: 1, offset: 0.1 },
+      { opacity: 0.9, transform: `translate(${dx}px,${dyy}px) scale(.8)`, offset: 0.7, easing: 'cubic-bezier(.5,0,.75,0)' },
+      { opacity: 0, transform: `translate(${dx * 1.08}px,${dyy + 12}px) scale(.3)` },
+    ], { duration: life, delay: LAND + 50, fill: 'both' });
+  });
+  layer.querySelector('.wand__ring').animate([{ opacity: 0, transform: 'scale(.2)' }, { opacity: 0.95, offset: 0.1 }, { opacity: 0, transform: 'scale(2.6)' }],
+    { duration: 700, delay: LAND + 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
+  layer.querySelector('.wand__flare').animate([{ opacity: 0, transform: 'scale(.25)' }, { opacity: 1, transform: 'scale(.85)', offset: 0.17, easing: 'cubic-bezier(.2,.7,.3,1)' }, { opacity: 0, transform: 'scale(1.7)' }],
+    { duration: 760, delay: LAND + 30, fill: 'both' });
+  // the title catches the light
+  if (end.title) end.title.animate([{ textShadow: '0 0 0 rgba(255,214,107,0)' }, { textShadow: '0 0 14px rgba(255,214,107,.85), 0 0 2px rgba(255,236,190,.9)', offset: 0.3 }, { textShadow: '0 0 0 rgba(255,214,107,0)' }],
+    { duration: 900, delay: LAND + 40, easing: 'ease-in-out' });
+  setTimeout(clear, LAND + 1700);
+}
+
 function armTabGlow() {
   document.addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
-    if (tab && !tab.classList.contains('is-active') && !e.defaultPrevented) glowNext('arrive', tab);
+    if (tab && !tab.classList.contains('is-active') && !e.defaultPrevented) glowNext('arrive');
   });
   let next = null;
   try { next = JSON.parse(sessionStorage.getItem(GLOW_KEY)); sessionStorage.removeItem(GLOW_KEY); } catch (_) { /* storage off */ }
-  if (next) requestAnimationFrame(() => edgeGlow(next.kind, Number(next.angle)));
+  if (next) requestAnimationFrame(() => requestAnimationFrame(wandArrive)); // after the page's first layout
+  else document.documentElement.classList.remove('arriving');
 }
 
 /** Night-sky effects on every sky on the page, and the arrival glow. Called once per page. */
