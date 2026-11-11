@@ -1935,7 +1935,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 
 /* ---------- Shared motion: rising out of a blur, rolling digits, the aurora chart's star, dropdown menus ---------- */
 @keyframes m-pop-scale { from { opacity: 0; scale: .4; } }
-@keyframes m-rise { from { opacity: 0; transform: translateY(14px); filter: blur(8px); } }
+@keyframes m-rise { from { opacity: 0; transform: translateY(14px); filter: var(--rise-filter, blur(8px)); } }
 @keyframes m-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes m-twinkle { 50% { opacity: .6; transform: scale(.75); } }
 @keyframes m-halo { from { opacity: .55; transform: scale(.5); } to { opacity: 0; transform: scale(1.9); } }
@@ -2168,5 +2168,36 @@ b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: i
   --tip-bg: #6a35c2; --tip-text: #e6d9fa; --tip-shadow: 0 10px 24px -6px rgba(106, 53, 194, .45);
   --bar: #a27fe2; --bar-on: #6f3dc4; --bar-today: #eba93a; --bar-today-on: #d98c1c;
   /* sideways bars carry words, so they stay light */
-  --bar-x: #dccbf6; --bar-x-today: #f6d99a;
+  --bar-x: #b596ec; --bar-x-today: #f2bb55;
 }
+
+/* ---------- Numbered pages (ui.js pager; the driver's Trips page too) ---------- */
+.tpages { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.tpages[hidden] { display: none; }
+.tpages__nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.tpages__btn {
+  min-width: 44px; height: 44px; padding: 0 12px; border: 1px solid var(--line-brand); border-radius: 14px; background: #fff; color: var(--ink);
+  font: 700 15px var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer;
+  transition: background-color .15s var(--ease-out), border-color .15s var(--ease-out), transform .15s var(--spring);
+}
+.tpages__btn:hover:not(:disabled) { border-color: var(--brand); color: var(--brand-deep); }
+.tpages__btn:active:not(:disabled) { transform: scale(.94); }
+.tpages__btn[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tpages__btn:disabled { color: #b8a9c9; cursor: default; }
+.tpages__btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.tpages__note { margin: 0; font-size: 12.5px; color: var(--sub); }
+.tpages__gap { min-width: 24px; height: 44px; display: grid; place-items: center; color: var(--sub); }
+/* phones: up to 7 page buttons still fit on one line */
+@media (max-width: 420px) { .tpages__nav { gap: 4px; flex-wrap: nowrap; } .tpages__btn { min-width: 38px; height: 40px; padding: 0 8px; border-radius: 12px; font-size: 14px; } .tpages__gap { min-width: 16px; height: 40px; } }
+
+/* ---------- Light mode (ui.js watchSmoothness): the same look, with the costly motion held still ----------
+   Cards rise without the blur; the night sky, glows, sheens and sparkles stop moving (they keep their place and
+   colour); glass gets a plain tint. Spinners, live dots and other signs of progress keep moving. */
+.lite { --rise-filter: none; }
+.lite .sky-aurora, .lite .sky-dust path, .lite .sky-dot, .lite .sky-tw,
+.lite .glowwrap__blobs > span, .lite .twinkle, .lite .choose__sparkle, .lite .svc__sparkle, .lite .glitter i,
+.lite .promo__aurora, .lite .promo__art, .lite .promo__eyebrow, .lite .promo__mascot,
+.lite .done__aurora, .lite .done__hero::after, .lite .mood__emoji, .lite .schart2__spark svg { animation: none !important; }
+.lite .sky-tw { opacity: .85; }
+.lite .sheen { display: none; }
+.lite .bpick__btn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255, 255, 255, .2); }

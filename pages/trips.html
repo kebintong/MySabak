@@ -41,10 +41,15 @@
 
         <section class="tpanel" aria-live="polite">
           <ul class="tlist" id="tripsList"></ul>
+          <div id="tripPages"></div>
+          <!-- Nothing on its way: one tap to go again (recent drop-offs, the last shop), or start fresh -->
           <div class="tquick" id="quick">
-            <h2 class="tquick__title">Start something</h2>
+            <section class="tagain" id="again" aria-labelledby="againTitle" hidden>
+              <h2 class="tagain__title" id="againTitle">Go again</h2>
+              <ul class="tagain__list" id="againList"></ul>
+            </section>
             <div class="tquick__row">
-              <a class="tquick__go" href="/#ride"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg>Book a ride</a>
+              <a class="tquick__go tquick__go--main" href="/#ride"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg>Book a ride</a>
               <a class="tquick__go" href="/pages/shops.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-food"/></svg>Order food</a>
             </div>
           </div>

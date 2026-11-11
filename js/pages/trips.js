@@ -4,7 +4,7 @@
 import { CONFIG } from '../config.js';
 import { myTrips, myOrders, myActiveTrip, orderStatus, orderRoute, onTripUpdate, shopMenu, ORDER_STEPS } from '../api.js';
 import { isNum } from '../money.js';
-import { $, $$, mountChrome, esc, when, pesoOr, icon, ava } from '../ui.js';
+import { $, $$, mountChrome, esc, when, pesoOr, icon, ava, pager, emptyRows } from '../ui.js';
 import { shopMap } from '../shop-map.js';
 
 mountChrome({ roles: ['client'] });
@@ -28,6 +28,9 @@ let show = 'ongoing';
 let drawn = ''; // the list on screen: redrawn only when it changes, so rows don't slide in again on every refresh
 let timer = 0;
 let open = null; // the card shown open: 'ride' or a food order's id (one at a time)
+let page = 1; // the page of past rides or food orders
+const PER = 6;
+const onPage = (list) => list.slice((page - 1) * PER, page * PER);
 
 /* ---------- Live cards ---------- */
 // Four segments: done ones purple, the current one gold
@@ -164,7 +167,24 @@ const pastOrder = (o) => `<li class="recent__row">${icon('i-food', 'icon--lg')}
       <span class="recent__meta">${esc(stepName(o.status))} · ${esc(when(o.placedAt))} · ${pesoOr(o.subtotal)}</span></span>
     <a class="btn-soft" href="/pages/order.html?id=${encodeURIComponent(o.id)}">View</a></li>`;
 
-const empty = (text) => `<li class="tlist__empty">${esc(text)}</li>`;
+
+/* ---------- Go again: with nothing on its way, the two latest drop-offs and the last shop, one tap each ---------- */
+const day = (ts) => new Date(ts).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+function drawAgain(count) {
+  const seen = new Set();
+  const places = rides.filter((t) => t.dropoff && t.dropoff.label && !seen.has(t.dropoff.label) && seen.add(t.dropoff.label)).slice(0, 2);
+  const lastShop = orders.find((o) => o.status === 'delivered') || orders.find((o) => o.status !== 'cancelled');
+  const rows = [
+    ...places.map((t) => `<li class="tagain__row"><span class="tagain__ic">${icon('i-pin')}</span>
+      <span class="tagain__text"><b>${esc(t.dropoff.label)}</b><span>${t.kind === 'express' ? 'Parcel' : 'Ride'} · last on ${esc(day(t.at))}</span></span>
+      <button type="button" class="btn-soft" data-rebook="${esc(t.id)}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`),
+    ...(lastShop ? [`<li class="tagain__row"><span class="tagain__ic">${icon('i-store')}</span>
+      <span class="tagain__text"><b>${esc(lastShop.shop.name)}</b><span>Food${lastShop.lines && lastShop.lines[0] ? ` · ${esc(lastShop.lines[0].name)}` : ''}</span></span>
+      <a class="btn-soft" href="/pages/shop.html?id=${encodeURIComponent(lastShop.shop.id)}">${icon('i-rebook', 'icon--sm icon--deep')}Order</a></li>`] : []),
+  ];
+  $('#again').hidden = Boolean(count) || !rows.length;
+  $('#againList').innerHTML = rows.join('');
+}
 
 /* ---------- The list for the switch ---------- */
 function draw() {
@@ -173,17 +193,24 @@ function draw() {
   $('#ongoingN').textContent = count;
   $('#ongoingN').hidden = !count;
   let html;
+  let pages = '';
   if (show === 'ongoing') {
     if (open && !(open === 'ride' ? live : cooking.some((o) => o.id === open))) open = null; // it arrived or was delivered
-    html = count ? [...(live ? [rideCard(live)] : []), ...cooking.map(foodCard)].join('') : empty('Nothing on its way right now.');
+    html = count ? [...(live ? [rideCard(live)] : []), ...cooking.map(foodCard)].join('') : emptyRows('Nothing on its way', 'Rides and food orders show up here, live.');
+    drawAgain(count);
   } else if (show === 'rides') {
     const past = rides.filter((t) => !live || t.id !== live.id);
-    html = past.length ? past.map(pastRide).join('') : empty('No rides yet. Your rides and deliveries show up here.');
+    page = Math.min(page, Math.max(1, Math.ceil(past.length / PER)));
+    html = past.length ? onPage(past).map(pastRide).join('') : emptyRows('No rides yet', 'Your rides and deliveries show up here.');
+    pages = pager(page, past.length, PER, 'rides');
   } else {
     const done = orders.filter((o) => DONE.includes(o.status));
-    html = done.length ? done.map(pastOrder).join('') : empty('No food orders yet. Your past orders show up here.');
+    page = Math.min(page, Math.max(1, Math.ceil(done.length / PER)));
+    html = done.length ? onPage(done).map(pastOrder).join('') : emptyRows('No food orders yet', 'Your past orders show up here.');
+    pages = pager(page, done.length, PER, 'orders');
   }
   $('#quick').hidden = show !== 'ongoing';
+  $('#tripPages').innerHTML = pages;
   if (show !== 'ongoing') open = null;
   if (html === drawn) return;
   drawn = html;
@@ -208,12 +235,22 @@ $('.tswitch').addEventListener('click', (e) => {
   const b = e.target.closest('[data-show]');
   if (!b || b.dataset.show === show) return;
   show = b.dataset.show;
+  page = 1;
   $$('.tswitch [data-show]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   draw();
 });
 
-// Rebook: put the drop-off first in the recent places, then the Ride screen opens it on "Choose your ride"
-$('#tripsList').addEventListener('click', (e) => {
+$('#tripPages').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-page]');
+  if (!b || b.disabled) return;
+  page = Number(b.dataset.page);
+  draw();
+  $('.tswitch').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#tripPages [aria-current="page"]').focus({ preventScroll: true });
+});
+
+// Rebook (in the Rides list or Go again): put the drop-off first in the recent places, then the Ride screen opens it on "Choose your ride"
+$('.tpanel').addEventListener('click', (e) => {
   const b = e.target.closest('[data-rebook]');
   if (!b) return;
   const trip = rides.find((t) => t.id === b.dataset.rebook);

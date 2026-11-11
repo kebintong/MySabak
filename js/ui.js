@@ -129,6 +129,23 @@ export const STATUS_ICON = { review: 'i-st-wait', fix: 'i-st-alert', approved: '
 /** An empty list: three faint rows that fade out, with the reason over them (css/base.css .erows). Goes in a <ul>. */
 export const emptyRows = (title, line) => `<li class="erows">${'<span class="erows__ghost" aria-hidden="true"><i></i><span><i></i><i></i></span></span>'.repeat(3)}
   <span class="erows__msg"><b>${esc(title)}</b><span>${esc(line)}</span></span></li>`;
+/** Which page numbers to show: all of them up to 7 pages, else the first, the last and the ones around `page`, with 0 for a gap. */
+export function pageList(page, pages) {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+  const keep = [...new Set([1, page - 1, page, page + 1, pages])].filter((p) => p >= 1 && p <= pages).sort((a, b) => a - b);
+  return keep.flatMap((p, i) => (i && p - keep[i - 1] > 1 ? [0, p] : [p]));
+}
+/** Numbered pages, ‹ 1 2 … 9 ›, with "Showing 1–6 of 40 accounts" under them; '' when everything fits on one page.
+ *  Buttons carry data-page: listen for clicks on the box you put this in. */
+export function pager(page, total, per, noun) {
+  const pages = Math.ceil(total / per);
+  if (pages < 2) return '';
+  const btn = (to, label, aria, current = false) => `<button type="button" class="tpages__btn" data-page="${to}" aria-label="${aria}"${current ? ' aria-current="page"' : ''}${to < 1 || to > pages ? ' disabled' : ''}>${label}</button>`;
+  const from = (page - 1) * per;
+  return `<nav class="tpages" aria-label="Pages"><div class="tpages__nav">${btn(page - 1, '‹', 'Previous page')}${pageList(page, pages)
+    .map((p) => (p ? btn(p, p, `Page ${p}`, p === page) : '<span class="tpages__gap" aria-hidden="true">…</span>')).join('')}${btn(page + 1, '›', 'Next page')}</div>
+    <p class="tpages__note">Showing ${from + 1}–${Math.min(from + per, total)} of ${total} ${esc(noun)}</p></nav>`;
+}
 /** A status label: a grey chip with a coloured icon and a word (css/base.css .tag). */
 export const tag = (kind, label) => `<span class="tag tag--${kind}">${icon(STATUS_ICON[kind] || STATUS_ICON.plain)}${label}</span>`;
 
@@ -208,6 +225,40 @@ export function mountMagic() {
   $$('.skyfx').forEach(paintSky);
   armTabGlow();
 }
+
+/* ---------- Light mode, for computers that struggle ----------
+   Some PCs (older graphics, battery saver, graphics acceleration turned off) drop frames on the blurred entrances,
+   the moving night sky and the breathing glows. If a page's first 1.5 seconds (its entrance) drop many frames, it
+   switches to light mode: <html class="lite">, the same look with those effects held still (css/base.css).
+   Remembered on this device. ?lite=1 or ?lite=0 in any address turns it on or off by hand. */
+const LITE_KEY = 'mysabak.lite';
+export function watchSmoothness() {
+  const html = document.documentElement;
+  let saved = null;
+  try {
+    const asked = new URLSearchParams(location.search).get('lite');
+    if (asked === '1' || asked === '0') localStorage.setItem(LITE_KEY, asked);
+    saved = localStorage.getItem(LITE_KEY);
+  } catch (_) { /* storage off: decide again on each page */ }
+  if (saved === '1' || (navigator.hardwareConcurrency || 8) <= 2) { html.classList.add('lite'); return; }
+  if (saved === '0' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const until = performance.now() + 1500;
+  let last = 0;
+  let frames = 0;
+  let slow = 0;
+  const tick = (now) => {
+    if (document.visibilityState !== 'visible') return; // a hidden tab says nothing about this device
+    if (last) { frames += 1; if (now - last > 34) slow += 1; } // 34 ms: two frames missed at 60 Hz
+    last = now;
+    if (now < until) { requestAnimationFrame(tick); return; }
+    if (frames >= 20 && slow / frames > 0.25) {
+      html.classList.add('lite');
+      try { localStorage.setItem(LITE_KEY, '1'); } catch (_) { /* this page only */ }
+    }
+  };
+  requestAnimationFrame(tick);
+}
+if (typeof document !== 'undefined') watchSmoothness();
 
 /* ---------- Top bar + tab bar ---------- */
 export const TABS = [
@@ -638,10 +689,9 @@ export const ava = (name, cls = '') => `<span class="${avaTone(name)}${cls ? ` $
  * The top-right account control: "Sign in" when signed out; when signed in, a profile button whose
  * dropdown holds the account's home and Sign out (Sign out lives only here).
  */
-/** The pages in the profile menu: a driver's, merchant's or admin's own pages (as in the tab bar), or a customer's account. */
-const menuPages = (role) => (role.tabs && role !== ROLES.client
-  ? role.tabs.map((id) => TABS.find((t) => t.id === id)).map((t) => [t.icon, t.label, (role.hrefs && role.hrefs[t.id]) || t.href])
-  : [[role.homeIcon, role.homeLabel, role.home]]);
+/** The pages in the profile menu: the role's own pages, in the tab bar's order. */
+const menuPages = (role) => role.tabs.filter((id) => id !== 'food').map((id) => TABS.find((t) => t.id === id))
+  .map((t) => [t.icon, t.label, (role.hrefs && role.hrefs[t.id]) || t.href]);
 const samePage = (href) => location.pathname.replace(/\.html$/, '') === href.replace(/\.html$/, '');
 
 export function mountAccount(link, user) {

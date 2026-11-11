@@ -2,7 +2,7 @@
    one account's profile (edit details, send a password reset, turn the account off or back on), the sign-up links to
    share, and how registrations are going. ?id= opens one account. */
 import { adminUsers, adminUpdateUser, adminSetUserStatus, adminPasswordReset, adminApplications, errorMessage } from '../api.js';
-import { $, esc, icon, toast, rollNumber, ava } from '../ui.js';
+import { $, esc, icon, toast, rollNumber, ava, pager } from '../ui.js';
 import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, since, day, num, tag, notice, wireTips } from './admin-common.js';
 
 const ROLES = [['', 'All'], ['rider', 'Riders'], ['driver', 'Drivers'], ['merchant', 'Merchants']];
@@ -10,8 +10,8 @@ const OFF_REASONS = ['Asked to close their account', 'Repeated complaints from r
 const AREA_WORD = { rider: 'Area', driver: 'City', merchant: 'Area' };
 
 const params = new URLSearchParams(location.search);
-const PAGE = 10; // rows shown at first, and added by "Show more"
-const state = { users: [], apps: { drivers: [], merchants: [] }, q: '', role: '', status: '', limit: PAGE, sel: params.get('id'), open: Boolean(params.get('id')), mode: 'view', errors: {}, busy: false };
+const PER = 6; // accounts on a page
+const state = { users: [], apps: { drivers: [], merchants: [] }, q: '', role: '', status: '', page: 1, sel: params.get('id'), open: Boolean(params.get('id')), mode: 'view', errors: {}, busy: false };
 
 mountAdmin().then((user) => {
   if (!user) return;
@@ -34,7 +34,7 @@ async function load() {
 
 const label = (u) => (u.role === 'merchant' && u.shop ? u.shop : u.name);
 const subLabel = (u) => (u.role === 'merchant' && u.shop ? `${u.name} · ${u.email}` : u.email);
-const resetPage = () => { state.limit = PAGE; };
+const resetPage = () => { state.page = 1; };
 const matches = (u) => {
   if (state.role && u.role !== state.role) return false;
   if (state.status && u.status !== state.status) return false;
@@ -57,14 +57,12 @@ function render() {
   const list = shown();
   const cur = current();
   $('#ucount').textContent = list.length === state.users.length ? `${num(list.length)} accounts, pending first` : `Showing ${num(list.length)} of ${num(state.users.length)} accounts`;
-  // the open account stays in view even when it's past the rows shown
+  // one page of the list (waiting first), split into its groups
   const waitAll = list.filter((u) => u.status === 'pending');
   const otherAll = list.filter((u) => u.status !== 'pending');
-  const per = waitAll.length && otherAll.length ? state.limit / 2 : state.limit; // both groups get a share of the first view
-  const rows = [...waitAll.slice(0, per), ...otherAll.slice(0, per)];
-  if (cur && !rows.includes(cur) && list.includes(cur)) rows.push(cur);
-  $('#more').hidden = waitAll.length <= per && otherAll.length <= per;
-  $('#more').textContent = 'Show more';
+  state.page = Math.min(state.page, Math.max(1, Math.ceil(list.length / PER)));
+  const rows = list.slice((state.page - 1) * PER, state.page * PER);
+  $('#upages').innerHTML = pager(state.page, list.length, PER, 'accounts');
   // Who needs a decision first, with a Review button; everyone else quiet below
   const row = (u, i) => {
     const pending = u.status === 'pending';
@@ -255,12 +253,20 @@ $('#urows').addEventListener('click', (e) => {
   const b = e.target.closest('[data-id]');
   if (b) pick(b.dataset.id);
 });
-$('#more').addEventListener('click', () => { state.limit += PAGE; render(); });
+$('#upages').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-page]');
+  if (!b || b.disabled) return;
+  state.page = Number(b.dataset.page);
+  render();
+  $('#usersTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#upages [aria-current="page"]').focus({ preventScroll: true });
+});
 $('#newest').addEventListener('click', (e) => {
   const b = e.target.closest('[data-id]');
   if (!b) return;
   Object.assign(state, { q: '', role: '', status: '' });
   $('#q').value = '';
+  state.page = Math.floor(shown().findIndex((u) => u.id === b.dataset.id) / PER) + 1; // the page it's on
   pick(b.dataset.id);
   $('#mgmt').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });

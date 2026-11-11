@@ -1,8 +1,8 @@
 /* Admin registrations (pages/admin-registrations.html): driver and shop applications. Pick one, look at the
    papers, tick the three checks, then approve, send back to fix (with a reason), or reject.
    ?kind=drivers|merchants picks the list, &tab=review|fix|approved|rejected the status and &id= opens one applicant. */
-import { adminApplications, adminDecide, errorMessage } from '../api.js';
-import { $, $$, esc, icon, toast, edgeGlow, calm, ava, emptyRows } from '../ui.js';
+import { adminApplications, adminDecide, adminDeleteApplications, errorMessage } from '../api.js';
+import { $, $$, esc, icon, toast, edgeGlow, calm, ava, emptyRows, pager } from '../ui.js';
 import { mountAdmin, STATUS, VEHICLE, ago, since, tag, notice, openSheet } from './admin-common.js';
 
 const KINDS = {
@@ -20,6 +20,7 @@ const KINDS = {
   },
 };
 const TABS = ['review', 'fix', 'approved', 'rejected'];
+const PER = 6; // applicants on a page
 // What to look for on each paper, and the fix reason to suggest when it isn't clear
 const PAPER_HELP = {
   License: { look: ['The name matches the application', 'The photo is the applicant', 'It hasn’t expired'], reason: 2 },
@@ -54,6 +55,7 @@ const state = {
   kind: KINDS[params.get('kind')] ? params.get('kind') : 'drivers',
   tab: TABS.includes(params.get('tab')) ? params.get('tab') : 'review', sel: params.get('id'), open: Boolean(params.get('id')),
   lists: { drivers: [], merchants: [] }, checks: {}, fixOpen: false, fixPick: 0, fixNote: '', done: null, paper: 0, drawn: false,
+  page: 1, confirm: null, // confirm: 'all' or an applicant's id, while asking before deleting
 };
 
 mountAdmin().then((user) => {
@@ -67,7 +69,10 @@ async function load() {
     const [drivers, merchants] = await Promise.all([adminApplications('drivers'), adminApplications('merchants')]);
     state.lists = { drivers, merchants };
     const picked = current();
-    if (picked && state.open) state.tab = picked.status; // opened from a link: show it in its own tab
+    if (picked && state.open) { // opened from a link: show it in its own tab, on its page
+      state.tab = picked.status;
+      state.page = Math.floor(shown().findIndex((a) => a.id === picked.id) / PER) + 1;
+    }
     render();
   } catch (err) {
     toast(errorMessage(err));
@@ -93,13 +98,24 @@ function render() {
     return `<button type="button" class="seg__btn" role="tab" data-tab="${t}" aria-selected="${t === state.tab}" title="${STATUS[t].label}"><span>${STATUS[t].short}</span><span class="seg__n">${n}</span></button>`;
   }).join('');
   const cur = current();
+  const noun = state.kind === 'drivers' ? 'drivers' : 'shops';
+  state.page = Math.min(state.page, Math.max(1, Math.ceil(shown().length / PER)));
+  const page = shown().slice((state.page - 1) * PER, state.page * PER);
+  // Rejected: clear them all out (their details and papers), after asking
+  const nRej = state.tab === 'rejected' ? shown().length : 0;
+  $('#rbulk').hidden = !nRej;
+  $('#rbulk').innerHTML = !nRej ? '' : state.confirm === 'all'
+    ? `<div class="confirm"><p>${nRej === 1 ? `Delete the rejected ${noun.slice(0, -1)}` : `Delete all ${nRej} rejected ${noun}`} and the papers they sent? This can’t be undone.</p>
+        <div class="actions"><button type="button" class="button button--danger cta" data-del-all>Delete ${nRej}</button><button type="button" class="button button--ghost cta" data-del-cancel>Cancel</button></div></div>`
+    : `<p class="rbulk__line">${nRej} rejected ${nRej === 1 ? noun.slice(0, -1) : noun}</p><button type="button" class="button button--danger cta rbulk__btn" data-del-ask="all">${icon('i-trash')}${nRej === 1 ? 'Delete' : 'Delete all'}</button>`;
   // the one applicant made in this browser stands out from the samples
-  $('#rows').innerHTML = shown().length ? shown().map((a, i) => `<li style="--i:${Math.min(i, 8)}"><button type="button" class="regrow" data-id="${esc(a.id)}" aria-current="${Boolean(cur && cur.id === a.id)}">
+  $('#rows').innerHTML = page.length ? page.map((a, i) => `<li style="--i:${Math.min(i, 8)}"><button type="button" class="regrow" data-id="${esc(a.id)}" aria-current="${Boolean(cur && cur.id === a.id)}">
       ${ava(nameOf(a))}
       <span class="row__main"><span class="row__title">${esc(nameOf(a))}</span>
         <span class="row__sub">${esc(a.kind === 'drivers' ? VEHICLE[a.vehicle] || a.vehicle : a.category)} · ${esc(a.kind === 'drivers' ? a.city : a.area)} · ${esc(ago(a.appliedAt))}</span></span>
       ${a.sample ? '' : tag('plain', 'This browser')}</button></li>`).join('')
-    : emptyRows(...EMPTY[state.tab](state.kind === 'drivers' ? 'drivers' : 'shops'));
+    : emptyRows(...EMPTY[state.tab](noun));
+  $('#rpages').innerHTML = pager(state.page, shown().length, PER, noun);
   $('#rows').classList.toggle('is-first', !state.drawn); // rows rise in on the first draw only
   state.drawn = true;
   $('#reg').classList.toggle('is-reviewing', state.open && Boolean(cur));
@@ -160,13 +176,18 @@ function renderReview(a) {
         <button type="button" class="button button--danger cta" data-decide="rejected">Reject</button>
         <span class="actions__hint">${allTicked ? 'All checks done' : `${ticked.filter(Boolean).length} of 3 checks done`}</span>
       </div>` : ''}
+    ${a.status === 'rejected' && !done ? (state.confirm === a.id
+    ? `<div class="confirm"><p>Delete ${esc(nameOf(a))} and the papers they sent? This can’t be undone.</p>
+        <div class="actions"><button type="button" class="button button--danger cta" data-del-one>Delete applicant</button><button type="button" class="button button--ghost cta" data-del-cancel>Cancel</button></div></div>`
+    : `<div class="actions"><button type="button" class="button button--danger cta" data-del-ask="${esc(a.id)}">${icon('i-trash')}Delete applicant</button>
+        <span class="actions__hint">Removes their details and papers.</span></div>`) : ''}
     ${done ? notice(done.status, esc(done.text), ' role="status"') : ''}`;
 }
 
 $('#stabs').addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]');
   if (!b) return;
-  Object.assign(state, { tab: b.dataset.tab, sel: null, open: false, fixOpen: false, done: null });
+  Object.assign(state, { tab: b.dataset.tab, sel: null, open: false, fixOpen: false, done: null, page: 1, confirm: null });
   render();
 });
 
@@ -174,14 +195,44 @@ $('#kinds').addEventListener('click', (e) => {
   const a = e.target.closest('[data-kind]');
   if (!a) return;
   e.preventDefault();
-  Object.assign(state, { kind: a.dataset.kind, tab: 'review', sel: null, open: false, fixOpen: false, done: null });
+  Object.assign(state, { kind: a.dataset.kind, tab: 'review', sel: null, open: false, fixOpen: false, done: null, page: 1, confirm: null });
   render();
+});
+
+$('#rpages').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-page]');
+  if (!b || b.disabled) return;
+  Object.assign(state, { page: Number(b.dataset.page), sel: null, open: false, confirm: null });
+  render();
+  $('#stabs').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('#rpages [aria-current="page"]').focus({ preventScroll: true });
+});
+
+/** Delete rejected applicants (all of them in the tab, or one), then show what's left. */
+async function remove(ids) {
+  try {
+    const { deleted } = await adminDeleteApplications({ kind: state.kind, ids });
+    state.lists[state.kind] = await adminApplications(state.kind);
+    Object.assign(state, { sel: null, open: false, confirm: null, done: null });
+    render();
+    toast(`Deleted ${deleted} applicant${deleted === 1 ? '' : 's'}.`);
+  } catch (err) {
+    toast(errorMessage(err));
+  }
+}
+// Ask first (Delete all in the list, Delete applicant in the panel), then delete or cancel
+document.addEventListener('click', (e) => {
+  const ask = e.target.closest('[data-del-ask]');
+  if (ask) { state.confirm = ask.dataset.delAsk; render(); const go = $('[data-del-all], [data-del-one]'); if (go) go.focus(); return; }
+  if (e.target.closest('[data-del-cancel]')) { state.confirm = null; render(); return; }
+  if (e.target.closest('[data-del-all]')) { remove(shown().map((a) => a.id)); return; }
+  if (e.target.closest('[data-del-one]')) { const a = current(); if (a) remove([a.id]); }
 });
 
 $('#rows').addEventListener('click', (e) => {
   const b = e.target.closest('[data-id]');
   if (!b) return;
-  Object.assign(state, { sel: b.dataset.id, open: true, fixOpen: false, done: null, paper: 0 });
+  Object.assign(state, { sel: b.dataset.id, open: true, fixOpen: false, done: null, paper: 0, confirm: null });
   render();
   if (matchMedia('(max-width: 899px)').matches) $('.content').scrollTo({ top: 0 });
 });

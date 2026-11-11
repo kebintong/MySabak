@@ -366,7 +366,7 @@ button.waitrow { width: 100%; border: 0; background: none; font: inherit; text-a
 .uprof .actions .button .icon { width: 18px; height: 18px; }
 
 .ulist__foot { display: flex; justify-content: center; padding: 12px 20px 20px; border-top: 1px solid var(--line); }
-.ulist__foot:has(#more[hidden]) { display: none; }
+.ulist__foot:empty { display: none; }
 .facts .span-2 { grid-column: 1 / -1; }
 .page--admin .card > .lede.small { margin-bottom: 16px; }
 .page--admin .card > .tiphint { margin-bottom: 8px; }
@@ -425,7 +425,7 @@ button.waitrow { width: 100%; border: 0; background: none; font: inherit; text-a
 .tsplit__grid div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .tsplit__grid div > span { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; color: var(--sub); }
 .tsplit__grid .icon { width: 14px; height: 14px; flex: none; stroke: var(--c); }
-.tsplit__grid b { font: 800 16px/1.15 var(--font-body); letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.tsplit__grid b { padding-left: 19px; font: 800 16px/1.15 var(--font-body); letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
 
 /* How riders pay: a donut, the biggest share in the middle */
 .pdonut { flex: 1; display: flex; align-items: center; gap: 20px; }
@@ -585,3 +585,12 @@ button.waitrow { width: 100%; border: 0; background: none; font: inherit; text-a
 @media (min-width: 900px) and (orientation: landscape) { .ritem .paper__img .pdraw { --pd: 48px; } .ritem .paper__img:has(.pdraw) { gap: 4px; } }
 .pview--none p { margin: 0; color: var(--sub); }
 .pview--none b { font-weight: 600; color: var(--ink); }
+
+/* Registrations: Delete all, above the rejected list; numbered pages under the list */
+.rbulk { margin: 0 12px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rbulk[hidden] { display: none; }
+.rbulk > .confirm { flex: 1; }
+.rbulk__line { margin: 0; font-size: 14px; color: var(--sub); }
+.page--admin .rbulk__btn { min-height: 38px; padding: 0 14px; }
+.button--danger .icon { width: 18px; height: 18px; stroke: var(--bad); }
+.rpages:not(:empty) { padding: 14px 12px 16px; border-top: 1px solid var(--line); }

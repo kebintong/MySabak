@@ -2,7 +2,7 @@
    cancelled orders for today, the last 7 days or this month. The owner picks a branch or All branches;
    a branch account sees its own branch. The dashboard's Preview analytics tiles open this page. */
 import { merchantSales, errorMessage } from '../api.js';
-import { $, $$, mountChrome, esc, peso, toast, rollNumber, icon, listMenu } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, toast, rollNumber, icon, listMenu, emptyRows } from '../ui.js';
 
 mountChrome({ roles: ['merchant'] });
 
@@ -52,10 +52,10 @@ function render(s) {
 
   $('#topList').innerHTML = s.top.length
     ? s.top.map((t) => `<li><span>${esc(t.name)} <small>· ${t.qty} sold</small></span><b>${peso(t.sales)}</b></li>`).join('')
-    : '<li class="empty">No orders in this period yet.</li>';
+    : emptyRows('No orders yet', 'Your best sellers in this period show up here.');
   $('#cancelList').innerHTML = s.cancelledList.length
     ? s.cancelledList.map((c) => `<li><span>${esc(c.customer)} <small>· ${esc(c.id)}</small></span><b>${peso(c.amount)}</b></li>`).join('')
-    : `<li class="empty">${s.cancelled ? 'Only sample cancellations in this period.' : 'No cancelled orders. Nice!'}</li>`;
+    : emptyRows(s.cancelled ? 'Only sample cancellations' : 'No cancelled orders', s.cancelled ? 'The real ones in this period show up here.' : 'Nice! Cancelled orders would show up here.');
 }
 
 async function load() {

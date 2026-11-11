@@ -368,3 +368,6 @@
     gap: 8px;
   }
 }
+
+/* An empty list (ui.js emptyRows) in the Top items and Cancelled cards */
+.slist > li.erows { display: block; padding: 4px 0 8px; }

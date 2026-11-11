@@ -683,7 +683,8 @@ const BROWSER_DRIVER = 'browser-driver'; // the application made in this browser
 function applications(kind) {
   const decided = demo.get('adminDecisions', {});
   const opened = adminOpenedAt();
-  const list = DEMO_APPLICATIONS[kind].map(({ hoursAgo, ...a }) => ({ ...a, kind, sample: true, appliedAt: opened - hoursAgo * 3600e3 }));
+  const deleted = new Set(demo.get('adminDeleted', []));
+  const list = DEMO_APPLICATIONS[kind].filter((a) => !deleted.has(a.id)).map(({ hoursAgo, ...a }) => ({ ...a, kind, sample: true, appliedAt: opened - hoursAgo * 3600e3 }));
   const d = demo.get('driver', null);
   if (kind === 'drivers' && d && d.method === 'online') {
     const papers = { license: 'unknown', orcr: 'unknown', selfie: 'unknown' }; // the demo doesn't keep the photos
@@ -728,6 +729,28 @@ export async function adminDecide({ kind, id, decision, reason = '' }) {
     demo.set('driver', { ...d, status: decision === 'fix' ? 'review' : decision, fixReason: entry.reason || undefined });
   }
   return { status: decision };
+}
+
+/**
+ * Delete rejected applications and everything they sent (details and papers). Only rejected ones; it can't be undone.
+ * DEMO: sample applicants are hidden for good in this browser; the driver who applied in this browser is erased.
+ * Backend: e.g. DELETE /api/admin/applications { kind, ids }
+ * @param {{kind:'drivers'|'merchants', ids:string[]}} input
+ * @returns {Promise<{deleted:number}>}
+ */
+export async function adminDeleteApplications({ kind, ids }) {
+  requireAdmin();
+  if (!DEMO_APPLICATIONS[kind]) throw Object.assign(new Error('Unknown kind'), { status: 400 });
+  const rejected = new Set(applications(kind).filter((a) => a.status === 'rejected').map((a) => a.id));
+  const gone = [...new Set(ids)].filter((id) => rejected.has(id));
+  if (!gone.length) throw Object.assign(new Error('Only rejected applications can be deleted.'), { status: 409 });
+  const decided = { ...demo.get('adminDecisions', {}) };
+  gone.forEach((id) => { delete decided[id]; });
+  demo.set('adminDecisions', decided);
+  if (gone.includes(BROWSER_DRIVER)) demo.set('driver', null); // their details go; they could apply again
+  const samples = gone.filter((id) => id !== BROWSER_DRIVER);
+  demo.set('adminDeleted', [...new Set([...demo.get('adminDeleted', []), ...samples])]);
+  return { deleted: gone.length };
 }
 
 /**
