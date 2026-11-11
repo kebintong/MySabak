@@ -23,8 +23,7 @@
 }
 .page--admin .page-head {
   gap: 8px; padding-bottom: 84px; color: #fff;
-  background: radial-gradient(40% 90% at 62% -10%, rgba(211, 91, 224, .38), transparent 70%),
-    linear-gradient(90deg, #1e0638 0%, #3e1270 36%, #6e30b4 72%, #9246c2 100%);
+  background: linear-gradient(90deg, #1e0638 0%, #3e1270 36%, #6e30b4 72%, #9246c2 100%);
 }
 .page--admin .page-head .lede { color: #e2d0f4; font-size: 16px; }
 .page--admin .lede.small, .page--admin .small { font-size: 14px; }

@@ -155,23 +155,68 @@ export const tag = (kind, label) => `<span class="tag tag--${kind}">${icon(STATU
 
 /* ---------- Midnight magic glow (Figma "H-v3 · Mascot · Midnight") ---------- */
 const STAR = 'M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z';
-// [x%, y%, r] white dots, then gold ones; [x%, y%, px, gold?, delay s] four-point twinkles
-const SKY_DOTS = [[6, 8, 1.2], [18, 15, 1.6], [31, 6, 1], [48, 17, 1.4], [67, 7, 1.2], [85, 11, 1.6], [95, 21, 1],
-  [64, 37, 1], [97, 63, 1.4], [15, 86, 1.2], [46, 86, 1.4], [77, 81, 1.1]];
-const SKY_GOLD = [[38, 13, 1.3], [90, 40, 1.2], [59, 91, 1.3]];
-const SKY_TWINKLES = [[41, 9, 8, 0, 1.9], [58, 11, 9, 0, 0.2], [74, 15, 15, 1, 1.1], [30, 85, 9, 0, 2.2], [8, 87, 7, 1, 1.4], [90, 82, 11, 1, 0.7]];
+/** How full a w×h sky is (Sky A, "deep field"): the star count follows the area, so a desktop sky is as full as a
+ *  phone's, and the four-point stars grow a little on wide screens. far: still specks, mid: slow breathers,
+ *  near: four-point stars that rest, then glint. */
+export function skyPlan(w, h) {
+  const area = w * h;
+  return {
+    far: Math.min(260, Math.round(area / 2400)),
+    mid: Math.min(70, Math.round(area / 9000)),
+    near: Math.min(14, Math.max(3, Math.round(w / 110))),
+    grow: Math.min(1.45, Math.max(1, w / 900)),
+  };
+}
+/** A repeatable random (mulberry32), so a sky looks the same every visit. */
+function seeded(seed) {
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
-/** Fill an element with the night-sky effects: drifting aurora, sparkle dust, blinking dots, twinkling stars. */
+/** Fill an element with the night sky: a slow lilac glow, three depths of stars and now and then a shooting star.
+ *  Sized to the element when it is painted (shortcut: a later resize keeps the first count; repaint on resize if
+ *  a big change ever matters). */
 export function paintSky(el) {
   if (!el || el.dataset.painted) return;
+  const box = el.getBoundingClientRect();
+  if (!box.width && typeof ResizeObserver !== 'undefined') { // hidden for now (a closed panel, a head not drawn yet): paint once it has a size
+    el.dataset.painted = 'wait';
+    const ro = new ResizeObserver(() => {
+      if (!el.getBoundingClientRect().width) return;
+      ro.disconnect();
+      delete el.dataset.painted;
+      paintSky(el);
+    });
+    ro.observe(el);
+    return;
+  }
   el.dataset.painted = '1';
-  const dots = (list, fill) => list.map(([x, y, r], i) => `<circle class="sky-dot" cx="${x}%" cy="${y}%" r="${r}" fill="${fill}" style="animation-delay:-${(i * 0.7) % 3}s"/>`).join('');
-  el.innerHTML = '<span class="sky-aurora"></span><span class="sky-aurora sky-aurora--gold"></span>'
-    + '<svg class="sky-dust" viewBox="0 0 390 262" preserveAspectRatio="none" aria-hidden="true">'
-    + '<path d="M-10 236 C90 210 150 228 230 176 C290 138 330 90 400 70" stroke="#FFE29A" stroke-opacity=".45" stroke-width="2" stroke-dasharray="1 9"/>'
-    + '<path d="M-10 244 C96 222 160 238 236 188 C296 150 336 104 400 84" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="1 13" style="animation-duration:17.5s"/></svg>'
-    + `<svg class="sky-dots" aria-hidden="true">${dots(SKY_DOTS, '#fff')}${dots(SKY_GOLD, '#FFE29A')}</svg>`
-    + SKY_TWINKLES.map(([x, y, s, gold, d]) => `<svg class="sky-tw" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-delay:${d}s" viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}" fill="${gold ? '#FFE29A' : '#fff'}"/></svg>`).join('');
+  const w = box.width || 390;
+  const h = box.height || 262;
+  const plan = skyPlan(w, h);
+  const r = seeded(7);
+  const pct = (n) => `${(n * 100).toFixed(2)}%`;
+  let far = '';
+  for (let i = 0; i < plan.far; i++) far += `<circle cx="${pct(r())}" cy="${pct(r() * 0.92)}" r="${(0.4 + r() * 0.45).toFixed(2)}" fill="#fff" fill-opacity="${(0.25 + r() * 0.4).toFixed(2)}"/>`;
+  let mid = '';
+  for (let i = 0; i < plan.mid; i++) {
+    const s = (1.6 + r() * 1.2).toFixed(1);
+    mid += `<i class="sky-mid" style="left:${pct(r())};top:${pct(r() * 0.85)};width:${s}px;height:${s}px;--t:${(4 + r() * 4).toFixed(1)}s;--d:-${(r() * 8).toFixed(1)}s"></i>`;
+  }
+  let near = '';
+  for (let i = 0; i < plan.near; i++) {
+    const s = Math.round((7 + r() * 8) * plan.grow);
+    const x = (i + 0.2 + r() * 0.6) / plan.near;
+    near += `<svg class="sky-tw" style="left:${pct(x)};top:${pct(0.04 + r() * 0.6)};width:${s}px;height:${s}px;--t:${(5 + r() * 4).toFixed(1)}s;--d:-${(r() * 9).toFixed(1)}s" viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}" fill="${r() < 0.4 ? '#FFE29A' : '#fff'}"/></svg>`;
+  }
+  const dx = Math.round(Math.min(520, w * 0.55));
+  el.innerHTML = '<span class="sky-aurora"></span><span class="sky-aurora sky-aurora--warm"></span>'
+    + `<svg class="sky-far" aria-hidden="true">${far}</svg>${mid}${near}`
+    + `<i class="sky-shoot" style="--dx:${dx}px;--dy:${Math.round(dx * 0.4)}px"></i>`;
 }
 
 /**

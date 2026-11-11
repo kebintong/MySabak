@@ -43,7 +43,7 @@
 .browse-btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .browse { position: absolute; inset: 0; z-index: 2; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; background: #faf5f3; padding-bottom: var(--content-bottom); }
 .browse__wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; }
-.browse__head { padding: calc(var(--content-top) + 6px) 0 22px; background: radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
+.browse__head { padding: calc(var(--content-top) + 6px) 0 22px; background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
 .browse__titlerow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .browse__title { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: #fff; }
 .browse__map {

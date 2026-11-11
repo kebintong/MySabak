@@ -520,10 +520,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .hero { /* the Figma sky is a 390px picture; stretched this wide its stars smear, so paint it */
     min-height: 360px;
     padding: calc(100px + var(--safe-t)) 24px 80px;
-    background:
-      radial-gradient(40% 70% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%),
-      radial-gradient(30% 50% at 12% 85%, rgba(246, 196, 108, .18), transparent 70%),
-      linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
+    background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
     clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%);
   }
 .quick, .promo { height: 116px; }
@@ -999,7 +996,6 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 /* same painted sky as the desktop home: the 390px picture smears this wide */
 .page--sky .app {
     background:
-      radial-gradient(40% 70% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%) center top / 100% 260px no-repeat,
       linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf) center top / 100% 260px no-repeat,
       #faf5f3;
   }
@@ -1019,7 +1015,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .page--head-sky .page-head {
   margin: calc(-10px - var(--content-top)) calc(50% - 50vw) 0;
   padding: calc(var(--content-top) + 14px) calc(50vw - 50% + 4px) 30px;
-  background: radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
+  background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
 }
 @media (min-width: 900px) {
 .wallet {
@@ -1839,26 +1835,32 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 }
 @property --s { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 
-/* Night sky: drifting aurora, sparkle dust, blinking dots and twinkles (filled in by paintSky() in ui.js) */
+/* Night sky, "deep field" (paintSky() in ui.js): one slow lilac glow and a faint warm one, sized to the sky;
+   still specks, stars that breathe slowly out of step, four-point stars that rest and then glint, and a shooting
+   star about every 13 s. Mostly still, with small moments. */
 .skyfx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .sky-aurora {
-  position: absolute; left: 44%; top: -40px; width: 260px; height: 150px; border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(211, 91, 224, .45), rgba(211, 91, 224, 0) 70%);
-  animation: sky-drift 9s ease-in-out infinite alternate;
+  position: absolute; left: 42%; top: -35%; width: 62%; height: 90%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(190, 120, 255, .5), rgba(190, 120, 255, 0));
+  animation: sky-drift 22s ease-in-out infinite alternate;
 }
-.sky-aurora--gold {
-  left: -60px; top: auto; bottom: 0; width: 240px; height: 120px;
-  background: radial-gradient(ellipse at center, rgba(246, 196, 108, .28), rgba(246, 196, 108, 0) 70%);
-  animation-delay: -4s;
+.sky-aurora--warm {
+  left: 20%; top: 50%; height: 50%; width: 60%;
+  background: radial-gradient(closest-side, rgba(246, 196, 108, .14), rgba(246, 196, 108, 0));
+  animation-duration: 26s; animation-direction: alternate-reverse;
 }
-.sky-dust { position: absolute; inset: 0; width: 100%; height: 100%; }
-.sky-dust path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; animation: sky-dust 12.25s linear infinite; }
-.sky-dots { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.sky-dot { opacity: .6; animation: sky-blink 3.4s ease-in-out infinite; }
-.sky-tw { position: absolute; transform-origin: 50% 50%; animation: sky-twinkle 2.8s ease-in-out infinite; }
+.sky-far { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sky-mid { position: absolute; border-radius: 50%; background: #fff; opacity: .6; animation: sky-blink var(--t, 6s) ease-in-out var(--d, 0s) infinite; }
+.sky-tw { position: absolute; transform-origin: 50% 50%; filter: drop-shadow(0 0 3px rgba(255, 226, 154, .7)); animation: sky-twinkle var(--t, 7s) ease-in-out var(--d, 0s) infinite; }
+.sky-shoot {
+  position: absolute; left: 18%; top: 12%; width: 120px; height: 2px; margin-left: -120px; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 70%, #ffe29a);
+  transform-origin: right center; opacity: 0; animation: sky-shoot 13s cubic-bezier(.3, 0, .2, 1) 2s infinite;
+}
 .page-head:has(> .skyfx) { position: relative; isolation: isolate; }
 .page-head:has(> .skyfx) > :not(.skyfx) { position: relative; z-index: 1; }
 .page--sky .app > .skyfx { bottom: auto; height: calc(230px + var(--safe-t)); }
+@media (max-width: 899px) { .page--sky .app > .skyfx { clip-path: polygon(0 0, 100% 0, 100% 86%, 0 100%); } } /* the picture's slanted edge: no stars on the cream */
 [data-sky] { position: relative; isolation: isolate; }
 
 /* Glow cards: a lilac → gold border, with a lilac glow breathing on the left and a gold one on the right */
@@ -1916,10 +1918,15 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 /* while it plays, the breathing glows dim so the rim stands out */
 .is-glowing .glowwrap__blobs > span { animation: glow-dim 1.7s ease 1; }
 
-@keyframes sky-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-28px, 14px) scale(1.12); } }
-@keyframes sky-dust { to { stroke-dashoffset: -280; } } /* a whole number of dash repeats (10 and 14), so the loop has no jump */
-@keyframes sky-blink { 0%, 100% { opacity: .2; } 50% { opacity: .9; } }
-@keyframes sky-twinkle { 0%, 100% { opacity: .25; transform: scale(.55) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
+@keyframes sky-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-6%, 5%) scale(1.08); } }
+@keyframes sky-blink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+/* rests most of the loop, then one glint */
+@keyframes sky-twinkle { 0%, 64%, 100% { opacity: .35; transform: scale(.55) rotate(0deg); } 76% { opacity: 1; transform: scale(1) rotate(25deg); } 88% { opacity: .6; transform: scale(.7) rotate(40deg); } }
+@keyframes sky-shoot {
+  0%, 88% { opacity: 0; transform: translate(0, 0) rotate(21.8deg) scaleX(.2); }
+  90% { opacity: 1; }
+  96%, 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(21.8deg) scaleX(1); }
+}
 @keyframes glow-breathe { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .9; transform: scale(1.05); } }
 @keyframes glow-dim { 0%, 100% { opacity: .7; } 18%, 70% { opacity: .18; } }
 @keyframes sheen { 0% { transform: translateX(-120%); } 55%, 100% { transform: translateX(160%); } }
@@ -1929,6 +1936,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 @media (prefers-reduced-motion: reduce) {
 .edgeglow { --s: 190deg; animation: glow-in 1.4s ease 1 forwards !important; animation-duration: 1.4s !important; }
 .sky-tw { opacity: .85; }
+.sky-shoot { display: none; }
 .sheen { display: none; }
 }
 [data-sky] > :not(.skyfx) { position: relative; z-index: 1; }
@@ -2195,7 +2203,7 @@ b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: i
    Cards rise without the blur; the night sky, glows, sheens and sparkles stop moving (they keep their place and
    colour); glass gets a plain tint. Spinners, live dots and other signs of progress keep moving. */
 .lite { --rise-filter: none; }
-.lite .sky-aurora, .lite .sky-dust path, .lite .sky-dot, .lite .sky-tw,
+.lite .sky-aurora, .lite .sky-mid, .lite .sky-tw, .lite .sky-shoot,
 .lite .glowwrap__blobs > span, .lite .twinkle, .lite .choose__sparkle, .lite .svc__sparkle, .lite .glitter i,
 .lite .promo__aurora, .lite .promo__art, .lite .promo__eyebrow, .lite .promo__mascot,
 .lite .done__aurora, .lite .done__hero::after, .lite .mood__emoji, .lite .schart2__spark svg { animation: none !important; }

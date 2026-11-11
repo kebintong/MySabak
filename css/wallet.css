@@ -23,7 +23,7 @@
 @media (min-width: 900px) {
 .page--wallet .page-head { background: none; }
 /* desktop Wallet: the whole page is sky */
-.page--wallet .app { background: radial-gradient(40% 50% at 78% 0%, rgba(190, 120, 255, .35), transparent 70%), linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
+.page--wallet .app { background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
 .page--wallet .content__inner { min-height: 100%; }
 .wallet__main { flex: 999 1 480px; min-width: 0; gap: 0; }
 .wallet__main .wsec + .wsec { margin-top: 14px; padding-top: 20px; border-top: 1px solid var(--line-brand); }

@@ -12,12 +12,7 @@
 /* ---------- Night sky (the page head of .page--head-sky), stars and a slanted cream edge ---------- */
 .page--driver .dsky {
   position: relative; padding-bottom: 92px; color: #fff;
-  background:
-    radial-gradient(circle at 12% 34%, #fff 0 1px, transparent 2px), radial-gradient(circle at 34% 16%, #fff 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 57% 26%, #fff 0 1px, transparent 2px), radial-gradient(circle at 80% 18%, #fff 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 92% 44%, #fff 0 1px, transparent 2px), radial-gradient(circle at 44% 64%, #fff 0 1px, transparent 2px),
-    radial-gradient(60% 80% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%),
-    linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
+  background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); /* stars and glow come from the sky (paintSky) */
 }
 .page--driver .dsky::after { /* the cream edge rising to the right, like Home */
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 64px; background: #faf5f3;
