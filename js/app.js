@@ -27,7 +27,7 @@ import {
   findDriver, cancelRide, onTripUpdate, rateRide, currentUser, myTrips, myActiveTrip, endTrip,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
-import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr, trackTrip } from './ui.js';
+import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr, trackTrip, ava, avaTone } from './ui.js';
 import { splitPrice, cleanTip } from './money.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -304,7 +304,6 @@ function showTripDone(order) {
   dlg.setAttribute('aria-labelledby', 'doneTitle');
   const p = order.price || { fare: null, tip: 0, total: null };
   const d = order.driver;
-  const initials = d.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const time = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
   dlg.innerHTML = `<div class="done__card">
     <div class="done__hero">
@@ -323,7 +322,7 @@ function showTripDone(order) {
       <p class="done__meta">${esc(order.vehicle.name)} · ${esc(order.distance)} · ${esc(order.duration)}</p>
 
       <div class="done__driver">
-        <span class="driver__ava" aria-hidden="true">${esc(initials)}</span>
+        ${ava(d.name, 'driver__ava')}
         <div class="driver__main"><span class="driver__name">${esc(d.name)}</span>
           <span class="driver__meta">${esc(`${d.vehicle.color} ${d.vehicle.model}`)} · ${esc(d.vehicle.plate)}</span></div>
       </div>
@@ -646,6 +645,7 @@ function renderTrip() {
   });
   setBind('driverName', d.name);
   setBind('driverInitials', d.name.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase());
+  $('[data-bind="driverInitials"]').className = `${avaTone(d.name)} driver__ava`;
   setBind('driverRating', d.rating.toFixed(1));
   setBind('driverCar', `${d.vehicle.color} ${d.vehicle.model}`);
   setBind('driverPlate', d.vehicle.plate);

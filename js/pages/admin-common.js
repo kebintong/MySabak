@@ -34,13 +34,10 @@ export const ACCOUNT = {
   deactivated: { label: 'Deactivated', tag: 'rejected' },
 };
 export const ROLE = { rider: 'Rider', driver: 'Driver', merchant: 'Merchant' };
-/** A status pill: a coloured dot and a word (no glyphs that read as truncated text). */
+/** A status pill: a word on a soft colour. */
 export const tag = (kind, label) => `<span class="tag tag--${kind}">${label}</span>`;
 export const minSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 export const num = (n) => Number(n).toLocaleString('en-PH');
-export const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-/** A round avatar: initials on a colour picked from the name, so the same person always looks the same. */
-export const ava = (name, big = false) => `<span class="ava ava--t${[...String(name)].reduce((n, c) => n + c.charCodeAt(0), 0) % 5}${big ? ' ava--lg' : ''}" aria-hidden="true">${escT(initials(name))}</span>`;
 /** How long ago, in words: "30 secs", "4 mins", "1 hr", "2 days". */
 export const ago = (ts) => {
   const s = Math.floor((Date.now() - ts) / 1000);

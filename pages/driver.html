@@ -15,9 +15,6 @@
   <meta name="apple-mobile-web-app-title" content="mysabak">
   <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
   <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/driver.css">
@@ -36,7 +33,7 @@
         <header class="page-head dsky">
           <div class="dsky__inner">
             <div class="dwho">
-              <span class="dwho__ava" data-bind="initials" aria-hidden="true"></span>
+              <span class="dwho__ava" aria-hidden="true"></span>
               <div class="dwho__text">
                 <p class="dwho__name"><b data-bind="firstName">driver</b><span data-bind="status"></span></p>
                 <p class="dwho__car"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg><span data-bind="vehicle">Vehicle</span></p>

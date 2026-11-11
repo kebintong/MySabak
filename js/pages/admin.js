@@ -1,8 +1,8 @@
 /* Admin overview (pages/admin.html): live counts of riders, drivers and merchants, applications waiting for
    review, and today's numbers. */
 import { adminOverview, adminApplications, errorMessage } from '../api.js';
-import { $, $$, esc, toast, icon, rollNumber } from '../ui.js';
-import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, ava, since, tag, wireTips } from './admin-common.js';
+import { $, $$, esc, toast, icon, rollNumber, ava } from '../ui.js';
+import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, since, tag, wireTips } from './admin-common.js';
 
 mountAdmin().then((user) => {
   if (!user) return;

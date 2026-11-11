@@ -4,7 +4,7 @@
 import { CONFIG } from '../config.js';
 import { myTrips, myOrders, myActiveTrip, orderStatus, orderRoute, onTripUpdate, shopMenu, ORDER_STEPS } from '../api.js';
 import { isNum } from '../money.js';
-import { $, $$, mountChrome, esc, when, pesoOr, icon } from '../ui.js';
+import { $, $$, mountChrome, esc, when, pesoOr, icon, ava } from '../ui.js';
 import { shopMap } from '../shop-map.js';
 
 mountChrome({ roles: ['client'] });
@@ -50,7 +50,6 @@ function liveCard({ key, iconId, tone, at, steps, title, sub, end, label, more }
   </li>`;
 }
 
-const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
 function rideCard(t) {
   const express = t.kind === 'express';
@@ -60,7 +59,7 @@ function rideCard(t) {
   const time = t.status === 'arrived' ? 'Here' : t.status !== 'searching' && isNum(t.etaMinutes) ? `${t.etaMinutes} min` : '';
   // Call and Chat show for the demo but don't do anything yet
   const driver = d ? `<div class="lcard__driver">
-      <span class="lcard__ava" aria-hidden="true">${esc(initials(d.name))}</span>
+      ${ava(d.name, 'lcard__ava')}
       <span class="lcard__who"><b>${esc(d.name)}</b><span>${esc(`${d.vehicle.color} ${d.vehicle.model}, ${d.vehicle.plate}`)}</span></span>
       <button type="button" class="lcard__act" aria-label="Call ${esc(d.name)}">${icon('i-phone')}</button>
       <button type="button" class="lcard__act" aria-label="Chat with ${esc(d.name)}">${icon('i-chat')}</button>

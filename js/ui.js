@@ -214,8 +214,8 @@ export const TABS = [
   { id: 'merchantStats', label: 'Analytics', icon: 'i-chart', href: '/pages/merchant-analytics.html' },
   { id: 'merchantManage', label: 'Manage', icon: 'i-pencil', href: '/pages/merchant-manage.html' },
   { id: 'support', label: 'Support', icon: 'i-heart', href: '/pages/support.html' },
-  { id: 'admin', label: 'Overview', icon: 'i-shield', href: '/pages/admin.html' },
-  { id: 'adminReg', label: 'Registrations', icon: 'i-check', href: '/pages/admin-registrations.html' },
+  { id: 'admin', label: 'Overview', icon: 'i-overview', href: '/pages/admin.html' },
+  { id: 'adminReg', label: 'Registrations', icon: 'i-registrations', href: '/pages/admin-registrations.html' },
   { id: 'adminStats', label: 'Analytics', icon: 'i-chart', href: '/pages/admin-analytics.html' },
   { id: 'adminManage', label: 'Management', icon: 'i-user', href: '/pages/admin-management.html' },
 ];
@@ -239,7 +239,7 @@ export const ROLES = {
   // Signs in on the customer form; not shown on any sign-in switch.
   admin: {
     label: 'Admin', tabs: ['admin', 'adminReg', 'adminStats', 'adminManage'],
-    home: '/pages/admin.html', homeLabel: 'Admin', homeIcon: 'i-shield', signIn: '/pages/account.html',
+    home: '/pages/admin.html', homeLabel: 'Admin', homeIcon: 'i-overview', signIn: '/pages/account.html',
   },
 };
 
@@ -621,7 +621,11 @@ export function filterTabs(nav, user) {
   trackTrip();
 }
 
-const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+export const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+/** An avatar's classes: round, with a colour picked from the name, so the same person always looks the same. */
+export const avaTone = (name) => `ava ava--t${[...String(name)].reduce((n, c) => n + c.charCodeAt(0), 0) % 5}`;
+/** A round avatar with initials. `cls` sets its size (e.g. 'profile__ava'). */
+export const ava = (name, cls = '') => `<span class="${avaTone(name)}${cls ? ` ${cls}` : ''}" aria-hidden="true">${esc(initials(name))}</span>`;
 
 /**
  * The top-right account control: "Sign in" when signed out; when signed in, a profile button whose
@@ -643,12 +647,12 @@ export function mountAccount(link, user) {
   wrap.className = 'profile';
   wrap.innerHTML = `
     <button type="button" class="btn btn--ghost profile__btn" aria-haspopup="menu" aria-expanded="false" aria-label="Profile: ${esc(user.name || role.label)}">
-      <span class="profile__ava" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
+      ${ava(user.name || role.label, 'profile__ava')}
       <span class="profile__name desktop-only">${esc(first)}</span>
     </button>
     <div class="profile__menu" role="menu" hidden>
       <div class="profile__who">
-        <span class="profile__ava profile__ava--lg" aria-hidden="true">${esc(initials(user.name || role.label))}</span>
+        ${ava(user.name || role.label, 'profile__ava profile__ava--lg')}
         <div class="profile__id">
           <span class="profile__line"><b>${esc(user.name || role.label)}</b><span class="profile__role">${esc(user.branch ? 'Branch' : role.label)}</span></span>
           ${user.branch ? `<span class="profile__sub">${esc(user.branch)} branch</span>` : ''}

@@ -2,8 +2,8 @@
    one account's profile (edit details, send a password reset, turn the account off or back on), the sign-up links to
    share, and how registrations are going. ?id= opens one account. */
 import { adminUsers, adminUpdateUser, adminSetUserStatus, adminPasswordReset, adminApplications, errorMessage } from '../api.js';
-import { $, esc, icon, toast, rollNumber } from '../ui.js';
-import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, ava, since, day, num, tag, wireTips } from './admin-common.js';
+import { $, esc, icon, toast, rollNumber, ava } from '../ui.js';
+import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, since, day, num, tag, wireTips } from './admin-common.js';
 
 const ROLES = [['', 'All'], ['rider', 'Riders'], ['driver', 'Drivers'], ['merchant', 'Merchants']];
 const OFF_REASONS = ['Asked to close their account', 'Repeated complaints from riders', 'Fake or duplicate account', 'Papers expired', 'Payment problems'];
@@ -104,7 +104,7 @@ function renderProfile(u) {
   ];
   const back = `<button type="button" class="back" data-back>${icon('i-back')}All accounts</button>`;
   const head = `<div class="review__head">
-      ${ava(label(u), true)}
+      ${ava(label(u), 'ava--lg')}
       <div class="review__who"><h2 class="review__name">${esc(label(u))}</h2>
         <p class="review__meta">${ROLE[u.role]}${u.demoLogin ? ' · demo login' : ''}${u.sample ? ' · sample' : ''}</p></div>
       ${tag(st.tag, st.label)}</div>`;
@@ -167,7 +167,7 @@ function renderLinks() {
       <p class="slink__note">${l.note}</p>
       <div class="slink__row"><label class="sr-only" for="link-${l.id}">${l.name} sign-up link</label>
         <input class="input" id="link-${l.id}" type="text" value="${esc(l.url)}" readonly>
-        <button type="button" class="button button--ghost cta" data-copy="${l.id}">Copy</button>
+        <button type="button" class="button button--ghost cta slink__copy" data-copy="${l.id}" aria-label="Copy the ${l.name.toLowerCase()} link"><span>Copy</span>${icon('i-copy')}</button>
         ${canShare ? `<button type="button" class="button button--ghost cta" data-share="${l.id}" aria-label="Share the ${l.name.toLowerCase()} link">${icon('i-share')}</button>` : ''}</div></li>`).join('');
   $('#links').addEventListener('focusin', (e) => { if (e.target.matches('input[readonly]')) e.target.select(); });
   $('#links').addEventListener('click', async (e) => {
@@ -176,9 +176,13 @@ function renderLinks() {
     if (c) {
       const input = $(`#link-${c.dataset.copy}`);
       try { await navigator.clipboard.writeText(input.value); } catch (_) { input.select(); document.execCommand('copy'); }
-      c.textContent = 'Copied';
+      const word = c.querySelector('span');
+      const glyph = c.querySelector('use');
+      const was = glyph.getAttribute('href');
+      word.textContent = 'Copied';
+      glyph.setAttribute('href', was.replace('i-copy', 'i-check'));
       toast('Link copied. Paste it in a message or post.');
-      setTimeout(() => { c.textContent = 'Copy'; }, 2000);
+      setTimeout(() => { word.textContent = 'Copy'; glyph.setAttribute('href', was); }, 2000);
     }
     if (s) {
       const l = links.find((x) => x.id === s.dataset.share);

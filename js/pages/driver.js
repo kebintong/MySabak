@@ -12,7 +12,7 @@ import {
 import { haversineKm } from '../money.js';
 import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow } from '../ui.js';
+import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava } from '../ui.js';
 import { tripsByDay } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
@@ -291,7 +291,7 @@ function renderActive() {
         ${['To pickup', 'At pickup', 'On the way', 'Done'].map((t, i) => `<li class="${i < at ? 'is-done' : i === at ? 'is-current' : ''}"><span>${t}</span></li>`).join('')}
       </ol>
       <div class="driver">
-        <span class="driver__ava" aria-hidden="true">${esc((job.rider.name || '?')[0])}</span>
+        ${ava(job.rider.name, 'driver__ava')}
         <div class="driver__main"><span class="driver__name">${esc(job.rider.name)}</span>
           <span class="driver__meta">${job.payment === 'cash' ? `Collect ${peso(job.fare)} in cash` : `Paid by ${esc(PAY[job.payment] || job.payment)} · ${peso(job.fare)}`}</span></div>
         <button type="button" class="btn-soft" data-call>${icon('i-phone', 'icon--sm icon--deep')}Call</button>
@@ -470,7 +470,7 @@ async function start() {
   $('#driverHome').hidden = false;
   const vehicle = CONFIG.vehicles.find((v) => v.id === d.vehicle);
   bindAll('firstName', (d.name || 'driver').split(' ')[0]);
-  bindAll('initials', (d.name || 'D').split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase());
+  $('.dwho__ava').outerHTML = ava(d.name || 'Driver', 'dwho__ava');
   bindAll('vehicle', [vehicle ? vehicle.name : d.vehicle, d.plate].filter(Boolean).join(' · '));
   // Approved: a small gold check by the name. Anything else says so in words
   $$('[data-bind="status"]').forEach((s) => {

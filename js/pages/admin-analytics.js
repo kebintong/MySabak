@@ -149,11 +149,11 @@ function render(a) {
   const worst = drops.reduce((x, y) => (y.lost > x.lost ? y : x));
   $('#funnelNote').innerHTML = `Most drop off at <b>${esc(worst.name)}</b> (−${num(worst.lost)}).`;
 
-  $('#areas').innerHTML = `<thead><tr><th>Area</th><th class="num">Trips</th><th class="num">Avg pickup</th><th class="num">Cancelled</th><th>Status</th></tr></thead>
+  $('#areas').innerHTML = `<thead><tr><th>Area</th><th class="num">Trips</th><th class="num">Avg pickup</th><th class="num">Cancelled</th><th class="area__status">Status</th></tr></thead>
     <tbody>${a.areas.map((r, i) => {
       const h = HEALTH[r.health] || HEALTH.good;
-      return `<tr style="--i:${i}"><td>${esc(r.name)}</td><td class="num">${num(r.trips)}</td><td class="num">${minSec(r.avgPickupSec)}</td><td class="num">${r.cancelledPct}%</td>
-        <td><span tabindex="0" data-tip="${esc(`${h.label}|${h.why}`)}">${tag(h.chip, h.label)}</span></td></tr>`;
+      return `<tr style="--i:${i}"><td class="area__name">${esc(r.name)}</td><td class="num" data-l="Trips">${num(r.trips)}</td><td class="num" data-l="Avg pickup">${minSec(r.avgPickupSec)}</td><td class="num" data-l="Cancelled">${r.cancelledPct}%</td>
+        <td class="area__status"><span tabindex="0" data-tip="${esc(`${h.label}|${h.why}`)}">${tag(h.chip, h.label)}</span></td></tr>`;
     }).join('')}</tbody>`;
   $$('.kpi6__v, .multi__v').forEach((b) => rollNumber(b));
 }

@@ -2,8 +2,8 @@
    papers, tick the three checks, then approve, send back to fix (with a reason), or reject.
    ?kind=drivers|merchants picks the list, &tab=review|fix|approved|rejected the status and &id= opens one applicant. */
 import { adminApplications, adminDecide, errorMessage } from '../api.js';
-import { $, $$, esc, icon, toast, edgeGlow, calm } from '../ui.js';
-import { mountAdmin, STATUS, VEHICLE, ava, ago, since, tag, openSheet } from './admin-common.js';
+import { $, $$, esc, icon, toast, edgeGlow, calm, ava } from '../ui.js';
+import { mountAdmin, STATUS, VEHICLE, ago, since, tag, openSheet } from './admin-common.js';
 
 const KINDS = {
   drivers: {
@@ -118,7 +118,7 @@ function renderReview(a) {
   box.innerHTML = `
     <button type="button" class="back" data-back>${icon('i-back')}All ${k.label.toLowerCase()}</button>
     <div class="review__head">
-      ${ava(nameOf(a), true)}
+      ${ava(nameOf(a), 'ava--lg')}
       <div class="review__who">
         <h2 class="review__name">${esc(nameOf(a))}</h2>
         <p class="review__meta">Applied ${esc(since(a.appliedAt))} · ${esc(a.phone)} · ${esc(a.email)}</p>

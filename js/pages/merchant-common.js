@@ -1,7 +1,7 @@
 /* Shared by the merchant pages (Dashboard, POS, Management): load the branch on screen, the night sky header
    (shop, branch, Accept orders switch) and, for the owner looking at another branch, the view-only / take-over bar. */
 import { merchantHome, setShopOpen, viewBranch, takeOverBranch, errorMessage } from '../api.js';
-import { $, esc, toast } from '../ui.js';
+import { $, esc, toast, avaTone, initials } from '../ui.js';
 
 /** Something failed: a short message, or back to sign-in when signed out. */
 export function failed(err) {
@@ -57,8 +57,8 @@ export function mountHead({ kicker = '', onChange = () => {} } = {}) {
     el('hello').textContent = kicker || `${hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'}${first ? `, ${first}` : ''}`;
     el('name').textContent = shop.name;
     el('meta').textContent = `${branch.name} branch${shop.area !== branch.name ? ` · ${shop.area}` : ''} · ${shop.hours || ''}`;
-    el('ava').innerHTML = shop.image ? `<img src="${esc(shop.image)}" alt="">`
-      : esc(shop.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase());
+    el('ava').className = shop.image ? 'mhero__ava' : `mhero__ava ${avaTone(shop.name)}`;
+    el('ava').innerHTML = shop.image ? `<img src="${esc(shop.image)}" alt="">` : esc(initials(shop.name));
     renderOpen();
     const bar = el('view');
     bar.hidden = home.role !== 'owner' || branch.main;

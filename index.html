@@ -20,9 +20,6 @@
   <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Map: MapLibre GL JS draws TomTom's map style -->
   <link rel="preconnect" href="https://api.tomtom.com">
@@ -195,7 +192,7 @@
             <li data-step="completed"><span data-bind="stepDone">Arrived</span></li>
           </ol>
           <div class="driver">
-            <span class="driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
+            <span class="ava ava--t0 driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
             <div class="driver__main">
               <span class="driver__name"><span data-bind="driverName">Driver</span> <span class="badge badge--wait driver__demo" id="driverDemo" hidden>Demo</span></span>
               <span class="driver__meta">★ <span data-bind="driverRating">4.9</span> · <span data-bind="driverCar">White Toyota Vios</span></span>

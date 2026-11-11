@@ -1,7 +1,7 @@
 /* mysabak service worker — caches the app shell so it opens offline.
    Bump CACHE when you change any of the files below.
    It sits at the top of the site so it can look after every page. */
-const CACHE = 'mysabak-v107';
+const CACHE = 'mysabak-v109';
 const SHELL = [
   '/',
   '/css/base.css',
@@ -18,6 +18,8 @@ const SHELL = [
   '/js/placeholders.js',
   '/js/shop-map.js',
   '/manifest.webmanifest',
+  '/assets/fonts/figtree/figtree-latin-wght-normal.woff2',
+  '/assets/fonts/figtree/figtree-latin-ext-wght-normal.woff2',
   '/assets/images/logo.svg',
   '/assets/images/favicon.svg',
   '/assets/images/map-bg.svg',
@@ -75,15 +77,5 @@ self.addEventListener('fetch', (event) => {
         .catch(() => caches.match(request, { ignoreSearch: true }))
     );
     return;
-  }
-
-  if (url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com')) {
-    event.respondWith(
-      caches.match(request).then((hit) => hit || fetch(request).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(request, copy));
-        return res;
-      }))
-    );
   }
 });
