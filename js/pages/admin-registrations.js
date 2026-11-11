@@ -2,19 +2,19 @@
    papers, tick the three checks, then approve, send back to fix (with a reason), or reject.
    ?kind=drivers|merchants picks the list, &tab=review|fix|approved|rejected the status and &id= opens one applicant. */
 import { adminApplications, adminDecide, errorMessage } from '../api.js';
-import { $, $$, esc, icon, toast, edgeGlow, calm, ava } from '../ui.js';
-import { mountAdmin, STATUS, VEHICLE, ago, since, tag, openSheet } from './admin-common.js';
+import { $, $$, esc, icon, toast, edgeGlow, calm, ava, emptyRows } from '../ui.js';
+import { mountAdmin, STATUS, VEHICLE, ago, since, tag, notice, openSheet } from './admin-common.js';
 
 const KINDS = {
   drivers: {
     label: 'Drivers', icon: 'i-wheel', approve: 'Approve driver', live: 'can go online now',
-    intro: 'Check each driver’s papers, then approve, send back to fix, or reject. They get an email either way.',
+    intro: 'Review each driver’s papers, then approve, ask for changes, or reject. They’re emailed either way.',
     checks: ['Name and photo match the license', 'Plate and model match the OR/CR', 'The selfie is the same person as the license'],
     reasons: ['The OR/CR photo is missing or unreadable', 'The selfie doesn’t clearly show your face', 'The license is expired', 'The plate doesn’t match the OR/CR'],
   },
   merchants: {
     label: 'Merchants', icon: 'i-store', approve: 'Approve shop', live: 'is live on mysabak now',
-    intro: 'Check each shop’s papers and photos, then approve, send back to fix, or reject. The owner gets an email either way.',
+    intro: 'Review each shop’s papers and photos, then approve, ask for changes, or reject. The owner is emailed either way.',
     checks: ['The owner’s name matches their ID', 'The permit matches the shop name and address', 'The shop photo shows a real storefront'],
     reasons: ['The business permit is missing or expired', 'The owner’s ID is unreadable', 'The shop photo doesn’t show the storefront', 'The address doesn’t match the permit'],
   },
@@ -35,10 +35,19 @@ const PAPER_SAYS = {
   clear: 'Readable, and the details match the application.',
   unclear: 'Hard to read. Look closely, or ask them for a sharper photo.',
   missing: 'Not uploaded. Ask them to add it before you approve.',
-  unknown: 'This demo doesn’t keep the photos uploaded in this browser.',
+  unknown: 'Photos uploaded in this browser aren’t saved in the demo.',
 };
-const PAPER = { clear: 'Clear', unclear: 'Unclear', missing: 'Missing', unknown: 'Not kept' };
+const PAPER = { clear: 'Clear', unclear: 'Unclear', missing: 'Missing', unknown: 'Not saved' };
 const PAPER_TAG = { clear: 'approved', unclear: 'review', missing: 'fix', unknown: 'rejected' };
+/** A faint drawing of a paper (a photo box and a few lines), shown where its photo would be. */
+const DRAWING = '<span class="pdraw" aria-hidden="true"><span></span><span><i></i><i></i><i></i><i></i></span></span>';
+/** What an empty status tab says. */
+const EMPTY = {
+  review: () => ['All caught up', 'New applications show up here.'],
+  fix: () => ['No requests out', 'Applicants you ask for changes show up here.'],
+  approved: (k) => [`No approved ${k} yet`, `${k[0].toUpperCase()}${k.slice(1)} you approve show up here.`],
+  rejected: (k) => [`No rejected ${k}`, `${k[0].toUpperCase()}${k.slice(1)} you reject show up here, with the reason.`],
+};
 
 const params = new URLSearchParams(location.search);
 const state = {
@@ -57,7 +66,6 @@ async function load() {
   try {
     const [drivers, merchants] = await Promise.all([adminApplications('drivers'), adminApplications('merchants')]);
     state.lists = { drivers, merchants };
-    $('#sampleChip').hidden = ![...drivers, ...merchants].some((a) => a.sample);
     const picked = current();
     if (picked && state.open) state.tab = picked.status; // opened from a link: show it in its own tab
     render();
@@ -91,7 +99,7 @@ function render() {
       <span class="row__main"><span class="row__title">${esc(nameOf(a))}</span>
         <span class="row__sub">${esc(a.kind === 'drivers' ? VEHICLE[a.vehicle] || a.vehicle : a.category)} · ${esc(a.kind === 'drivers' ? a.city : a.area)} · ${esc(ago(a.appliedAt))}</span></span>
       ${a.sample ? '' : tag('plain', 'This browser')}</button></li>`).join('')
-    : '<li class="empty">Nothing here right now.</li>';
+    : emptyRows(...EMPTY[state.tab](state.kind === 'drivers' ? 'drivers' : 'shops'));
   $('#rows').classList.toggle('is-first', !state.drawn); // rows rise in on the first draw only
   state.drawn = true;
   $('#reg').classList.toggle('is-reviewing', state.open && Boolean(cur));
@@ -125,7 +133,7 @@ function renderReview(a) {
       </div>
       ${tag(a.status, STATUS[a.status].label)}
     </div>
-    ${a.status === 'fix' && a.reason && !done ? `<p class="notice notice--fix">Sent back: “${esc(a.reason)}”</p>` : ''}
+    ${a.status === 'fix' && a.reason && !done ? notice('fix', `<b>Changes requested.</b> ${esc(a.reason)}`) : ''}
     <dl class="facts">${facts.map(([dt, dd]) => `<div><dt>${dt}</dt><dd>${esc(dd)}</dd></div>`).join('')}</dl>
     <section aria-labelledby="papersTitle">
       <h3 class="subtitle" id="papersTitle">${canCheck ? 'Check each paper' : 'Papers'}</h3>
@@ -133,13 +141,13 @@ function renderReview(a) {
       <div class="rthumbs" role="group" aria-label="Choose a paper">${papers.map(([name, , c], i) => `<button type="button" class="rthumb" data-show="${i}" aria-pressed="${i === on}">${c !== null && ticked[c] ? icon('i-check') : ''}<span>${esc(name)}</span></button>`).join('')}</div>
       <div class="ritems">${papers.map(([name, st, c], i) => `<div class="ritem${i === on ? ' is-on' : ''}${c !== null && ticked[c] ? ' is-ticked' : ''}">
         <button type="button" class="paper" data-paper="${esc(name)}" data-state="${st}" aria-label="${esc(name)}: ${PAPER[st] || st}. Open details">
-          <span class="paper__img">${a.sample ? 'Sample: no photo' : `Photo of ${esc(name)}`}<br><span class="paper__open">Tap for details</span></span></button>
+          <span class="paper__img">${a.sample ? `${DRAWING}<span class="paper__none">No photo yet · <span class="paper__open">View</span></span>` : `Photo of ${esc(name)}<br><span class="paper__open">View details</span>`}</span></button>
         <div class="ritem__side"><span class="ritem__name"><strong>${esc(name)}</strong>${tag(PAPER_TAG[st] || 'rejected', PAPER[st] || st)}</span>
           ${canCheck && c !== null ? `<label class="rcheck"><input type="checkbox" data-check="${c}"${ticked[c] ? ' checked' : ''}><span>${esc(k.checks[c])}</span></label>` : ''}</div></div>`).join('')}</div>
     </section>
     ${canDecide && !done ? `
       ${state.fixOpen ? `<div class="fixbox">
-        <div class="afield"><label class="afield__label" for="fixReason">What needs fixing</label>
+        <div class="afield"><label class="afield__label" for="fixReason">What needs to change</label>
           <select class="select" id="fixReason">${k.reasons.map((r, i) => `<option${i === state.fixPick ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select>
           <span class="afield__hint">The applicant sees this in the app and by email.</span></div>
         <div class="afield"><label class="afield__label" for="fixNote">Note to the applicant <span class="muted">(optional)</span></label>
@@ -148,11 +156,11 @@ function renderReview(a) {
       </div>` : ''}
       <div class="actions">
         <button type="button" class="button cta" data-decide="approved"${allTicked ? '' : ' disabled'}>${k.approve}</button>
-        <button type="button" class="button button--ghost cta" data-decide="fix">${state.fixOpen ? 'Send back to fix' : 'Ask to fix papers'}</button>
+        <button type="button" class="button button--ghost cta" data-decide="fix">${state.fixOpen ? 'Send request' : 'Ask for changes'}</button>
         <button type="button" class="button button--danger cta" data-decide="rejected">Reject</button>
-        <span class="actions__hint">${allTicked ? 'Ready to approve.' : `${ticked.filter(Boolean).length} of 3 checked`}</span>
+        <span class="actions__hint">${allTicked ? 'All checks done' : `${ticked.filter(Boolean).length} of 3 checks done`}</span>
       </div>` : ''}
-    ${done ? `<p class="notice notice--${done.status}" role="status">${esc(done.text)}</p>` : ''}`;
+    ${done ? notice(done.status, esc(done.text), ' role="status"') : ''}`;
 }
 
 $('#stabs').addEventListener('click', (e) => {
@@ -199,10 +207,10 @@ function openPaper(a, name, st) {
   const canFix = (a.status === 'review' || a.status === 'fix') && (st === 'unclear' || st === 'missing');
   openSheet({
     title: `${name} · ${nameOf(a)}`,
-    body: `<div class="pview">${a.sample ? 'Sample applicant: no photo kept.<br>With the backend, the uploaded photo shows here, full size.' : `Photo of ${esc(name)}`}</div>
+    body: `<div class="pview${a.sample ? ' pview--none' : ''}">${a.sample ? `${DRAWING}<p><b>No photo yet.</b> The photo shows here once ${esc(nameOf(a).split(' ')[0])} uploads it.</p>` : `Photo of ${esc(name)}`}</div>
       <p class="pstate">${tag(PAPER_TAG[st] || 'rejected', PAPER[st] || st)} ${PAPER_SAYS[st] || ''}</p>
       ${help.look.length ? `<div><h3 class="subtitle">Look for</h3><ul class="pcheck">${help.look.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
-      <div class="actions">${canFix ? `<button type="button" class="button cta" data-askfix>Ask them to fix this</button>` : ''}
+      <div class="actions">${canFix ? `<button type="button" class="button cta" data-askfix>Ask for a new photo</button>` : ''}
         <button type="button" class="button button--ghost cta" data-close>Close</button></div>`,
     onReady: (d) => {
       const b = d.querySelector('[data-askfix]');
@@ -239,7 +247,7 @@ $('#review').addEventListener('click', async (e) => {
     await adminDecide({ kind: a.kind, id: a.id, decision, reason });
     const k = KINDS[a.kind];
     const text = decision === 'approved' ? `Approved. ${nameOf(a)} ${k.live}.`
-      : decision === 'fix' ? `Sent back: “${reason}”. They can upload again.` : `Rejected. ${nameOf(a)} will be told why.`;
+      : decision === 'fix' ? `Changes requested: ${reason}. They can upload new photos.` : `Rejected. ${nameOf(a)} will be told why.`;
     if (decision === 'approved') edgeGlow('reward', b);
     // the decided applicant stays open with its confirmation until another is picked
     Object.assign(state, { sel: a.id, fixOpen: false, done: { id: a.id, status: decision, text } });

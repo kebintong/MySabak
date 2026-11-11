@@ -6,7 +6,7 @@ import {
 } from '../api.js';
 import { BRANCH_AREAS } from '../demo-data.js';
 import { itemPicture, storefront } from '../placeholders.js';
-import { $, mountChrome, esc, peso, toast, icon } from '../ui.js';
+import { $, mountChrome, esc, peso, toast, icon, tag } from '../ui.js';
 import { failed, loadHome, mountHead } from './merchant-common.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -44,8 +44,7 @@ function branchRow(b) {
       <span class="branch__pin" aria-hidden="true">${icon('i-pin')}</span>
       <span class="branch__text"><span class="branch__name">${esc(b.name)}${b.main ? ' <small>Main</small>' : ''}${b.sample ? ' <span class="tag-demo">Sample</span>' : ''}</span>
         <span class="branch__area">${esc(b.area)} · ${b.todayOrders} order${b.todayOrders === 1 ? '' : 's'} today</span></span>
-      <span class="branch__state${b.account.status === 'disabled' ? ' is-off' : b.open ? '' : ' is-off'}">${
-  b.account.status === 'disabled' ? 'Off' : b.open ? 'Open' : 'Closed'}</span>
+      <span class="branch__state">${b.account.status === 'disabled' ? tag('rejected', 'Turned off') : b.open ? tag('approved', 'Open') : tag('rejected', 'Closed')}</span>
     </button>
     <div class="branch__body"><div class="branch__inner"><div class="branch__detail">
       ${fact('Address', esc(b.address))}${fact('Hours', esc(b.hours))}
@@ -98,7 +97,7 @@ function renderMenu() {
         <div class="pcard__top"><h3 class="pcard__name">${esc(i.name)}</h3><span class="pcard__price">${variants.length > 1 ? '<small>from</small> ' : ''}${peso(i.price)}</span></div>
         ${i.note ? `<p class="pcard__desc">${esc(i.note)}</p>` : ''}
         ${variants.length ? `<ul class="pcard__variants" aria-label="Prices">${variants.map((v) => `<li><span>${esc(v.name)}</span><b>${peso(v.price)}</b></li>`).join('')}</ul>` : ''}
-        <div class="pcard__foot"><span class="pcard__state">${on ? 'Available' : 'Sold out'}</span>
+        <div class="pcard__foot"><span class="pcard__state">${on ? tag('approved', 'Available') : tag('rejected', 'Sold out')}</span>
           ${isOwner() ? `<button type="button" class="button button--ghost pcard__edit" data-edit="${esc(i.id)}" aria-label="Edit ${esc(i.name)}">Edit</button>` : ''}
           <button type="button" class="switch" role="switch" aria-checked="${on}" aria-label="${esc(i.name)} available" data-item="${esc(i.id)}"${home.canAct ? '' : ' disabled'}><span></span></button></div>
       </div></li>`;
@@ -321,7 +320,7 @@ $('#menuList').addEventListener('click', async (e) => {
     renderMenu.count();
     const card = b.closest('.pcard');
     card.classList.toggle('is-off', !next);
-    $('.pcard__state', card).textContent = next ? 'Available' : 'Sold out';
+    $('.pcard__state', card).innerHTML = next ? tag('approved', 'Available') : tag('rejected', 'Sold out');
   } catch (err) { failed(err); }
 });
 

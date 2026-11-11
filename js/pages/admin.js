@@ -1,7 +1,7 @@
 /* Admin overview (pages/admin.html): live counts of riders, drivers and merchants, applications waiting for
    review, and today's numbers. */
 import { adminOverview, adminApplications, errorMessage } from '../api.js';
-import { $, $$, esc, toast, icon, rollNumber, ava } from '../ui.js';
+import { $, $$, esc, toast, icon, rollNumber, ava, emptyRows } from '../ui.js';
 import { mountAdmin, SERVICES, STATUS, VEHICLE, minSec, num, since, tag, wireTips } from './admin-common.js';
 
 mountAdmin().then((user) => {
@@ -17,7 +17,6 @@ mountAdmin().then((user) => {
 
 async function load() {
   const [o, drivers, shops] = await Promise.all([adminOverview(), adminApplications('drivers'), adminApplications('merchants')]);
-  $('#sampleChip').hidden = !o.sample;
 
   // Each count: what's happening now, the total, and the one thing to act on (a link when there is something to do)
   const pct = (a, b) => `${Math.round((a / (b || 1)) * 100)}%`;
@@ -47,7 +46,7 @@ async function load() {
       ${ava(name)}
       <span class="row__main"><span class="row__title">${esc(name)}</span><span class="row__sub">${esc(what)} · ${esc(since(a.appliedAt))}</span></span>
       ${tag('review', STATUS.review.label)}</a></li>`;
-  }).join('') : '<li class="empty">No one is waiting for review.</li>';
+  }).join('') : emptyRows('All caught up', 'New driver and shop applications show up here.');
 
   const t = o.today;
   $('#today').innerHTML = `<div><b class="today__n">${num(t.trips)}</b><span class="today__l">trips and orders</span></div>

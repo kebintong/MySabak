@@ -3,7 +3,7 @@
    Mood board and, for the owner, every branch today. Selling is on POS; branches, shop and menu on Management. */
 import { merchantSales, errorMessage } from '../api.js';
 import { moodFor } from '../mood.js';
-import { $, $$, mountChrome, esc, peso, when, icon, rollNumber, smoothPath, STAR_SVG as STAR } from '../ui.js';
+import { $, $$, mountChrome, esc, peso, when, icon, rollNumber, smoothPath, STAR_SVG as STAR, tag } from '../ui.js';
 import { loadHome, mountHead } from './merchant-common.js';
 
 mountChrome({ roles: ['merchant'] });
@@ -128,12 +128,12 @@ function renderBranches() {
   card.hidden = home.role !== 'owner';
   if (card.hidden) return;
   $('#branchCount').textContent = `${home.branches.length} branch${home.branches.length === 1 ? '' : 'es'}`;
-  // Its state in words, coloured: open until its closing time, closed, or turned off
+  // Its state as a status chip: open until its closing time, closed, or turned off
   const state = (b) => {
-    if (b.account.status === 'disabled') return '<span class="bglance__state">Account off</span>';
-    if (!b.open) return '<span class="bglance__state">Closed</span>';
+    if (b.account.status === 'disabled') return tag('rejected', 'Turned off');
+    if (!b.open) return tag('rejected', 'Closed');
     const until = String(b.hours || '').split('–')[1];
-    return `<span class="bglance__state is-open">Open${until ? ` until ${esc(until.trim())}` : ''}</span>`;
+    return tag('approved', `Open${until ? ` until ${esc(until.trim())}` : ''}`);
   };
   $('#branchGlance').innerHTML = home.branches.map((b) => {
     const onScreen = b.id === home.branch.id;

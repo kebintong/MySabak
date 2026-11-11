@@ -28,31 +28,30 @@
               <h1 class="page-title">Analytics</h1>
               <p class="lede">The last 7 days, compared with the week before.</p>
             </div>
-            <span class="sample-chip" id="sampleChip" hidden>Sample numbers</span>
           </div>
         </header>
 
-        <section class="kpis6 rise" aria-label="This week" id="kpis"></section>
+        <section class="kpis6 rise skel-block" style="--skel-h: 96px" aria-label="This week" id="kpis"></section>
 
         <section class="card" aria-labelledby="growTitle" style="--enter: 4">
-          <h2 class="card__title" id="growTitle">Who’s on mysabak</h2>
-          <p class="lede small">Last 30 days. Each line has its own scale. Point at or tap a line for that day.</p>
-          <div class="multis" id="growth"></div>
+          <h2 class="card__title" id="growTitle">Growth</h2>
+          <p class="lede small">Last 30 days, each on its own scale. Hover or tap a line for a day.</p>
+          <div class="multis skel-block" id="growth"></div>
         </section>
 
         <div class="agrid agrid--even">
           <section class="card" aria-labelledby="tripsTitle" style="--enter: 5">
             <h2 class="card__title card__title--row" id="tripsTitle">Trips per day <span class="muted small" id="tripsTotal"></span></h2>
-            <p class="tiphint">Point at or tap a day to see each service.</p>
-            <div class="tbars" id="trips" role="group" aria-label="Trips each day"></div>
+            <p class="tiphint">Hover or tap a day to split it by service.</p>
+            <div class="tbars skel-block" id="trips" role="group" aria-label="Trips each day"></div>
             <div class="tsplit" id="tripSplit" aria-live="polite"></div>
             <details class="astable"><summary>Show as a table</summary><div class="tablewrap"><table class="atable" id="tripsTable"></table></div></details>
           </section>
 
           <section class="card" aria-labelledby="tipsTitle" style="--enter: 6">
-            <h2 class="card__title card__title--row" id="tipsTitle">Tips to mysabak, per day <span class="muted small" id="tips30"></span></h2>
-            <p class="lede small">Our only income. Drivers keep 100% of fares and shops 100% of item prices.</p>
-            <p class="tiphint">Point at or tap the line for a day.</p>
+            <h2 class="card__title card__title--row" id="tipsTitle">Daily tips <span class="muted small" id="tips30"></span></h2>
+            <p class="lede small">mysabak’s only income. Drivers keep every fare and shops keep every sale.</p>
+            <p class="tiphint">Hover or tap the line for a day.</p>
             <div class="linewrap pointable" id="tipsWrap" aria-label="Tips per day, last 30 days. Use the arrow keys to read each day.">
               <svg class="line30" id="tipsLine" viewBox="0 0 600 220" preserveAspectRatio="none" aria-hidden="true"></svg>
             </div>
@@ -60,15 +59,15 @@
           </section>
 
           <section class="card" aria-labelledby="payTitle" style="--enter: 7">
-            <h2 class="card__title" id="payTitle">How riders pay</h2>
+            <h2 class="card__title" id="payTitle">Payment methods</h2>
             <p class="tiphint">Share of this week’s trips.</p>
-            <div class="pdonut" id="payments"></div>
+            <div class="pdonut skel-block" id="payments"></div>
           </section>
 
           <section class="card" aria-labelledby="funnelTitle" style="--enter: 7">
             <h2 class="card__title" id="funnelTitle">New drivers, last 30 days</h2>
-            <p class="tiphint">From applying to a first trip. Point at or tap a step.</p>
-            <div class="fbars" id="funnel"></div>
+            <p class="tiphint">From application to first trip. Hover or tap a step.</p>
+            <div class="fbars skel-block" id="funnel"></div>
             <p class="fnote" id="funnelNote"></p>
           </section>
         </div>

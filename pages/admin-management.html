@@ -26,9 +26,8 @@
           <div class="ahead__row">
             <div>
               <h1 class="page-title">Management</h1>
-              <p class="lede">Find any account, fix its details, or turn it off. Share sign-up links with new drivers and shops.</p>
+              <p class="lede">Search accounts, update details, or turn an account off. Share sign-up links with new drivers and shops.</p>
             </div>
-            <span class="sample-chip" id="sampleChip" hidden>Sample accounts</span>
           </div>
         </header>
 
@@ -48,7 +47,7 @@
               </div>
               <p class="ucount" id="ucount" aria-live="polite"></p>
             </div>
-            <div id="urows"></div>
+            <div class="skel-rows" id="urows"></div>
             <div class="ulist__foot"><button type="button" class="button button--ghost cta" id="more" hidden>Show more</button></div>
           </section>
 
@@ -58,7 +57,7 @@
         <div class="agrid agrid--even">
           <section class="card" aria-labelledby="linksTitle" style="--enter: 3">
             <h2 class="card__title" id="linksTitle">Sign-up links</h2>
-            <p class="lede small">Send these to people who want to join. Each opens the right sign-up page on this site.</p>
+            <p class="lede small">Share these with people who want to join.</p>
             <ul class="links" id="links"></ul>
           </section>
 
@@ -67,7 +66,7 @@
             <p class="lede small" id="actLine"></p>
             <div class="tablewrap"><table class="atable" id="activity"></table></div>
             <h3 class="subtitle subtitle--gap">Newest accounts</h3>
-            <ul class="list" id="newest"></ul>
+            <ul class="list skel-rows" id="newest"></ul>
           </section>
         </div>
       </div>

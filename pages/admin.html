@@ -29,22 +29,21 @@
               <h1 class="page-title">Overview</h1>
               <p class="lede" id="dateLine">Today</p>
             </div>
-            <span class="sample-chip" id="sampleChip" hidden>Sample numbers</span>
           </div>
         </header>
 
-        <section class="counts rise" aria-label="Live counts" id="counts"></section>
+        <section class="counts rise skel-block" aria-label="Live counts" id="counts"></section>
 
         <div class="agrid agrid--lead">
           <section class="card glow-border" aria-labelledby="waitTitle" style="--enter: 4">
-            <h2 class="card__title card__title--row" id="waitTitle">Waiting for review <a class="card__link" href="/pages/admin-registrations.html">See all</a></h2>
-            <ul class="list" id="waitList"></ul>
+            <h2 class="card__title card__title--row" id="waitTitle">Pending review <a class="card__link" href="/pages/admin-registrations.html">See all</a></h2>
+            <ul class="list skel-rows" id="waitList"></ul>
           </section>
 
           <div class="acol">
             <section class="card" aria-labelledby="todayTitle" style="--enter: 5">
               <h2 class="card__title" id="todayTitle">Today so far</h2>
-              <div class="today" id="today"></div>
+              <div class="today skel-block" style="--skel-h: 64px" id="today"></div>
               <div class="svcbar" id="svcbar" role="img"></div>
               <ul class="legend" id="svcLegend"></ul>
             </section>
@@ -55,8 +54,8 @@
                 <b class="count__now" id="wtipsTotal"></b>
                 <span class="kpi6__d" id="wtipsChange"></span>
               </div>
-              <p class="tiphint">Tips to mysabak, last 7 days. Point at or tap a day.</p>
-              <div class="wbars" id="wtipsBars" role="group"></div>
+              <p class="tiphint">Last 7 days. Hover or tap a day.</p>
+              <div class="wbars skel-block" id="wtipsBars" role="group"></div>
             </section>
           </div>
         </div>

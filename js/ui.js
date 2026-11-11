@@ -124,6 +124,13 @@ export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&a
 const ICONS = '/assets/images/icons.svg';
 /** <svg> for an icon in assets/images/icons.svg */
 export const icon = (id, cls = '') => `<svg class="icon ${cls}" aria-hidden="true"><use href="${ICONS}#${id}"/></svg>`;
+/** Which icon each kind of status shows: waiting (clock), approved (check), a problem (alert), off (minus), plain (info). */
+export const STATUS_ICON = { review: 'i-st-wait', fix: 'i-st-alert', approved: 'i-st-ok', rejected: 'i-st-off', plain: 'i-st-info' };
+/** An empty list: three faint rows that fade out, with the reason over them (css/base.css .erows). Goes in a <ul>. */
+export const emptyRows = (title, line) => `<li class="erows">${'<span class="erows__ghost" aria-hidden="true"><i></i><span><i></i><i></i></span></span>'.repeat(3)}
+  <span class="erows__msg"><b>${esc(title)}</b><span>${esc(line)}</span></span></li>`;
+/** A status label: a grey chip with a coloured icon and a word (css/base.css .tag). */
+export const tag = (kind, label) => `<span class="tag tag--${kind}">${icon(STATUS_ICON[kind] || STATUS_ICON.plain)}${label}</span>`;
 
 /* ---------- Midnight magic glow (Figma "H-v3 · Mascot · Midnight") ---------- */
 const STAR = 'M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z';

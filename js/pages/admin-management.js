@@ -3,7 +3,7 @@
    share, and how registrations are going. ?id= opens one account. */
 import { adminUsers, adminUpdateUser, adminSetUserStatus, adminPasswordReset, adminApplications, errorMessage } from '../api.js';
 import { $, esc, icon, toast, rollNumber, ava } from '../ui.js';
-import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, since, day, num, tag, wireTips } from './admin-common.js';
+import { mountAdmin, ACCOUNT, ROLE, STATUS, VEHICLE, since, day, num, tag, notice, wireTips } from './admin-common.js';
 
 const ROLES = [['', 'All'], ['rider', 'Riders'], ['driver', 'Drivers'], ['merchant', 'Merchants']];
 const OFF_REASONS = ['Asked to close their account', 'Repeated complaints from riders', 'Fake or duplicate account', 'Papers expired', 'Payment problems'];
@@ -25,7 +25,6 @@ async function load() {
   try {
     const [users, drivers, merchants] = await Promise.all([adminUsers(), adminApplications('drivers'), adminApplications('merchants')]);
     Object.assign(state, { users, apps: { drivers, merchants } });
-    $('#sampleChip').hidden = !users.some((u) => u.sample);
     render();
     renderActivity();
   } catch (err) {
@@ -57,7 +56,7 @@ function render() {
   renderTiles();
   const list = shown();
   const cur = current();
-  $('#ucount').textContent = list.length === state.users.length ? `${num(list.length)} accounts, waiting first` : `Showing ${num(list.length)} of ${num(state.users.length)} accounts`;
+  $('#ucount').textContent = list.length === state.users.length ? `${num(list.length)} accounts, pending first` : `Showing ${num(list.length)} of ${num(state.users.length)} accounts`;
   // the open account stays in view even when it's past the rows shown
   const waitAll = list.filter((u) => u.status === 'pending');
   const otherAll = list.filter((u) => u.status !== 'pending');
@@ -82,7 +81,7 @@ function render() {
   const waitN = waitAll.length;
   const otherN = otherAll.length;
   const otherTitle = state.status === 'active' ? 'Active' : state.status === 'deactivated' ? 'Turned off' : 'Everyone else';
-  $('#urows').innerHTML = rows.length ? group('Needs your review', `${num(waitN)} waiting`, waiting) + group(otherTitle, `${num(otherN)} account${otherN === 1 ? '' : 's'}`, others)
+  $('#urows').innerHTML = rows.length ? group('Needs your review', `${num(waitN)} pending`, waiting) + group(otherTitle, `${num(otherN)} account${otherN === 1 ? '' : 's'}`, others)
     : `<p class="empty ugroup__empty">No accounts match. <button type="button" class="ulink card__link" data-clear>Clear the search</button></p>`;
   $('#urows').classList.toggle('is-first', !state.drawn); // rows rise in on the first draw only, not on every filter
   state.drawn = true;
@@ -106,7 +105,7 @@ function renderProfile(u) {
   const head = `<div class="review__head">
       ${ava(label(u), 'ava--lg')}
       <div class="review__who"><h2 class="review__name">${esc(label(u))}</h2>
-        <p class="review__meta">${ROLE[u.role]}${u.demoLogin ? ' · demo login' : ''}${u.sample ? ' · sample' : ''}</p></div>
+        <p class="review__meta">${ROLE[u.role]}${u.demoLogin ? ' · demo login' : ''}</p></div>
       ${tag(st.tag, st.label)}</div>`;
 
   if (state.mode === 'edit') {
@@ -128,8 +127,8 @@ function renderProfile(u) {
     return;
   }
 
-  const offNote = u.status === 'deactivated' ? `<p class="notice notice--rejected">Turned off${u.statusAt ? ` on ${day(u.statusAt)}` : ''}: “${esc(u.reason)}”. They can’t sign in until you turn the account back on.</p>` : '';
-  const pendingNote = u.status === 'pending' ? `<p class="notice notice--review">Their ${u.role === 'driver' ? 'driver' : 'shop'} application is ${u.application.status === 'fix' ? 'waiting for them to fix their papers' : 'waiting for review'}. Approve it before managing the account.</p>` : '';
+  const offNote = u.status === 'deactivated' ? notice('rejected', `<b>Turned off${u.statusAt ? ` on ${day(u.statusAt)}` : ''}.</b> Reason: ${esc(u.reason)}. They can’t sign in until you turn the account back on.`) : '';
+  const pendingNote = u.status === 'pending' ? notice('review', u.application.status === 'fix' ? `<b>Changes requested.</b> They’re fixing their papers. You can manage this account once their ${u.role === 'driver' ? 'driver' : 'shop'} application is approved.` : `<b>Pending review.</b> Approve their ${u.role === 'driver' ? 'driver' : 'shop'} application first, then you can manage this account.`) : '';
   let actions = '';
   if (u.status === 'pending') {
     actions = `<a class="button cta" href="/pages/admin-registrations.html?kind=${u.application.kind}&tab=${u.application.status}&id=${encodeURIComponent(u.id)}">Review application</a>`;
@@ -157,13 +156,13 @@ function renderProfile(u) {
 function renderLinks() {
   const base = location.origin;
   const links = [
-    { id: 'driver', name: 'Drivers', url: `${base}/pages/drive-signup.html`, note: 'The driver application: details, vehicle and papers. It lands in Registrations for review.', ready: true },
-    { id: 'merchant', name: 'Shops', url: `${base}/pages/merchant.html`, note: 'The merchant page, with “Become a partner”. The partner form itself isn’t built yet.', ready: false },
-    { id: 'rider', name: 'Riders', url: `${base}/pages/account.html`, note: 'The customer account page. Customer sign-up isn’t built yet.', ready: false },
+    { id: 'driver', name: 'Drivers', url: `${base}/pages/drive-signup.html`, note: 'Opens the driver application. New applications show up in Registrations.', ready: true },
+    { id: 'merchant', name: 'Shops', url: `${base}/pages/merchant.html`, note: 'Opens the merchant page. The partner sign-up form is still being built.', ready: false },
+    { id: 'rider', name: 'Riders', url: `${base}/pages/account.html`, note: 'Opens the customer sign-in page. Customer sign-up is still being built.', ready: false },
   ];
   const canShare = typeof navigator.share === 'function';
   $('#links').innerHTML = links.map((l) => `<li class="slink">
-      <div class="slink__top"><span class="slink__name">${l.name}</span>${l.ready ? tag('approved', 'Ready') : tag('review', 'Form not built yet')}</div>
+      <div class="slink__top"><span class="slink__name">${l.name}</span>${l.ready ? tag('approved', 'Live') : tag('review', 'Coming soon')}</div>
       <p class="slink__note">${l.note}</p>
       <div class="slink__row"><label class="sr-only" for="link-${l.id}">${l.name} sign-up link</label>
         <input class="input" id="link-${l.id}" type="text" value="${esc(l.url)}" readonly>
@@ -202,7 +201,7 @@ function renderActivity() {
   }).join('')}</tr>`).join('')}</tbody>`;
   const week = state.users.filter((u) => Date.now() - u.joinedAt < 7 * 86400e3);
   const waiting = state.users.filter((u) => u.status === 'pending').length;
-  $('#actLine').textContent = `${week.length} new sign-ups in the last 7 days · ${waiting} still waiting for review.`;
+  $('#actLine').textContent = `${week.length} new sign-ups this week · ${waiting} pending review.`;
   $('#newest').innerHTML = state.users.slice(0, 4).map((u) => `<li><button type="button" class="waitrow ulink-row" data-id="${esc(u.id)}">
       ${ava(label(u))}
       <span class="row__main"><span class="row__title">${esc(label(u))}</span><span class="row__sub">${ROLE[u.role]} · joined ${esc(since(u.joinedAt))}</span></span>
@@ -223,11 +222,11 @@ $('#q').addEventListener('input', (e) => {
   clearTimeout(typing);
   typing = setTimeout(() => { Object.assign(state, { q: e.target.value, open: false, sel: null, mode: 'view' }); resetPage(); render(); }, 120);
 });
-const TILES = [['', 'All accounts', ''], ['pending', 'Waiting', ' is-wait'], ['active', 'Active', ' is-good'], ['deactivated', 'Turned off', ' is-off']];
+const TILES = [['', 'All accounts'], ['pending', 'Pending review'], ['active', 'Active'], ['deactivated', 'Turned off']];
 // Drawn once and then only updated, so the tiles don't rise in again on every filter
 function renderTiles() {
   const host = $('#stiles');
-  if (!host.children.length) host.innerHTML = TILES.map(([id, name, tone]) => `<button type="button" class="stile${tone}" data-status="${id}"><b></b><span>${name}</span></button>`).join('');
+  if (!host.children.length) host.innerHTML = TILES.map(([id, name]) => `<button type="button" class="stile" data-status="${id}"><b></b><span>${name}</span></button>`).join('');
   [...host.children].forEach((t) => {
     const n = num(state.users.filter((u) => (!state.role || u.role === state.role) && (!t.dataset.status || u.status === t.dataset.status)).length);
     t.setAttribute('aria-pressed', String(state.status === t.dataset.status));

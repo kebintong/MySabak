@@ -36,16 +36,11 @@ function line(vals, w, h, lo = Math.min(...vals), hi = Math.max(...vals)) {
   return { line: d, area: `${d} L${w - 2},${h} L2,${h} Z`, last: pts[pts.length - 1], pts };
 }
 
-/* The aurora look, as on the merchant Dashboard: a glowing line from purple to gold over a soft fill, a gold star at today */
-const aurora = (id, w, g) => `<defs>
-  <linearGradient id="${id}L" gradientUnits="userSpaceOnUse" x1="0" x2="${w}" y1="0" y2="0"><stop offset="0" stop-color="#7b3fbf"/><stop offset=".7" stop-color="#c59af0"/><stop offset="1" stop-color="#f6c46c"/></linearGradient>
-  <linearGradient id="${id}F" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c59af0" stop-opacity=".5"/><stop offset="1" stop-color="#f1eaf8" stop-opacity="0"/></linearGradient>
-  <filter id="${id}G" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="3"/></filter></defs>
-  <path d="${g.area}" fill="url(#${id}F)"/><path class="aglow" d="${g.line}" stroke="url(#${id}L)" filter="url(#${id}G)"/><path class="aline" d="${g.line}" stroke="url(#${id}L)"/>`;
+/* Plain and soft: one lilac line over a flat pale fill, a gold star at today */
+const aurora = (id, w, g) => `<path class="aarea" d="${g.area}"/><path class="aline" d="${g.line}"/>`;
 const nowStar = (g, w, h) => `<span class="anow" aria-hidden="true" style="left:${((g.last[0] / w) * 100).toFixed(2)}%;top:${((g.last[1] / h) * 100).toFixed(2)}%"><i></i>${STAR_SVG}</span>`;
 
 function render(a) {
-  $('#sampleChip').hidden = !a.sample;
   const w = a.week;
   const kpi = (l, v, d, bad) => `<div class="kpi6" tabindex="0" data-tip="${esc(`${l}: ${v}|${KPI_HELP[l]}|${d} on the 7 days before`)}">
     <span class="stat-l">${l}</span><b class="kpi6__v">${v}</b><span class="kpi6__d${bad ? ' kpi6__d--bad' : ''}">${d}</span></div>`;
@@ -127,7 +122,7 @@ function render(a) {
   // How riders pay: a donut with the biggest share in the middle
   const R = 58;
   const RING = 2 * Math.PI * R;
-  const PAY_COLOURS = ['#7b3fbf', '#c59af0', '#f6c46c'];
+  const PAY_COLOURS = ['#9a72d6', '#d6c3f1', '#f1cd85'];
   const payTip = (p) => esc(`${p.share}%|${p.name}|About ${num(Math.round((w.trips * p.share) / 100))} trips this week`);
   let along = 0;
   const arcs = a.payments.map((p, i) => {

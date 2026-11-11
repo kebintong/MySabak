@@ -1,6 +1,6 @@
 /* Shared by the admin pages (pages/admin*.html). Admins sign in on the customer form (pages/account.html);
    nothing on the site links to these pages. */
-import { mountChrome } from '../ui.js';
+import { mountChrome, icon, tag, STATUS_ICON as KIND_ICON } from '../ui.js';
 
 /** Mount the page for admins only: signed-out visitors go to sign in, other roles to their own home. */
 export function mountAdmin() {
@@ -22,8 +22,8 @@ export const SERVICES = [
 ];
 // Application statuses. `short` fits the four status tabs side by side on a phone.
 export const STATUS = {
-  review: { label: 'Waiting', short: 'Waiting' },
-  fix: { label: 'Needs a fix', short: 'To fix' },
+  review: { label: 'Pending review', short: 'Pending' },
+  fix: { label: 'Changes requested', short: 'Changes' },
   approved: { label: 'Approved', short: 'Approved' },
   rejected: { label: 'Rejected', short: 'Rejected' },
 };
@@ -31,11 +31,12 @@ export const STATUS = {
 export const ACCOUNT = {
   active: { label: 'Active', tag: 'approved' },
   pending: { label: 'Pending review', tag: 'review' },
-  deactivated: { label: 'Deactivated', tag: 'rejected' },
+  deactivated: { label: 'Turned off', tag: 'rejected' },
 };
 export const ROLE = { rider: 'Rider', driver: 'Driver', merchant: 'Merchant' };
-/** A status pill: a word on a soft colour. */
-export const tag = (kind, label) => `<span class="tag tag--${kind}">${label}</span>`;
+export { tag }; // the grey status chip, shared with every page (ui.js)
+/** A note on a grey panel: the status icon, a bold first sentence (in `html`), then plain text. */
+export const notice = (kind, html, extra = '') => `<p class="notice notice--${kind}"${extra}>${icon(KIND_ICON[kind] || KIND_ICON.plain)}<span>${html}</span></p>`;
 export const minSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 export const num = (n) => Number(n).toLocaleString('en-PH');
 /** How long ago, in words: "30 secs", "4 mins", "1 hr", "2 days". */

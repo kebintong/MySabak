@@ -311,7 +311,6 @@
 .dmapview, .dhero { animation: none; }
 }
 
-.badge--ok { background: #e6f5e9; color: #2f7a3f; }
 
 /* ---------- Trips page (pages/driver-trips.html): type chips, trips by day, numbered pages ---------- */
 .page--driver .content__inner:has(#tripList) { padding-bottom: 88px; } /* room above the floating tab bar */

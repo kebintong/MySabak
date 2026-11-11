@@ -480,8 +480,8 @@ async function start() {
       s.setAttribute('aria-label', 'Approved driver');
       s.innerHTML = icon('i-check');
     } else {
-      s.className = 'badge badge--wait';
-      s.textContent = 'Under review';
+      s.className = 'tag tag--review';
+      s.innerHTML = `${icon('i-st-wait')}Under review`;
     }
   });
   approved = d.status === 'approved';
