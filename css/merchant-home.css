@@ -257,7 +257,7 @@
 .pcard__section { position: absolute; left: 10px; top: 10px; padding: 2px 9px; border-radius: 999px; background: #fff; font-size: 12px; font-weight: 700; color: var(--sub); }
 .pcard__sold {
   position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .75);
-  color: var(--ink); font: 800 13px var(--font-body); letter-spacing: .06em; text-transform: uppercase; opacity: 0; transition: opacity .2s var(--ease-out);
+  color: var(--ink); font: 800 13px var(--font-body); opacity: 0; transition: opacity .2s var(--ease-out);
 }
 .pcard.is-off .pcard__sold { opacity: 1; }
 .pcard.is-off .pcard__img img, .pcard.is-off .pcard__img .pic { opacity: .5; }

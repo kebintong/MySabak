@@ -1,6 +1,22 @@
 /* mysabak · wallet styles. Loaded after base.css. */
 
 .wallet__main { display: flex; flex-direction: column; gap: 28px; }
+/* Your mysabak card */
+.wcard {
+  flex: 1 1 100%; min-width: 0; overflow: hidden; padding: 20px; border-radius: 22px; min-height: 176px; color: #fff;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 16px;
+  background: linear-gradient(135deg, #2a0a52, #5b1c8f 55%, #8e3fc9); box-shadow: 0 18px 40px -18px rgba(62, 18, 112, .7);
+}
+.wcard::before { content: ""; position: absolute; right: -50px; top: -50px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(closest-side, rgba(246, 196, 108, .35), transparent); pointer-events: none; }
+.wcard__top { display: flex; align-items: center; justify-content: space-between; }
+.wcard__brand { font: 800 19px var(--font-body); letter-spacing: -.02em; }
+.wcard__chip { width: 38px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #ffe29a, #e3933f); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.wcard__nums { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.wcard__nums p { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.wcard__nums span { font-size: 12.5px; color: #e2d0f4; }
+.wcard__nums b { font: 800 30px/1.1 var(--font-body); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.wcard__zero { color: #ffd36b; }
+.wcard__foot { margin: 0; font-size: 12.5px; color: #e2d0f4; }
 .wsec__title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 17px; font-weight: 700; color: var(--navy); }
 .wpays { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .wpay { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 6px; text-align: center; }

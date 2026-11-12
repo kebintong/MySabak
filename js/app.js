@@ -1038,7 +1038,7 @@ function rebookTrip(trip, from) {
   const d = trip && trip.dropoff;
   if (!d) return;
   rememberPlace(d.label, d);
-  edgeGlow('reward', from);
+  edgeGlow('arrive', from);
   location.hash = 'ride';
   goToChoose(d.label || 'Pinned location', d);
 }

@@ -739,8 +739,6 @@ body:not([data-state="request"]) .map-controls {
 .promo__eyebrow {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
   background: linear-gradient(90deg, #ffe29a, #f6c46c 25%, #fff6d8 50%, #e3933f 75%, #ffe29a) 0 0 / 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -2145,6 +2143,11 @@ body.is-status-hidden .panel--trip {
   display: inline-flex;
   align-items: center;
   padding-left: 12px;
+}
+
+/* Food button: the design's halo colours */
+.tab[data-tab="food"] .tab__icon::before {
+  background: conic-gradient(from 0deg, #f6c46c, #c59af0, #fff, #e3933f, #9a5ad8, #f6c46c);
 }
 
 @media (min-width: 900px) {

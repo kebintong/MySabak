@@ -34,6 +34,16 @@
         </header>
 
         <div class="wallet">
+          <!-- Your mysabak card: night-sky purple with stars (data-sky) and a gold chip; what you've tipped and paid in fees -->
+          <section class="wcard" data-sky aria-label="Your mysabak card">
+            <div class="wcard__top"><b class="wcard__brand">mysabak</b><span class="wcard__chip" aria-hidden="true"></span></div>
+            <div class="wcard__nums">
+              <p><span>Tipped so far</span><b id="tipsTotal">₱0</b></p>
+              <p><span>Booking fees paid</span><b class="wcard__zero">₱0</b></p>
+            </div>
+            <p class="wcard__foot"><span id="cardName"></span>No booking fees, ever.</p>
+          </section>
+
           <div class="wallet__main">
             <section class="wsec" aria-labelledby="payTitle">
               <h2 class="wsec__title" id="payTitle">How you can pay</h2>
@@ -52,7 +62,6 @@
           <section class="wsec wtips" aria-labelledby="tipsTitle">
             <div class="wtips__head">
               <h2 class="wsec__title" id="tipsTitle">Your tips</h2>
-              <span class="wtips__total"><b id="tipsTotal">₱0</b> so far</span>
             </div>
             <ul class="list skel-rows" id="tipList"></ul>
             <p class="wtips__foot">Tips go 100% to mysabak and keep rides fee-free for drivers.</p>

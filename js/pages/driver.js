@@ -12,7 +12,7 @@ import {
 import { haversineKm } from '../money.js';
 import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava } from '../ui.js';
+import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava, emptyRows } from '../ui.js';
 import { tripsByDay } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
@@ -182,7 +182,7 @@ function stopWatch() {
 /* ---------- Online pill ---------- */
 function paintOnline() {
   const btn = $('#onlineBtn');
-  btn.setAttribute('aria-pressed', String(online));
+  btn.setAttribute('aria-checked', String(online));
   btn.classList.toggle('is-on', online);
   if (!approved) {
     bindAll('onlineTitle', 'Application under review');
@@ -242,7 +242,7 @@ function renderJobs() {
   let html;
   if (job) html = '';
   else if (!approved) html = '<div class="dempty dtone--lilac"><h3>Application under review</h3><p>We’ll email you when you’re approved. Then you can go online here.</p></div>';
-  else if (!online) html = `<div class="dempty dempty--quiet"><span class="dempty__ic">${icon('i-receipt')}</span><p>They show up here while you’re online.</p></div>`; // the sky above already says you're offline
+  else if (!online) html = `<div class="dempty dempty--quiet"><ul class="list">${emptyRows('No requests yet', 'They show up here while you’re online.')}</ul></div>`; // the sky above already says you're offline
   else if (!shown.length) html = '<div class="dempty dtone--lilac"><p class="jobs-wait"><span class="online__pulse" aria-hidden="true"></span>Waiting for requests nearby…</p><p>They show here, nearest first.</p></div>';
   else {
     const rest = shown.filter((j) => j !== hero);
@@ -402,6 +402,8 @@ async function toggleOnline() {
     online = res.online;
     listen();
     paintAll();
+    const today = new Date().toDateString();
+    try { if (online && localStorage.getItem('mysabak.onlineDay') !== today) { localStorage.setItem('mysabak.onlineDay', today); edgeGlow('reward', $('#onlineBtn')); } } catch (_) { /* storage off */ }
   } catch (err) {
     if (err.status === 401) { location.replace('/pages/drive.html'); return; }
     toast(err.status === 403 ? 'You can go online once your application is approved.' : errorMessage(err));

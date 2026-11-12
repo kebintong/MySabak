@@ -48,8 +48,8 @@
               </div>
             </div>
             <div class="dgo">
-              <p class="dgo__status"><b><span class="dgo__dot" aria-hidden="true"></span><span data-bind="onlineTitle">You’re offline</span></b><span data-bind="onlineHint">Go online to get Ride, Express and Shop requests.</span></p>
-              <button type="button" class="dgo__btn" id="onlineBtn" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-power"/></svg><span data-bind="onlineAction">Go online</span></button>
+              <p class="dgo__status" id="onlineStatus"><b data-bind="onlineTitle">You’re offline</b><span data-bind="onlineHint">Go online to get Ride, Express and Shop requests.</span></p>
+              <button type="button" class="dgo__switch" id="onlineBtn" role="switch" aria-checked="false" aria-describedby="onlineStatus"><span class="dgo__knob" aria-hidden="true"></span><span class="sr-only" data-bind="onlineAction">Go online</span></button>
             </div>
           </div>
         </header>

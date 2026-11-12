@@ -3,7 +3,7 @@
    → "Application sent", updates by email). */
 import { CONFIG } from '../config.js';
 import { driverApply, errorMessage } from '../api.js';
-import { $, $$, mountChrome, toast, wirePasswordReveal, edgeGlow } from '../ui.js';
+import { $, $$, mountChrome, toast, wirePasswordReveal, edgeGlow, listMenu } from '../ui.js';
 
 mountChrome();
 
@@ -36,6 +36,17 @@ $$('[data-office]').forEach((n) => {
 });
 $('#directionsBtn').addEventListener('click', () => toast('Directions will open in Maps once the office address is final.'));
 
+/* ---------- City: a menu like the rest of mysabak; the hidden input keeps it required ---------- */
+const CITIES = ['Cebu City', 'Mandaue City', 'Lapu-Lapu City', 'Talisay City', 'Other'].map((c) => ({ id: c, name: c, sub: '', icon: 'i-pin' }));
+const cityMenu = listMenu($('#cityBtn'), $('#cityList'), (id) => {
+  $('input[name="city"]').value = id;
+  $('#cityName').textContent = id;
+  $('#cityName').classList.remove('is-empty');
+  cityMenu.set(CITIES, id);
+});
+cityMenu.set(CITIES, null);
+$('input[name="city"]').addEventListener('invalid', () => $('#cityBtn').focus());
+
 const form = $('#signupForm');
 const steps = $$('.wizard__step', form);
 const labels = $$('[data-step-label]');
@@ -52,7 +63,6 @@ function show(i) {
     if (n === i) l.setAttribute('aria-current', 'step'); else l.removeAttribute('aria-current');
   });
   back.hidden = i === 0;
-  $('.wizard__steps').style.setProperty('--p', (i + 1) / steps.length);
   next.textContent = i === steps.length - 1 ? 'Submit application' : 'Next';
   const first = $('input:not([type="radio"]):not([type="checkbox"]), select', steps[i]);
   if (first) first.focus({ preventScroll: true });
@@ -74,7 +84,7 @@ $$('[data-file]', form).forEach((box) => {
   input.addEventListener('change', () => {
     const file = input.files[0];
     box.classList.toggle('is-done', Boolean(file));
-    status.textContent = file ? `${file.name} · ready` : status.dataset.hint;
+    status.textContent = file ? `${file.name} · ${(file.size / 1048576).toFixed(1)} MB` : status.dataset.hint;
   });
 });
 

@@ -1,10 +1,12 @@
 /* Support page (pages/support.html): how money moves, tip totals, give without a ride, your tips. */
+import { CONFIG } from '../config.js';
 import { supportStats, myTips, sendTip, errorMessage } from '../api.js';
 import { $, mountChrome, tipPicker, toast, peso, esc, when, edgeGlow, icon, tag, emptyRows } from '../ui.js';
 
 mountChrome();
 
 const KIND = { ride: 'Ride', express: 'Express', shop: 'Shop order', direct: 'Without a ride' };
+const METHOD = Object.fromEntries([...CONFIG.ridePayments, ...CONFIG.tips.methods].map((m) => [m.id, m.name])); // how a tip was paid, by name
 const bind = (name, text) => { $(`[data-bind="${name}"]`).textContent = text; };
 
 // What tips pay for: a plain icon each; the share once there are real tips to split, "Soon" until then
@@ -26,7 +28,7 @@ async function loadMine() {
   const tips = await myTips();
   $('#myTips').innerHTML = tips.length
     ? tips.map((t) => `<li class="row"><div class="row__main"><span class="row__title">${esc(KIND[t.orderType] || t.orderType)}</span>
-        <span class="row__sub">${esc(when(t.at))} · ${esc(t.method.toUpperCase())}</span></div><span class="row__end">${peso(t.amount)}</span></li>`).join('')
+        <span class="row__sub">${esc(when(t.at))} · ${esc(METHOD[t.method] || t.method)}</span></div><span class="row__end">${peso(t.amount)}</span></li>`).join('')
     : emptyRows('No tips yet', 'Tip after a ride, a parcel or a shop order.');
 }
 

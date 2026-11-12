@@ -69,7 +69,7 @@ button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 a { color: var(--brand); }
 a:not([class]):hover { color: var(--brand-deep); } /* plain text links only: styled links (buttons) keep their own colours */
-input::placeholder { color: var(--placeholder); }
+input::placeholder, textarea::placeholder { color: #8a7b9e; font-weight: 400; opacity: 1; }
 :focus-visible {
   outline: 3px solid rgba(91, 37, 150, 0.45);
   outline-offset: 2px;
@@ -505,15 +505,13 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 }
 .promo__link .icon { stroke: #ffd66b; }
 .promo__link .icon { transition: transform .2s var(--spring); }
-/* Figma "List v3/Recent trip": hover fills the Rebook chip */
+/* Figma "List v3/Recent trip" (its Rebook chip hovers like every .btn-soft) */
 .recent { grid-column: 1 / -1; }
 .recent__row { display: flex; align-items: center; gap: 12px; min-height: 48px; }
 .recent__row > .icon { stroke: #7b3fbf; }
 .recent__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .recent__name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .recent__meta { font-size: 12px; color: var(--muted); }
-.recent__row:hover .btn-soft { background: var(--brand-deep); color: #fff; }
-.recent__row:hover .btn-soft .icon { stroke: #fff; }
 .list > .recent__row { min-height: 60px; }
 .trips-empty img { width: 200px; height: auto; }
 @media (min-width: 900px) {
@@ -618,47 +616,34 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   width: 64px; height: 64px;
   margin-top: -42px; /* centre sits on the bar edge */
   border-radius: 50%;
-  isolation: isolate;
-  background: radial-gradient(circle at 35% 30%, #8e3fc9, #5b1c8f 55%, #2a0a4e);
-  /* a thin rim of light on the button, and a soft violet glow under the aura */
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .55), inset 0 -6px 14px rgba(255, 214, 107, .18), 0 0 22px 4px rgba(150, 90, 230, .4);
+  background: linear-gradient(145deg, #1e0638, #5b1c8f 50%, #8e3fc9);
+  box-shadow: 0 0 0 2px #fff, 0 6px 16px rgba(41, 10, 69, .3);
   animation: none;
   transition: transform .2s var(--spring);
 }
 .tab[data-tab="food"] .tab__icon .icon { width: 28px; height: 28px; stroke: #fff; }
-.tab[data-tab="food"] .tab__roll { z-index: 1; }
-/* Moon aura (draft M1): no hard ring. Two soft arcs of light, white-lilac and gold-lilac, turn slowly round the
-   button in opposite directions (7 s and 11 s), so the light seems to flow; the outer one breathes. */
+/* Halo ring (rotates) and pulse ring (expands), behind the white gap */
 .tab[data-tab="food"] .tab__icon::before,
 .tab[data-tab="food"] .tab__icon::after {
   content: "";
   position: absolute;
-  z-index: -1;
   border-radius: 50%;
+  z-index: -1;
   pointer-events: none;
 }
 .tab[data-tab="food"] .tab__icon::before {
-  inset: -12px;
-  background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, .95) 7%, rgba(181, 123, 255, .95) 15%, transparent 28%,
-    transparent 50%, rgba(246, 196, 108, .9) 58%, rgba(160, 100, 240, .8) 68%, transparent 80%);
-  -webkit-mask: radial-gradient(closest-side, transparent 70%, #000 76%, rgba(0, 0, 0, .55) 88%, transparent 100%);
-  mask: radial-gradient(closest-side, transparent 70%, #000 76%, rgba(0, 0, 0, .55) 88%, transparent 100%);
-  filter: blur(4px);
-  animation: spin 7s linear infinite;
+  inset: -5px;
+  background: conic-gradient(#a65fe8, #f2b55c 22%, #fff 38%, #e9a04a 52%, #a65fe8 68%, #e7d6fb 84%, #a65fe8);
+  /* ring only: hover/press transforms lift this above the button fill */
+  -webkit-mask: radial-gradient(closest-side, transparent 33.5px, #000 34px);
+  mask: radial-gradient(closest-side, transparent 33.5px, #000 34px);
+  animation: spin 6s linear infinite;
 }
 .tab[data-tab="food"] .tab__icon::after {
-  inset: -18px;
-  background: conic-gradient(from 120deg, transparent, rgba(160, 100, 240, .75) 12%, transparent 30%,
-    transparent 55%, rgba(197, 154, 240, .7) 66%, transparent 80%);
-  -webkit-mask: radial-gradient(closest-side, transparent 70%, #000 76%, rgba(0, 0, 0, .55) 88%, transparent 100%);
-  mask: radial-gradient(closest-side, transparent 70%, #000 76%, rgba(0, 0, 0, .55) 88%, transparent 100%);
-  filter: blur(8px);
-  animation: spin-back 11s linear infinite, fab-breathe 3.6s ease-in-out infinite;
+  inset: 0;
+  border: 3px solid rgba(197, 154, 240, .5);
+  animation: fab-pulse 2.4s var(--ease-out) infinite;
 }
-@keyframes spin-back { to { transform: rotate(-360deg); } }
-@keyframes fab-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
-.lite .tab[data-tab="food"] .tab__icon::before, .lite .tab[data-tab="food"] .tab__icon::after { animation: none; }
-@media (prefers-reduced-motion: reduce) { .tab[data-tab="food"] .tab__icon::before, .tab[data-tab="food"] .tab__icon::after { animation: none; } }
 /* Orbiting stars */
 .tab[data-tab="food"]::after {
   content: "";
@@ -698,7 +683,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   100% { opacity: 0; transform: translate(-50%, -6px); }
 }
 @media (prefers-reduced-motion: reduce) { .tab__tip { animation-name: tip-fade; } @keyframes tip-fade { 12%, 80% { opacity: 1; transform: translateX(-50%); } 0%, 100% { opacity: 0; transform: translateX(-50%); } } }
-.tab[data-tab="food"].is-turning .tab__icon { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .55), 0 0 18px 6px rgba(246, 196, 108, .55), 0 6px 16px rgba(41, 10, 69, .3); }
+.tab[data-tab="food"].is-turning .tab__icon { box-shadow: 0 0 0 2px #fff, 0 0 18px 6px rgba(246, 196, 108, .55), 0 6px 16px rgba(41, 10, 69, .3); }
 /* The Cart step with an order: its total in the 64px circle (ui.js artInner) */
 .tab__total { color: #fff; font: 800 14px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap; }
 .tab__total--long { font-size: 11.5px; letter-spacing: -.02em; }
@@ -1137,11 +1122,12 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   border-radius: 12px;
   background: var(--field);
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--ink);
   outline: none;
   transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
 }
+.select:has(> option[value=""]:checked) { color: #8a7b9e; }
 .textarea { padding: 12px 14px; min-height: 84px; resize: vertical; }
 .input:focus, .textarea:focus, .select:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(91, 37, 150, 0.12); background: #fff; }
 .field .suggest { top: 100%; bottom: auto; left: 0; right: 0; margin-top: 6px; z-index: 5; }

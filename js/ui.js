@@ -227,6 +227,7 @@ export function paintSky(el) {
  * Light mode and "reduce motion": only the top bloom.
  */
 export function edgeGlow(kind = 'arrive', from = null) {
+  if (kind === 'reward' && takeSpark()) { wandArrive(from); return; }
   let x = innerWidth / 2;
   let y = innerHeight * 0.7;
   const r = from && from.getBoundingClientRect ? from.getBoundingClientRect() : null;
@@ -256,8 +257,22 @@ export function edgeGlow(kind = 'arrive', from = null) {
   setTimeout(() => { layer.remove(); document.body.classList.remove('is-glowing'); }, (still ? 0 : CLIMB) + 1000);
 }
 
-// Tabs (and a few buttons) load a new page, so the arrival plays on the next page: it is remembered for it
+// The magic is for moments, not for moving around: a welcome on the first page of a visit, then rewards (a booking,
+// an order, a claimed offer, a tip, an approval, going online for the day…), at most SPARKS a visit.
+// A reward that loads a new page (placing an order) is remembered for that page.
 const GLOW_KEY = 'mysabak.glow';
+const WELCOME_KEY = 'mysabak.welcomed';
+const SPARKS_KEY = 'mysabak.sparks';
+const SPARKS = 3;
+/** One more wand spark this visit? (counts it) */
+function takeSpark() {
+  try {
+    const n = Number(sessionStorage.getItem(SPARKS_KEY) || 0);
+    if (n >= SPARKS) return false;
+    sessionStorage.setItem(SPARKS_KEY, String(n + 1));
+  } catch (_) { /* storage off: still play it */ }
+  return true;
+}
 /** Play the arrival (the wand spark) on the next page this tab opens (e.g. after placing an order). */
 export function glowNext(kind = 'arrive') {
   try { sessionStorage.setItem(GLOW_KEY, JSON.stringify({ kind })); } catch (_) { /* storage off: no spark */ }
@@ -283,9 +298,9 @@ function landingPoint() {
   const r = rects[rects.length - 1] || title.getBoundingClientRect();
   return { x: Math.min(innerWidth - 16, r.right + 10), y: r.top + r.height * 0.42, title };
 }
-export function wandArrive() {
+export function wandArrive(from = null) {
   const end = landingPoint();
-  const tab = document.querySelector('.tab.is-active');
+  const tab = from && from.getBoundingClientRect ? from : document.querySelector('.tab.is-active'); // what you tapped, else the tab you're on
   const tr = tab && tab.getBoundingClientRect();
   const sx = tr && tr.width ? tr.left + tr.width / 2 : innerWidth / 2;
   const sy = tr && tr.height ? tr.top + tr.height * 0.4 : innerHeight - 40;
@@ -402,14 +417,14 @@ export function wandArrive() {
   setTimeout(clear, LAND + 1700);
 }
 
-function armTabGlow() {
-  document.addEventListener('click', (e) => {
-    const tab = e.target.closest('.tab');
-    if (tab && !tab.classList.contains('is-active') && !e.defaultPrevented) glowNext('arrive');
-  });
+function armArrival() {
   let next = null;
-  try { next = JSON.parse(sessionStorage.getItem(GLOW_KEY)); sessionStorage.removeItem(GLOW_KEY); } catch (_) { /* storage off */ }
-  if (next) requestAnimationFrame(() => requestAnimationFrame(wandArrive)); // after the page's first layout
+  try {
+    next = JSON.parse(sessionStorage.getItem(GLOW_KEY));
+    sessionStorage.removeItem(GLOW_KEY);
+    if (!next && !sessionStorage.getItem(WELCOME_KEY)) { sessionStorage.setItem(WELCOME_KEY, '1'); next = { kind: 'welcome' }; }
+  } catch (_) { /* storage off: no magic */ }
+  if (next) requestAnimationFrame(() => requestAnimationFrame(() => wandArrive())); // after the page's first layout
   else document.documentElement.classList.remove('arriving');
 }
 
@@ -422,7 +437,7 @@ export function mountMagic() {
     if (!$(':scope > .skyfx', host)) host.insertAdjacentHTML('afterbegin', '<div class="skyfx" aria-hidden="true"></div>');
   });
   $$('.skyfx').forEach(paintSky);
-  armTabGlow();
+  armArrival();
 }
 
 /* ---------- Light mode, for computers that struggle ----------

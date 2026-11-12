@@ -1,12 +1,13 @@
 /* Wallet (pages/wallet.html): payment methods and the customer's tips. */
 import { CONFIG } from '../config.js';
-import { myTips, myTrips, myOrders } from '../api.js';
+import { myTips, myTrips, myOrders, currentUser } from '../api.js';
 import { isNum } from '../money.js';
 import { $, $$, mountChrome, esc, when, peso, icon, emptyRows } from '../ui.js';
 
 mountChrome({ roles: ['client'] });
 
 const KIND = { ride: 'Ride', express: 'Express', shop: 'Shop order', direct: 'Without a ride' };
+const METHOD = Object.fromEntries([...CONFIG.ridePayments, ...CONFIG.tips.methods].map((m) => [m.id, m.name])); // how a tip was paid, by name
 
 $('#payList').innerHTML = CONFIG.ridePayments.map((m) => `<li class="wpay">
   <span class="wpay__icon">${icon(m.icon)}</span>
@@ -16,7 +17,7 @@ myTips().then((tips) => {
   $('#tipsTotal').textContent = peso(tips.reduce((sum, t) => sum + t.amount, 0));
   $('#tipList').innerHTML = tips.length
     ? tips.map((t) => `<li class="row"><div class="row__main"><span class="row__title">${esc(KIND[t.orderType] || t.orderType)}</span>
-        <span class="row__sub">${esc(when(t.at))} · ${esc(t.method.toUpperCase())}</span></div><span class="row__end">${peso(t.amount)}</span></li>`).join('')
+        <span class="row__sub">${esc(when(t.at))} · ${esc(METHOD[t.method] || t.method)}</span></div><span class="row__end">${peso(t.amount)}</span></li>`).join('')
     : '<li class="empty">No tips yet. You can tip after a ride, an Express delivery or a shop order.</li>';
 });
 
@@ -56,3 +57,6 @@ Promise.all([myTrips(), myOrders()]).then(([trips, orders]) => {
   ].sort((a, b) => b.at - a.at);
   drawRecent();
 });
+
+// The card carries your name
+currentUser().then((me) => { if (me && me.name) $('#cardName').textContent = `${me.name} · `; });
