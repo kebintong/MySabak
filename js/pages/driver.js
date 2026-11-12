@@ -1,5 +1,5 @@
-/* Driver home (pages/driver.html), draft Q: Home's night sky with today's earnings and the online pill, the
-   nearest request as the big lilac card (the others below; tap one to swap it in), then shortcuts and the week.
+/* Drive (pages/driver.html): only the work. Today in one line and the online switch on the night sky, then the
+   nearest request as the big card (the others below; tap one to swap it in). Money is on Earnings.
    The map opens full screen: every request as a pin, a route preview before accepting, or in-app navigation
    to the next stop (turn by turn from TomTom, following the phone's location). Google Maps stays as a backup.
    Accept one and follow it: to pickup → arrived → on the trip → completed.
@@ -13,7 +13,6 @@ import { haversineKm } from '../money.js';
 import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
 import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava, emptyRows, rollNumber } from '../ui.js';
-import { tripsByDay } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
 
@@ -387,7 +386,6 @@ $('#mapSheet').addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mapMode) closeMap(); });
 $('#mapBtn').addEventListener('click', () => openMap(job ? 'nav' : 'all'));
-$$('[data-payout]').forEach((b) => b.addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.')));
 
 $('#locateBtn').addEventListener('click', async () => {
   try {
@@ -427,55 +425,15 @@ setInterval(() => {
   if (expired) { jobs = jobs.filter((j) => j.expiresAt > Date.now()); renderJobs(); }
 }, 1000);
 
+// Today in one line (the rest is on Earnings); the amount rolls like the analytics numbers
 async function loadEarnings() {
   const e = await driverEarnings();
-  const was = $$('[data-bind="today"], [data-bind="week"]').map((b) => b.dataset.value ?? null);
+  const was = $('[data-bind="today"]').dataset.value ?? null;
   bindAll('today', peso(e.today));
-  bindAll('week', peso(e.week));
-  $$('[data-bind="today"], [data-bind="week"]').forEach((b, i) => rollNumber(b, was[i])); // the analytics' rolling digits
-  bindAll('payout', e.payout.method || 'Add GCash or a bank to get paid');
-  bindAll('payoutAction', e.payout.method ? 'Change' : 'Set up');
-  $$('.dround [data-payout]').forEach((b) => b.toggleAttribute('data-needs', !e.payout.method)); // a dot: still to do
+  rollNumber($('[data-bind="today"]'), was);
   const midnight = new Date().setHours(0, 0, 0, 0);
   const n = e.trips.filter((t) => t.at >= midnight).length;
-  bindAll('todayCount', String(n));
-  bindAll('todayLabel', n === 1 ? 'trip today' : 'trips today');
-  paintWeek(e.trips);
-  // Today's trips only (up to 6), with today's total; past trips are on the Trips page
-  const trips = [...e.trips].sort((a, b) => b.at - a.at);
-  const today = trips.filter((t) => t.at >= midnight);
-  $('#trips').innerHTML = today.length ? tripsByDay(today.slice(0, 6), today) : '<li class="empty">No trips yet today. Go online to start earning.</li>';
-  $('#todaySum').textContent = today.length ? `${today.length} trip${today.length === 1 ? '' : 's'} · ${peso(today.reduce((sum, t) => sum + t.fare, 0))}` : '';
-  $('#allTrips').hidden = trips.length === today.length && today.length <= 6;
-  $('#allTrips span').textContent = trips.length > today.length ? 'See past trips' : `See all ${trips.length} trips`;
-}
-
-// A tap on a bar keeps its amount showing (phones have no hover); a second tap, or another bar, moves it
-if ($('#weekBars')) $('#weekBars').addEventListener('click', (e) => {
-  const col = e.target.closest('.dweek__col');
-  if (!col) return;
-  const pick = !col.classList.contains('is-pick');
-  $$('.dweek__col', $('#weekBars')).forEach((c) => c.classList.toggle('is-pick', pick && c === col));
-});
-// The last 7 days, a bar a day (today in gold), and the change from the 7 days before
-function paintWeek(trips) {
-  const start = (daysAgo) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - daysAgo); return d.getTime(); };
-  const dayTotal = (daysAgo) => trips.filter((t) => t.at >= start(daysAgo) && t.at < start(daysAgo - 1)).reduce((s, t) => s + t.fare, 0);
-  const days = [6, 5, 4, 3, 2, 1, 0].map((ago) => ({ ago, total: dayTotal(ago), day: new Date(start(ago)).toLocaleDateString('en-PH', { weekday: 'short' }) }));
-  const before = [13, 12, 11, 10, 9, 8, 7].reduce((s, ago) => s + dayTotal(ago), 0);
-  const now = days.reduce((s, d) => s + d.total, 0);
-  const max = Math.max(...days.map((d) => d.total), 1);
-  const when = (d) => (d.ago ? new Date(start(d.ago)).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Today');
-  $('#weekBars').innerHTML = days.map((d, i) => `<button type="button" class="dweek__col${d.ago ? '' : ' is-now'}${d.total ? '' : ' is-zero'}" style="--bh:${Math.max(6, Math.round((d.total / max) * 60))}px;--i:${i}" aria-label="${esc(when(d))}: ${peso(d.total)}">
-    <span class="dweek__plot"><i></i><span class="dweek__tip" aria-hidden="true"><b>${peso(d.total)}</b><span>${esc(when(d))}</span></span></span>
-    <span class="dweek__day" aria-hidden="true">${d.ago ? esc(d.day.slice(0, 1)) : 'Today'}</span></button>`).join('');
-  const delta = $('#weekDelta');
-  delta.hidden = !before;
-  if (before) {
-    const pct = Math.round(((now - before) / before) * 100);
-    delta.className = `dweek__delta${pct < 0 ? ' is-down' : ''}`;
-    delta.innerHTML = `${icon(pct < 0 ? 'i-trend-down' : 'i-trend-up')}${Math.abs(pct)}% vs the 7 days before`;
-  }
+  bindAll('todayTrips', `${n} trip${n === 1 ? '' : 's'}`);
 }
 
 /* ---------- Start ---------- */
@@ -483,22 +441,6 @@ async function start() {
   const d = await driverStatus();
   if (!d.signedIn) { location.replace('/pages/drive.html'); return; } // sign in first
   $('#driverHome').hidden = false;
-  const vehicle = CONFIG.vehicles.find((v) => v.id === d.vehicle);
-  bindAll('firstName', (d.name || 'driver').split(' ')[0]);
-  $('.dwho__ava').outerHTML = ava(d.name || 'Driver', 'dwho__ava');
-  bindAll('vehicle', [vehicle ? vehicle.name : d.vehicle, d.plate].filter(Boolean).join(' · '));
-  // Approved: a small gold check by the name. Anything else says so in words
-  $$('[data-bind="status"]').forEach((s) => {
-    if (d.status === 'approved') {
-      s.className = 'dwho__ok';
-      s.setAttribute('role', 'img');
-      s.setAttribute('aria-label', 'Approved driver');
-      s.innerHTML = icon('i-check');
-    } else {
-      s.className = 'tag tag--review';
-      s.innerHTML = `${icon('i-st-wait')}Under review`;
-    }
-  });
   approved = d.status === 'approved';
   online = approved && d.online;
   job = approved ? await activeJob() : null;

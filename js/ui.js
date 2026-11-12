@@ -500,6 +500,9 @@ export const TABS = [
   { id: 'wallet', label: 'Wallet', icon: 'i-wallet', href: '/pages/wallet.html' },
   { id: 'account', label: 'Account', icon: 'i-user', href: '/pages/account.html' },
   { id: 'drive', label: 'Drive', icon: 'i-wheel', href: '/pages/drive.html' },
+  { id: 'driverEarn', label: 'Earnings', icon: 'i-chart', href: '/pages/driver-earnings.html' },
+  { id: 'driverTrips', label: 'Trips', icon: 'i-receipt', href: '/pages/driver-trips.html' },
+  { id: 'driverAccount', label: 'Account', icon: 'i-user', href: '/pages/driver-account.html' },
   { id: 'merchant', label: 'Dashboard', icon: 'i-store', href: '/pages/merchant-home.html' },
   { id: 'merchantStats', label: 'Analytics', icon: 'i-chart', href: '/pages/merchant-analytics.html' },
   { id: 'merchantManage', label: 'Manage', icon: 'i-pencil', href: '/pages/merchant-manage.html' },
@@ -519,7 +522,7 @@ export const ROLES = {
     home: '/pages/account.html', homeLabel: 'My account', homeIcon: 'i-user', signIn: '/pages/account.html',
   },
   driver: {
-    label: 'Driver', tabs: ['drive', 'support'], hrefs: { drive: '/pages/driver.html' },
+    label: 'Driver', tabs: ['drive', 'driverEarn', 'driverTrips', 'driverAccount'], hrefs: { drive: '/pages/driver.html' }, // Support is on Account
     home: '/pages/driver.html', homeLabel: 'Driver home', homeIcon: 'i-wheel', signIn: '/pages/drive.html',
   },
   merchant: {

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Earnings · mysabak</title>
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <script>try{if(sessionStorage.getItem('mysabak.glow'))document.documentElement.classList.add('arriving')}catch(e){}</script>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/driver.css">
+  <script type="module" src="/js/pages/driver-earnings.js"></script>
+</head>
+<body class="page page--sky page--head-sky page--driver">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+        <!-- Today and the last 7 days on the sky; the week as bars; the week in numbers; the payout -->
+        <header class="page-head">
+          <h1 class="page-title">Earnings</h1>
+          <div class="dsum dsum--page">
+            <p class="dearn"><span class="dearn__label">Today</span><span class="dearn__value" data-bind="today">₱0</span></p>
+            <div class="dstats">
+              <p><b data-bind="week">₱0</b><span>last 7 days</span></p>
+              <p><b data-bind="todayCount">0</b><span data-bind="todayLabel">trips today</span></p>
+            </div>
+          </div>
+        </header>
+
+        <section class="card dweek" aria-labelledby="weekTitle">
+          <div class="dweek__head">
+            <div class="dweek__sum"><h2 class="dweek__title" id="weekTitle">This week</h2><b class="dweek__value" data-bind="week">₱0</b></div>
+            <span class="dweek__delta" id="weekDelta" hidden></span>
+          </div>
+          <div class="dweek__bars skel-block" style="--skel-h: 96px" id="weekBars" role="group" aria-label="Earnings each day"></div>
+        </section>
+
+        <section class="card dglance" aria-labelledby="glanceTitle">
+          <h2 class="card__title" id="glanceTitle">The last 7 days, in numbers</h2>
+          <dl class="dglance__rows">
+            <div><dt>Trips</dt><dd data-bind="weekCount">0</dd></div>
+            <div><dt>Average per trip</dt><dd data-bind="weekAvg">₱0</dd></div>
+            <div><dt>Booking fees taken</dt><dd class="dglance__zero">₱0</dd></div>
+          </dl>
+        </section>
+
+        <section class="card dpay" aria-labelledby="payTitle">
+          <div class="dpay__text"><h2 id="payTitle">Payout method</h2><p data-bind="payout">Add GCash or a bank to get paid.</p></div>
+          <button type="button" class="dpay__btn" data-payout data-bind="payoutAction">Set up</button>
+        </section>
+        <p class="finder__note">You keep 100% of every fare. Riders’ tips go to mysabak, which is why there are no fees.</p>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="driverEarn" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

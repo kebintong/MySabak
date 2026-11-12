@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Account · mysabak</title>
+  <meta name="theme-color" content="#5b2596">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mysabak">
+  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
+  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <script>try{if(sessionStorage.getItem('mysabak.glow'))document.documentElement.classList.add('arriving')}catch(e){}</script>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/driver.css">
+  <script type="module" src="/js/pages/driver-account.js"></script>
+</head>
+<body class="page page--sky page--head-sky page--driver">
+  <div class="app">
+    <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
+    <header class="topbar" data-topbar></header>
+
+    <main class="content">
+      <div class="content__inner">
+        <!-- Who's driving on the sky; then your driving, help, and sign out -->
+        <header class="page-head">
+          <div class="dwho dwho--page">
+            <span class="dwho__ava" aria-hidden="true"></span>
+            <div class="dwho__text">
+              <h1 class="dwho__name"><b data-bind="name">Driver</b><span data-bind="status"></span></h1>
+              <p class="dwho__car"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg><span data-bind="vehicle">Vehicle</span></p>
+            </div>
+          </div>
+        </header>
+
+        <section class="card dacct" aria-labelledby="drivingTitle">
+          <h2 class="card__title" id="drivingTitle">Your driving</h2>
+          <ul class="drows">
+            <li class="drow"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg><span class="drow__text"><b>Profile</b><span data-bind="contact">Mobile number and email</span></span></li>
+            <li class="drow"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg><span class="drow__text"><b>Vehicle and documents</b><span data-bind="vehicleLong">Your vehicle</span></span></li>
+            <li><button type="button" class="drow drow--go" data-payout><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg><span class="drow__text"><b>Payout method</b><span>Not set up yet</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button></li>
+          </ul>
+        </section>
+
+        <section class="card dacct" aria-labelledby="helpTitle">
+          <h2 class="card__title" id="helpTitle">Help</h2>
+          <ul class="drows">
+            <li><a class="drow drow--go" href="/pages/support.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg><span class="drow__text"><b>Support mysabak</b><span>Where your fares and tips go</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+            <li><button type="button" class="drow drow--go" data-help><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-chat"/></svg><span class="drow__text"><b>Get help</b><span>A ride, a payment, your account</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button></li>
+          </ul>
+        </section>
+
+        <section class="card dacct dacct--out">
+          <button type="button" class="drow drow--out" id="signOutBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-power"/></svg><span class="drow__text"><b>Sign out</b></span></button>
+        </section>
+      </div>
+    </main>
+
+    <div class="bottom">
+      <nav class="dock tabs" data-tabs="driverAccount" aria-label="Main"></nav>
+    </div>
+  </div>
+</body>
+</html>

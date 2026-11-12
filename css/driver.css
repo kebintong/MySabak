@@ -372,3 +372,50 @@
 .tfilter .fchip:hover { border-color: var(--brand); color: var(--brand-deep); }
 .tfilter .fchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .tfilter .fchip span { margin-left: 2px; font-weight: 500; opacity: .75; }
+
+/* ---------- Drive: today in one line on the sky; a Map button beside the requests ---------- */
+.dtoday { margin: 0; display: flex; align-items: center; gap: 16px; font-size: 13px; color: #e2d0f4; }
+.dtoday b { color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dtoday a { margin-left: auto; font-weight: 700; color: #ffd36b; text-decoration: none; }
+.dtoday a:hover { text-decoration: underline; }
+.dreq__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dreq__map { /* solid white: it sits where the sky meets the cream edge, so it has to read on both */
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: #fff; color: var(--brand-deep); font: 700 13.5px var(--font-body); box-shadow: 0 4px 12px rgba(41, 10, 69, .18);
+  transition: transform .15s var(--spring), box-shadow .15s var(--ease-out);
+}
+.dreq__map .icon { width: 15px; height: 15px; stroke: var(--brand-deep); --pin-fill: var(--brand-deep); --pin-dot: #fff; }
+.dreq__map:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(41, 10, 69, .22); }
+.page--driver.has-job .dreq__map { visibility: visible; }
+
+/* ---------- Earnings ---------- */
+.dsum--page { margin-top: 6px; }
+.dweek__delta, .dweek__delta.is-down { padding: 0; background: none; } /* the change in words, no badge */
+.dglance__rows { margin: 0; display: flex; flex-direction: column; }
+.dglance__rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.dglance__rows > div + div { border-top: 1px solid var(--line); }
+.dglance__rows dt { font-size: 14px; color: var(--sub); }
+.dglance__rows dd { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dglance__zero { color: #a8670c !important; }
+
+/* ---------- Driver account: rows with plain icons in the ink of their words ---------- */
+.dwho--page .dwho__ava { width: 56px; height: 56px; font-size: 18px; }
+.dwho--page .dwho__name { font-size: 20px; }
+.drows { margin: 0; padding: 0; list-style: none; }
+.drows > li + li { border-top: 1px solid var(--line); }
+.drow { width: 100%; min-height: 60px; padding: 10px 0; border: 0; background: none; display: flex; align-items: center; gap: 14px; text-align: left; font: inherit; color: inherit; text-decoration: none; }
+.drows > .drow + .drow { border-top: 1px solid var(--line); }
+.drow > .icon { width: 21px; height: 21px; flex: none; stroke: var(--ink); stroke-width: 1.9; --pin-fill: var(--ink); }
+.drow__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.drow__text b { font-size: 15px; font-weight: 600; color: var(--ink); }
+.drow__text span { font-size: 13px; color: var(--sub); overflow-wrap: anywhere; }
+.drow__chev { width: 18px !important; height: 18px !important; stroke: var(--sub) !important; }
+.drow--go { cursor: pointer; border-radius: 12px; transition: background-color .15s var(--ease-out); }
+.drow--go:hover { background: #faf6fd; }
+.drow--go:hover .drow__chev { transform: translateX(2px); }
+.drow__chev { transition: transform .2s var(--spring); }
+.drow--go:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.drow--out { min-height: 52px; cursor: pointer; }
+.drow--out > .icon { stroke: #c0392b; }
+.drow--out .drow__text b { color: #c0392b; }
+.dacct--out { padding-top: 4px; padding-bottom: 4px; }
