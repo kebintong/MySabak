@@ -212,7 +212,8 @@ const payLine = (j) => `${esc(PAY[j.payment] || j.payment)}${j.rider ? ` · ${es
 function heroCard(j) {
   const k = KIND[j.kind];
   return `<article class="dhero dtone--${k.tone}" style="--kind:${k.ink}" data-id="${esc(j.id)}">
-      <span class="dhero__kind">${esc(k.name)} · ${kmAway(j.pickup).toFixed(1)} km away · <span data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</span> left${j.demo ? ' · Demo' : ''}</span>
+      <span class="dhero__kind">${esc(k.name)} · ${kmAway(j.pickup).toFixed(1)} km away${j.demo ? ' · Demo' : ''}</span>
+      <span class="dhero__timer${j.expiresAt - Date.now() < 30000 ? ' is-low' : ''}"><b data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</b> left</span>
       <h3 class="dhero__from">${esc(j.pickup.label)}</h3>
       <p class="dhero__to">to ${esc(j.dropoff.label)} · ${j.distanceKm.toFixed(1)} km trip · ${payLine(j)}</p>
       <p class="dhero__fare">${peso(j.fare)}</p>
@@ -421,6 +422,7 @@ setInterval(() => {
   $$('[data-expires]').forEach((n) => {
     const left = Number(n.dataset.expires) - Date.now();
     n.textContent = mmss(left);
+    n.parentElement.classList.toggle('is-low', left < 30000); // the pill turns soft red in the last 30 seconds
     if (left <= 0) expired = true;
   });
   if (expired) { jobs = jobs.filter((j) => j.expiresAt > Date.now()); renderJobs(); }
