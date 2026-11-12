@@ -3,7 +3,7 @@
    The map opens full screen: every request as a pin, a route preview before accepting, or in-app navigation
    to the next stop (turn by turn from TomTom, following the phone's location). Google Maps stays as a backup.
    Accept one and follow it: to pickup → arrived → on the trip → completed.
-   Job requests come from onJobRequest(); the demo sends SAMPLE ones (tagged "Demo"). */
+   Job requests come from onJobRequest(); the demo sends SAMPLE ones. */
 import { CONFIG } from '../config.js';
 import {
   driverStatus, setOnline, onJobRequest, acceptJob, activeJob, updateJob, cancelJob, driverEarnings,
@@ -212,8 +212,8 @@ const payLine = (j) => `${esc(PAY[j.payment] || j.payment)}${j.rider ? ` · ${es
 function heroCard(j) {
   const k = KIND[j.kind];
   return `<article class="dhero dtone--${k.tone}" style="--kind:${k.ink}" data-id="${esc(j.id)}">
-      <span class="dhero__kind">${esc(k.name)} · ${kmAway(j.pickup).toFixed(1)} km away${j.demo ? ' · Demo' : ''}</span>
-      <span class="dhero__timer${j.expiresAt - Date.now() < 30000 ? ' is-low' : ''}"><b data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</b> left</span>
+      <span class="dhero__kind">${esc(k.name)} · ${kmAway(j.pickup).toFixed(1)} km away</span>
+      <span class="dhero__timer"><b data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</b> left</span>
       <h3 class="dhero__from">${esc(j.pickup.label)}</h3>
       <p class="dhero__to">to ${esc(j.dropoff.label)} · ${j.distanceKm.toFixed(1)} km trip · ${payLine(j)}</p>
       <p class="dhero__fare">${peso(j.fare)}</p>
@@ -285,7 +285,7 @@ function renderActive() {
   const w = jobWords(job);
   const at = STEPS.indexOf(job.status);
   box.innerHTML = `<article class="activejob dtone--${k.tone}" style="--kind:${k.ink}">
-      <div class="activejob__top">${icon(k.icon, 'icon--sm')}${esc(k.name)}${job.demo ? ' · Demo' : ''}<b>${peso(job.fare)}</b></div>
+      <div class="activejob__top">${icon(k.icon, 'icon--sm')}${esc(k.name)}<b>${peso(job.fare)}</b></div>
       <h2 class="activejob__title">${esc(w.title)}</h2>
       <p class="activejob__sub">${esc(w.sub)}</p>
       <ol class="trip__steps" aria-label="Job progress">
@@ -422,7 +422,6 @@ setInterval(() => {
   $$('[data-expires]').forEach((n) => {
     const left = Number(n.dataset.expires) - Date.now();
     n.textContent = mmss(left);
-    n.parentElement.classList.toggle('is-low', left < 30000); // the pill turns soft red in the last 30 seconds
     if (left <= 0) expired = true;
   });
   if (expired) { jobs = jobs.filter((j) => j.expiresAt > Date.now()); renderJobs(); }
@@ -447,7 +446,6 @@ async function loadEarnings() {
   const today = trips.filter((t) => t.at >= midnight);
   $('#trips').innerHTML = today.length ? tripsByDay(today.slice(0, 6), today) : '<li class="empty">No trips yet today. Go online to start earning.</li>';
   $('#todaySum').textContent = today.length ? `${today.length} trip${today.length === 1 ? '' : 's'} · ${peso(today.reduce((sum, t) => sum + t.fare, 0))}` : '';
-  $('#tripsNote').hidden = !today.some((t) => t.demo);
   $('#allTrips').hidden = trips.length === today.length && today.length <= 6;
   $('#allTrips span').textContent = trips.length > today.length ? 'See past trips' : `See all ${trips.length} trips`;
 }

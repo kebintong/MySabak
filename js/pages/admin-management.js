@@ -103,7 +103,7 @@ function renderProfile(u) {
   const head = `<div class="review__head">
       ${ava(label(u), 'ava--lg')}
       <div class="review__who"><h2 class="review__name">${esc(label(u))}</h2>
-        <p class="review__meta">${ROLE[u.role]}${u.demoLogin ? ' · demo login' : ''}</p></div>
+        <p class="review__meta">${ROLE[u.role]}</p></div>
       ${tag(st.tag, st.label)}</div>`;
 
   if (state.mode === 'edit') {

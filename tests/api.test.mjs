@@ -324,7 +324,7 @@ test('demo merchant account: sign in, open/close, sold out items, sign out', asy
   home = await api.merchantHome();
   assert.equal(home.shop.name, 'Lola’s Kitchen');
   assert.equal(home.shop.menu.find((i) => i.id === 'adobo').price, 135);
-  assert.equal(acc.shop.name, 'Demo Kitchen', 'the demo data itself is not changed');
+  assert.equal(acc.shop.name, 'Kusina ni Mila', 'the demo data itself is not changed');
 
   await api.merchantSignOut();
   await assert.rejects(api.updateShop({ name: 'x' }), { status: 401 });

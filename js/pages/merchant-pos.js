@@ -137,7 +137,7 @@ const ago = (ts) => {
 };
 const orderCard = (o, i) => `<li class="ocard ocard--${esc(o.status)}" style="--i:${i}">
     <div class="ocard__head"><span class="ocard__who">${esc(o.customer || 'Customer')} <span class="ocard__id">· ${esc(o.id)}</span></span>
-      <span>${esc(ago(o.placedAt))}${o.demo ? ' <span class="tag-demo">Sample</span>' : ''}</span></div>
+      <span>${esc(ago(o.placedAt))}</span></div>
     <ul class="morder__lines">${o.lines.map((l) => `<li>${l.qty} × ${esc(l.name)}${(l.options || []).length ? ` <span>· ${esc(l.options.join(', '))}</span>` : ''}${l.note ? ` <span>“${esc(l.note)}”</span>` : ''}</li>`).join('')}</ul>
     ${o.notes ? `<p class="ocard__note">“${esc(o.notes)}”</p>` : ''}
     <div class="ocard__foot"><span class="ocard__total">${peso(o.subtotal)}</span>

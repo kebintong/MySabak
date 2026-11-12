@@ -42,7 +42,7 @@ function branchRow(b) {
   return `<li class="branch${open ? ' is-open' : ''}">
     <button type="button" class="branch__head" data-branch="${esc(b.id)}" aria-expanded="${open}">
       <span class="branch__pin" aria-hidden="true">${icon('i-pin')}</span>
-      <span class="branch__text"><span class="branch__name">${esc(b.name)}${b.main ? ' <small>Main</small>' : ''}${b.sample ? ' <span class="tag-demo">Sample</span>' : ''}</span>
+      <span class="branch__text"><span class="branch__name">${esc(b.name)}${b.main ? ' <small>Main</small>' : ''}</span>
         <span class="branch__area">${esc(b.area)} · ${b.todayOrders} order${b.todayOrders === 1 ? '' : 's'} today</span></span>
       <span class="branch__state">${b.account.status === 'disabled' ? tag('rejected', 'Turned off') : b.open ? tag('approved', 'Open') : tag('rejected', 'Closed')}</span>
     </button>

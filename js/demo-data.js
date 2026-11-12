@@ -158,23 +158,23 @@ export const SHOPS = [
 export const DEMO_ACCOUNTS = {
   client: {
     phone: '09170000003', email: 'client@mysabak.demo', password: 'mysabak-demo',
-    name: 'Demo Customer', city: 'Cebu City',
+    name: 'Dana Cruz', city: 'Cebu City',
   },
   // Signs in on the customer form (pages/account.html) and lands on pages/admin.html.
   admin: {
     phone: '09170000009', email: 'admin@mysabak.demo', password: 'mysabak-demo',
-    name: 'Demo Admin',
+    name: 'Andrea Lim',
   },
   driver: {
     phone: '09170000001', email: 'driver@mysabak.demo', password: 'mysabak-demo',
-    name: 'Demo Driver', city: 'Cebu City', vehicle: 'sedan', plate: 'DMO 1234', model: 'Toyota Vios', year: 2021, status: 'approved',
+    name: 'Dante Dizon', city: 'Cebu City', vehicle: 'sedan', plate: 'GDX 4821', model: 'Toyota Vios', year: 2021, status: 'approved',
   },
   merchant: {
     phone: '09170000002', email: 'merchant@mysabak.demo', password: 'mysabak-demo',
-    name: 'Demo Merchant',
+    name: 'Mila Santos',
     // The merchant's own shop. Not listed on the Shops page (only the SAMPLE shops above are).
     shop: {
-      id: 'demo-kitchen', name: 'Demo Kitchen', sign: 'DEMO KITCHEN', category: 'food', area: 'Capitol Site',
+      id: 'demo-kitchen', name: 'Kusina ni Mila', sign: 'KUSINA NI MILA', category: 'food', area: 'Capitol Site',
       address: 'Escario St, Capitol Site, Cebu City', phone: '0917 000 0002',
       lng: 123.8930, lat: 10.3180, hours: '9:00 AM – 9:00 PM', opensAt: '09:00', closesAt: '21:00',
       color: '#5630d8', tint: '#ece6ff', image: null,

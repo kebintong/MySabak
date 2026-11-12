@@ -653,7 +653,6 @@ function renderTrip() {
   setBind('driverRating', d.rating.toFixed(1));
   setBind('driverCar', `${d.vehicle.color} ${d.vehicle.model}`);
   setBind('driverPlate', d.vehicle.plate);
-  $('#driverDemo').hidden = !d.demo;
   $('#cancelTrip').hidden = d.status === 'on_trip' || d.status === 'completed';
 }
 
@@ -1078,7 +1077,7 @@ $('#claimOffer').addEventListener('click', (e) => {
   store.set(CLAIM_KEY, true);
   renderClaim();
   edgeGlow('reward', e.currentTarget);
-  toast('Offer claimed. (Demo: discounts arrive with vouchers.)');
+  toast('Offer claimed.');
 });
 
 /* =========================================================
