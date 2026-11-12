@@ -1,24 +1,25 @@
 /* Support page (pages/support.html): how money moves, tip totals, give without a ride, your tips. */
 import { supportStats, myTips, sendTip, errorMessage } from '../api.js';
-import { $, mountChrome, tipPicker, toast, peso, pesoOr, esc, when, edgeGlow } from '../ui.js';
+import { $, mountChrome, tipPicker, toast, peso, esc, when, edgeGlow, icon, tag, emptyRows } from '../ui.js';
 
 mountChrome();
 
 const KIND = { ride: 'Ride', express: 'Express', shop: 'Shop order', direct: 'Without a ride' };
 const bind = (name, text) => { $(`[data-bind="${name}"]`).textContent = text; };
 
+// What tips pay for: a plain icon each; the share once there are real tips to split, "Soon" until then
+const PAYS_ICON = ['i-layers', 'i-chat', 'i-star', 'i-shield'];
 async function loadStats() {
   const s = await supportStats();
-  bind('period', s.period);
-  bind('tipsTotal', pesoOr(s.tipsTotal));
-  bind('ordersFeeFree', typeof s.ordersFeeFree === 'number' ? s.ordersFeeFree.toLocaleString('en-PH') : '[NUMBER]');
-  $('#bars').innerHTML = s.breakdown.map((b) => {
-    const known = typeof b.share === 'number';
-    return `<div class="bar${known ? '' : ' bar--unknown'}">
-      <div class="bar__top"><span>${esc(b.label)}</span><span>${known ? `${b.share}%` : '[—%]'}</span></div>
-      <div class="bar__track"><div class="bar__fill" style="--w:${known ? b.share : 0}%"></div></div>
-    </div>`;
-  }).join('');
+  const live = typeof s.tipsTotal === 'number' || typeof s.ordersFeeFree === 'number';
+  $('[data-bind="period"]').outerHTML = live ? `<span class="badge" data-bind="period">${esc(s.period)}</span>` : tag('review', 'After launch');
+  const fact = (name, text) => { const b = $(`[data-bind="${name}"]`); b.textContent = text ?? '—'; b.classList.toggle('is-none', text == null); };
+  fact('tipsTotal', typeof s.tipsTotal === 'number' ? peso(s.tipsTotal) : null);
+  fact('ordersFeeFree', typeof s.ordersFeeFree === 'number' ? s.ordersFeeFree.toLocaleString('en-PH') : null);
+  $('#statsNote').hidden = live;
+  $('#bars').innerHTML = s.breakdown.map((b, i) => `<li class="pct__row"><span class="pct__ic">${icon(PAYS_ICON[i] || 'i-heart')}</span>
+    <span class="pct__who"><b>${esc(b.label)}</b></span>${typeof b.share === 'number' ? `<b class="pct__n">${b.share}<small>%</small></b>` : tag('review', 'Soon')}</li>`).join('');
+  $('#barsNote').hidden = s.breakdown.every((b) => typeof b.share === 'number');
 }
 
 async function loadMine() {
@@ -26,12 +27,12 @@ async function loadMine() {
   $('#myTips').innerHTML = tips.length
     ? tips.map((t) => `<li class="row"><div class="row__main"><span class="row__title">${esc(KIND[t.orderType] || t.orderType)}</span>
         <span class="row__sub">${esc(when(t.at))} · ${esc(t.method.toUpperCase())}</span></div><span class="row__end">${peso(t.amount)}</span></li>`).join('')
-    : '<li class="empty">No tips yet. You can tip after a ride, an Express delivery or a shop order.</li>';
+    : emptyRows('No tips yet', 'Tip after a ride, a parcel or a shop order.');
 }
 
 const give = $('#giveBtn');
 const picker = tipPicker($('#givePicker'), {
-  onChange: (n) => { give.disabled = !n; give.textContent = n ? `Support with ${peso(n)}` : 'Support mysabak'; },
+  onChange: (n) => { give.disabled = !n; give.textContent = n ? `Tip ${peso(n)}` : 'Choose an amount'; },
 });
 give.addEventListener('click', async () => {
   const amount = picker.amount();
@@ -47,6 +48,7 @@ give.addEventListener('click', async () => {
   } catch (err) {
     toast(err.status === 400 ? err.message : errorMessage(err));
     give.disabled = false;
+    give.textContent = `Tip ${peso(amount)}`;
   }
 });
 

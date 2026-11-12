@@ -57,6 +57,20 @@
             <ul class="list skel-rows" id="tipList"></ul>
             <p class="wtips__foot">Tips go 100% to mysabak and keep rides fee-free for drivers.</p>
           </section>
+
+          <!-- Recent payments: the last rides and shop orders and how each was paid (js/pages/wallet.js) -->
+          <section class="wsec wrecent" aria-labelledby="recentTitle">
+            <div class="wrecent__head">
+              <h2 class="wsec__title" id="recentTitle">Recent payments</h2>
+              <div class="wrecent__filter" role="group" aria-label="Show">
+                <button type="button" class="wfilter" data-show="all" aria-pressed="true">All</button>
+                <button type="button" class="wfilter" data-show="rides" aria-pressed="false">Rides</button>
+                <button type="button" class="wfilter" data-show="shop" aria-pressed="false">Shop orders</button>
+              </div>
+            </div>
+            <ul class="wrecent__list skel-rows" id="recentList"></ul>
+            <a class="wrecent__all" href="/pages/trips.html">All in Trips &amp; Orders →</a>
+          </section>
         </div>
       </div>
     </main>

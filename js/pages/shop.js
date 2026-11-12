@@ -62,7 +62,7 @@ function renderInfo() {
 }
 
 async function startMap() {
-  const hero = shopMap($('#heroMap'), { interactive: false, padding: () => ({ top: 34, bottom: 16, left: 24, right: 24 }) });
+  const hero = shopMap($('#heroMap'), { interactive: false, padding: () => ({ top: 36, bottom: 44, left: 24, right: 24 }) }); // room for the pin above, the ride time below
   let frame = () => hero.fit([[shop.lng, shop.lat]], { maxZoom: 15 });
   // The route map only shows on desktop: size it when the screen gets that wide
   window.matchMedia('(min-width: 900px)').addEventListener('change', () => { hero.resize(); frame(); });

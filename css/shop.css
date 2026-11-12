@@ -165,7 +165,11 @@
 .shop-info__ava { width: 88px; height: 88px; border-radius: 22px; }
 .shop-about { display: block; }
 .shop-hero { position: relative; top: auto; right: auto; height: 132px; border-radius: 20px; overflow: hidden; border: 2px solid rgba(255, 255, 255, .5); background: var(--map-ground); }
-.shop-hero__eta { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 5px 10px; }
+.shop-hero__eta { position: absolute; left: 10px; bottom: 10px; z-index: 2; padding: 5px 10px; font-size: 12px; }
+/* a small map: a small pin, without its name (the name is the page title) */
+.shop-hero .spin { width: 22px; height: 29px; }
+.shop-hero .spin.is-active svg { transform: none; }
+.shop-hero .spin__label { display: none; }
 .shop-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
 /* Stuck tabs sit under the logo; the strip covers what scrolls past above them */
 .menu-tabs { top: 84px; margin: 20px 0 16px; padding: 0 20px; border: 1px solid var(--line-brand); border-radius: 16px; flex-wrap: wrap; gap: 0 26px; }

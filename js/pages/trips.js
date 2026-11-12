@@ -175,10 +175,10 @@ function drawAgain(count) {
   const places = rides.filter((t) => t.dropoff && t.dropoff.label && !seen.has(t.dropoff.label) && seen.add(t.dropoff.label)).slice(0, 2);
   const lastShop = orders.find((o) => o.status === 'delivered') || orders.find((o) => o.status !== 'cancelled');
   const rows = [
-    ...places.map((t) => `<li class="tagain__row"><span class="tagain__ic">${icon('i-pin')}</span>
+    ...places.map((t) => `<li class="tagain__row"><span class="tagain__ic">${icon(t.kind === 'express' ? 'k-parcel' : 'k-place')}</span>
       <span class="tagain__text"><b>${esc(t.dropoff.label)}</b><span>${t.kind === 'express' ? 'Parcel' : 'Ride'} · last on ${esc(day(t.at))}</span></span>
       <button type="button" class="btn-soft" data-rebook="${esc(t.id)}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`),
-    ...(lastShop ? [`<li class="tagain__row"><span class="tagain__ic">${icon('i-store')}</span>
+    ...(lastShop ? [`<li class="tagain__row"><span class="tagain__ic">${icon('k-shop')}</span>
       <span class="tagain__text"><b>${esc(lastShop.shop.name)}</b><span>Food${lastShop.lines && lastShop.lines[0] ? ` · ${esc(lastShop.lines[0].name)}` : ''}</span></span>
       <a class="btn-soft" href="/pages/shop.html?id=${encodeURIComponent(lastShop.shop.id)}">${icon('i-rebook', 'icon--sm icon--deep')}Order</a></li>`] : []),
   ];

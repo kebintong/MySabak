@@ -42,9 +42,13 @@
 
 /* The tear line: dashed, with a notch punched out of each side */
 .cut { position: relative; height: 0; margin: 4px -20px; border-top: 2px dashed #e6dcef; }
-.cut::before, .cut::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: #faf5f3; /* the page behind the ticket */ }
-.cut::before { left: -11px; }
-.cut::after { right: -11px; }
+.cut::before, .cut::after {
+  content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%;
+  background: #faf5f3; /* the page behind the ticket */ box-shadow: inset 0 2px 5px rgba(41, 10, 69, .12);
+}
+/* only the half inside the ticket is drawn, so the ticket's edge and shadow run on round the hole */
+.cut::before { left: -11px; clip-path: inset(-2px -2px -2px 50%); }
+.cut::after { right: -11px; clip-path: inset(-2px 50% -2px -2px); }
 
 /* Receipt lines */
 .orc { margin: 0; display: flex; flex-direction: column; gap: 12px; }

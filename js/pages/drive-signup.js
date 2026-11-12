@@ -9,8 +9,14 @@ mountChrome();
 
 /* ---------- Views: choose / walk-in / online / done ---------- */
 const views = $$('[data-view]');
+const HEAD = { 'walk-in': 'Walk in at our office', online: 'Apply online', done: 'Application sent' };
 function showView(name) {
   views.forEach((v) => { v.hidden = v.dataset.view !== name; });
+  $('#signupTitle').textContent = HEAD[name] || 'Drive with mysabak';
+  const sub = name === 'walk-in' || name === 'online';
+  $('#headBack').hidden = sub;
+  $('#viewBack').hidden = !sub;
+  $('#signupPerks').hidden = name !== 'choose';
   document.title = `${{ 'walk-in': 'Walk in', online: 'Apply online', done: 'Application sent' }[name] || 'Sign up to drive'} · mysabak`;
 }
 const route = () => {
@@ -46,6 +52,7 @@ function show(i) {
     if (n === i) l.setAttribute('aria-current', 'step'); else l.removeAttribute('aria-current');
   });
   back.hidden = i === 0;
+  $('.wizard__steps').style.setProperty('--p', (i + 1) / steps.length);
   next.textContent = i === steps.length - 1 ? 'Submit application' : 'Next';
   const first = $('input:not([type="radio"]):not([type="checkbox"]), select', steps[i]);
   if (first) first.focus({ preventScroll: true });

@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="/css/drive-signup.css">
   <script type="module" src="/js/pages/drive-signup.js"></script>
 </head>
-<body class="page page--sky">
+<body class="page page--sky page--head-sky page--signup">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
@@ -28,28 +28,36 @@
     <main class="content">
       <div class="content__inner">
 
-        <div class="auth auth--wide">
-          <section class="card auth-card" aria-labelledby="signupTitle">
-            <div class="auth-card__head">
-              <span class="auth-card__badge" aria-hidden="true"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-wheel"/></svg></span>
-              <h1 class="auth-card__title" id="signupTitle">Drive with mysabak</h1>
-              <p class="lede">Keep 100% of every fare. No commission, no booking fees.</p>
-            </div>
+        <!-- The sky head: a way back, the title, the three promises (start only). Each view's title shows here. -->
+        <header class="page-head dsu-head">
+          <a class="page-head__back" href="/pages/account.html" data-back id="headBack"><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg><span>Back</span></a>
+          <a class="page-head__back" href="#" id="viewBack" hidden><svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg><span>Other ways to apply</span></a>
+          <h1 class="page-title" id="signupTitle">Drive with mysabak</h1>
+          <ul class="dperks" id="signupPerks">
+            <li><svg class="dperks__star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z"/></svg>Keep 100% of every fare</li>
+            <li><svg class="dperks__star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z"/></svg>No commission</li>
+            <li><svg class="dperks__star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.6 16.4 11.1 24 12C16.4 12.9 12.9 16.4 12 24C11.1 16.4 7.6 12.9 0 12C7.6 11.1 11.1 7.6 12 0Z"/></svg>No booking fees</li>
+          </ul>
+        </header>
 
+        <!-- One white sheet holds each view -->
+        <section class="card dsheet" aria-labelledby="signupTitle">
             <!-- 1 · Choose how to apply -->
             <div class="view" data-view="choose">
               <h2 class="view__title">How would you like to apply?</h2>
               <div class="choices">
                 <a class="choice" href="#online">
-                  <span class="choice__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-phone"/></svg></span>
+                  <span class="choice__icon"><svg class="choice__art" aria-hidden="true"><use href="/assets/images/icons.svg#k-phone"/></svg></span>
                   <span class="choice__text"><span class="choice__name">Apply online</span>
-                    <span class="choice__hint">About 5 minutes. Upload your documents and get updates by email.</span></span>
+                    <span class="choice__hint">Upload your documents and get updates by email.</span>
+                    <span class="choice__meta">About 5 minutes</span></span>
                   <svg class="icon choice__go" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
                 </a>
                 <a class="choice" href="#walk-in">
-                  <span class="choice__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="/assets/images/icons.svg#i-store"/></svg></span>
+                  <span class="choice__icon"><svg class="choice__art" aria-hidden="true"><use href="/assets/images/icons.svg#k-shop"/></svg></span>
                   <span class="choice__text"><span class="choice__name">Walk in at our office</span>
-                    <span class="choice__hint">Bring your documents and our team will sign you up on the spot.</span></span>
+                    <span class="choice__hint">Bring your documents and our team will sign you up on the spot.</span>
+                    <span class="choice__meta" data-office="hours"></span></span>
                   <svg class="icon choice__go" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg>
                 </a>
               </div>
@@ -57,8 +65,6 @@
 
             <!-- 2a · Walk in -->
             <div class="view" data-view="walk-in" hidden>
-              <a class="page-head__back" href="#"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Other ways to apply</a>
-              <h2 class="view__title">Walk in at our office</h2>
               <div class="office-map" role="img" aria-label="Map showing the mysabak Driver Hub">
                 <span class="office-map__pin">
                   <svg width="32" height="42" viewBox="0 0 730 965" aria-hidden="true"><path d="M365 0C566.584 6.67149e-05 730 163.416 730 365C730 409.184 722.147 451.533 707.765 490.731C707.145 492.418 706.789 494.187 706.43 495.948C705.799 499.045 704.547 502.116 702.589 505.01C701.877 506.061 701.272 507.181 700.772 508.349C682.355 551.432 655.889 590.253 623.264 622.922C622.343 623.843 621.508 624.847 620.778 625.926L406.394 942.792C386.564 972.1 343.399 972.101 323.569 942.792L109.108 625.813C108.379 624.736 107.547 623.735 106.629 622.815C74.0992 590.215 47.6995 551.497 29.3061 508.536C28.7922 507.336 28.1696 506.184 27.438 505.102L24.208 500.328C22.0607 497.154 20.8736 493.74 20.5119 490.338C20.2022 487.427 19.9894 484.471 19.0538 481.697C6.698 445.055 0 405.81 0 365C0 163.416 163.416 0 365 0Z" fill="#7A3EBE"/><circle cx="364.483" cy="368.5" r="205.5" fill="#F9F9F9"/></svg>
@@ -83,7 +89,6 @@
 
             <!-- 2b · Apply online -->
             <div class="view" data-view="online" hidden>
-              <a class="page-head__back" href="#"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg>Other ways to apply</a>
 
             <ol class="wizard__steps" aria-label="Sign-up steps">
               <li class="is-current" data-step-label="1"><span>1</span>About you</li>
@@ -184,7 +189,6 @@
               <a class="auth-link auth-link--strong" href="/pages/drive.html">Sign in</a>
             </div>
           </section>
-        </div>
       </div>
     </main>
 

@@ -2147,11 +2147,6 @@ body.is-status-hidden .panel--trip {
   padding-left: 12px;
 }
 
-/* Food button: the design's halo colours */
-.tab[data-tab="food"] .tab__icon::before {
-  background: conic-gradient(from 0deg, #f6c46c, #c59af0, #fff, #e3933f, #9a5ad8, #f6c46c);
-}
-
 @media (min-width: 900px) {
   .hero {
     clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%);

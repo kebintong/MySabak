@@ -220,27 +220,40 @@ export function paintSky(el) {
 }
 
 /**
- * The edge glow: a light that sweeps around the screen's edge, starting from where you tapped.
+ * The edge glow, in moonlight (the same light as the wand arrival): a soft light climbs both side edges from the
+ * height of what you tapped, and the top edge blooms above it. It fades to clear inward, so there is never a line.
  * kind 'arrive' (lilac: you moved somewhere) or 'reward' (gold: you booked, claimed, ordered, tipped…).
- * from: the element tapped, or an angle in degrees (0 = top centre, clockwise).
+ * from: the element tapped (or nothing: from the lower middle of the screen).
+ * Light mode and "reduce motion": only the top bloom.
  */
 export function edgeGlow(kind = 'arrive', from = null) {
-  let angle = typeof from === 'number' ? from : 180;
-  if (from && typeof from === 'object' && from.getBoundingClientRect) {
-    const r = from.getBoundingClientRect();
-    const x = r.left + r.width / 2 - innerWidth / 2;
-    const y = r.top + r.height / 2 - innerHeight / 2;
-    angle = (Math.atan2(x, -y) * 180) / Math.PI;
-  }
-  document.querySelectorAll('.edgeglow').forEach((n) => n.remove());
-  const glow = document.createElement('div');
-  glow.className = `edgeglow edgeglow--${kind === 'reward' ? 'reward' : 'arrive'}`;
-  glow.setAttribute('aria-hidden', 'true');
-  glow.style.setProperty('--o', `${angle}deg`);
-  glow.innerHTML = '<span class="edgeglow__rim edgeglow__rim--soft"></span><span class="edgeglow__rim"></span>';
-  document.body.append(glow);
+  let x = innerWidth / 2;
+  let y = innerHeight * 0.7;
+  const r = from && from.getBoundingClientRect ? from.getBoundingClientRect() : null;
+  if (r && r.width) { x = r.left + r.width / 2; y = r.top + r.height / 2; }
+  document.querySelectorAll('.wand--edge').forEach((n) => n.remove());
+  const layer = document.createElement('div');
+  layer.className = `wand wand--edge${kind === 'reward' ? ' wand--reward' : ''}`;
+  layer.setAttribute('aria-hidden', 'true');
+  layer.innerHTML = `<div class="wand__edge"><span class="wand__side"></span><span class="wand__side wand__side--r"></span><span class="wand__top" style="left:${Math.round(x)}px"></span></div>`;
+  document.body.append(layer);
   document.body.classList.add('is-glowing');
-  setTimeout(() => { glow.remove(); document.body.classList.remove('is-glowing'); }, 1800);
+  const still = calm() || document.documentElement.classList.contains('lite');
+  const CLIMB = 720;
+  if (!still) {
+    layer.querySelectorAll('.wand__side').forEach((n) => n.animate([
+      { opacity: 0, transform: `translateY(${Math.round(y)}px)` },
+      { opacity: 1, transform: `translateY(${Math.round(y - 12)}px)`, offset: 0.12, easing: 'cubic-bezier(.3,.6,.25,1)' },
+      { opacity: 1, transform: 'translateY(30px)', offset: 0.7, easing: 'ease-out' },
+      { opacity: 0, transform: 'translateY(0)' },
+    ], { duration: CLIMB + 380, fill: 'both' }));
+  }
+  layer.querySelector('.wand__top').animate([
+    { opacity: 0, transform: 'scaleX(.3)', easing: 'cubic-bezier(.16,1,.3,1)' },
+    { opacity: 1, transform: 'scaleX(1)', offset: 0.24, easing: 'cubic-bezier(.45,0,.25,1)' },
+    { opacity: 0, transform: 'scaleX(1.25)' },
+  ], { duration: 1030, delay: still ? 0 : CLIMB - 120, fill: 'both' });
+  setTimeout(() => { layer.remove(); document.body.classList.remove('is-glowing'); }, (still ? 0 : CLIMB) + 1000);
 }
 
 // Tabs (and a few buttons) load a new page, so the arrival plays on the next page: it is remembered for it
@@ -520,6 +533,9 @@ export function mountChrome({ roles = null } = {}) {
     setupInstall($('[data-install]', top));
   }
   if (!$('#toast')) document.body.insertAdjacentHTML('beforeend', '<div class="toast" id="toast" role="status" aria-live="polite"></div>');
+  // Back links (a[data-back]): to the mysabak page you came from, else where their href points
+  const from = document.referrer.startsWith(`${location.origin}/`) && new URL(document.referrer).pathname !== location.pathname ? document.referrer : '';
+  if (from) $$('a[data-back]').forEach((a) => { a.href = from; });
   registerServiceWorker();
   mountMagic();
   return currentUser().catch(() => null).then((user) => {

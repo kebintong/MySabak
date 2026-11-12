@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="/css/support.css">
   <script type="module" src="/js/pages/support.js"></script>
 </head>
-<body class="page page--head-sky page--support">
+<body class="page page--sky page--head-sky page--support">
   <div class="app">
     <!-- Top bar and tab bar are filled in by js/ui.js (mountChrome) -->
     <header class="topbar" data-topbar></header>
@@ -28,46 +28,58 @@
     <main class="content">
       <div class="content__inner">
 
-        <!-- The promise on the night sky, the three 100%s under it; this month in a card over the sky's edge -->
-        <header class="page-head ssky">
-          <p class="ssky__kicker"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg>Support mysabak</p>
-          <h1 class="ssky__title">Drivers keep <span>100%</span> of every fare.</h1>
-          <p class="ssky__lede">mysabak runs on your tips.</p>
-          <ul class="pct" aria-label="Where your money goes">
-            <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg></span><span class="pct__who"><b>Your driver</b><span>The fare</span></span><b class="pct__n">100%</b></li>
-            <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-box"/></svg></span><span class="pct__who"><b>Your rider</b><span>Shop delivery fee</span></span><b class="pct__n">100%</b></li>
-            <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg></span><span class="pct__who"><b>mysabak</b><span>Tips</span></span><b class="pct__n">100%</b></li>
-          </ul>
-          <p class="ssky__foot">No booking fees and no cut from drivers. Tips are optional and always shown on your receipt.</p>
+        <!-- The promise on the night sky; then cards. Phones: one column. Desktop: the tip card stays beside the rest. -->
+        <header class="page-head">
+          <a class="page-head__back" href="/pages/account.html" data-back><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-back"/></svg><span>Account</span></a>
+          <h1 class="page-title">Support mysabak</h1>
+          <p class="lede">Drivers keep 100% of every fare. mysabak runs on the tips you choose to give.</p>
         </header>
 
-        <section class="card sstats-card" aria-labelledby="statsTitle">
-          <h2 class="card__title card__title--row" id="statsTitle">This month <span class="badge" data-bind="period">…</span></h2>
-          <!-- Two plain facts split by a thin line -->
-          <div class="sfacts">
-            <p><b data-bind="tipsTotal">₱[AMOUNT]</b><span>tipped to mysabak</span></p>
-            <p><b data-bind="ordersFeeFree">[NUMBER]</b><span>trips and deliveries with no fees</span></p>
+        <div class="sgrid">
+          <div class="sgrid__main">
+            <section class="card smoney" aria-labelledby="moneyTitle">
+              <h2 class="card__title" id="moneyTitle">Where your money goes</h2>
+              <ul class="pct">
+                <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg></span><span class="pct__who"><b>Your driver</b><span>The whole fare</span></span><b class="pct__n">100<small>%</small></b></li>
+                <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-box"/></svg></span><span class="pct__who"><b>Your rider</b><span>The whole shop delivery fee</span></span><b class="pct__n">100<small>%</small></b></li>
+                <li class="pct__row"><span class="pct__ic"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg></span><span class="pct__who"><b>mysabak</b><span>Only the tips you choose to give</span></span><b class="pct__n">100<small>%</small></b></li>
+              </ul>
+              <p class="small muted">No booking fees and no cut from drivers. Tips are optional and always on your receipt.</p>
+            </section>
+
+            <section class="card spays" aria-labelledby="barsTitle">
+              <h2 class="card__title" id="barsTitle">What tips pay for</h2>
+              <ul class="pct pct--pays" id="bars"></ul>
+              <p class="small muted" id="barsNote" hidden>The share for each shows once there are real tips to split.</p>
+            </section>
+
+            <section class="card sstats-card" aria-labelledby="statsTitle">
+              <h2 class="card__title card__title--row" id="statsTitle">This month <span class="badge" data-bind="period">…</span></h2>
+              <div class="sfacts">
+                <p><span>Tipped to mysabak</span><b data-bind="tipsTotal">—</b></p>
+                <p><span>Trips and deliveries, no fees</span><b data-bind="ordersFeeFree">—</b></p>
+              </div>
+              <p class="small muted" id="statsNote" hidden>The real numbers show here once mysabak is live.</p>
+            </section>
           </div>
-        </section>
 
-        <section class="card" aria-labelledby="giveTitle">
-          <h2 class="card__title" id="giveTitle">Support without a ride</h2>
-          <div class="tip">
-            <div id="givePicker"></div>
-            <p class="tip__note">This goes to mysabak, not to a driver, and it isn’t a charity donation.</p>
-            <button type="button" class="button button--block" id="giveBtn" disabled>Support mysabak</button>
+          <div class="sgrid__side">
+            <section class="card sgive" aria-labelledby="giveTitle">
+              <h2 class="card__title" id="giveTitle">Give a tip</h2>
+              <p class="sgive__line">No ride needed. It goes to mysabak, never out of a driver’s fare.</p>
+              <div class="tip">
+                <div id="givePicker"></div>
+                <button type="button" class="button button--block" id="giveBtn" disabled>Choose an amount</button>
+                <p class="tip__note">Not a charity donation. Shown on your receipt.</p>
+              </div>
+            </section>
+
+            <section class="card smine" aria-labelledby="mineTitle">
+              <h2 class="card__title" id="mineTitle">Your tips</h2>
+              <ul class="list skel-rows" id="myTips"></ul>
+            </section>
           </div>
-        </section>
-
-        <section class="card" aria-labelledby="barsTitle">
-          <h2 class="card__title" id="barsTitle">What tips pay for</h2>
-          <div class="bars skel-block" style="--skel-h: 96px" id="bars"></div>
-        </section>
-
-        <section class="card" aria-labelledby="mineTitle">
-          <h2 class="card__title" id="mineTitle">Your tips</h2>
-          <ul class="list skel-rows" id="myTips"></ul>
-        </section>
+        </div>
       </div>
     </main>
 

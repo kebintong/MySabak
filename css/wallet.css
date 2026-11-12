@@ -20,8 +20,28 @@
 .wtips__total { font-size: 13px; color: var(--sub); white-space: nowrap; }
 .wtips .empty { padding: 6px 0 0; text-align: left; }
 .wtips__foot { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+/* Recent payments */
+.wrecent { flex: 1 1 100%; min-width: 0; padding-top: 18px; border-top: 1px solid var(--line-brand); }
+.wrecent__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.wrecent__head .wsec__title { margin: 0; }
+.wrecent__filter { display: flex; gap: 6px; }
+.wfilter { height: 32px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line-brand); background: none; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
+.wfilter:hover { border-color: var(--brand); }
+.wfilter[aria-pressed="true"] { background: var(--brand-deep); border-color: var(--brand-deep); color: #fff; }
+.wrecent__list { list-style: none; margin: 0; padding: 0; }
+.wrecent__list > li + li { border-top: 1px solid var(--line); }
+.wrecent__row { display: flex; align-items: center; gap: 12px; min-height: 60px; text-decoration: none; color: inherit; }
+.wrecent__row > .icon { width: 20px; height: 20px; stroke: var(--brand-deep); stroke-width: 1.9; }
+.wrecent__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wrecent__text b { font-size: 14.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wrecent__text span { font-size: 12.5px; color: var(--sub); }
+.wrecent__end { font-size: 14.5px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.wrecent__chev { width: 16px; height: 16px; stroke: var(--sub); }
+.wrecent__row:hover .wrecent__text b { color: var(--brand-deep); }
+.wrecent__all { display: inline-flex; margin-top: 8px; font-size: 13.5px; font-weight: 700; color: var(--brand-deep); text-decoration: none; }
 @media (min-width: 900px) {
 .page--wallet .page-head { background: none; }
+.wrecent { padding-top: 22px; }
 /* desktop Wallet: the whole page is sky */
 .page--wallet .app { background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf); }
 .page--wallet .content__inner { min-height: 100%; }

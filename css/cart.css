@@ -17,8 +17,9 @@
   text-decoration: none; color: var(--ink); font-size: 12.5px; font-weight: 600; text-align: center;
   transition: background-color .15s var(--ease-out), transform .15s var(--spring);
 }
-.cempty__icwrap { width: 48px; height: 48px; border-radius: 16px; background: var(--tint); display: grid; place-items: center; transition: background-color .15s var(--ease-out); }
-.cempty__ic { width: 24px; height: 24px; fill: none; stroke: var(--brand-deep); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cempty__icwrap { width: 52px; height: 52px; border-radius: 16px; background: #f4ecfb; display: grid; place-items: center; transition: background-color .15s var(--ease-out); }
+.cempty__ic { width: 34px; height: 34px; transition: transform .2s var(--spring); } /* two-tone drawings, coloured in the sprite (icons.svg k-*) */
+.cempty__cat:hover .cempty__ic { transform: translateY(-2px) rotate(-4deg); }
 .cempty__cat:hover .cempty__icwrap { background: #e8daf7; }
 .cempty__cat:active { transform: scale(.95); }
 .cempty__cat:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }

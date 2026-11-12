@@ -1,50 +1,45 @@
-/* mysabak · support styles. Loaded after base.css. */
+/* mysabak · Support page (pages/support.html). Loaded after base.css.
+   The sky head (base.css .page--head-sky), then cards: where your money goes, give a tip, what tips pay for,
+   this month, your tips. Phones: one column in that order. Desktop: the tip card and your tips beside the rest. */
 
 .page--support .card__title { font-size: 17px; font-weight: 700; }
-.bar + .bar { margin-top: 12px; }
-.bar__top { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 500; color: var(--ink); }
-.bar__top span:last-child { font-weight: 800; font-variant-numeric: tabular-nums; }
-.bar__track { height: 8px; margin-top: 6px; border-radius: 999px; background: var(--tint); overflow: hidden; }
-.bar__fill { height: 100%; width: var(--w, 0%); border-radius: inherit; background: var(--chart); }
-.bar--unknown .bar__fill { width: 100%; background: repeating-linear-gradient(90deg, var(--line-brand) 0 8px, transparent 8px 14px); }
-/* Where your money goes: a row each, an icon, who and what, then 100% */
+.sgrid { display: flex; flex-direction: column; gap: 14px; }
+.sgrid__main, .sgrid__side { display: contents; }
+.smoney { order: 1; } .sgive { order: 2; } .spays { order: 3; } .sstats-card { order: 4; } .smine { order: 5; }
+.page--support .small { margin: 0; font-size: 12.5px; line-height: 1.45; }
+
+/* Where your money goes / what tips pay for: a plain icon, the words, then the number set like a price */
 .pct { margin: 0; padding: 0; list-style: none; }
-.pct__row { min-height: 60px; display: flex; align-items: center; gap: 12px; }
+.pct__row { min-height: 62px; display: flex; align-items: center; gap: 12px; }
 .pct__row + .pct__row { border-top: 1px solid var(--line); }
-.pct__ic { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--tint); display: grid; place-items: center; }
-.pct__ic .icon { width: 19px; height: 19px; stroke: var(--brand-deep); }
+.pct__ic { width: 28px; flex: none; display: grid; place-items: center; }
+.pct__ic .icon { width: 22px; height: 22px; stroke: var(--brand-deep); stroke-width: 1.9; }
 .pct__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .pct__who b { font-size: 15px; font-weight: 700; color: var(--ink); }
 .pct__who span { font-size: 13px; color: var(--sub); }
-.pct__n { font: 800 22px/1 var(--font-body); letter-spacing: -.02em; color: var(--brand-deep); font-variant-numeric: tabular-nums; }
+.pct__n { font: 800 24px/1 var(--font-body); letter-spacing: -.02em; color: var(--brand-deep); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pct__n small { font-size: 15px; font-weight: 800; color: var(--brand); }
+.pct--pays .pct__row { min-height: 52px; }
+.pct--pays .pct__who b { font-size: 14.5px; font-weight: 600; }
+.pct--pays .pct__n { font-size: 18px; }
 
 /* This month: two facts split by a thin line */
-.sfacts { display: flex; }
-.sfacts p { flex: 1; min-width: 0; margin: 0; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-.sfacts p + p { border-left: 1px solid var(--line-brand); }
-.sfacts b { font: 800 22px/1.15 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sfacts { display: grid; grid-template-columns: 1fr 1fr; }
+.sfacts p { min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.sfacts p + p { padding-left: 16px; border-left: 1px solid var(--line); }
 .sfacts span { font-size: 12.5px; font-weight: 500; color: var(--sub); }
+.sfacts b { font: 800 24px/1.15 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sfacts b.is-none { color: #c9bcd8; }
 
-/* ---------- The promise on the night sky (draft B) ---------- */
-.page--support .ssky { position: relative; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; color: #fff; } /* the sky and its stars: base.css + ui.js, like Wallet */
-.ssky__kicker { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #e2d0f4; }
-.ssky__kicker .icon { width: 16px; height: 16px; stroke: var(--gold); }
-.ssky__title { margin: 0; max-width: 18ch; font: 800 28px/1.15 var(--font-body); letter-spacing: -.01em; color: #fff; }
-.ssky__title span { color: var(--gold); }
-.ssky__lede { margin: -4px 0 6px; font-size: 15px; color: #e2d0f4; }
-.ssky__foot { margin: 2px 0 0; font-size: 12.5px; color: rgba(226, 208, 244, .85); }
-/* the three 100%s as glass rows on the sky */
-.ssky .pct { display: flex; flex-direction: column; gap: 8px; }
-.ssky .pct__row { min-height: 0; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 16px; background: rgba(255, 255, 255, .1); }
-.ssky .pct__row + .pct__row { border-top: 1px solid rgba(255, 255, 255, .16); }
-.ssky .pct__ic { width: 36px; height: 36px; border-radius: 11px; background: rgba(255, 255, 255, .14); }
-.ssky .pct__ic .icon { stroke: #fff; }
-.ssky .pct__who b { color: #fff; }
-.ssky .pct__who span { color: #e2d0f4; }
-.ssky .pct__n { font-size: 18px; color: var(--gold); }
-/* this month: a card over the sky's bottom edge */
-.ssky + .sstats-card { position: relative; z-index: 1; margin-top: -54px; }
-@media (min-width: 760px) {
-.ssky__title { font-size: 36px; max-width: none; }
-.ssky .pct { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+/* Give a tip */
+.sgive__line { margin: -4px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
+.sgive .tip { display: flex; flex-direction: column; gap: 14px; }
+.sgive .tip__amounts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.sgive .tip__amount { min-width: 0; height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; }
+.sgive .tip__note { margin: 0; font-size: 12.5px; color: var(--muted); }
+
+@media (min-width: 900px) {
+.sgrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+.sgrid__main, .sgrid__side { display: flex; flex-direction: column; gap: 16px; }
+.sgrid__side { position: sticky; top: 16px; }
 }
