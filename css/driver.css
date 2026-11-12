@@ -179,6 +179,24 @@
 @media (min-width: 600px) and (max-width: 899.98px) {
 .dminis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+/* Phones: the big card more compact and the other requests as short rows, so several fit on one screen */
+@media (max-width: 599.98px) {
+.dhero { padding: 14px 16px; grid-template-columns: minmax(0, 1fr) 96px; }
+.dhero__from { font-size: 18px; }
+.dhero__to { font-size: 13px; }
+.dhero__fare { margin-top: 2px; font-size: 26px; }
+.dhero__art { max-height: 72px; }
+.dhero__actions { margin-top: 6px; }
+.dhero__actions .button { min-height: 44px; }
+.dminis { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.dmini {
+  min-height: 0; padding: 10px 14px; border-radius: 16px; column-gap: 12px; row-gap: 0; align-items: center;
+  grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; grid-template-areas: "art kind fare" "art from fare";
+}
+.dmini__art { height: 30px; max-width: 48px; justify-self: center; align-self: center; object-position: center; }
+.dmini__from { font-size: 14.5px; -webkit-line-clamp: 1; }
+.dmini__fare { align-self: center; padding: 0; font-size: 18px; }
+}
 
 /* ---------- The last 7 days, shortcuts, trips, payout. Desktop: the trips beside the rest ---------- */
 .dgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -253,7 +271,9 @@
 .dtrips__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .dtrips__head .card__title { margin: 0; }
 .dtrips__note { font-size: 12.5px; color: var(--sub); }
-.dtrips__note[hidden] { display: none; }
+.dtrips__note [hidden] { display: none; }
+/* Today's trips: the card's title says the day, so the day line inside is left out */
+#tripsCard .tday__head { display: none; }
 .tdays, .tday__list { margin: 0; padding: 0; list-style: none; }
 .tday__head { margin: 0; padding: 10px 0 2px; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--sub); }
 .trow { position: relative; min-height: 60px; margin: 0 -10px; padding: 0 10px; border-radius: 14px; display: flex; align-items: center; gap: 12px; transition: background-color .15s var(--ease-out); }

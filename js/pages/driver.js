@@ -247,7 +247,7 @@ function renderJobs() {
   else if (!shown.length) html = '<div class="dempty dtone--lilac"><p class="jobs-wait"><span class="online__pulse" aria-hidden="true"></span>Waiting for requests nearby…</p><p>They show here, nearest first.</p></div>';
   else {
     const rest = shown.filter((j) => j !== hero);
-    html = heroCard(hero) + (rest.length ? `<div class="dminis">${rest.slice(0, 4).map(miniCard).join('')}</div>` : '');
+    html = heroCard(hero) + (rest.length ? `<div class="dminis">${rest.slice(0, 5).map(miniCard).join('')}</div>` : '');
   }
   $('#jobList').innerHTML = html;
   if (mapMode && mapMode !== 'nav') { paintSheet(); paintMap(); }
@@ -442,12 +442,14 @@ async function loadEarnings() {
   bindAll('todayCount', String(n));
   bindAll('todayLabel', n === 1 ? 'trip today' : 'trips today');
   paintWeek(e.trips);
-  // The latest 5, by day; the rest on the Trips page
+  // Today's trips only (up to 6), with today's total; past trips are on the Trips page
   const trips = [...e.trips].sort((a, b) => b.at - a.at);
-  $('#trips').innerHTML = trips.length ? tripsByDay(trips.slice(0, 5), trips) : '<li class="empty">No trips yet. Go online to start earning.</li>';
-  $('#tripsNote').hidden = !trips.some((t) => t.demo);
-  $('#allTrips').hidden = trips.length <= 5;
-  $('#allTrips span').textContent = `See all ${trips.length} trips`;
+  const today = trips.filter((t) => t.at >= midnight);
+  $('#trips').innerHTML = today.length ? tripsByDay(today.slice(0, 6), today) : '<li class="empty">No trips yet today. Go online to start earning.</li>';
+  $('#todaySum').textContent = today.length ? `${today.length} trip${today.length === 1 ? '' : 's'} · ${peso(today.reduce((sum, t) => sum + t.fare, 0))}` : '';
+  $('#tripsNote').hidden = !today.some((t) => t.demo);
+  $('#allTrips').hidden = trips.length === today.length && today.length <= 6;
+  $('#allTrips span').textContent = trips.length > today.length ? 'See past trips' : `See all ${trips.length} trips`;
 }
 
 // A tap on a bar keeps its amount showing (phones have no hover); a second tap, or another bar, moves it
