@@ -429,9 +429,12 @@ function armArrival() {
 }
 
 /** Night-sky effects on every sky on the page, and the arrival glow. Called once per page. */
+// What rises in when a page opens (css/base.css "Page entrance"): each gets its place in the page, so they come in turn
+const ENTER = '.is-home .hero__inner > *, .is-home .home__grid > *, .page:not(.page--admin):not(.page--merchant) :is(.page-head > :not(.skyfx), .shop-sky__inner > *, .card, .shop-card, .menu-tabs, .wcard, .wsec, .tswitch, .tpanel, .tquick, .dround, .dsheet, .signin__body, .check-layout > *)';
 export function mountMagic() {
   if (document.body.dataset.magic) return;
   document.body.dataset.magic = '1';
+  $$(ENTER).forEach((el, i) => el.style.setProperty('--enter', Math.min(i, 10)));
   // the sky headers of the content pages get the same effects as Home's
   $$('.page--head-sky .page-head, .page--sky:not(.page--head-sky) .app, [data-sky]').forEach((host) => {
     if (!$(':scope > .skyfx', host)) host.insertAdjacentHTML('afterbegin', '<div class="skyfx" aria-hidden="true"></div>');

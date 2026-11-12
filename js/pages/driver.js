@@ -12,7 +12,7 @@ import {
 import { haversineKm } from '../money.js';
 import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava, emptyRows } from '../ui.js';
+import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava, emptyRows, rollNumber } from '../ui.js';
 import { tripsByDay } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
@@ -428,8 +428,10 @@ setInterval(() => {
 
 async function loadEarnings() {
   const e = await driverEarnings();
+  const was = $$('[data-bind="today"], [data-bind="week"]').map((b) => b.dataset.value ?? null);
   bindAll('today', peso(e.today));
   bindAll('week', peso(e.week));
+  $$('[data-bind="today"], [data-bind="week"]').forEach((b, i) => rollNumber(b, was[i])); // the analytics' rolling digits
   bindAll('payout', e.payout.method || 'Add GCash or a bank to get paid');
   bindAll('payoutAction', e.payout.method ? 'Change' : 'Set up');
   $$('.dround [data-payout]').forEach((b) => b.toggleAttribute('data-needs', !e.payout.method)); // a dot: still to do
@@ -446,6 +448,13 @@ async function loadEarnings() {
   $('#allTrips span').textContent = `See all ${trips.length} trips`;
 }
 
+// A tap on a bar keeps its amount showing (phones have no hover); a second tap, or another bar, moves it
+if ($('#weekBars')) $('#weekBars').addEventListener('click', (e) => {
+  const col = e.target.closest('.dweek__col');
+  if (!col) return;
+  const pick = !col.classList.contains('is-pick');
+  $$('.dweek__col', $('#weekBars')).forEach((c) => c.classList.toggle('is-pick', pick && c === col));
+});
 // The last 7 days, a bar a day (today in gold), and the change from the 7 days before
 function paintWeek(trips) {
   const start = (daysAgo) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - daysAgo); return d.getTime(); };
@@ -454,8 +463,10 @@ function paintWeek(trips) {
   const before = [13, 12, 11, 10, 9, 8, 7].reduce((s, ago) => s + dayTotal(ago), 0);
   const now = days.reduce((s, d) => s + d.total, 0);
   const max = Math.max(...days.map((d) => d.total), 1);
-  $('#weekBars').innerHTML = days.map((d) => `<span class="dweek__col${d.ago ? '' : ' is-now'}${d.total ? '' : ' is-zero'}" style="--h:${Math.round((d.total / max) * 100)}%"><i></i><span>${d.ago ? esc(d.day.slice(0, 1)) : 'Today'}</span></span>`).join('');
-  $('#weekBars').setAttribute('aria-label', `Earnings each day: ${days.map((d) => `${d.day} ${peso(d.total)}`).join(', ')}`);
+  const when = (d) => (d.ago ? new Date(start(d.ago)).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Today');
+  $('#weekBars').innerHTML = days.map((d, i) => `<button type="button" class="dweek__col${d.ago ? '' : ' is-now'}${d.total ? '' : ' is-zero'}" style="--bh:${Math.max(6, Math.round((d.total / max) * 60))}px;--i:${i}" aria-label="${esc(when(d))}: ${peso(d.total)}">
+    <span class="dweek__plot"><i></i><span class="dweek__tip" aria-hidden="true"><b>${peso(d.total)}</b><span>${esc(when(d))}</span></span></span>
+    <span class="dweek__day" aria-hidden="true">${d.ago ? esc(d.day.slice(0, 1)) : 'Today'}</span></button>`).join('');
   const delta = $('#weekDelta');
   delta.hidden = !before;
   if (before) {

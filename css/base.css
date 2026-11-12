@@ -2229,3 +2229,14 @@ b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: i
 .wand__side--r { left: auto; right: -80px; }
 .wand__top { width: 620px; margin-left: -310px; }
 }
+
+/* ---------- Page entrance, everywhere: the same motion as the admin and merchant pages ----------
+   When a page opens or reloads, the header's content, then each card in turn, rise out of a soft blur.
+   --enter is each one's place in the page (set once by ui.js mountMagic); light mode drops the blur. */
+.is-home .hero__inner > *, .is-home .home__grid > *, .page:not(.page--admin):not(.page--merchant) :is(.page-head > :not(.skyfx), .shop-sky__inner > *, .card, .shop-card, .menu-tabs, .wcard, .wsec, .tswitch, .tpanel, .tquick, .dround, .dsheet, .signin__body, .check-layout > *) {
+  animation: m-rise .5s var(--ease-out) backwards;
+  animation-delay: calc(var(--enter, 0) * 60ms);
+}
+@media (prefers-reduced-motion: reduce) {
+.is-home .hero__inner > *, .is-home .home__grid > *, .page:not(.page--admin):not(.page--merchant) :is(.page-head > :not(.skyfx), .shop-sky__inner > *, .card, .shop-card, .menu-tabs, .wcard, .wsec, .tswitch, .tpanel, .tquick, .dround, .dsheet, .signin__body, .check-layout > *) { animation: none; }
+}

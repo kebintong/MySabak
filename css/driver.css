@@ -56,7 +56,7 @@
   display: block; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
   transition: transform .3s var(--spring);
 }
-.dgo__switch[aria-checked="true"] { background: linear-gradient(90deg, #b98af0, #f6c46c); }
+.dgo__switch[aria-checked="true"] { background: var(--gold); } /* plain gold, like the merchant's open switch */
 .dgo__switch[aria-checked="true"] .dgo__knob { transform: translateX(24px); }
 .dgo__switch:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .dgo__switch:disabled { opacity: .45; cursor: default; }
@@ -98,7 +98,7 @@
 .dhero__from { grid-area: from; margin: 0; font: 800 20px/1.2 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
 .dhero__to { grid-area: to; margin: 0; font-size: 13.5px; color: var(--sub); }
 .dhero__fare { grid-area: fare; margin: 4px 0 0; font: 800 32px var(--font-display); letter-spacing: -.02em; color: var(--ink); }
-.dhero__art { grid-area: art; align-self: center; width: 100%; height: auto; pointer-events: none; }
+.dhero__art { grid-area: art; align-self: center; justify-self: center; width: 100%; max-height: 120px; object-fit: contain; pointer-events: none; }
 .dhero__actions { grid-area: actions; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .dhero__actions .button { min-height: 46px; font-size: 15px; }
 .dhero__actions .button:first-child { flex: 1 1 160px; max-width: 300px; } /* never a full-width bar on a wide card */
@@ -109,24 +109,25 @@
 /* Small cards: the name gets the full width, the fare and the picture share the bottom row */
 .dminis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dmini {
-  position: relative; overflow: hidden; min-height: 112px; padding: 12px; border: 0; border-radius: 18px;
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto 1fr; column-gap: 6px;
+  position: relative; overflow: hidden; min-height: 128px; padding: 14px; border: 0; border-radius: 18px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto 1fr; column-gap: 8px; row-gap: 2px;
   grid-template-areas: "kind kind" "from from" "fare art";
   font: inherit; color: var(--ink); text-align: left; cursor: pointer;
   transition: transform .15s var(--spring), box-shadow .2s var(--ease-out);
 }
 .dmini:hover { box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
 .dmini:active { transform: scale(.97); }
-.dmini__kind { grid-area: kind; font-size: 12px; font-weight: 800; color: var(--kind); }
-.dmini__from { grid-area: from; font-size: 14px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
-.dmini__fare { grid-area: fare; align-self: end; font: 800 20px var(--font-display); }
-.dmini__art { grid-area: art; align-self: end; width: 64px; height: auto; pointer-events: none; }
+.dmini__kind { grid-area: kind; font-size: 12.5px; font-weight: 700; color: var(--kind); }
+.dmini__from { grid-area: from; font-size: 15px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dmini__fare { grid-area: fare; align-self: end; padding-bottom: 2px; font: 800 22px/1 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+/* the picture by height, so a wide car and a winged parcel look the same size and stay inside the card */
+.dmini__art { grid-area: art; align-self: end; justify-self: end; height: 44px; width: auto; max-width: 96px; object-fit: contain; pointer-events: none; }
 @media (min-width: 900px) {
 #jobList { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .dminis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.dmini { min-height: 200px; }
+.dmini { min-height: 150px; padding: 16px; }
 .dhero:only-child { grid-column: 1 / -1; }
-.dmini__art { width: 88px; }
+.dmini__art { height: 54px; max-width: 120px; }
 }
 .dempty--quiet { display: block !important; padding: 4px 0 !important; background: #fff; }
 .dempty--quiet .erows { padding: 10px 16px 14px; }
@@ -189,13 +190,36 @@
 .dweek__delta .icon { width: 14px; height: 14px; stroke: currentColor; }
 .dweek__delta.is-down { background: #fbe9df; color: #b4410c; }
 .dweek__delta[hidden] { display: none; }
-.dweek__bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; height: 92px; }
-.dweek__col { min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
-.dweek__col i { width: 100%; height: max(6px, calc(var(--h) * .66)); border-radius: 8px; background: var(--bar); transform-origin: bottom; animation: bar-grow .55s var(--ease-out) backwards; }
+.dweek__bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; height: 92px; overflow: visible; }
+/* A bar a day, each a button: hover, focus or a tap shows a night tag with the exact amount and the others fade back
+   (the same as the analytics charts) */
+.dweek__col { min-width: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+.dweek__plot { position: relative; width: 100%; height: var(--bh); }
+.dweek__plot i { display: block; width: 100%; height: 100%; border-radius: 8px; background: var(--bar); transform-origin: bottom; animation: bar-grow .55s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 40ms + 60ms); transition: opacity .2s var(--ease-out), box-shadow .2s var(--ease-out), background-color .15s var(--ease-out); }
 .dweek__col.is-zero i { background: var(--line); }
 .dweek__col.is-now i { background: var(--bar-today); }
-.dweek__col > span { font-size: 11.5px; font-weight: 500; color: var(--sub); white-space: nowrap; }
-.dweek__col.is-now > span { font-weight: 700; color: var(--ink); }
+.dweek__col:hover i, .dweek__col.is-pick i { background: var(--bar-on); }
+.dweek__col.is-now:hover i, .dweek__col.is-now.is-pick i { background: #f2bb55; }
+.dweek__bars:has(.dweek__col:hover) .dweek__col:not(:hover) i, .dweek__bars:has(.is-pick):not(:has(.dweek__col:hover)) .dweek__col:not(.is-pick) i { opacity: .45; }
+.dweek__col:focus-visible { outline: none; }
+.dweek__col:focus-visible i { box-shadow: 0 0 0 3px var(--gold); }
+.dweek__day { font-size: 11.5px; font-weight: 500; color: var(--sub); white-space: nowrap; }
+.dweek__col.is-now .dweek__day { font-weight: 700; color: var(--ink); }
+.dweek__tip {
+  position: absolute; left: 50%; bottom: calc(100% + 10px); z-index: 3; translate: -50% 0;
+  padding: 8px 12px; border-radius: 12px; background: var(--tip-bg); box-shadow: var(--tip-shadow);
+  display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap; pointer-events: none;
+  opacity: 0; scale: .92; transform-origin: bottom center; transition: opacity .18s var(--ease-out), scale .3s var(--spring);
+}
+.dweek__tip b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #fff; }
+.dweek__tip span { font-size: 11.5px; font-weight: 500; color: var(--tip-text); }
+.dweek__tip::after { content: ""; position: absolute; left: 50%; top: 100%; translate: -50% -1px; border: 6px solid transparent; border-top-color: var(--tip-bg); }
+.dweek__col:nth-child(-n+2) .dweek__tip { left: 0; translate: 0 0; transform-origin: bottom left; }
+.dweek__col:nth-child(-n+2) .dweek__tip::after { left: 10px; translate: 0 -1px; }
+.dweek__col:nth-last-child(-n+2) .dweek__tip { left: auto; right: 0; translate: 0 0; transform-origin: bottom right; }
+.dweek__col:nth-last-child(-n+2) .dweek__tip::after { left: auto; right: 10px; translate: 0 -1px; }
+.dweek__col:hover .dweek__tip, .dweek__col:focus-visible .dweek__tip, .dweek__col.is-pick .dweek__tip { opacity: 1; scale: 1; }
+.dweek__bars:has(.dweek__col:hover) .dweek__col.is-pick:not(:hover) .dweek__tip { opacity: 0; scale: .92; }
 
 /* Shortcuts: one white bar, plain icons, thin lines between */
 .dround { display: flex; border-radius: 20px; background: #fff; border: 1px solid var(--line-brand); overflow: hidden; }
@@ -218,10 +242,15 @@
 .dtrips__note[hidden] { display: none; }
 .tdays, .tday__list { margin: 0; padding: 0; list-style: none; }
 .tday__head { margin: 0; padding: 10px 0 2px; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--sub); }
-.trow { min-height: 60px; display: flex; align-items: center; gap: 12px; }
-.trow + .trow { border-top: 1px solid var(--line); }
-.trow__ic { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--tint); display: grid; place-items: center; }
-.trow__ic .icon { width: 19px; height: 19px; stroke: var(--brand-deep); }
+.trow { position: relative; min-height: 60px; margin: 0 -10px; padding: 0 10px; border-radius: 14px; display: flex; align-items: center; gap: 12px; transition: background-color .15s var(--ease-out); }
+.trow + .trow::before { content: ""; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: var(--line); }
+.trow:hover { background: #faf6fd; }
+.trow:hover::before, .trow:hover + .trow::before { opacity: 0; }
+/* the ride's vehicle picture, or a two-tone parcel / store: no tile */
+.trow__ic { width: 48px; height: 40px; flex: none; display: grid; place-items: center; transition: transform .2s var(--spring); }
+.trow__ic img { width: 44px; height: auto; }
+.trow__ic .icon { width: 30px; height: 30px; }
+.trow:hover .trow__ic { transform: translateX(2px); }
 .trow__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .trow__main b { font-size: 15px; font-weight: 700; color: var(--ink); }
 .trow__main b span { font-weight: 400; color: var(--sub); }
