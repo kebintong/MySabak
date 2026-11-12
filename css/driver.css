@@ -103,8 +103,13 @@
 .dhero__actions .button { min-height: 46px; font-size: 15px; }
 .dhero__actions .button:first-child { flex: 1 1 160px; max-width: 300px; } /* never a full-width bar on a wide card */
 .dhero__actions .button--ghost { background: rgba(255, 255, 255, .78); }
-.dhero__route { display: inline-flex; align-items: center; gap: 6px; }
-.dhero__route .icon { width: 16px; height: 16px; stroke: var(--brand-deep); }
+.dhero__route {
+  min-height: 46px; padding: 0 10px; border: 0; background: none; cursor: pointer;
+  font: 700 15px var(--font-body); color: var(--brand-deep); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px;
+  transition: text-decoration-color .15s var(--ease-out);
+}
+.dhero__route:hover { text-decoration-color: currentColor; }
+.dhero__route:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 10px; }
 
 /* Small cards: the name gets the full width, the fare and the picture share the bottom row */
 .dminis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -246,10 +251,9 @@
 .trow + .trow::before { content: ""; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: var(--line); }
 .trow:hover { background: #faf6fd; }
 .trow:hover::before, .trow:hover + .trow::before { opacity: 0; }
-/* the ride's vehicle picture, or a two-tone parcel / store: no tile */
-.trow__ic { width: 48px; height: 40px; flex: none; display: grid; place-items: center; transition: transform .2s var(--spring); }
-.trow__ic img { width: 44px; height: auto; }
-.trow__ic .icon { width: 30px; height: 30px; }
+/* the classic line icon of the trip's kind, in the same ink as its name: no tile */
+.trow__ic { width: 28px; height: 40px; flex: none; display: grid; place-items: center; transition: transform .2s var(--spring); }
+.trow__ic .icon { width: 22px; height: 22px; stroke: var(--ink); stroke-width: 1.8; }
 .trow:hover .trow__ic { transform: translateX(2px); }
 .trow__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .trow__main b { font-size: 15px; font-weight: 700; color: var(--ink); }

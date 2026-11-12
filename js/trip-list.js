@@ -14,11 +14,9 @@ function dayName(ts) {
   return d.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-// What each row shows: the ride's vehicle picture (the ones on Home), else a two-tone drawing (icons.svg k-*)
-const RIDE_ART = { motor: 'moto', sedan: 'car', suv: 'suv' };
-const art = (t) => (t.kind === 'ride' || !TRIP_KIND[t.kind]
-  ? `<img src="/assets/images/3d/${RIDE_ART[t.vehicle] || 'car'}.svg" alt="" width="44" height="30">`
-  : icon(t.kind === 'express' ? 'k-parcel' : 'k-shop'));
+// What each row shows: the classic line icon of its kind, in the row's ink
+const RIDE_ICON = { motor: 'i-motor', sedan: 'i-car', suv: 'i-suv' };
+const art = (t) => icon(t.kind === 'ride' ? RIDE_ICON[t.vehicle] || 'i-car' : (TRIP_KIND[t.kind] || TRIP_KIND.ride)[1]);
 const row = (t) => {
   const [name] = TRIP_KIND[t.kind] || [t.kind];
   return `<li class="trow"><span class="trow__ic">${art(t)}</span>

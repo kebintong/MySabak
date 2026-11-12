@@ -220,7 +220,7 @@ function heroCard(j) {
       <div class="dhero__actions">
         <button type="button" class="button" data-accept>Accept ${peso(j.fare)}</button>
         <button type="button" class="button button--ghost" data-skip>Skip</button>
-        <button type="button" class="button button--ghost dhero__route" data-route>${icon('i-pin')}See route</button>
+        <button type="button" class="dhero__route" data-route>Preview the route</button>
       </div>
     </article>`;
 }
