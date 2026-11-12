@@ -1,5 +1,5 @@
-/* The driver's trips (pages/driver-trips.html?kind=ride&page=2): filter by type, 10 a page grouped by day,
-   numbered pages. The Drive page shows the latest 5 and links here. */
+/* The driver's trips (pages/driver-trips.html?kind=ride&page=2): filter by type; today's trips in their own card,
+   past trips below, 10 a page grouped by day, with numbered pages. */
 import { driverStatus, driverEarnings } from '../api.js';
 import { $, mountChrome, peso, esc } from '../ui.js';
 import { tripsByDay, TRIP_KIND } from '../trip-list.js';
@@ -14,7 +14,7 @@ let all = [];
 
 function render() {
   const list = kind === 'all' ? all : all.filter((t) => t.kind === kind);
-  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+  const pages = Math.max(1, Math.ceil(list.filter((t) => t.at < new Date().setHours(0, 0, 0, 0)).length / PER_PAGE)); // past trips only
   page = Math.min(page, pages);
   const query = new URLSearchParams({ ...(kind !== 'all' && { kind }), ...(page > 1 && { page }) }).toString();
   history.replaceState(null, '', query ? `?${query}` : location.pathname);
@@ -23,12 +23,21 @@ function render() {
   $('#tripKinds').innerHTML = ['all', ...Object.keys(TRIP_KIND)].filter((k) => k === 'all' || count(k))
     .map((k) => `<button type="button" class="fchip" data-kind="${k}" aria-pressed="${k === kind}">${k === 'all' ? 'All' : esc(TRIP_KIND[k][0])} <span>${count(k)}</span></button>`).join('');
 
-  const total = list.reduce((s, t) => s + t.fare, 0);
-  $('#tripsSum').textContent = list.length ? `${list.length} trip${list.length === 1 ? '' : 's'} · ${peso(total)}` : '';
+  const sum = (l) => (l.length ? `${l.length} trip${l.length === 1 ? '' : 's'} · ${peso(l.reduce((s, t) => s + t.fare, 0))}` : '');
+  $('#tripsSum').textContent = sum(list);
+  // Today in its own card; the pages are for past trips
+  const midnight = new Date().setHours(0, 0, 0, 0);
+  const today = list.filter((t) => t.at >= midnight);
+  const past = list.filter((t) => t.at < midnight);
+  $('#todaySum').textContent = sum(today);
+  $('#pastSum').textContent = sum(past);
+  $('#todayList').classList.remove('skel-rows');
+  $('#todayList').innerHTML = today.length ? tripsByDay(today, today) : '<li class="empty">No trips yet today. Go online to start earning.</li>';
   const from = (page - 1) * PER_PAGE;
-  $('#tripList').innerHTML = list.length
-    ? tripsByDay(list.slice(from, from + PER_PAGE), list)
-    : '<li class="empty">No trips yet. Go online to start earning.</li>';
+  $('#tripList').classList.remove('skel-rows');
+  $('#tripList').innerHTML = past.length
+    ? tripsByDay(past.slice(from, from + PER_PAGE), past)
+    : '<li class="empty">No past trips yet.</li>';
 
   // Numbered pages: ‹ 1 2 3 › (the newest page first)
   // shortcut: every page number is shown (the demo keeps at most 50 trips, so 5 pages); add "…" past ~7 pages
@@ -37,7 +46,7 @@ function render() {
   $('#pageNav').innerHTML = btn(page - 1, '‹', 'Newer trips')
     + Array.from({ length: pages }, (_, i) => btn(i + 1, i + 1, `Page ${i + 1}`, i + 1 === page)).join('')
     + btn(page + 1, '›', 'Older trips');
-  $('#pageNote').textContent = list.length ? `Showing ${from + 1}–${Math.min(from + PER_PAGE, list.length)} of ${list.length} trips` : '';
+  $('#pageNote').textContent = past.length ? `Showing ${from + 1}–${Math.min(from + PER_PAGE, past.length)} of ${past.length} past trips` : '';
 }
 
 $('#tripKinds').addEventListener('click', (e) => {

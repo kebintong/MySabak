@@ -278,7 +278,7 @@
 .dtrips__note { font-size: 12.5px; color: var(--sub); }
 .dtrips__note [hidden] { display: none; }
 /* Today's trips: the card's title says the day, so the day line inside is left out */
-#tripsCard .tday__head { display: none; }
+.dtrips--today .tday__head { display: none; }
 .tdays, .tday__list { margin: 0; padding: 0; list-style: none; }
 .tday__head { margin: 0; padding: 10px 0 2px; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--sub); }
 .trow { position: relative; min-height: 60px; margin: 0 -10px; padding: 0 10px; border-radius: 14px; display: flex; align-items: center; gap: 12px; transition: background-color .15s var(--ease-out); }

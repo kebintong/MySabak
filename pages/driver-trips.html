@@ -32,10 +32,14 @@
           <p class="lede" id="tripsSum" aria-live="polite"></p>
         </header>
 
-        <!-- Every trip, by type, 10 a page, grouped by day (js/pages/driver-trips.js) -->
+        <!-- Today's trips in their own card; past trips below, 10 a page, grouped by day (js/pages/driver-trips.js) -->
         <div class="fchips tfilter" id="tripKinds" role="group" aria-label="Show"></div>
-        <section class="card dtrips" aria-labelledby="tripsTitle">
-          <h2 class="sr-only" id="tripsTitle">Your trips</h2>
+        <section class="card dtrips dtrips--today" aria-labelledby="todayTitle">
+          <div class="dtrips__head"><h2 class="card__title" id="todayTitle">Today</h2><span class="dtrips__note" id="todaySum"></span></div>
+          <ul class="tdays skel-rows" id="todayList"></ul>
+        </section>
+        <section class="card dtrips" aria-labelledby="pastTitle">
+          <div class="dtrips__head"><h2 class="card__title" id="pastTitle">Past trips</h2><span class="dtrips__note" id="pastSum"></span></div>
           <ul class="tdays skel-rows" id="tripList"></ul>
         </section>
         <div class="tpages" id="tripPages" hidden>
