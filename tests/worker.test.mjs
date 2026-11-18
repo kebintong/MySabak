@@ -104,10 +104,10 @@ test('a missing TOMTOM_KEY secret gives a clear 503', async () => {
   assert.match((await res.json()).error, /TOMTOM_KEY/);
 });
 
-test('old /html/ links go to the home page', async () => {
+test('old /html/ links go to the app', async () => {
   const res = await call('/html/index.html');
   assert.equal(res.status, 301);
-  assert.equal(res.headers.get('location'), `${SITE}/`);
+  assert.equal(res.headers.get('location'), `${SITE}/app`);
 });
 
 // ---------- /api/health ----------

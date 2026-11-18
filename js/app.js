@@ -2,7 +2,7 @@
    mysabak · Home + Ride booking screen
    Vanilla JS modules, no build step.
 
-   index.html opens on the Home dashboard. Ride links switch to the ride screen without a reload:
+   app.html (/app) opens on the Home dashboard. Ride links switch to the ride screen without a reload:
      #ride / #where (search) = Ride, #moto = Ride with Motor picked, #parcel = Express,
      #rebook = Choose your ride for the latest recent place (Trips → Rebook). Back = Home.
    Two modes: Ride (passengers) and Express (parcels), same screen.

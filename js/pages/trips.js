@@ -72,7 +72,7 @@ function rideCard(t) {
     title: words, sub: `To ${b.dropoff.label}`,
     label: `${express ? 'Parcel' : 'Ride'} to ${b.dropoff.label}, ${words.toLowerCase()}${time ? `, ${time}` : ''}`,
     end: time ? `<span class="lcard__eta">${esc(time)}</span>` : `<span class="lcard__price">${pesoOr(b.price && b.price.total, '[FARE]')}</span>`,
-    more: `${driver}<a class="button button--block lcard__go" href="/#${express ? 'parcel' : 'ride'}">${icon('i-pin')}Track ${express ? 'parcel' : 'ride'}</a>`,
+    more: `${driver}<a class="button button--block lcard__go" href="/app#${express ? 'parcel' : 'ride'}">${icon('i-pin')}Track ${express ? 'parcel' : 'ride'}</a>`,
   });
 }
 
@@ -260,7 +260,7 @@ $('.tpanel').addEventListener('click', (e) => {
     const list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').filter((p) => p.title !== label);
     localStorage.setItem(RECENT_KEY, JSON.stringify([{ title: label, lng, lat }, ...list].slice(0, 5)));
   } catch (_) { /* storage off: the Ride screen still opens */ }
-  location.href = '/#rebook';
+  location.href = '/app#rebook';
 });
 
 /* ---------- Start ---------- */

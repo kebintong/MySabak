@@ -12,12 +12,12 @@ const TIP_WINDOW_MS = 24 * 60 * 60 * 1000; // tip from the receipt for 24 hours
 // Back: to the page you came from, named (Trips & Orders, Cart, a shop…). Straight after checkout, or from
 // outside the app, it's Trips & Orders: going back to checkout would show an empty cart.
 const BACK_TO = [['/pages/trips', 'Trips & Orders'], ['/pages/cart', 'Cart'], ['/pages/shops', 'Shops'], ['/pages/shop', 'Shop'],
-  ['/pages/wallet', 'Wallet'], ['/pages/account', 'Account'], ['/index.html', 'Home']];
+  ['/pages/wallet', 'Wallet'], ['/pages/account', 'Account'], ['/app', 'Home']];
 function backLink() {
   let from = null;
   try { from = new URL(document.referrer); } catch (_) { /* no referrer */ }
   if (!from || from.origin !== location.origin) return;
-  const place = from.pathname === '/' ? ['/', 'Home'] : BACK_TO.find(([path]) => from.pathname.startsWith(path));
+  const place = BACK_TO.find(([path]) => from.pathname.startsWith(path));
   if (!place) return;
   const link = $('#backLink');
   link.href = from.pathname + from.search + from.hash;

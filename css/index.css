@@ -435,7 +435,7 @@ body:not([data-state="request"]) .map-controls {
   filter: drop-shadow(0 0 3px rgba(246, 196, 108, .6));
 }
 
-/* glowing gold (index.html draws it) */
+/* glowing gold (app.html draws it) */
 .pickup__text {
   min-width: 0;
   display: flex;

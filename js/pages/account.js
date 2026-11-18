@@ -12,7 +12,7 @@ mountChrome({ roles: ['client'] }).then((user) => {
 });
 
 // Admins sign in here too (not advertised); their account's role sends them to the admin page.
-wireSignInForm($('#signinForm'), clientSignIn, (res) => (res.role === 'admin' ? ROLES.admin.home : '/'));
+wireSignInForm($('#signinForm'), clientSignIn, (res) => (res.role === 'admin' ? ROLES.admin.home : '/app'));
 
 $('#forgot').addEventListener('click', (e) => { e.preventDefault(); toast('Password reset by text message is coming soon.'); });
 $('#signupLink').addEventListener('click', (e) => { e.preventDefault(); toast('Customer sign-up is coming soon.'); });

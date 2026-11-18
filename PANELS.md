@@ -34,7 +34,7 @@ missing.
 
 ---
 
-## Home (`index.html`; the "Home" tab)
+## Home (`app.html`, at /app; the "Home" tab)
 Design: Figma "H-v3 · Mascot · Midnight magic glow". Phones show it like the Figma frame; desktop lays the same cards out wider.
 
 | Panel | Data | Source |
@@ -56,7 +56,7 @@ another tab, gold ("reward") when you book, claim, order, tip, accept a job or s
 Tab bar (customers): **Home · Trips · Food · Wallet · Account** (Food is the round middle button on phones).
 Drive and Support are linked from the Account page. Drivers and merchants keep their own tabs.
 
-## Ride screen (`index.html#ride`)
+## Ride screen (`app.html#ride`)
 Design: Figma "02 · Book a Ride". Phones: back button + route card (pickup, drop-off) on top, steps in a sheet at
 the bottom. Desktop: the same in one column on the left of the map. Back: Choose your ride → edit the drop-off;
 otherwise → Home.

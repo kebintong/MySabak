@@ -494,7 +494,7 @@ if (typeof document !== 'undefined') watchSmoothness();
 
 /* ---------- Top bar + tab bar ---------- */
 export const TABS = [
-  { id: 'home', label: 'Home', icon: 'i-home', href: '/' },
+  { id: 'home', label: 'Home', icon: 'i-home', href: '/app' },
   { id: 'trips', label: 'Trips & Orders', icon: 'i-clock', href: '/pages/trips.html' },
   { id: 'food', label: 'Food', icon: 'i-food', href: '/pages/shops.html' }, // the round middle button
   { id: 'wallet', label: 'Wallet', icon: 'i-wallet', href: '/pages/wallet.html' },
@@ -546,7 +546,7 @@ export function mountChrome({ roles = null } = {}) {
   const top = $('[data-topbar]');
   if (top) {
     top.innerHTML = `
-      <a class="brand" href="/" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="150" height="35"></a>
+      <a class="brand" href="/app" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="150" height="35"></a>
       <div class="topbar__actions">
         <button type="button" class="btn btn--ghost btn--install" data-install hidden>${icon('i-download')}<span class="mobile-only">Install</span><span class="desktop-only">Install app</span></button>
         <span data-account hidden></span>
@@ -664,8 +664,8 @@ const PARCEL = 2;
 const CART = 3;
 export const LOOP = [
   { label: 'Food', href: '/pages/shops.html', icon: 'i-food' },
-  { label: 'Ride', href: '/#ride', icon: 'i-car' },
-  { label: 'Parcel', href: '/#parcel', icon: 'i-box' },
+  { label: 'Ride', href: '/app#ride', icon: 'i-car' },
+  { label: 'Parcel', href: '/app#parcel', icon: 'i-box' },
   { label: 'Cart', href: '/pages/cart.html', icon: 'i-cart' },
 ];
 const QUARTER = 90; // degrees of turn per icon
@@ -676,7 +676,7 @@ const GLIDE = 'cubic-bezier(.22, 1, .36, 1)';
 /** Which LOOP step a page shows. tab: the tab bar's data-tabs (the food, cart and checkout pages say 'food'). */
 export function loopStep(path, hash, tab) {
   if (path.startsWith('/pages/cart') || path.startsWith('/pages/checkout')) return CART;
-  if (tab === 'food' || (path !== '/' && path !== '/index.html')) return FOOD;
+  if (tab === 'food' || (path !== '/app' && path !== '/app.html')) return FOOD;
   if (hash === '#parcel') return PARCEL;
   return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? RIDE : FOOD;
 }
@@ -729,7 +729,7 @@ function loopHref(i) {
 // Same page (Home's #ride / #parcel): change the hash so app.js routes without a reload
 function loopGo(href) {
   const url = new URL(href, location.origin);
-  const home = (p) => (p === '/index.html' ? '/' : p);
+  const home = (p) => (p === '/app.html' ? '/app' : p);
   if (home(url.pathname) === home(location.pathname)) location.hash = url.hash;
   else location.href = href;
 }
@@ -908,7 +908,7 @@ export function guardRole(user, roles) {
   return true;
 }
 
-/** Hide the tabs (in a static tab bar with data-tab="id" links, like index.html) this user doesn't see. */
+/** Hide the tabs (in a static tab bar with data-tab="id" links, like app.html) this user doesn't see. */
 export function filterTabs(nav, user) {
   const role = ROLES[user ? user.role : 'guest'];
   $$('[data-tab]', nav).forEach((a) => { a.hidden = !role.tabs.includes(a.dataset.tab); });

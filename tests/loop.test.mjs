@@ -26,15 +26,16 @@ test('each step is recognised from its own page', () => {
 });
 
 test('Moto and the other ride links count as Ride; cart and checkout show the Cart; every other page shows Food', () => {
-  assert.equal(loopStep('/', '#moto', undefined), 1);
-  assert.equal(loopStep('/index.html', '#where', undefined), 1);
+  assert.equal(loopStep('/app', '#moto', undefined), 1);
+  assert.equal(loopStep('/app.html', '#where', undefined), 1);
   assert.equal(loopStep('/pages/cart', '', 'food'), 3); // their tab bars say 'food'
   assert.equal(loopStep('/pages/checkout.html', '', 'food'), 3);
   assert.equal(loopStep('/pages/shop.html', '', 'food'), 0);
   assert.equal(loopStep('/pages/wallet.html', '#parcel', 'wallet'), 0);
   assert.equal(loopStep('/pages/trips.html', '', 'trips'), 0);
   assert.equal(loopStep('/pages/account.html', '', 'account'), 0);
-  assert.equal(loopStep('/', '', undefined), 0);
+  assert.equal(loopStep('/app', '', undefined), 0);
+  assert.equal(loopStep('/', '#ride', undefined), 0); // / is the landing page now
 });
 
 test('the turn between two angles goes the short way, even across the ±180° seam', () => {

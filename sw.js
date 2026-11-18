@@ -1,9 +1,12 @@
 /* mysabak service worker — caches the app shell so it opens offline.
    Bump CACHE when you change any of the files below.
    It sits at the top of the site so it can look after every page. */
-const CACHE = 'mysabak-v143';
+const CACHE = 'mysabak-v145';
 const SHELL = [
   '/',
+  '/app',
+  '/css/landing.css',
+  '/js/landing.js',
   '/css/base.css',
   '/css/index.css',
   '/js/config.js',

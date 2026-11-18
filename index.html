@@ -1,394 +1,259 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-PH">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>mysabak — Sabay tayo, sabak lang</title>
-  <meta name="description" content="Book a ride with mysabak. No booking fees, no hidden charges — you only pay the base fare plus distance.">
-  <meta name="theme-color" content="#5b2596">
+  <title>mysabak · Rides, moto, parcels and food, with no booking fees</title>
+  <meta name="description" content="mysabak gets you a ride, a moto, a parcel delivery or food from local shops in one app. Drivers keep 100% of every fare, and there are no booking fees.">
+  <meta name="theme-color" content="#1e0638">
+  <link rel="canonical" href="https://mysabak.venki050524.workers.dev/">
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icons/icon-192.png">
-  <link rel="apple-touch-icon" href="assets/images/icons/apple-touch-icon.png">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="mysabak">
-  <!-- Catch the browser's install prompt early; js/ui.js (setupInstall) uses it -->
-  <script>addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__installPrompt = e; });</script>
+  <!-- Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="mysabak">
+  <meta property="og:title" content="mysabak · Your day moves better">
+  <meta property="og:description" content="Rides, moto, parcels and food in one app. Drivers keep 100% of every fare, and there are no booking fees.">
+  <meta property="og:url" content="https://mysabak.venki050524.workers.dev/">
+  <meta property="og:image" content="https://mysabak.venki050524.workers.dev/assets/images/icons/icon-512.png">
+  <meta property="og:image:alt" content="The mysabak logo">
+  <meta property="og:locale" content="en_PH">
+  <meta name="twitter:card" content="summary">
 
-  <!-- Fonts -->
-
-  <!-- Map: MapLibre GL JS draws TomTom's map style -->
-  <link rel="preconnect" href="https://api.tomtom.com">
-  <script>try{if(sessionStorage.getItem('mysabak.glow'))document.documentElement.classList.add('arriving')}catch(e){}</script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/index.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/figtree/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="stylesheet" href="/css/landing.css">
+  <script type="module" src="/js/landing.js"></script>
 </head>
-<body data-state="request" class="is-home">
-  <!-- Opened on a ride link (#ride, #where, #moto, #parcel, #rebook): skip the home so it doesn't flash -->
-  <script>if (/^#(ride|where|moto|parcel|rebook)$/.test(location.hash)) document.body.className = 'is-ride';</script>
+<body>
+  <a class="lp-skip" href="#main">Skip to content</a>
 
-  <div class="app">
-
-    <!-- ============ Map ============ -->
-    <div class="map" id="map" aria-label="Map" role="region">
-      <div class="map__canvas" id="mapCanvas"></div>
-    </div>
-
-    <!-- Marker elements: js/map.js hands these to MapLibre, which moves them onto the map -->
-    <div id="markerStore" hidden>
-      <div class="mk mk--pickup" id="mkPickup" data-show="request" title="Drag to adjust your pickup">
-        <span class="pulse"><span class="dot"></span></span>
-        <span class="mk-label mk-label--pickup">
-          <span class="mk-label__kicker">Pickup here</span>
-          <span class="mk-label__title" data-bind="pickup">[Street, barangay]</span>
-        </span>
-      </div>
-      <div class="mk mk--origin" id="mkOrigin" data-show="choose search trip">
-        <span class="radar" data-show="search" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="ring"></span>
-        <span class="mk-label mk-label--origin" data-bind="from">Current location</span>
-      </div>
-      <div class="mk mk--dest" id="mkDest" data-show="choose search trip">
-        <svg width="32" height="42" viewBox="0 0 730 965" aria-hidden="true"><path d="M365 0C566.584 6.67149e-05 730 163.416 730 365C730 409.184 722.147 451.533 707.765 490.731C707.145 492.418 706.789 494.187 706.43 495.948C705.799 499.045 704.547 502.116 702.589 505.01C701.877 506.061 701.272 507.181 700.772 508.349C682.355 551.432 655.889 590.253 623.264 622.922C622.343 623.843 621.508 624.847 620.778 625.926L406.394 942.792C386.564 972.1 343.399 972.101 323.569 942.792L109.108 625.813C108.379 624.736 107.547 623.735 106.629 622.815C74.0992 590.215 47.6995 551.497 29.3061 508.536C28.7922 507.336 28.1696 506.184 27.438 505.102L24.208 500.328C22.0607 497.154 20.8736 493.74 20.5119 490.338C20.2022 487.427 19.9894 484.471 19.0538 481.697C6.698 445.055 0 405.81 0 365C0 163.416 163.416 0 365 0Z" fill="#7A3EBE"/><circle cx="364.483" cy="368.5" r="205.5" fill="#F9F9F9"/></svg>
-        <span class="mk-label mk-label--dest" data-bind="dropoff">[Drop-off place]</span>
-      </div>
-      <div class="mk mk--time" id="mkTime" data-show="choose search">
-        <span class="mk-label mk-label--time" data-bind="duration">[Travel time]</span>
-      </div>
-      <div class="mk mk--driver" id="mkDriver" data-show="trip" aria-hidden="true">
-        <span class="mk__rider"></span><!-- the rider icon (map.js RIDER_SVG) -->
-      </div>
-    </div>
-
-    <!-- ============ Top bar (home) ============ -->
-    <header class="topbar">
-      <a class="brand" href="./" aria-label="mysabak home">
-        <img src="assets/images/logo.svg" alt="mysabak" width="150" height="35">
-      </a>
-      <div class="topbar__actions">
-        <button type="button" class="btn btn--ghost btn--install" data-install hidden>
-          <svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-download"/></svg><span class="mobile-only">Install</span><span class="desktop-only">Install app</span>
-        </button>
-        <span data-account hidden></span>
-      </div>
-    </header>
-
-    <!-- ============ Map controls (ride) ============ -->
-    <div class="map-controls">
-      <div class="zoom desktop-only">
-        <button type="button" class="ctrl" id="zoomIn" aria-label="Zoom in"><svg class="icon icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
-        <span class="zoom__sep"></span>
-        <button type="button" class="ctrl" id="zoomOut" aria-label="Zoom out"><svg class="icon icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-minus"/></svg></button>
-      </div>
-      <button type="button" class="ctrl ctrl--solo" id="locateBtn" aria-label="Go to my location"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-locate"/></svg></button>
-    </div>
-
-    <!-- ============ Ride screen: route card on top, step panels below (phones) or in a left column (desktop) ============ -->
-    <div class="ride" id="ride">
-      <div class="ride__top">
-        <button type="button" class="ride__back" id="rideBack" aria-label="Back"><svg class="icon icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-back"/></svg></button>
-        <form class="route" id="searchForm" autocomplete="off">
-          <h1 class="sr-only" data-bind="askTitle">Saan tayo?</h1>
-          <div class="route__row route__pickup">
-            <span class="route__dot" aria-hidden="true"></span>
-            <label class="route__text" for="pickupIn"><span class="route__label">Pickup</span>
-              <input id="pickupIn" class="route__input" type="text" placeholder="Search a pickup place" enterkeyhint="next"
-                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pickupSuggest"></label>
-            <button type="button" class="route__btn route__btn--locate" data-pickup aria-label="Use my current location" title="Use my current location"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-locate"/></svg></button>
-          </div>
-          <span class="route__sep" aria-hidden="true"></span>
-          <div class="route__row route__drop">
-            <span class="route__dot route__dot--drop" aria-hidden="true"></span>
-            <label class="route__text" for="dest"><span class="route__label">Drop-off</span>
-              <input id="dest" class="route__input" data-dest type="text" placeholder="Where to?" enterkeyhint="go"
-                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest"></label>
-            <button type="button" class="route__btn route__btn--clear" id="clearDest" data-show="choose" aria-label="Clear drop-off"><svg class="icon icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-close"/></svg></button>
-            <button type="submit" class="route__btn route__btn--go" data-show="request" aria-label="See rides"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-arrow"/></svg></button>
-          </div>
-          <ul class="suggest" id="suggest" role="listbox" aria-label="Suggested places" hidden></ul>
-          <ul class="suggest" id="pickupSuggest" role="listbox" aria-label="Pickup places" hidden></ul>
-        </form>
-      </div>
-
-      <div class="bottom">
-
-        <!-- Step 1 · Where to? -->
-        <section class="panel panel--request" data-show="request" aria-label="Set your trip">
-          <div class="mode" role="radiogroup" aria-label="What do you need?">
-            <button type="button" class="mode__btn" role="radio" aria-checked="true" data-mode="ride"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg>Ride</button>
-            <button type="button" class="mode__btn" role="radio" aria-checked="false" data-mode="express"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-box"/></svg>Parcel</button>
-          </div>
-          <p class="panel__hint"><span data-bind="askTitle">Saan tayo?</span> <span data-bind="askHint">Set your drop-off above.</span></p>
-          <div class="chips" role="group" aria-label="Quick places">
-            <button type="button" class="chip" data-saved="home"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg>Home</button>
-            <button type="button" class="chip" data-saved="work"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>Office</button>
-            <button type="button" class="chip" data-recent data-rebook hidden><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-clock"/></svg><span class="chip__text" data-bind="recent"></span></button>
-            <button type="button" class="chip" id="pickOnMap" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-hand"/></svg>Pick on map</button>
-          </div>
-        </section>
-
-        <!-- Step 2 · Choose your ride -->
-        <section class="panel panel--choose" data-show="choose" aria-labelledby="chooseTitle">
-          <div class="choose__head">
-            <div>
-              <h2 id="chooseTitle" class="choose__title">Choose your ride</h2>
-              <p class="choose__summary"><span data-bind="distance">[Distance]</span> · <span data-bind="duration">[Travel time]</span> · fixed fares</p>
-            </div>
-            <img class="choose__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="22" height="22">
-          </div>
-
-          <div class="vehicles" role="radiogroup" aria-label="Vehicle">
-            <!-- Filled by js/app.js from CONFIG.vehicles (js/config.js) -->
-          </div>
-
-          <button type="button" class="pay" id="payBtn">
-            <svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-cash" data-pay-icon/></svg>
-            <span class="pay__label" data-bind="payment">Cash</span>
-            <span class="pay__change">Change</span>
-            <svg class="icon icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg>
-          </button>
-          <p class="fare-note desktop-only">Fare: base <span data-bind="base">₱[AMOUNT]</span> + distance <span data-bind="distfare">₱[AMOUNT]</span></p>
-
-          <button type="button" class="book" data-book>
-            <span class="book__idle"><span data-bind="bookVerb">Book</span> <span data-bind="vehicle">Sedan</span></span>
-            <span class="book__idle" data-bind="fare">₱[FARE]</span>
-          </button>
-        </section>
-
-        <!-- Steps 3–4 hidden: a slim bar that brings the status card back -->
-        <button type="button" class="statusbar" id="statusBar" data-show="search trip" aria-controls="searchPanel tripPanel" aria-expanded="false">
-          <span class="statusbar__icon" aria-hidden="true"><svg class="icon icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
-          <span class="statusbar__text"><span class="statusbar__title" data-bind="barTitle">Finding you a driver</span><span class="statusbar__sub" data-bind="barSub"></span></span>
-          <span class="statusbar__show">Show <svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span>
-        </button>
-
-        <!-- Step 3 · Finding a driver -->
-        <section class="panel panel--search" id="searchPanel" data-show="search" aria-labelledby="searchTitle" aria-live="polite">
-          <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
-          <div class="searching">
-            <span class="searching__icon" aria-hidden="true"><span></span><svg class="icon icon--xl icon--white"><use href="assets/images/icons.svg#i-car" data-vehicle-icon/></svg></span>
-            <div class="searching__text">
-              <h2 class="searching__title" id="searchTitle" data-bind="searchTitle">Finding you a driver</h2>
-              <p class="searching__sub"><span data-bind="vehicle">Sedan</span> · <span data-bind="priceTotal">₱[FARE]</span> · <span data-bind="payment">Cash</span></p>
-            </div>
-          </div>
-          <div class="searching__bar" aria-hidden="true"><span></span></div>
-          <button type="button" class="button button--ghost button--block" id="cancelSearch">Cancel</button>
-        </section>
-
-        <!-- Step 4 · Driver on the way / on the trip -->
-        <section class="panel panel--trip" id="tripPanel" data-show="trip" aria-labelledby="tripTitle" aria-live="polite">
-          <button type="button" class="panel__hide" data-hide-status aria-label="Hide the status card"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></button>
-          <div class="trip__head">
-            <div>
-              <h2 class="trip__title" id="tripTitle" data-bind="tripTitle">Your driver is on the way</h2>
-              <p class="trip__sub" data-bind="tripSub">Arriving in 3 min</p>
-            </div>
-            <span class="trip__eta" data-bind="tripEta" hidden></span>
-          </div>
-          <ol class="trip__steps" aria-label="Trip progress">
-            <li data-step="arriving"><span data-bind="stepArriving">On the way</span></li>
-            <li data-step="on_trip"><span data-bind="stepTrip">On the trip</span></li>
-            <li data-step="completed"><span data-bind="stepDone">Arrived</span></li>
-          </ol>
-          <div class="driver">
-            <span class="ava ava--t0 driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
-            <div class="driver__main">
-              <span class="driver__name"><span data-bind="driverName">Driver</span></span>
-              <span class="driver__meta">★ <span data-bind="driverRating">4.9</span> · <span data-bind="driverCar">White Toyota Vios</span></span>
-            </div>
-            <span class="driver__plate" data-bind="driverPlate">ABC 1234</span>
-          </div>
-          <div class="trip__actions">
-            <button type="button" class="btn-soft" id="callDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-phone"/></svg>Call</button>
-            <button type="button" class="btn-soft" id="messageDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-chat"/></svg>Message</button>
-            <span class="trip__pay"><span data-bind="payment">Cash</span> · <b data-bind="priceTotal">₱[FARE]</b></span>
-            <button type="button" class="trip__cancel" id="cancelTrip">Cancel ride</button>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- ============ Home (Figma "H-v3 · Mascot · Midnight magic glow") ============ -->
-    <main class="home" id="home">
-      <header class="hero">
-        <div class="skyfx" aria-hidden="true"></div>
-        <div class="hero__inner">
-          <div class="hero__top">
-            <button type="button" class="pickup" data-pickup>
-              <svg class="pickup__pin" viewBox="0 0 730 965" aria-hidden="true"><defs><linearGradient id="pinGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe29a"/><stop offset=".55" stop-color="#f6c46c"/><stop offset="1" stop-color="#e3933f"/></linearGradient></defs><path d="M365 0C566.584 6.67149e-05 730 163.416 730 365C730 409.184 722.147 451.533 707.765 490.731C707.145 492.418 706.789 494.187 706.43 495.948C705.799 499.045 704.547 502.116 702.589 505.01C701.877 506.061 701.272 507.181 700.772 508.349C682.355 551.432 655.889 590.253 623.264 622.922C622.343 623.843 621.508 624.847 620.778 625.926L406.394 942.792C386.564 972.1 343.399 972.101 323.569 942.792L109.108 625.813C108.379 624.736 107.547 623.735 106.629 622.815C74.0992 590.215 47.6995 551.497 29.3061 508.536C28.7922 507.336 28.1696 506.184 27.438 505.102L24.208 500.328C22.0607 497.154 20.8736 493.74 20.5119 490.338C20.2022 487.427 19.9894 484.471 19.0538 481.697C6.698 445.055 0 405.81 0 365C0 163.416 163.416 0 365 0Z" fill="url(#pinGold)"/><circle cx="364.483" cy="368.5" r="205.5" fill="#fff"/></svg>
-              <span class="pickup__text"><span class="pickup__label">Pickup from</span><span class="pickup__value"><span data-bind="from">Current location</span><svg class="icon icon--sm icon--white pickup__chev" aria-hidden="true"><use href="assets/images/icons.svg#i-chevron"/></svg></span></span>
-            </button>
-          </div>
-          <a class="home-search" href="#where"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-search"/></svg>Where are you going?</a>
-          <div class="glass-chips" role="group" aria-label="Saved places">
-            <button type="button" class="glass-chip" data-saved="home"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg>Home</button>
-            <button type="button" class="glass-chip" data-saved="work"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-work"/></svg>Office</button>
-            <button type="button" class="glass-chip" data-recent data-rebook hidden><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-bookmark"/></svg><span class="chip__text" data-bind="recent"></span></button>
-            <button type="button" class="glass-chip glass-chip--add" data-soon="Saved places" aria-label="Add a saved place"><svg class="icon icon--white" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
-          </div>
-        </div>
-      </header>
-
-      <div class="home__grid">
-        <!-- Magic pick: the last trip in this browser, booked again in one tap (hidden until there is one) -->
-        <div class="glowwrap pick-wrap" id="magicPick" hidden>
-          <span class="glowwrap__blobs" aria-hidden="true"><span></span><span></span></span>
-          <div class="pick glow-border">
-            <span class="pick__star" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z" fill="#FFE29A"/></svg></span>
-            <span class="pick__text">
-              <span class="pick__eyebrow">Magic pick</span>
-              <span class="pick__title">Heading to <span data-bind="pickPlace"></span>?</span>
-              <span class="pick__meta" data-bind="pickMeta"></span>
-            </span>
-            <button type="button" class="pick__book cta" id="pickBook"><span>Book</span></button>
-          </div>
-        </div>
-
-        <a class="glowwrap svc-wrap" href="#ride">
-          <span class="glowwrap__blobs" aria-hidden="true"><span></span><span></span></span>
-          <span class="svc svc--ride glow-border">
-            <span class="glitter" aria-hidden="true"><i style="--star-x:46%;--star-y:18%;--star-size:13px;--star-delay:0s"></i><i class="l" style="--star-x:53%;--star-y:70%;--star-size:8px;--star-delay:1.1s"></i><i style="--star-x:90%;--star-y:10%;--star-size:10px;--star-delay:0.6s"></i><i class="l" style="--star-x:40%;--star-y:80%;--star-size:7px;--star-delay:1.7s"></i><i style="--star-x:72%;--star-y:8%;--star-size:7px;--star-delay:2.2s"></i></span>
-            <span class="svc__copy"><span class="svc__name">Ride</span><span class="svc__sub">Up to 6 seats</span></span>
-            <span class="svc__ground" aria-hidden="true"></span>
-            <img class="svc__art" src="assets/images/3d/car.svg" alt="" width="240" height="107">
-            <img class="svc__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="10" height="10">
-            <span class="sheen" aria-hidden="true"></span>
-          </span>
-        </a>
-        <a class="svc svc--lilac" href="#moto">
-          <span class="glitter" aria-hidden="true"><i style="--star-x:14%;--star-y:66%;--star-size:8px;--star-delay:0.3s"></i><i class="l" style="--star-x:52%;--star-y:50%;--star-size:6px;--star-delay:1.4s"></i></span>
-          <span class="svc__copy"><span class="svc__name">Moto</span><span class="svc__sub">Skip traffic</span></span>
-          <span class="svc__ground" aria-hidden="true"></span>
-          <img class="svc__art" src="assets/images/3d/moto.svg" alt="" width="80" height="50">
-          <img class="svc__sparkle" src="assets/images/v3/sparkle-lilac.svg" alt="" width="8" height="8">
-        </a>
-        <a class="svc svc--peach" href="#parcel">
-          <span class="glitter" aria-hidden="true"><i style="--star-x:14%;--star-y:66%;--star-size:8px;--star-delay:0.3s"></i><i class="l" style="--star-x:52%;--star-y:50%;--star-size:6px;--star-delay:1.4s"></i></span>
-          <span class="svc__copy"><span class="svc__name">Parcel</span><span class="svc__sub">Door to door</span></span>
-          <span class="svc__ground" aria-hidden="true"></span>
-          <img class="svc__art" src="assets/images/3d/parcel.svg" alt="" width="80" height="50">
-          <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
-        </a>
-        <a class="svc svc--peach" href="pages/shops.html">
-          <span class="glitter" aria-hidden="true"><i style="--star-x:14%;--star-y:66%;--star-size:8px;--star-delay:0.3s"></i><i class="l" style="--star-x:52%;--star-y:50%;--star-size:6px;--star-delay:1.4s"></i></span>
-          <span class="svc__copy"><span class="svc__name">Food</span><span class="svc__sub">Meals nearby</span></span>
-          <span class="svc__ground" aria-hidden="true"></span>
-          <img class="svc__art" src="assets/images/3d/food.svg" alt="" width="80" height="50">
-          <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
-        </a>
-
-        <div class="quick">
-          <button type="button" class="quick__item" data-soon="Scheduled rides"><img src="assets/images/3d/schedule.svg" alt="" width="36" height="36">Schedule</button>
-          <button type="button" class="quick__item" data-soon="Multi-stop rides"><img src="assets/images/3d/multistop.svg" alt="" width="36" height="36">Multi-stop</button>
-          <button type="button" class="quick__item" data-soon="Vouchers"><img src="assets/images/3d/vouchers.svg" alt="" width="36" height="36">Vouchers</button>
-        </div>
-
-        <!-- Magic Rides promo (Midnight). DEMO: "Claim offer" is remembered in this browser; no discount is applied yet -->
-        <section class="glowwrap promo-wrap" aria-label="New rider offer">
-          <span class="glowwrap__blobs glowwrap__blobs--big" aria-hidden="true"><span></span><span></span></span>
-          <div class="promo promo--magic">
-            <span class="promo__aurora" aria-hidden="true"></span>
-            <span class="glitter glitter--night" aria-hidden="true"><i class="w" style="--star-x:38%;--star-y:8%;--star-size:11px;--star-delay:0.9s"></i><i style="--star-x:54%;--star-y:84%;--star-size:8px;--star-delay:1.5s"></i><i class="w" style="--star-x:63%;--star-y:22%;--star-size:7px;--star-delay:0.4s"></i><i style="--star-x:30%;--star-y:92%;--star-size:6px;--star-delay:2.1s"></i><i style="--star-x:92%;--star-y:12%;--star-size:10px;--star-delay:1.1s"></i><i class="w" style="--star-x:76%;--star-y:66%;--star-size:7px;--star-delay:0.6s"></i><i style="--star-x:84%;--star-y:40%;--star-size:6px;--star-delay:3s"></i></span>
-            <span class="promo__shadow" aria-hidden="true"></span>
-            <img class="promo__mascot" src="assets/images/3d/mascot.svg" alt="" width="160" height="244">
-            <div class="promo__copy">
-              <span class="promo__eyebrow">Magic rides</span>
-              <h2 class="promo__title">A little magic on your first rides</h2>
-              <button type="button" class="promo__claim cta" id="claimOffer"><span><span data-bind="claimLabel">Claim offer</span><svg class="icon icon--sm" aria-hidden="true" data-claim-arrow><use href="assets/images/icons.svg#i-arrow"/></svg></span></button>
-            </div>
-          </div>
-        </section>
-
-        <section class="recent" data-recent-list hidden aria-labelledby="recentTitle">
-          <div class="recent__head"><h2 class="recent__title" id="recentTitle">Recent</h2><a class="recent__all" href="pages/trips.html">See all</a></div>
-          <ul class="recent__list" id="recentList"></ul>
-        </section>
-      </div>
-    </main>
-
-    <!-- Tab bar (home). Signed-in drivers and merchants never get here: app.js sends them to their own home. -->
-    <div class="tabbar">
-      <nav class="dock tabs" aria-label="Main">
-        <a data-tab="home" class="tab is-active" href="./" aria-current="page"><span class="tab__icon"><svg class="icon icon--xl" aria-hidden="true"><use href="assets/images/icons.svg#i-home"/></svg></span><span class="tab__label">Home</span></a>
-        <a data-tab="trips" class="tab" href="pages/trips.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-clock"/></svg></span><span class="tab__label">Trips &amp; Orders</span></a>
-        <a data-tab="food" class="tab" href="pages/shops.html"><span class="tab__icon"></span><span class="tab__label">Food</span></a>
-        <a data-tab="wallet" class="tab" href="pages/wallet.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-wallet"/></svg></span><span class="tab__label">Wallet</span></a>
-        <a data-tab="account" class="tab" href="pages/account.html"><span class="tab__icon"><svg class="icon icon--xl icon--muted" aria-hidden="true"><use href="assets/images/icons.svg#i-user"/></svg></span><span class="tab__label">Account</span></a>
+  <!-- Navigation: clear over the night sky, a white bar once you scroll (js/landing.js) -->
+  <header class="lp-nav" data-nav>
+    <div class="lp-nav__in lp-wrap">
+      <a class="lp-logo" href="/" aria-label="mysabak home"><img src="/assets/images/logo.svg" alt="mysabak" width="128" height="30"></a>
+      <nav class="lp-links" aria-label="Main">
+        <a href="#top" data-link="top">Home</a>
+        <a href="#services" data-link="services">Services</a>
+        <a href="#how" data-link="how">How it works</a>
+        <a href="#about" data-link="about">About us</a>
       </nav>
+      <div class="lp-nav__end">
+        <a class="lp-navlink lp-hide-sm" href="/pages/drive-signup.html">Become a driver</a>
+        <a class="lp-navlink" href="/pages/account.html">Sign in</a>
+        <a class="lp-btn lp-btn--gold lp-btn--sm lp-hide-sm" href="/app">Open the app</a>
+        <button class="lp-menu" type="button" aria-expanded="false" aria-controls="lpSheet" aria-label="Open the menu">
+          <span></span><span></span>
+        </button>
+      </div>
     </div>
+    <div class="lp-sheet" id="lpSheet" hidden>
+      <nav class="lp-sheet__links" aria-label="Menu">
+        <a href="#top">Home</a>
+        <a href="#services">Services</a>
+        <a href="#how">How it works</a>
+        <a href="#about">About us</a>
+        <a href="/pages/drive-signup.html">Become a driver</a>
+      </nav>
+      <a class="lp-btn lp-btn--gold lp-btn--block" href="/app">Open the app</a>
+    </div>
+  </header>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-    <!-- After Book: how to pay + your price (an extra on top of the fare is a tip for mysabak) -->
-    <dialog class="sheet paysheet" id="paySheet" aria-labelledby="payTitle">
-      <form class="sheet__body" id="payForm" method="dialog" autocomplete="off">
-        <span class="sheet__handle" aria-hidden="true"></span>
-        <div>
-          <h2 class="sheet__title" id="payTitle" data-bind="payTitle">Confirm your ride</h2>
-          <p class="sheet__sub"><span data-bind="vehicle">Sedan</span> · to <span data-bind="dropoff">[Drop-off place]</span> · <span data-bind="distance">[Distance]</span></p>
-        </div>
-
-        <fieldset class="paymethods"><legend class="paysheet__label">Pay with</legend><div class="paymethods__list" id="payMethods"><!-- from CONFIG.ridePayments --></div></fieldset>
-
-        <section class="yourprice" aria-labelledby="priceLabel">
-          <div class="yourprice__head">
-            <h3 class="paysheet__label" id="priceLabel">Your price</h3>
-            <span class="yourprice__hint">Add a little on top if you like. It’s a tip for mysabak.</span>
+  <main id="main">
+    <!-- ============ Hero ============ -->
+    <section class="lp-hero" id="top" aria-labelledby="heroTitle">
+      <div class="lp-stars" aria-hidden="true">
+        <i style="left:6%;top:14%"></i><i style="left:14%;top:52%"></i><i style="left:23%;top:9%"></i><i style="left:33%;top:70%"></i>
+        <i style="left:41%;top:26%"></i><i style="left:52%;top:12%"></i><i style="left:61%;top:58%"></i><i style="left:70%;top:22%"></i>
+        <i style="left:79%;top:46%"></i><i style="left:88%;top:10%"></i><i style="left:94%;top:36%"></i><i style="left:47%;top:84%"></i>
+        <b class="lp-star--gold" style="left:84%;top:20%"></b>
+      </div>
+      <div class="lp-hero__in lp-wrap">
+        <div class="lp-hero__text">
+          <p class="lp-eyebrow lp-enter" style="--d:.15s">Sabay tayo, sabak lang</p>
+          <h1 class="lp-h1" id="heroTitle">
+            <span class="lp-ln"><span style="--d:.25s">Your day</span></span>
+            <span class="lp-ln"><span style="--d:.37s">moves <em>better</em></span></span>
+            <span class="lp-ln"><span style="--d:.49s">with mysabak.</span></span>
+          </h1>
+          <p class="lp-lead lp-enter" style="--d:.7s">Rides, moto, parcels and food from the shops nearby, in one app. Drivers keep the whole fare.</p>
+          <div class="lp-ctas lp-enter" style="--d:.85s">
+            <a class="lp-btn lp-btn--gold lp-btn--lg" href="/app#ride" data-magnet>Book a ride <svg class="lp-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="lp-btn lp-btn--ghost lp-btn--lg" href="#services">See a day with mysabak</a>
           </div>
-          <div class="yourprice__ctrl">
-            <button type="button" class="yourprice__step" data-price-step="-1" aria-label="Lower the price"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-minus"/></svg></button>
-            <output class="yourprice__value" id="priceValue" aria-live="polite">₱[FARE]</output>
-            <button type="button" class="yourprice__step" data-price-step="1" aria-label="Raise the price"><svg class="icon icon--lg icon--ink" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg></button>
+        </div>
+
+        <!-- The mascot rides in along a gold route, with a car and a parcel -->
+        <div class="lp-hero__art" aria-hidden="true">
+          <svg class="lp-route" viewBox="0 0 600 560" preserveAspectRatio="none" fill="none">
+            <path d="M10 540 C 170 470, 210 380, 340 320 S 540 160, 600 70" pathLength="1"/>
+            <circle cx="10" cy="540" r="7"/>
+          </svg>
+          <div class="lp-par lp-par--car" data-depth="-.04"><img class="lp-art-car" src="/assets/images/3d/car.svg" alt="" width="326" height="145"></div>
+          <div class="lp-par lp-par--parcel" data-depth=".1"><img class="lp-art-parcel" src="/assets/images/3d/parcel.svg" alt="" width="120" height="64"></div>
+          <div class="lp-par lp-par--mascot" data-depth=".07"><img class="lp-art-mascot" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" fetchpriority="high"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ A day with mysabak: sideways as you scroll (desktop), a swipe row (phones) ============ -->
+    <section class="lp-day" id="services" aria-labelledby="dayTitle" data-day>
+      <div class="lp-day__pin">
+        <div class="lp-day__track" data-day-track data-native-scroll tabindex="0" aria-label="A day with mysabak">
+          <div class="lp-day__panel lp-day__intro">
+            <h2 class="lp-h2" id="dayTitle" data-split>A day with mysabak.</h2>
+            <p class="lp-body" data-reveal>Four errands between breakfast and dinner, all from one app.</p>
+            <img class="lp-day__introart" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" loading="lazy">
+            <p class="lp-day__hint" aria-hidden="true"><span class="lp-hint-wide">Keep scrolling</span><span class="lp-hint-narrow">Swipe</span><svg class="lp-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></p>
           </div>
-          <div class="yourprice__chips" id="tipChips" role="group" aria-label="Add a tip"><!-- No tip, +₱10, +₱20, +₱50 --></div>
-          <label class="yourprice__custom" id="customRow" hidden><span id="customLabel">Your price</span>
-            <span class="yourprice__input"><span aria-hidden="true">₱</span><input class="input" id="customPrice" type="number" inputmode="numeric" min="0" step="1" placeholder="90"></span></label>
-          <dl class="receipt" id="priceBreakdown"></dl>
-          <p class="tip__note"><svg class="icon icon--sm" aria-hidden="true"><use href="assets/images/icons.svg#i-shield"/></svg>Your driver keeps 100% of the fare. The extra goes to mysabak and keeps rides fee-free for drivers.</p>
-        </section>
 
-        <div class="sheet__actions">
-          <button type="button" class="button button--ghost" data-close>Back</button>
-          <button type="submit" class="button" id="findBtn">Find a driver</button>
+          <article class="lp-day__panel lp-stop lp-stop--ride" data-stop>
+            <div class="lp-stop__text">
+              <p class="lp-stop__time">7:40 AM</p>
+              <h3 class="lp-stop__title">A ride to work</h3>
+              <p class="lp-stop__say">Set your drop-off and a driver comes to your pin. You see the route before you book.</p>
+              <a class="lp-stop__go" href="/app#ride">Book a ride</a>
+            </div>
+            <figure class="lp-phone" data-lean><img src="/assets/images/landing/app-ride.webp" alt="The mysabak ride screen: your pickup on the map and a box for where to." width="780" height="1688" loading="lazy" decoding="async"></figure>
+          </article>
+
+          <article class="lp-day__panel lp-stop lp-stop--moto" data-stop>
+            <div class="lp-stop__text">
+              <p class="lp-stop__time">12:15 PM</p>
+              <h3 class="lp-stop__title">Lunch across town, on a moto</h3>
+              <p class="lp-stop__say">When it’s just you, a moto gets through the noon traffic.</p>
+              <a class="lp-stop__go" href="/app#moto">Book a moto</a>
+            </div>
+            <div class="lp-stop__art" data-lean aria-hidden="true">
+              <span class="lp-speed"><i></i><i></i><i></i></span>
+              <img src="/assets/images/3d/moto.svg" alt="" width="232" height="124" loading="lazy">
+            </div>
+          </article>
+
+          <article class="lp-day__panel lp-stop lp-stop--parcel" data-stop>
+            <div class="lp-stop__text">
+              <p class="lp-stop__time">3:00 PM</p>
+              <h3 class="lp-stop__title">The documents, sent across the city</h3>
+              <p class="lp-stop__say">Book a parcel the same way as a ride, then follow it on the map until it arrives.</p>
+              <a class="lp-stop__go" href="/app#parcel">Send a parcel</a>
+            </div>
+            <figure class="lp-phone lp-phone--crop" data-lean><img src="/assets/images/landing/app-route.webp" alt="The mysabak parcel screen: the route from pickup to drop-off, 20 minutes away." width="780" height="1688" loading="lazy" decoding="async"></figure>
+          </article>
+
+          <article class="lp-day__panel lp-stop lp-stop--food lp-night" data-stop>
+            <div class="lp-stars lp-stars--soft" aria-hidden="true"><i style="left:12%;top:14%"></i><i style="left:44%;top:8%"></i><i style="left:70%;top:20%"></i><i style="left:88%;top:62%"></i><b class="lp-star--gold" style="left:30%;top:24%"></b></div>
+            <div class="lp-stop__text">
+              <p class="lp-stop__time">7:30 PM</p>
+              <h3 class="lp-stop__title">Dinner from the kusina down the street</h3>
+              <p class="lp-stop__say">Order from the shops near you, pay how you like, and it comes to your door.</p>
+              <a class="lp-stop__go" href="/pages/shops.html">Order food</a>
+            </div>
+            <figure class="lp-phone" data-lean><img src="/assets/images/landing/app-food.webp" alt="A shop in the mysabak app, with its rating, opening hours and menu." width="780" height="1688" loading="lazy" decoding="async"></figure>
+          </article>
+
+          <div class="lp-day__panel lp-day__outro lp-night">
+            <p class="lp-day__end" data-reveal>Your whole day, sorted. <em>Sabak lang.</em></p>
+            <a class="lp-btn lp-btn--gold lp-btn--lg" href="/app" data-magnet>Open the app <svg class="lp-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+          <span class="lp-day__road" aria-hidden="true"></span>
         </div>
-      </form>
-    </dialog>
 
-    <!-- Express: parcel details (asked when booking in Express mode) -->
-    <dialog class="sheet" id="parcelSheet" aria-labelledby="parcelTitle">
-      <form class="sheet__body form" id="parcelForm" method="dialog" autocomplete="off">
-        <span class="sheet__handle" aria-hidden="true"></span>
-        <h2 class="sheet__title" id="parcelTitle">Parcel details</h2>
-        <p class="sheet__sub">Your driver picks it up from you and hands it to the receiver.</p>
-        <div class="form-grid">
-          <label class="field"><span class="field__label">Receiver’s name</span>
-            <input class="input" name="receiverName" required></label>
-          <label class="field"><span class="field__label">Receiver’s mobile number</span>
-            <input class="input" name="receiverPhone" type="tel" inputmode="tel" required pattern="[+0-9 ]{10,16}" placeholder="09XX XXX XXXX"></label>
+        <!-- Desktop only: the mascot rides along while the day goes by, and a clock -->
+        <div class="lp-day__rider" aria-hidden="true" data-rider><img src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" loading="lazy"></div>
+        <ol class="lp-day__clock" aria-hidden="true" data-clock>
+          <li>7:40 AM</li><li>12:15 PM</li><li>3:00 PM</li><li>7:30 PM</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ How it works: one sentence that lights up as you read ============ -->
+    <section class="lp-how" id="how" aria-labelledby="howTitle" data-how>
+      <div class="lp-wrap">
+        <h2 class="lp-sr" id="howTitle">How it works</h2>
+        <p class="lp-read" data-read>Pick a ride, a moto, a parcel or food. Set your pickup and drop-off. Choose cash, GCash or online banking, and book. Then follow your driver on the live map, all the way to your door.</p>
+      </div>
+    </section>
+
+    <!-- ============ The fare ============ -->
+    <section class="lp-fare" id="about" aria-labelledby="fareTitle" data-fare>
+      <div class="lp-stars lp-stars--soft" aria-hidden="true">
+        <i style="left:8%;top:18%"></i><i style="left:22%;top:72%"></i><i style="left:46%;top:12%"></i><i style="left:66%;top:80%"></i><i style="left:84%;top:30%"></i>
+      </div>
+      <div class="lp-fare__in lp-wrap">
+        <h2 class="lp-h2" id="fareTitle" data-split>Every peso of the fare goes to <em>your driver.</em></h2>
+        <div class="lp-farebar" data-farebar>
+          <div class="lp-farebar__fill"><span>Your driver</span><b><span data-pct>100</span>%</b></div>
         </div>
-        <fieldset class="pills" id="parcelSizes"><legend>Size</legend><!-- from CONFIG.parcelSizes --></fieldset>
-        <label class="field"><span class="field__label">What are you sending?</span>
-          <input class="input" name="item" required placeholder="e.g. documents, a cake or a phone"></label>
-        <label class="field"><span class="field__label">Notes for the driver <span class="muted">(optional)</span></span>
-          <textarea class="textarea" name="notes" placeholder="A landmark, the gate, or how to handle it"></textarea></label>
-        <p class="field__hint">Not allowed: cash, illegal or dangerous items, live animals.</p>
-        <div class="sheet__actions">
-          <button type="button" class="button button--ghost" data-close>Cancel</button>
-          <button type="submit" class="button">Send with <span data-bind="vehicle">Sedan</span></button>
+        <p class="lp-farebar__extra" data-reveal>+ a small extra for mysabak, only if you choose to add one</p>
+        <p class="lp-body lp-fare__say" data-reveal>mysabak takes no commission and charges no booking fees. The extra you choose to give supports mysabak and never comes out of a driver’s fare.</p>
+      </div>
+    </section>
+
+    <!-- ============ Work with mysabak: drivers and shops ============ -->
+    <section class="lp-work" aria-labelledby="workTitle">
+      <h2 class="lp-sr" id="workTitle">Work with mysabak</h2>
+      <div class="lp-work__grid lp-wrap">
+        <article class="lp-work__card lp-work__card--drive" data-reveal>
+          <h3 class="lp-work__title">Drive with mysabak. Keep the whole fare.</h3>
+          <p class="lp-work__say">Apply online or walk in. No commission and no booking fees.</p>
+          <div class="lp-ctas">
+            <a class="lp-btn lp-btn--ink lp-btn--lg" href="/pages/drive-signup.html" data-magnet>Become a driver</a>
+            <a class="lp-textcta" href="/pages/drive.html">Driver sign in</a>
+          </div>
+          <img class="lp-work__art" src="/assets/images/3d/suv.svg" alt="" width="326" height="145" loading="lazy" data-lean>
+        </article>
+        <article class="lp-work__card lp-work__card--shop" data-reveal style="--d:.12s">
+          <h3 class="lp-work__title">Sell from your kusina.</h3>
+          <p class="lp-work__say">Put your menu on mysabak, take orders from people nearby, and run your counter with the mysabak POS.</p>
+          <div class="lp-ctas">
+            <a class="lp-btn lp-btn--purple lp-btn--lg" href="/pages/merchant.html" data-magnet>Explore partnerships</a>
+          </div>
+          <div class="lp-order" aria-hidden="true" data-lean>
+            <span class="lp-order__ping"></span>
+            <span><b>New order</b>2 items · for delivery</span>
+            <span class="lp-order__btn">Accept</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ Closing ============ -->
+    <section class="lp-end" aria-labelledby="endTitle">
+      <div class="lp-end__panel lp-wrap" data-reveal="scale">
+        <div class="lp-stars lp-stars--soft" aria-hidden="true">
+          <i style="left:10%;top:20%"></i><i style="left:30%;top:76%"></i><i style="left:52%;top:14%"></i><i style="left:72%;top:66%"></i><b class="lp-star--gold" style="left:20%;top:44%"></b>
         </div>
-      </form>
-    </dialog>
+        <div class="lp-end__text">
+          <h2 class="lp-h2" id="endTitle">Wherever life takes you, <em>sabak lang.</em></h2>
+          <div class="lp-ctas">
+            <a class="lp-btn lp-btn--gold lp-btn--lg" href="/app" data-magnet>Open the app</a>
+            <a class="lp-btn lp-btn--ghost lp-btn--lg" href="/pages/account.html">Sign in</a>
+          </div>
+        </div>
+        <img class="lp-end__mascot" src="/assets/images/mascot.svg" alt="" width="819" height="811" loading="lazy">
+      </div>
+    </section>
+  </main>
 
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <!-- App: js/app.js loads config.js, api.js (server calls) and map.js -->
-  <script type="module" src="js/app.js"></script>
+  <footer class="lp-foot">
+    <div class="lp-wrap">
+      <div class="lp-foot__top">
+        <div class="lp-foot__brand">
+          <img src="/assets/images/logo.svg" alt="mysabak" width="128" height="30" loading="lazy">
+          <p>Rides, moto, parcels and food, with no booking fees. Sabay tayo, sabak lang.</p>
+        </div>
+        <nav class="lp-foot__cols" aria-label="Footer">
+          <div><h3>Services</h3><a href="/app#ride">Ride</a><a href="/app#moto">Moto</a><a href="/app#parcel">Parcel</a><a href="/pages/shops.html">Food</a></div>
+          <div><h3>mysabak</h3><a href="#about">About us</a><a href="#how">How it works</a><a href="/pages/support.html">Support mysabak</a></div>
+          <div><h3>Partners</h3><a href="/pages/drive-signup.html">Become a driver</a><a href="/pages/drive.html">Driver sign in</a><a href="/pages/merchant.html">Shop partners</a></div>
+          <div><h3>Your account</h3><a href="/app">Open the app</a><a href="/pages/account.html">Sign in</a><a href="/pages/trips.html">Trips &amp; orders</a></div>
+        </nav>
+      </div>
+      <p class="lp-foot__base"><span>© 2026 mysabak</span><a href="#top">Back to top</a></p>
+    </div>
+  </footer>
 </body>
 </html>

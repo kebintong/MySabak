@@ -26,8 +26,8 @@ export default {
     const url = new URL(request.url);
     if (url.pathname.startsWith(`${PREFIX}/`)) return proxyTomTom(request, env, url);
     if (url.pathname === '/api/health') return health(env);
-    // Old address of the app (it used to live at /html/)
-    if (url.pathname === '/html' || url.pathname.startsWith('/html/')) return Response.redirect(`${url.origin}/`, 301);
+    // Old address of the app (it used to live at /html/); / is the landing page now
+    if (url.pathname === '/html' || url.pathname.startsWith('/html/')) return Response.redirect(`${url.origin}/app`, 301);
     // Old address of the POS (bookmarks, installed apps); the browser keeps any #online
     if (/^\/pages\/merchant-pos(\.html)?$/.test(url.pathname)) return Response.redirect(`${url.origin}/pos${url.search}`, 301);
     return env.ASSETS.fetch(request);
