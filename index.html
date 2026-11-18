@@ -71,6 +71,7 @@
         <i style="left:79%;top:46%"></i><i style="left:88%;top:10%"></i><i style="left:94%;top:36%"></i><i style="left:47%;top:84%"></i>
         <b class="lp-star--gold" style="left:84%;top:20%"></b>
       </div>
+      <div class="lp-hero__city" data-hero-city aria-hidden="true"></div>
       <div class="lp-hero__in lp-wrap">
         <div class="lp-hero__text">
           <p class="lp-eyebrow lp-enter" style="--d:.15s">Sabay tayo, sabak lang</p>
@@ -79,22 +80,16 @@
             <span class="lp-ln"><span style="--d:.37s">moves <em>better</em></span></span>
             <span class="lp-ln"><span style="--d:.49s">with mysabak.</span></span>
           </h1>
-          <p class="lp-lead lp-enter" style="--d:.7s">Rides, moto, parcels and food from the shops nearby, in one app. Drivers keep the whole fare.</p>
+          <p class="lp-lead lp-enter" style="--d:.7s">Rides, moto, parcels and food from the shops nearby, anywhere in Cebu. Drivers keep the whole fare.</p>
           <div class="lp-ctas lp-enter" style="--d:.85s">
             <a class="lp-btn lp-btn--gold lp-btn--lg" href="/app#ride" data-magnet>Book a ride <svg class="lp-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             <a class="lp-btn lp-btn--ghost lp-btn--lg" href="#services">See a day with mysabak</a>
           </div>
         </div>
 
-        <!-- The mascot rides in along a gold route, with a car and a parcel -->
+        <!-- The mascot, over the city at dawn; she rides off as you scroll on (js/landing.js) -->
         <div class="lp-hero__art" aria-hidden="true">
-          <svg class="lp-route" viewBox="0 0 600 560" preserveAspectRatio="none" fill="none">
-            <path d="M10 540 C 170 470, 210 380, 340 320 S 540 160, 600 70" pathLength="1"/>
-            <circle cx="10" cy="540" r="7"/>
-          </svg>
-          <div class="lp-par lp-par--car" data-depth="-.04"><img class="lp-art-car" src="/assets/images/3d/car.svg" alt="" width="326" height="145"></div>
-          <div class="lp-par lp-par--parcel" data-depth=".1"><img class="lp-art-parcel" src="/assets/images/3d/parcel.svg" alt="" width="120" height="64"></div>
-          <div class="lp-par lp-par--mascot" data-depth=".07"><img class="lp-art-mascot" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" fetchpriority="high"></div>
+          <div class="lp-hero__rider" data-hero-rider><img class="lp-art-mascot" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" fetchpriority="high"></div>
         </div>
       </div>
     </section>
@@ -106,7 +101,6 @@
           <div class="lp-day__panel lp-day__intro">
             <h2 class="lp-h2" id="dayTitle" data-split>A day with mysabak.</h2>
             <p class="lp-body" data-reveal>Four errands between breakfast and dinner, all from one app.</p>
-            <img class="lp-day__introart" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" loading="lazy">
             <p class="lp-day__hint" aria-hidden="true"><span class="lp-hint-wide">Keep scrolling</span><span class="lp-hint-narrow">Swipe</span><svg class="lp-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></p>
           </div>
 
@@ -117,7 +111,7 @@
               <p class="lp-stop__say">Set your drop-off and a driver comes to your pin. You see the route before you book.</p>
               <a class="lp-stop__go" href="/app#ride">Book a ride</a>
             </div>
-            <figure class="lp-phone" data-lean><img src="/assets/images/landing/app-ride.webp" alt="The mysabak ride screen: your pickup on the map and a box for where to." width="780" height="1688" loading="lazy" decoding="async"></figure>
+            <figure class="lp-iphone" data-lean data-tilt><span class="lp-iphone__screen"><img src="/assets/images/landing/app-ride.webp" alt="The mysabak ride screen: your pickup on the map and a box for where to." width="780" height="1688" loading="lazy" decoding="async"><span class="lp-pulse" style="--x:50%;--y:47.7%" aria-hidden="true"></span></span></figure>
           </article>
 
           <article class="lp-day__panel lp-stop lp-stop--moto" data-stop>
@@ -140,7 +134,7 @@
               <p class="lp-stop__say">Book a parcel the same way as a ride, then follow it on the map until it arrives.</p>
               <a class="lp-stop__go" href="/app#parcel">Send a parcel</a>
             </div>
-            <figure class="lp-phone lp-phone--crop" data-lean><img src="/assets/images/landing/app-route.webp" alt="The mysabak parcel screen: the route from pickup to drop-off, 20 minutes away." width="780" height="1688" loading="lazy" decoding="async"></figure>
+            <figure class="lp-iphone" data-lean data-tilt><span class="lp-iphone__screen"><img src="/assets/images/landing/app-route.webp" alt="The mysabak parcel screen: the route from pickup to drop-off, 20 minutes away, and the vehicles to choose from." width="780" height="1688" loading="lazy" decoding="async"><span class="lp-pulse" style="--x:18.3%;--y:34.5%" aria-hidden="true"></span><span class="lp-pulse lp-pulse--to" style="--x:81.5%;--y:28.6%" aria-hidden="true"></span></span></figure>
           </article>
 
           <article class="lp-day__panel lp-stop lp-stop--food lp-night" data-stop>
@@ -151,7 +145,7 @@
               <p class="lp-stop__say">Order from the shops near you, pay how you like, and it comes to your door.</p>
               <a class="lp-stop__go" href="/pages/shops.html">Order food</a>
             </div>
-            <figure class="lp-phone" data-lean><img src="/assets/images/landing/app-food.webp" alt="A shop in the mysabak app, with its rating, opening hours and menu." width="780" height="1688" loading="lazy" decoding="async"></figure>
+            <figure class="lp-ipad" data-lean data-tilt><span class="lp-ipad__screen"><img src="/assets/images/landing/ipad-food.webp" alt="A carinderia in the mysabak app on a tablet: its rating, opening hours, map and menu." width="1548" height="2064" loading="lazy" decoding="async"><span class="lp-tap" style="--x:22.3%;--y:46.3%" aria-hidden="true"></span></span></figure>
           </article>
 
           <div class="lp-day__panel lp-day__outro lp-night">
@@ -162,7 +156,15 @@
         </div>
 
         <!-- Desktop only: the mascot rides along while the day goes by, and a clock -->
-        <div class="lp-day__rider" aria-hidden="true" data-rider><img src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" loading="lazy"></div>
+        <div class="lp-day__rider" aria-hidden="true" data-rider>
+          <img class="lp-rider__ride" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" loading="lazy">
+          <img class="lp-rider__pose" src="/assets/images/mascot/pose-hello-wave.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-rider__pose" src="/assets/images/mascot/pose-checking-the-map.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-rider__pose" src="/assets/images/mascot/pose-thumbs-up-wink.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-rider__pose" src="/assets/images/mascot/pose-delivery-dash.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-rider__pose" src="/assets/images/mascot/pose-break-on-the-box.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-rider__pose" src="/assets/images/mascot/pose-jump-for-joy.svg" alt="" width="440" height="540" loading="lazy">
+        </div>
         <ol class="lp-day__clock" aria-hidden="true" data-clock>
           <li>7:40 AM</li><li>12:15 PM</li><li>3:00 PM</li><li>7:30 PM</li>
         </ol>
@@ -189,6 +191,28 @@
         </div>
         <p class="lp-farebar__extra" data-reveal>+ a small extra for mysabak, only if you choose to add one</p>
         <p class="lp-body lp-fare__say" data-reveal>mysabak takes no commission and charges no booking fees. The extra you choose to give supports mysabak and never comes out of a driver’s fare.</p>
+      </div>
+    </section>
+
+    <!-- ============ Cebu: real places, licensed photos (credits under each) ============ -->
+    <section class="lp-cebu" aria-labelledby="cebuTitle">
+      <div class="lp-wrap">
+        <h2 class="lp-h2" id="cebuTitle" data-split>Made for every corner of <em>Cebu.</em></h2>
+        <p class="lp-body" data-reveal>From the towers downtown, across the bridge to Mactan, to the rotunda at Fuente and every barangay in between.</p>
+        <div class="lp-cebu__grid">
+          <figure class="lp-photo lp-photo--wide" data-reveal="scale">
+            <div class="lp-photo__img"><img src="/assets/images/landing/cebu-skyline.webp" alt="The Cebu City skyline, with towers downtown and the hills behind." width="2000" height="680" loading="lazy" decoding="async"></div>
+            <figcaption><b>Downtown Cebu City</b><span>Photo: ConradPhotos, <a href="https://commons.wikimedia.org/wiki/File:Cebu_City_skyline_2026.jpg">Wikimedia Commons</a>, CC0</span></figcaption>
+          </figure>
+          <figure class="lp-photo" data-reveal="scale" style="--d:.08s">
+            <div class="lp-photo__img"><img src="/assets/images/landing/cebu-bridge.webp" alt="The Cebu–Cordova Link Expressway crossing the channel to Mactan." width="1400" height="1050" loading="lazy" decoding="async"></div>
+            <figcaption><b>Cebu–Cordova bridge</b><span>Photo: LMP 2001, <a href="https://commons.wikimedia.org/wiki/File:Cebu-Cordova_Link_Expressway_2024-07-05.jpg">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, resized</span></figcaption>
+          </figure>
+          <figure class="lp-photo" data-reveal="scale" style="--d:.16s">
+            <div class="lp-photo__img"><img src="/assets/images/landing/cebu-fuente.webp" alt="Fuente Osmeña Circle from above, with traffic around the rotunda and towers behind." width="1200" height="900" loading="lazy" decoding="async"></div>
+            <figcaption><b>Fuente Osmeña Circle</b><span>Photo: Patrickroque01, <a href="https://commons.wikimedia.org/wiki/File:Fuente_Osme%C3%B1a_Circle,_Osme%C3%B1a_Boulevard-B._Rodriguez_drone_(Cebu_City;_01-20-2026).jpg">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, resized</span></figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
@@ -243,7 +267,13 @@
       <div class="lp-foot__top">
         <div class="lp-foot__brand">
           <img src="/assets/images/logo.svg" alt="mysabak" width="128" height="30" loading="lazy">
-          <p>Rides, moto, parcels and food, with no booking fees. Sabay tayo, sabak lang.</p>
+          <p>Rides, moto, parcels and food anywhere in Cebu, with no booking fees. Sabay tayo, sabak lang.</p>
+          <ul class="lp-social" aria-label="mysabak on social media (coming soon)">
+            <li title="Facebook: coming soon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.5V7c0-.7.3-1 1-1h2V2.5h-3c-2.8 0-4 1.7-4 4.2v1.8H7.5V12H10v9.5h4V12h2.7l.5-3.5z"/></svg><span class="lp-sr">Facebook, coming soon</span></li>
+            <li title="Instagram: coming soon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0zM12 2.5c-2.6 0-2.9 0-3.9.1-3.4.2-5.3 2-5.5 5.5C2.5 9.1 2.5 9.4 2.5 12s0 2.9.1 3.9c.2 3.4 2.1 5.3 5.5 5.5 1 .1 1.3.1 3.9.1s2.9 0 3.9-.1c3.4-.2 5.3-2.1 5.5-5.5.1-1 .1-1.3.1-3.9s0-2.9-.1-3.9c-.2-3.4-2.1-5.3-5.5-5.5-1-.1-1.3-.1-3.9-.1zm0 1.7c2.5 0 2.8 0 3.8.1 2.5.1 3.7 1.3 3.8 3.8.1 1 .1 1.3.1 3.9s0 2.8-.1 3.8c-.1 2.5-1.3 3.7-3.8 3.8-1 .1-1.3.1-3.8.1s-2.8 0-3.8-.1c-2.5-.1-3.7-1.3-3.8-3.8-.1-1-.1-1.3-.1-3.8s0-2.8.1-3.8c.1-2.6 1.3-3.7 3.8-3.8 1-.2 1.3-.2 3.8-.2z"/></svg><span class="lp-sr">Instagram, coming soon</span></li>
+            <li title="TikTok: coming soon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2.5h-3.3v12.6a2.7 2.7 0 1 1-2.7-2.7c.3 0 .5 0 .8.1V9.1a6 6 0 1 0 5.2 6V8.7a7.6 7.6 0 0 0 4.4 1.4V6.8a4.4 4.4 0 0 1-4.4-4.3z"/></svg><span class="lp-sr">TikTok, coming soon</span></li>
+            <li class="lp-social__soon" aria-hidden="true">Soon</li>
+          </ul>
         </div>
         <nav class="lp-foot__cols" aria-label="Footer">
           <div><h3>Services</h3><a href="/app#ride">Ride</a><a href="/app#moto">Moto</a><a href="/app#parcel">Parcel</a><a href="/pages/shops.html">Food</a></div>
@@ -252,7 +282,7 @@
           <div><h3>Your account</h3><a href="/app">Open the app</a><a href="/pages/account.html">Sign in</a><a href="/pages/trips.html">Trips &amp; orders</a></div>
         </nav>
       </div>
-      <p class="lp-foot__base"><span>© 2026 mysabak</span><a href="#top">Back to top</a></p>
+      <p class="lp-foot__base"><span>© 2026 mysabak · Cebu, Philippines</span><span class="lp-foot__legal"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="#top">Back to top</a></span></p>
     </div>
   </footer>
 </body>

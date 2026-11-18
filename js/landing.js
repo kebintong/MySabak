@@ -5,6 +5,8 @@
    - The day: on desktop the section holds still and the day slides sideways; phones swipe it.
    - Reveals, the How it works sentence, the fare bar, the nav and the phone menu.
    With prefers-reduced-motion: no glide, no lean, nothing tied to scrolling, everything shown at once. */
+import { buildScene, paintScene, heroCity } from './landing-scene.js';
+
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const root = document.documentElement;
@@ -60,7 +62,8 @@ document.addEventListener('click', (e) => {
 });
 
 /* =================== Lean: scroll speed on a spring =================== */
-const lean = { x: 0, v: 0, speed: 0, lastY: scrollY };
+const lean = { x: 0, v: 0, speed: 0, lastY: scrollY, set: '0' };
+const leaners = [...document.querySelectorAll('[data-lean], [data-rider]')];
 function leanStep(dt) {
   if (still.matches) return false;
   const raw = dt > 0 ? (scrollY - lean.lastY) / dt : 0; // px per second
@@ -71,7 +74,8 @@ function leanStep(dt) {
   lean.v *= Math.exp(-15 * dt); // damping: a little overshoot, then rest
   lean.x += lean.v * dt;
   const moving = Math.abs(lean.x) > 0.002 || Math.abs(lean.v) > 0.002 || Math.abs(raw) > 1;
-  root.style.setProperty('--lean', moving ? lean.x.toFixed(4) : '0');
+  const v = moving ? lean.x.toFixed(4) : '0';
+  if (v !== lean.set) { lean.set = v; leaners.forEach((el) => el.style.setProperty('--lean', v)); } // only on the things that lean: setting it on <html> restyles the whole city every frame
   return moving;
 }
 
@@ -146,11 +150,12 @@ const track = $('[data-day-track]', day);
 const stops = $$('[data-stop]', track);
 const clock = $$('[data-clock] li', day);
 let slide = 0; // px the day moves sideways
-const SPEED = 1.8; // sideways px per px scrolled down: the day moves a little faster than the page
+let SPEED = 1.8; // sideways px per px scrolled down: the day moves a little faster than the page (2.2 on phones)
 let marks = []; // where each stop is centred, 0…1
 let night = 1;
 function sizeDay() {
-  const pinned = wide.matches && !still.matches;
+  const pinned = !still.matches;
+  SPEED = innerWidth < 600 ? 2.2 : 1.8;
   day.classList.toggle('is-pinned', pinned);
   track.style.transform = '';
   if (!pinned) { day.style.height = ''; slide = 0; return; }
@@ -159,16 +164,55 @@ function sizeDay() {
   marks = stops.map((s) => clamp((s.offsetLeft + s.offsetWidth / 2 - innerWidth / 2) / slide, 0, 1));
   const food = stops.find((s) => s.classList.contains('lp-night'));
   night = food ? clamp((food.offsetLeft - innerWidth * 0.55) / slide, 0, 1) : 1;
+  buildScene(pin, { slide, marks, vw: innerWidth, vh: pin.offsetHeight });
 }
+let dayP = 0;
 function paintDay() {
   if (!slide) return;
   const p = clamp((-day.getBoundingClientRect().top * SPEED) / slide, 0, 1);
+  dayP = p;
   track.style.transform = `translate3d(${(-p * slide).toFixed(1)}px,0,0)`;
+  paintScene(pin, p);
   let on = 0;
   marks.forEach((m, i) => { if (p >= m - 0.12) on = i; });
   clock.forEach((li, i) => li.classList.toggle('is-on', i === on));
   day.classList.toggle('is-night', p >= night);
 }
+const rider = $('[data-rider]', day);
+const poses = $$('.lp-rider__pose', rider);
+let restTimer = 0;
+function poseFor(p) {
+  if (p < marks[0] - 0.08) return 0; // hello
+  if (p > marks[marks.length - 1] + 0.08) return poses.length - 1; // home: jump for joy
+  let best = 0;
+  marks.forEach((m, i) => { if (Math.abs(p - m) < Math.abs(p - marks[best])) best = i; });
+  return best + 1;
+}
+function settle() {
+  if (!slide) return;
+  const r = day.getBoundingClientRect();
+  if (r.top > 0 || r.bottom < innerHeight) return; // only while the day is on screen
+  const p = dayP;
+  if (p < marks[0] - 0.06 || p > marks[marks.length - 1] + 0.06) return; // the start and the end are free
+  const m = marks.reduce((a, b) => (Math.abs(p - b) < Math.abs(p - a) ? b : a));
+  if (Math.abs(p - m) < 0.002) return;
+  const y = scrollY + (m - p) * (slide / SPEED);
+  if (glide.on) glideTo(y); else scrollTo({ top: y, behavior: 'smooth' });
+}
+function onRest() {
+  if (!slide) return;
+  const i = poseFor(dayP);
+  poses.forEach((img, k) => img.classList.toggle('is-on', k === i));
+  rider.classList.add('is-resting');
+  settle();
+}
+addEventListener('scroll', () => {
+  if (!slide) return;
+  rider.classList.remove('is-resting');
+  clearTimeout(restTimer);
+  restTimer = setTimeout(onRest, 420);
+}, { passive: true });
+
 // Tabbing to a stop's link while pinned: scroll the page so that stop is in view
 track.addEventListener('focusin', (e) => {
   const panel = e.target.closest('.lp-day__panel');
@@ -229,12 +273,30 @@ if (!still.matches && 'IntersectionObserver' in window) {
   io.observe(farebar);
 }
 
-/* =================== Parallax in the first screen (desktop) =================== */
-const layers = $$('[data-depth]');
+/* =================== Hero: the city at dawn; the mascot rides off as you scroll =================== */
 const hero = $('.lp-hero');
-function paintParallax() {
-  if (still.matches || !wide.matches || scrollY > hero.offsetHeight) return;
-  layers.forEach((el) => { el.style.transform = `translate3d(0,${(scrollY * Number(el.dataset.depth)).toFixed(1)}px,0)`; });
+const heroRider = $('[data-hero-rider]');
+const city = $('[data-hero-city]');
+function sizeHero() { city.innerHTML = heroCity(city.offsetWidth, city.offsetHeight); }
+function paintHero() {
+  if (still.matches) return;
+  const k = clamp(scrollY / hero.offsetHeight, 0, 1);
+  if (k >= 1 && heroRider.dataset.gone) return;
+  heroRider.dataset.gone = k >= 1 ? '1' : '';
+  heroRider.style.transform = `translate3d(${(k * innerWidth * 0.3).toFixed(1)}px,${(k * innerHeight * 0.14).toFixed(1)}px,0) rotate(${(k * -7).toFixed(2)}deg) scale(${(1 - k * 0.28).toFixed(3)})`;
+}
+
+/* =================== Devices tilt toward the pointer (desktop) =================== */
+if (mouse.matches && !still.matches) {
+  $$('[data-tilt]').forEach((dev) => {
+    const panel = dev.closest('.lp-day__panel');
+    panel.addEventListener('pointermove', (e) => {
+      const r = dev.getBoundingClientRect();
+      dev.style.setProperty('--ty', `${clamp(((e.clientX - r.left) / r.width - 0.5) * 12, -8, 8).toFixed(2)}deg`);
+      dev.style.setProperty('--tx', `${clamp(-((e.clientY - r.top) / r.height - 0.5) * 8, -6, 6).toFixed(2)}deg`);
+    });
+    panel.addEventListener('pointerleave', () => { dev.style.removeProperty('--ty'); dev.style.removeProperty('--tx'); });
+  });
 }
 
 /* =================== Buttons lean a little toward the pointer =================== */
@@ -259,7 +321,7 @@ function frame(t) {
   paintNav();
   paintDay();
   paintRead();
-  paintParallax();
+  paintHero();
   const leaning = leanStep(dt);
   if (gliding || leaning) requestFrame();
 }
@@ -269,17 +331,19 @@ function requestFrame() {
   requestAnimationFrame(frame);
 }
 addEventListener('scroll', requestFrame, { passive: true });
-const resize = () => { sizeDay(); requestFrame(); };
+const resize = () => { sizeHero(); sizeDay(); requestFrame(); };
 addEventListener('resize', resize);
 addEventListener('load', () => {
   resize(); // panel sizes settle once fonts and images are in
-  $$('img[loading="lazy"]', track).forEach((img) => { img.loading = 'eager'; }); // the day's screens are ready before they slide in
+  $$('img[loading="lazy"]', pin).forEach((img) => { img.loading = 'eager'; }); // the day's screens and poses are ready before they're needed
 });
 still.addEventListener('change', () => { setGlide(); resize(); });
 mouse.addEventListener('change', setGlide);
 setGlide();
+sizeHero();
 sizeDay();
 frame(performance.now());
+onRest(); // she starts by waving hello
 
 // Offline support: the same service worker as the app
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
