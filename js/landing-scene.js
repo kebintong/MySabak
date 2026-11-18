@@ -51,6 +51,7 @@ function palette(time) {
 const rect = (x, y, w, h, cls, extra = '') => `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" class="${cls}"${extra}/>`;
 const path = (d, cls) => `<path d="${d}" class="${cls}"/>`;
 let winN = 0;
+let swayN = 0; // a counter, not r(): a random draw here would reshuffle the whole street
 const win = (x, y, w, h) => rect(x, y, w, h, 'lp-win', ` style="--wd:${(winN++ % 29) * 0.06}s"`);
 function windows(x, top, w, h, cols, rows, r, skip = 0.2) {
   let s = '';
@@ -91,6 +92,8 @@ function palm(x, base, h, r, cls = 's-leaf', trunkCls = 's-trunk') {
   }
   // fronds: [direction (-1 left, 1 right), reach, rise] — mostly sideways and drooping, a couple higher
   const L = h * (0.4 + r() * 0.08);
+  // the crown sways in the breeze around the top of the trunk, each palm out of step
+  s += `<g class="lp-sway" style="transform-origin:${f1(tx)}px ${f1(ty)}px;--sw:${6 + (swayN % 3) * 1.3}s;animation-delay:${-(swayN++ % 7) * 1.1}s">`;
   // like a fountain: each frond rises from the crown, then arcs out and down; old ones hang lower
   const set = [[-1, 1, 0.35], [1, 1, 0.38], [-0.62, 0.86, 0.72], [0.66, 0.84, 0.7], [-1, 0.78, -0.1], [1, 0.8, -0.12], [0.08, 0.58, 0.95]];
   set.forEach(([d, reach, rise], i) => {
@@ -102,7 +105,7 @@ function palm(x, base, h, r, cls = 's-leaf', trunkCls = 's-trunk') {
     s += frond(tx, ty, cx, cy, ex, ey, len * 0.13, i === 4 || i === 5 ? 's-leafsh' : cls);
   });
   [[-1.1, 2.6], [1.2, 3.2], [0, 4.2]].forEach(([dx, dy]) => { s += `<circle cx="${f1(tx + dx * wt * 1.4)}" cy="${f1(ty + dy)}" r="${f1(Math.max(1.8, h * 0.024))}" class="s-nut"/>`; });
-  return s;
+  return s + '</g>';
 }
 // One frond: a quadratic rib; leaflets hang from both sides, pointing back toward the stem and down (gravity),
 // shorter toward the tip, so it reads as a feathery fringe
@@ -485,8 +488,8 @@ export function buildScene(pin, { slide, marks, vw, vh }) {
     const scene = document.createElement('div');
     scene.className = 'lp-scene';
     scene.setAttribute('aria-hidden', 'true');
-    scene.innerHTML = `<div class="lp-scene__sky"></div><div class="lp-scene__stars"></div><span class="lp-scene__sun"></span><span class="lp-scene__moon"></span>
-      <svg class="lp-scene__birds" viewBox="0 0 120 40" width="120" height="40"><path d="M4 20q8-8 16 0q8-8 16 0M50 8q6-6 12 0q6-6 12 0M84 28q7-7 14 0q7-7 14 0"/></svg>
+    scene.innerHTML = `<div class="lp-scene__sky"></div><div class="lp-scene__stars"></div><div class="lp-scene__clouds"><i style="--y:22%;--w:22vmin;--t:150s;--d:-70s"></i><i style="--y:62%;--w:14vmin;--t:115s;--d:-95s"></i><i style="--y:4%;--w:17vmin;--t:135s;--d:-25s"></i></div><span class="lp-scene__sun"></span><span class="lp-scene__moon"></span>
+      <svg class="lp-scene__birds" viewBox="0 0 120 40" width="120" height="40"><path d="M4 20q8-8 16 0q8-8 16 0"/><path d="M50 8q6-6 12 0q6-6 12 0"/><path d="M84 28q7-7 14 0q7-7 14 0"/></svg>
       <div class="lp-layer lp-layer--far"></div><div class="lp-scene__haze"></div><div class="lp-layer lp-layer--mid"></div><div class="lp-scene__jeep"></div>`;
     const near = document.createElement('div');
     near.className = 'lp-layer lp-layer--near';
@@ -496,7 +499,7 @@ export function buildScene(pin, { slide, marks, vw, vh }) {
     const stars = scene.querySelector('.lp-scene__stars');
     const r = rnd(3);
     stars.innerHTML = Array.from({ length: 40 }, () => `<i style="left:${(r() * 100).toFixed(1)}%;top:${(r() * 55).toFixed(1)}%;--s:${(1 + r() * 1.6).toFixed(1)}px"></i>`).join('');
-    els = { sky: scene.querySelector('.lp-scene__sky'), haze: scene.querySelector('.lp-scene__haze'), scene, near, far: scene.querySelector('.lp-layer--far'), mid: scene.querySelector('.lp-layer--mid'), jeep: scene.querySelector('.lp-scene__jeep'), sun: scene.querySelector('.lp-scene__sun'), moon: scene.querySelector('.lp-scene__moon'), birds: scene.querySelector('.lp-scene__birds'), stars };
+    els = { sky: scene.querySelector('.lp-scene__sky'), haze: scene.querySelector('.lp-scene__haze'), scene, near, far: scene.querySelector('.lp-layer--far'), mid: scene.querySelector('.lp-layer--mid'), jeep: scene.querySelector('.lp-scene__jeep'), sun: scene.querySelector('.lp-scene__sun'), moon: scene.querySelector('.lp-scene__moon'), birds: scene.querySelector('.lp-scene__birds'), clouds: scene.querySelector('.lp-scene__clouds'), stars };
   }
   state = { slide, marks, vw, vh };
   const k = `${Math.round(slide)}|${vw}|${vh}`;
@@ -552,6 +555,7 @@ export function paintScene(pin, p) {
   els.sun.style.opacity = String(1 - nightness);
   els.sun.style.setProperty('--warm', day.toFixed(3));
   els.moon.style.opacity = els.stars.style.opacity = nightness.toFixed(3);
+  els.clouds.style.opacity = String(1 - nightness * 0.75);
   els.birds.style.opacity = String(Math.max(0, 1 - p / marks[1]));
   const isNight = p >= dusk;
   if (isNight !== night) { night = isNight; pin.classList.toggle('is-lit', isNight); }

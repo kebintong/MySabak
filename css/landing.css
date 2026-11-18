@@ -435,6 +435,21 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
 }
 .lp-scene__moon { position: absolute; left: 80%; top: 14%; width: 6vmin; height: 6vmin; border-radius: 50%; box-shadow: inset -1.4vmin -.7vmin 0 0 #fff2cf; opacity: 0; rotate: -20deg; filter: drop-shadow(0 0 10px rgba(255, 236, 180, .55)); }
 .lp-scene__birds { position: absolute; left: 34%; top: 20%; width: 9vmin; height: auto; fill: none; stroke: var(--c-near); stroke-width: 2.4; stroke-linecap: round; animation: lpFloat 5s ease-in-out infinite; }
+/* Idle life: nature and light move by themselves; anything that travels the road moves only with the scroll */
+.lp-scene__birds path { transform-box: fill-box; transform-origin: 50% 100%; animation: lpFlap .8s ease-in-out infinite; }
+.lp-scene__birds path:nth-child(2) { animation-delay: -.3s; } .lp-scene__birds path:nth-child(3) { animation-delay: -.55s; }
+.lp-scene__sun::after { content: ""; position: absolute; inset: -35%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 140, .4), rgba(255, 214, 140, 0) 65%); animation: lpBreathe 6s ease-in-out infinite; }
+.lp-scene__clouds { position: absolute; left: 0; right: 0; top: calc(var(--nav-h, 72px) + 2vh); height: 34%; }
+.lp-scene__clouds i { position: absolute; left: 0; top: var(--y); width: var(--w); height: calc(var(--w) * .26); border-radius: 999px; background: #fff; opacity: .6; animation: lpDrift var(--t) linear var(--d) infinite; }
+.lp-scene__clouds i::before, .lp-scene__clouds i::after { content: ""; position: absolute; border-radius: 50%; background: #fff; }
+.lp-scene__clouds i::before { left: 16%; bottom: 30%; width: 42%; aspect-ratio: 1; }
+.lp-scene__clouds i::after { left: 50%; bottom: 36%; width: 28%; aspect-ratio: 1; }
+.lp-sway { transform-box: view-box; animation: lpSway var(--sw, 7s) ease-in-out infinite; }
+.lp-scrolling .lp-sway { animation-play-state: paused; }
+.lp-hero__city .lp-win:nth-of-type(29n), .lp-end__city .lp-win:nth-of-type(29n) { animation: lpFlick 11s step-end infinite; }
+.lp-hero__city .lp-win:nth-of-type(29n + 13), .lp-end__city .lp-win:nth-of-type(29n + 13) { animation: lpFlick 13s step-end -6s infinite; }
+.lp-shoot { position: absolute; left: 56%; top: 9%; width: 110px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff); opacity: 0; transform-origin: 0 50%; animation: lpShoot 15s ease-in 5s infinite; }
+.lp-off *, .lp-off *::before, .lp-off *::after { animation-play-state: paused !important; }
 /* Haze between the far city and the street: farther things look paler */
 .lp-scene__haze { position: absolute; left: 0; right: 0; bottom: var(--road); height: 26vh; background: linear-gradient(180deg, transparent, var(--c-skyB, #fde8d2)); opacity: .45; }
 .lp-layer { position: absolute; left: 0; bottom: var(--road); line-height: 0; will-change: transform; }
@@ -672,9 +687,16 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
 @keyframes lpRing { 0% { opacity: .9; scale: .35; } 100% { opacity: 0; scale: 1.7; } }
 @keyframes lpTap { 0%, 55% { opacity: 0; scale: .5; } 62% { opacity: 1; scale: 1; } 80%, 100% { opacity: 0; scale: 1.6; } }
 @keyframes lpHop { 0% { translate: 0 0; scale: .9 1.1; } 40% { translate: 0 -16%; scale: 1.04 .96; } 70% { translate: 0 0; scale: 1.08 .92; } 100% { translate: 0 0; scale: 1; } }
+@keyframes lpFlap { 50% { scale: 1 -.55; } }
+@keyframes lpBreathe { 50% { scale: 1.2; opacity: .55; } }
+@keyframes lpDrift { from { transform: translateX(-30vmin); } to { transform: translateX(105vw); } }
+@keyframes lpSway { 0%, 100% { rotate: -1.8deg; } 50% { rotate: 1.8deg; } }
+@keyframes lpFlick { 0% { opacity: .75; } 60% { opacity: .1; } 85% { opacity: .75; } }
+@keyframes lpShoot { 0% { opacity: 0; transform: rotate(18deg) translateX(0); } 1% { opacity: 1; } 5% { opacity: 0; transform: rotate(18deg) translateX(280px); } 100% { opacity: 0; transform: rotate(18deg) translateX(280px); } }
 @keyframes lpNudge { 0%, 60%, 100% { translate: 0 0; } 30% { translate: 6px 0; } }
 
 /* ---------- Lite (js/landing.js turns it on when scrolling is measurably slow on this device) ---------- */
+.lp-lite .lp-sway, .lp-lite .lp-win, .lp-lite .lp-shoot { animation: none !important; }
 .lp-lite [data-lean] { transform: none !important; }
 .lp-lite .lp-iphone, .lp-lite .lp-laptop__lid, .lp-lite .lp-order, .lp-lite .lp-photo__img { box-shadow: 0 10px 24px -14px rgba(20, 5, 40, .45) !important; }
 .lp-lite .lp-ground, .lp-lite .lp-scene__haze, .lp-lite .lp-scene__birds, .lp-lite .lp-scene__jeep, .lp-lite .lp-iphone__screen::after { display: none; }

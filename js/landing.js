@@ -155,6 +155,11 @@ if (still.matches || !('IntersectionObserver' in window)) {
 /* =================== The day: sideways while the section holds still (desktop) =================== */
 const day = $('[data-day]');
 const pin = $('.lp-day__pin', day);
+// The scenery's idle motion (palms, clouds, windows) pauses while its section is off screen
+if ('IntersectionObserver' in window) {
+  const idle = new IntersectionObserver((list) => list.forEach((e) => e.target.classList.toggle('lp-off', !e.isIntersecting)));
+  ['.lp-hero', '[data-day]', '.lp-end'].forEach((q) => { const el = $(q); if (el) idle.observe(el); });
+}
 const track = $('[data-day-track]', day);
 const stops = $$('[data-stop]', track);
 const clock = $$('[data-clock] li', day);
@@ -368,6 +373,9 @@ function requestFrame() {
   requestAnimationFrame(frame);
 }
 addEventListener('scroll', requestFrame, { passive: true });
+// Palms hold still while the page scrolls: their sway repaints the street, and nobody sees it mid-scroll
+let scrollRest = 0;
+addEventListener('scroll', () => { root.classList.add('lp-scrolling'); clearTimeout(scrollRest); scrollRest = setTimeout(() => root.classList.remove('lp-scrolling'), 250); }, { passive: true });
 const resize = () => { sizeHero(); sizeDay(); measure(); requestFrame(); };
 // Fonts and pictures can change the page's height after load: measure again when they do
 if ('ResizeObserver' in window) new ResizeObserver(() => { measure(); requestFrame(); }).observe(document.body);
