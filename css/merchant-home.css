@@ -180,7 +180,7 @@
 .sseg button:focus-visible { outline: 3px solid rgba(91, 37, 150, .45); outline-offset: 1px; }
 .sales { display: flex; flex-direction: column; gap: 12px; }
 .sales__head { display: flex; flex-direction: column; gap: 4px; }
-.sales__value { font: 800 34px/1.1 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sales__value { font: 800 34px/1.1 var(--font-display); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
 .sales__delta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--sub); }
 .sales__delta .icon { width: 16px; height: 16px; stroke-width: 2.2; }
 .sales__delta.is-down { color: #b4410c; }
@@ -223,7 +223,7 @@
 .mood--busy { background: #fff6e2; }
 .mood--slow { background: #fff0e8; }
 .mood__emoji { font-size: 38px; line-height: 1; display: inline-block; align-self: flex-start; animation: mood-bob 3s ease-in-out infinite; }
-.mood__title { margin: 8px 0 0; font: 700 20px/1.25 var(--font-body); color: var(--ink); }
+.mood__title { margin: 8px 0 0; font: 700 20px/1.25 var(--font-display); color: var(--ink); }
 .mood__text { margin: 0; font-size: 14.5px; line-height: 1.5; font-weight: 400; color: var(--sub); }
 .mood__nums { margin: 6px 0 0; font-size: 13.5px; font-weight: 600; color: var(--brand-deep); }
 .mood--busy .mood__nums { color: #8a5a10; }
@@ -292,7 +292,7 @@
 .nowcounts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .nowcount { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; color: var(--sub); text-decoration: none; }
 .nowcount + .nowcount { border-left: 1px solid var(--line); }
-.nowcount b { font: 800 30px/1.1 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.nowcount b { font: 800 30px/1.1 var(--font-display); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
 .nowcount span { font-size: 13px; font-weight: 500; }
 .nowcount.is-on:first-child b { color: var(--brand-deep); }
 .nowcount:hover b { color: var(--brand-deep); }

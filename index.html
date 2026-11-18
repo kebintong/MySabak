@@ -23,8 +23,9 @@
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/images/icons/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/figtree/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <script>document.documentElement.classList.add('js')</script>
+  <script>document.documentElement.classList.add('js');if('scrollRestoration' in history)history.scrollRestoration='manual'</script>
   <link rel="stylesheet" href="/css/landing.css">
   <script type="module" src="/js/landing.js"></script>
 </head>
@@ -89,7 +90,7 @@
 
         <!-- The mascot, over the city at dawn; she rides off as you scroll on (js/landing.js) -->
         <div class="lp-hero__art" aria-hidden="true">
-          <div class="lp-hero__rider" data-hero-rider><img class="lp-art-mascot" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" fetchpriority="high"></div>
+          <div class="lp-hero__rider" data-hero-rider><img class="lp-art-mascot" src="/assets/images/3d/mascot-ride-1200.webp" srcset="/assets/images/3d/mascot-ride-480.webp 480w, /assets/images/3d/mascot-ride-1200.webp 1200w" sizes="(min-width: 900px) 34vw, 58vw" alt="" width="1200" height="1832" fetchpriority="high"></div>
         </div>
       </div>
     </section>
@@ -111,7 +112,7 @@
               <p class="lp-stop__say">Set your drop-off and a driver comes to your pin. You see the route before you book.</p>
               <a class="lp-stop__go" href="/app#ride">Book a ride</a>
             </div>
-            <figure class="lp-iphone" data-lean data-tilt><span class="lp-iphone__screen"><img src="/assets/images/landing/app-ride.webp" alt="The mysabak ride screen: your pickup on the map and a box for where to." width="780" height="1688" loading="lazy" decoding="async"><span class="lp-pulse" style="--x:50%;--y:47.7%" aria-hidden="true"></span></span></figure>
+            <figure class="lp-iphone" data-lean data-tilt style="--sb:#ece8e0;--sbi:#14101c"><span class="lp-iphone__btns" aria-hidden="true"></span><span class="lp-iphone__screen"><span class="lp-sb" aria-hidden="true"><b>9:41</b><span class="lp-sb__r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg><svg viewBox="0 0 16 12"><path d="M8 11.6 10.4 9a3.4 3.4 0 0 0-4.8 0z"/><path d="M8 4.6a7.4 7.4 0 0 1 5.3 2.2l1.4-1.5A9.5 9.5 0 0 0 8 2.5 9.5 9.5 0 0 0 1.3 5.3l1.4 1.5A7.4 7.4 0 0 1 8 4.6z" opacity=".95"/><path d="M8 7.9a4 4 0 0 1 2.9 1.2l1.4-1.5A6 6 0 0 0 8 5.9a6 6 0 0 0-4.3 1.7l1.4 1.5A4 4 0 0 1 8 7.9z"/></svg><i class="lp-batt"><i></i></i></span></span><span class="lp-shot"><img src="/assets/images/landing/app-ride.webp" alt="The mysabak ride screen: your pickup on the map and a box for where to." width="780" height="1688" loading="lazy" decoding="async"><span class="lp-pulse" style="--x:50%;--y:47.7%" aria-hidden="true"></span></span><span class="lp-home" aria-hidden="true"></span></span><span class="lp-ground" aria-hidden="true"></span></figure>
           </article>
 
           <article class="lp-day__panel lp-stop lp-stop--moto" data-stop>
@@ -134,7 +135,7 @@
               <p class="lp-stop__say">Book a parcel the same way as a ride, then follow it on the map until it arrives.</p>
               <a class="lp-stop__go" href="/app#parcel">Send a parcel</a>
             </div>
-            <figure class="lp-iphone" data-lean data-tilt><span class="lp-iphone__screen"><img src="/assets/images/landing/app-route.webp" alt="The mysabak parcel screen: the route from pickup to drop-off, 20 minutes away, and the vehicles to choose from." width="780" height="1688" loading="lazy" decoding="async"><span class="lp-pulse" style="--x:18.3%;--y:34.5%" aria-hidden="true"></span><span class="lp-pulse lp-pulse--to" style="--x:81.5%;--y:28.6%" aria-hidden="true"></span></span></figure>
+            <figure class="lp-iphone" data-lean data-tilt style="--sb:#ece8e0;--sbi:#14101c"><span class="lp-iphone__btns" aria-hidden="true"></span><span class="lp-iphone__screen"><span class="lp-sb" aria-hidden="true"><b>9:41</b><span class="lp-sb__r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg><svg viewBox="0 0 16 12"><path d="M8 11.6 10.4 9a3.4 3.4 0 0 0-4.8 0z"/><path d="M8 4.6a7.4 7.4 0 0 1 5.3 2.2l1.4-1.5A9.5 9.5 0 0 0 8 2.5 9.5 9.5 0 0 0 1.3 5.3l1.4 1.5A7.4 7.4 0 0 1 8 4.6z" opacity=".95"/><path d="M8 7.9a4 4 0 0 1 2.9 1.2l1.4-1.5A6 6 0 0 0 8 5.9a6 6 0 0 0-4.3 1.7l1.4 1.5A4 4 0 0 1 8 7.9z"/></svg><i class="lp-batt"><i></i></i></span></span><span class="lp-shot"><img src="/assets/images/landing/app-route.webp" alt="The mysabak parcel screen: the route from pickup to drop-off, 20 minutes away, and the vehicles to choose from." width="780" height="1688" loading="lazy" decoding="async"><span class="lp-pulse" style="--x:18.3%;--y:34.5%" aria-hidden="true"></span><span class="lp-pulse lp-pulse--to" style="--x:81.5%;--y:28.6%" aria-hidden="true"></span></span><span class="lp-home" aria-hidden="true"></span></span><span class="lp-ground" aria-hidden="true"></span></figure>
           </article>
 
           <article class="lp-day__panel lp-stop lp-stop--food lp-night" data-stop>
@@ -145,7 +146,14 @@
               <p class="lp-stop__say">Order from the shops near you, pay how you like, and it comes to your door.</p>
               <a class="lp-stop__go" href="/pages/shops.html">Order food</a>
             </div>
-            <figure class="lp-ipad" data-lean data-tilt><span class="lp-ipad__screen"><img src="/assets/images/landing/ipad-food.webp" alt="A carinderia in the mysabak app on a tablet: its rating, opening hours, map and menu." width="1548" height="2064" loading="lazy" decoding="async"><span class="lp-tap" style="--x:22.3%;--y:46.3%" aria-hidden="true"></span></span></figure>
+            <div class="lp-pair" data-lean data-tilt>
+              <figure class="lp-laptop">
+                <span class="lp-laptop__lid"><span class="lp-laptop__screen"><span class="lp-browser" aria-hidden="true"><i></i><i></i><i></i><span class="lp-browser__url"><svg viewBox="0 0 12 14"><path d="M3 6V4a3 3 0 0 1 6 0v2h.5A1.5 1.5 0 0 1 11 7.5v5A1.5 1.5 0 0 1 9.5 14h-7A1.5 1.5 0 0 1 1 12.5v-5A1.5 1.5 0 0 1 2.5 6zm1.5 0h3V4a1.5 1.5 0 0 0-3 0z"/></svg>mysabak</span></span><span class="lp-shot"><img src="/assets/images/landing/laptop-food.webp" alt="A carinderia in mysabak on a laptop: its rating, opening hours, map and menu." width="1800" height="1125" loading="lazy" decoding="async"><span class="lp-tap" style="--x:23.8%;--y:70.8%" aria-hidden="true"></span></span></span></span>
+                <span class="lp-laptop__base" aria-hidden="true"></span>
+                <span class="lp-ground lp-ground--wide" aria-hidden="true"></span>
+              </figure>
+              <figure class="lp-iphone lp-iphone--pair" style="--sb:#33105f;--sbi:#ffffff"><span class="lp-iphone__btns" aria-hidden="true"></span><span class="lp-iphone__screen"><span class="lp-sb" aria-hidden="true"><b>9:41</b><span class="lp-sb__r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg><svg viewBox="0 0 16 12"><path d="M8 11.6 10.4 9a3.4 3.4 0 0 0-4.8 0z"/><path d="M8 4.6a7.4 7.4 0 0 1 5.3 2.2l1.4-1.5A9.5 9.5 0 0 0 8 2.5 9.5 9.5 0 0 0 1.3 5.3l1.4 1.5A7.4 7.4 0 0 1 8 4.6z" opacity=".95"/><path d="M8 7.9a4 4 0 0 1 2.9 1.2l1.4-1.5A6 6 0 0 0 8 5.9a6 6 0 0 0-4.3 1.7l1.4 1.5A4 4 0 0 1 8 7.9z"/></svg><i class="lp-batt"><i></i></i></span></span><span class="lp-shot"><img src="/assets/images/landing/app-food.webp" alt="The same carinderia in the mysabak app on a phone, with its menu." width="780" height="1688" loading="lazy" decoding="async"></span><span class="lp-home" aria-hidden="true"></span></span><span class="lp-ground" aria-hidden="true"></span></figure>
+            </div>
           </article>
 
           <div class="lp-day__panel lp-day__outro lp-night">
@@ -157,7 +165,7 @@
 
         <!-- Desktop only: the mascot rides along while the day goes by, and a clock -->
         <div class="lp-day__rider" aria-hidden="true" data-rider>
-          <img class="lp-rider__ride" src="/assets/images/3d/mascot.svg" alt="" width="1664" height="2540" loading="lazy">
+          <img class="lp-rider__ride" src="/assets/images/3d/mascot-ride-480.webp" alt="" width="480" height="733" loading="lazy">
           <img class="lp-rider__pose" src="/assets/images/mascot/pose-hello-wave.svg" alt="" width="440" height="540" loading="lazy">
           <img class="lp-rider__pose" src="/assets/images/mascot/pose-checking-the-map.svg" alt="" width="440" height="540" loading="lazy">
           <img class="lp-rider__pose" src="/assets/images/mascot/pose-thumbs-up-wink.svg" alt="" width="440" height="540" loading="lazy">
@@ -221,24 +229,33 @@
       <h2 class="lp-sr" id="workTitle">Work with mysabak</h2>
       <div class="lp-work__grid lp-wrap">
         <article class="lp-work__card lp-work__card--drive" data-reveal>
-          <h3 class="lp-work__title">Drive with mysabak. Keep the whole fare.</h3>
-          <p class="lp-work__say">Apply online or walk in. No commission and no booking fees.</p>
-          <div class="lp-ctas">
-            <a class="lp-btn lp-btn--ink lp-btn--lg" href="/pages/drive-signup.html" data-magnet>Become a driver</a>
-            <a class="lp-textcta" href="/pages/drive.html">Driver sign in</a>
+          <div class="lp-work__text">
+            <h3 class="lp-work__title">Drive with mysabak. Keep the whole fare.</h3>
+            <p class="lp-work__say">Apply online or walk in. No commission and no booking fees.</p>
+            <div class="lp-ctas">
+              <a class="lp-btn lp-btn--ink lp-btn--lg" href="/pages/drive-signup.html" data-magnet>Become a driver</a>
+              <a class="lp-textcta" href="/pages/drive.html">Driver sign in</a>
+            </div>
           </div>
-          <img class="lp-work__art" src="/assets/images/3d/suv.svg" alt="" width="326" height="145" loading="lazy" data-lean>
+          <div class="lp-work__device" data-lean>
+            <figure class="lp-iphone" style="--sb:#3a1170;--sbi:#ffffff"><span class="lp-iphone__btns" aria-hidden="true"></span><span class="lp-iphone__screen"><span class="lp-sb" aria-hidden="true"><b>9:41</b><span class="lp-sb__r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg><svg viewBox="0 0 16 12"><path d="M8 11.6 10.4 9a3.4 3.4 0 0 0-4.8 0z"/><path d="M8 4.6a7.4 7.4 0 0 1 5.3 2.2l1.4-1.5A9.5 9.5 0 0 0 8 2.5 9.5 9.5 0 0 0 1.3 5.3l1.4 1.5A7.4 7.4 0 0 1 8 4.6z" opacity=".95"/><path d="M8 7.9a4 4 0 0 1 2.9 1.2l1.4-1.5A6 6 0 0 0 8 5.9a6 6 0 0 0-4.3 1.7l1.4 1.5A4 4 0 0 1 8 7.9z"/></svg><i class="lp-batt"><i></i></i></span></span><span class="lp-shot"><img src="/assets/images/landing/app-driver.webp" alt="The mysabak driver app: online, with three requests nearby and a ₱70 ride to accept." width="780" height="1688" loading="lazy" decoding="async"></span><span class="lp-home" aria-hidden="true"></span></span></figure>
+          </div>
         </article>
         <article class="lp-work__card lp-work__card--shop" data-reveal style="--d:.12s">
-          <h3 class="lp-work__title">Sell from your kusina.</h3>
-          <p class="lp-work__say">Put your menu on mysabak, take orders from people nearby, and run your counter with the mysabak POS.</p>
-          <div class="lp-ctas">
-            <a class="lp-btn lp-btn--purple lp-btn--lg" href="/pages/merchant.html" data-magnet>Explore partnerships</a>
+          <div class="lp-work__text">
+            <h3 class="lp-work__title">Sell from your kusina.</h3>
+            <p class="lp-work__say">Put your menu on mysabak, take orders from people nearby, and run your counter with the mysabak POS.</p>
+            <div class="lp-ctas">
+              <a class="lp-btn lp-btn--purple lp-btn--lg" href="/pages/merchant.html" data-magnet>Explore partnerships</a>
+            </div>
           </div>
-          <div class="lp-order" aria-hidden="true" data-lean>
-            <span class="lp-order__ping"></span>
-            <span><b>New order</b>2 items · for delivery</span>
-            <span class="lp-order__btn">Accept</span>
+          <div class="lp-work__device" data-lean>
+            <figure class="lp-iphone" style="--sb:#2e0c58;--sbi:#ffffff"><span class="lp-iphone__btns" aria-hidden="true"></span><span class="lp-iphone__screen"><span class="lp-sb" aria-hidden="true"><b>9:41</b><span class="lp-sb__r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg><svg viewBox="0 0 16 12"><path d="M8 11.6 10.4 9a3.4 3.4 0 0 0-4.8 0z"/><path d="M8 4.6a7.4 7.4 0 0 1 5.3 2.2l1.4-1.5A9.5 9.5 0 0 0 8 2.5 9.5 9.5 0 0 0 1.3 5.3l1.4 1.5A7.4 7.4 0 0 1 8 4.6z" opacity=".95"/><path d="M8 7.9a4 4 0 0 1 2.9 1.2l1.4-1.5A6 6 0 0 0 8 5.9a6 6 0 0 0-4.3 1.7l1.4 1.5A4 4 0 0 1 8 7.9z"/></svg><i class="lp-batt"><i></i></i></span></span><span class="lp-shot"><img src="/assets/images/landing/app-shop.webp" alt="The mysabak shop dashboard: accepting orders, two new orders and today’s sales." width="780" height="1688" loading="lazy" decoding="async"></span><span class="lp-home" aria-hidden="true"></span></span></figure>
+            <div class="lp-order" aria-hidden="true">
+              <span class="lp-order__ping"></span>
+              <span><b>New order</b>2 items · for delivery</span>
+              <span class="lp-order__btn">Accept</span>
+            </div>
           </div>
         </article>
       </div>
@@ -248,8 +265,9 @@
     <section class="lp-end" aria-labelledby="endTitle">
       <div class="lp-end__panel lp-wrap" data-reveal="scale">
         <div class="lp-stars lp-stars--soft" aria-hidden="true">
-          <i style="left:10%;top:20%"></i><i style="left:30%;top:76%"></i><i style="left:52%;top:14%"></i><i style="left:72%;top:66%"></i><b class="lp-star--gold" style="left:20%;top:44%"></b>
+          <i style="left:10%;top:20%"></i><i style="left:30%;top:12%"></i><i style="left:52%;top:24%"></i><i style="left:64%;top:10%"></i><i style="left:44%;top:40%"></i><b class="lp-star--gold" style="left:58%;top:16%"></b>
         </div>
+        <span class="lp-end__moon" aria-hidden="true"></span>
         <div class="lp-end__text">
           <h2 class="lp-h2" id="endTitle">Wherever life takes you, <em>sabak lang.</em></h2>
           <div class="lp-ctas">
@@ -257,7 +275,12 @@
             <a class="lp-btn lp-btn--ghost lp-btn--lg" href="/pages/account.html">Sign in</a>
           </div>
         </div>
-        <img class="lp-end__mascot" src="/assets/images/mascot.svg" alt="" width="819" height="811" loading="lazy">
+        <!-- The end of the day's ride: home in Cebu at night, the mascot tipping her hat -->
+        <div class="lp-end__scene" aria-hidden="true">
+          <div class="lp-end__city" data-end-city></div>
+          <span class="lp-end__road"></span>
+          <img class="lp-end__mascot" src="/assets/images/mascot/pose-hat-tip-bow.svg" alt="" width="440" height="540" loading="lazy">
+        </div>
       </div>
     </section>
   </main>

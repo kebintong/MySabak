@@ -4,14 +4,18 @@ import { esc, peso, icon } from './ui.js';
 export const TRIP_KIND = { ride: ['Ride', 'i-car'], express: ['Express', 'i-box'], shop: ['Shop delivery', 'i-bag'] };
 
 const dayKey = (ts) => new Date(ts).toDateString();
-const time = (ts) => new Date(ts).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
+// Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
+const TIME = new Intl.DateTimeFormat('en-PH', { hour: 'numeric', minute: '2-digit' });
+const MONTH_DAY = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' });
+const WEEK_DAY = new Intl.DateTimeFormat('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
+const time = (ts) => TIME.format(new Date(ts));
 function dayName(ts) {
   const d = new Date(ts);
   const t = new Date();
   if (dayKey(d) === dayKey(t)) return 'Today';
   t.setDate(t.getDate() - 1);
-  if (dayKey(d) === dayKey(t)) return `Yesterday · ${d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}`;
-  return d.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
+  if (dayKey(d) === dayKey(t)) return `Yesterday · ${MONTH_DAY.format(d)}`;
+  return WEEK_DAY.format(d);
 }
 
 // What each row shows: the classic line icon of its kind, in the row's ink

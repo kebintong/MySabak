@@ -24,6 +24,7 @@ export const pop = (n, from = 1.25) => {
  * digits that stay the same stay still; none = from 0. The number takes its final width at once.
  * Screen readers get the final text once; the reels are hidden from them. For text-only elements.
  */
+const ROLL_STEP = new Map();
 export function rollNumber(n, from = null) {
   if (!n) return;
   const text = n.textContent;
@@ -33,13 +34,17 @@ export function rollNumber(n, from = null) {
   const before = digits(from);
   const after = [...text].filter((c) => /\d/.test(c));
   let i = after.length; // digits left to place, counted from the right
+  // A digit's step in whole pixels: 1.1em is often a fraction (17.6px at 16px), which left some digits (a 3 at
+  // -52.8px) half a pixel off their neighbours (a 0 at 0px). Read before the element is rewritten: reading after
+  // forced a fresh layout for every number on a page.
+  // Numbers with the same classes share a size: measure once per kind, not once per number
+  const kind = `${n.className}|${n.parentElement?.className || ''}|${innerWidth >= 900}`;
+  let step = ROLL_STEP.get(kind);
+  if (!step) { step = Math.round(parseFloat(getComputedStyle(n).fontSize) * 1.1) || 18; ROLL_STEP.set(kind, step); }
   n.innerHTML = `<span class="roll" aria-hidden="true">${[...text].map((c) => (/\d/.test(c)
     ? `<span class="roll__d"><span class="roll__reel">${'0123456789'.split('').map((d) => `<span>${d}</span>`).join('')}</span></span>`
     : `<span>${c === " " ? "&nbsp;" : esc(c)}</span>`)).join('')}</span><span class="sr-only">${esc(text)}</span>`;
   const reels = [...n.querySelectorAll('.roll__reel')];
-  // A digit's step in whole pixels: 1.1em is often a fraction (17.6px at 16px), which left some digits (a 3 at
-  // -52.8px) half a pixel off their neighbours (a 0 at 0px)
-  const step = Math.round(parseFloat(getComputedStyle(n).fontSize) * 1.1) || 18;
   n.firstElementChild.style.setProperty('--rh', `${step}px`);
   reels.forEach((reel, k) => {
     i -= 1; // this reel's place from the right (0 = ones)
@@ -50,10 +55,10 @@ export function rollNumber(n, from = null) {
     if (to === at && from !== null) return; // unchanged digits stay still
     const past = to + (to >= at ? 0.16 : -0.16);
     reel.animate([
-      { transform: y(at), filter: 'blur(0)', easing: 'cubic-bezier(.45, 0, .25, 1)' },
-      { transform: y(at + (to - at) * 0.78), filter: 'blur(1.1px)', offset: 0.5, easing: 'cubic-bezier(.2, .65, .3, 1)' },
-      { transform: y(past), filter: 'blur(.2px)', offset: 0.8, easing: 'cubic-bezier(.3, 0, .25, 1)' },
-      { transform: y(to), filter: 'blur(0)' },
+      { transform: y(at), easing: 'cubic-bezier(.45, 0, .25, 1)' },
+      { transform: y(at + (to - at) * 0.78), offset: 0.5, easing: 'cubic-bezier(.2, .65, .3, 1)' },
+      { transform: y(past), offset: 0.8, easing: 'cubic-bezier(.3, 0, .25, 1)' },
+      { transform: y(to) },
     ], { duration: 720, delay: i * 90, fill: 'backwards' });
   });
 }
@@ -202,11 +207,14 @@ export function paintSky(el) {
   const pct = (n) => `${(n * 100).toFixed(2)}%`;
   let far = '';
   for (let i = 0; i < plan.far; i++) far += `<circle cx="${pct(r())}" cy="${pct(r() * 0.92)}" r="${(0.4 + r() * 0.45).toFixed(2)}" fill="#fff" fill-opacity="${(0.25 + r() * 0.4).toFixed(2)}"/>`;
-  let mid = '';
+  // The blinking stars in 3 groups, each blinking at its own pace: 3 animations instead of one per star
+  const groups = ['', '', ''];
   for (let i = 0; i < plan.mid; i++) {
     const s = (1.6 + r() * 1.2).toFixed(1);
-    mid += `<i class="sky-mid" style="left:${pct(r())};top:${pct(r() * 0.85)};width:${s}px;height:${s}px;--t:${(4 + r() * 4).toFixed(1)}s;--d:-${(r() * 8).toFixed(1)}s"></i>`;
+    groups[i % 3] += `<i class="sky-dot" style="left:${pct(r())};top:${pct(r() * 0.85)};width:${s}px;height:${s}px"></i>`;
+    r(); r(); // keep the old random sequence, so the sky looks the same
   }
+  const mid = groups.map((g, k) => `<span class="sky-mid" style="--t:${[5.2, 6.8, 8.4][k]}s;--d:-${[0, 2.6, 5.1][k]}s">${g}</span>`).join('');
   let near = '';
   for (let i = 0; i < plan.near; i++) {
     const s = Math.round((7 + r() * 8) * plan.grow);
@@ -214,6 +222,8 @@ export function paintSky(el) {
     near += `<svg class="sky-tw" style="left:${pct(x)};top:${pct(0.04 + r() * 0.6)};width:${s}px;height:${s}px;--t:${(5 + r() * 4).toFixed(1)}s;--d:-${(r() * 9).toFixed(1)}s" viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}" fill="${r() < 0.4 ? '#FFE29A' : '#fff'}"/></svg>`;
   }
   const dx = Math.round(Math.min(520, w * 0.55));
+  // Off screen (scrolled away, a closed panel): the sky holds still
+  if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => el.classList.toggle('is-still', !e.isIntersecting)).observe(el);
   el.innerHTML = '<span class="sky-aurora"></span><span class="sky-aurora sky-aurora--warm"></span>'
     + `<svg class="sky-far" aria-hidden="true">${far}</svg>${mid}${near}`
     + `<i class="sky-shoot" style="--dx:${dx}px;--dy:${Math.round(dx * 0.4)}px"></i>`;
@@ -1152,7 +1162,8 @@ export function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('is-visible'), 3200);
 }
 
-export const when = (ts) => new Date(ts).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const WHEN = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); // built once
+export const when = (ts) => WHEN.format(new Date(ts));
 export const params = () => new URLSearchParams(location.search);
 
 /* ---------- Place search (address box with suggestions) ---------- */

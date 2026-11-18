@@ -21,6 +21,9 @@ import {
   DEMO_BRANCHES, DEMO_BRANCH_ORDERS, BRANCH_AREAS, DEMO_APPLICATIONS, DEMO_ADMIN, DEMO_USERS,
 } from './demo-data.js';
 import { cleanPicks, unitPrice, pickLabels } from './menu.js';
+// Chart labels: formatters built once (toLocaleDateString() makes a new one on every call)
+const WD_SHORT = new Intl.DateTimeFormat('en-PH', { weekday: 'short' });
+const WD_LONG = new Intl.DateTimeFormat('en-PH', { weekday: 'long', month: 'short', day: 'numeric' });
 
 /** Base of the TomTom proxy. map.js uses it for the map style and tiles. */
 export const TOMTOM_PROXY = new URL('/api/tomtom', location.origin).href;
@@ -1395,8 +1398,8 @@ export async function merchantSales({ range = 'day', branchId = 'all' } = {}) {
     series = Array.from({ length: days }, (_, i) => {
       const daysAgo = days - 1 - i;
       const d = new Date(midnight(daysAgo));
-      const label = range === 'week' ? (daysAgo ? d.toLocaleDateString('en-PH', { weekday: 'short' }) : 'Today') : String(d.getDate());
-      const when = d.toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric' }); // "Monday, Nov 9"
+      const label = range === 'week' ? (daysAgo ? WD_SHORT.format(d) : 'Today') : String(d.getDate());
+      const when = WD_LONG.format(d); // "Monday, Nov 9"
       return { label, when, value: sum(daysAgo), now: daysAgo === 0 };
     });
   }

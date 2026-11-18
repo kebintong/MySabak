@@ -494,7 +494,7 @@ body:not([data-state="request"]) .map-controls {
 }
 
 .glass-chip {
-  height: 36px;
+  height: 44px;
   padding: 0 12px;
   border: 1px solid rgba(255, 255, 255, .22);
   border-radius: 18px;

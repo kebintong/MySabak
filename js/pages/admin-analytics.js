@@ -20,7 +20,10 @@ const KPI_HELP = {
 };
 const SVC_ICON = { ride: 'i-car', express: 'i-box', moto: 'i-motor', shop: 'i-bag' };
 /** "Oct 6" for `back` days before today. */
-const dayName = (back) => (back === 0 ? 'Today' : new Date(Date.now() - back * 86400e3).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }));
+// Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
+const MONTH_DAY = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' });
+const WEEKDAY = {};
+const dayName = (back) => (back === 0 ? 'Today' : MONTH_DAY.format(new Date(Date.now() - back * 86400e3)));
 
 mountAdmin().then((user) => {
   if (!user) return;
@@ -79,7 +82,7 @@ function render(a) {
   const days = a.tripsPerDay;
   const lastDay = days.length - 1;
   // the real weekday of each bar (the sample data's own day names don't follow the calendar)
-  const weekday = (i, form) => new Date(Date.now() - (lastDay - i) * 86400e3).toLocaleDateString('en-PH', { weekday: form });
+  const weekday = (i, form) => (WEEKDAY[form] ||= new Intl.DateTimeFormat('en-PH', { weekday: form })).format(new Date(Date.now() - (lastDay - i) * 86400e3));
   const longDay = (i) => (i === lastDay ? 'Today so far' : weekday(i, 'long'));
   const shortDay = (i) => (i === lastDay ? 'Today' : weekday(i, 'short'));
   $('#trips').innerHTML = days.map((d, i) => `<button type="button" class="tbar${i === lastDay ? ' is-today' : ''}" data-i="${i}" style="--i:${i};--h:${Math.round((totals[i] / max) * 100)}%" aria-label="${esc(longDay(i))}: ${num(totals[i])} trips" aria-pressed="false">

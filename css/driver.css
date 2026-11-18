@@ -36,11 +36,11 @@
 .dsum { display: flex; flex-direction: column; gap: 14px; }
 .dearn { margin: 0; display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
 .dearn__label { font-size: 13px; font-weight: 500; color: #e2d0f4; }
-.dearn__value { font: 800 52px/1.05 var(--font-body); letter-spacing: -.02em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.dearn__value { font: 800 52px/1.05 var(--font-display); letter-spacing: -.02em; color: var(--gold); font-variant-numeric: tabular-nums; }
 .dstats { display: flex; max-width: 320px; }
 .dstats p { flex: 1; margin: 0; display: flex; flex-direction: column; gap: 2px; }
 .dstats p + p { padding-left: 16px; border-left: 1px solid rgba(255, 255, 255, .22); }
-.dstats b { font: 800 20px/1.1 var(--font-body); letter-spacing: -.02em; color: #fff; font-variant-numeric: tabular-nums; }
+.dstats b { font: 800 20px/1.1 var(--font-display); letter-spacing: -.02em; color: #fff; font-variant-numeric: tabular-nums; }
 .dstats span { font-size: 12.5px; font-weight: 500; color: #e2d0f4; }
 
 /* Going online: one glass row, the status in words, a switch at the end (like a phone's settings) */
@@ -222,7 +222,7 @@
 .dweek__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .dweek__sum { display: flex; flex-direction: column; gap: 2px; }
 .dweek__title { margin: 0; font-size: 13px; font-weight: 600; color: var(--sub); }
-.dweek__value { font: 800 26px/1.1 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dweek__value { font: 800 26px/1.1 var(--font-display); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
 .dweek__delta { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #e3f3e8; color: #1e7a44; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 .dweek__delta .icon { width: 14px; height: 14px; stroke: currentColor; }
 .dweek__delta.is-down { background: #fbe9df; color: #b4410c; }

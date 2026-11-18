@@ -59,7 +59,7 @@
 .ticket__lines .empty { padding: 14px 4px; color: var(--muted); }
 .ticket__total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 1px dashed var(--line); }
 .ticket__total span { font-size: 15px; font-weight: 700; color: var(--sub); }
-.ticket__total b { font: 800 26px var(--font-body); font-variant-numeric: tabular-nums; }
+.ticket__total b { font: 800 26px var(--font-display); font-variant-numeric: tabular-nums; }
 .ticket__pay { display: flex; flex-direction: column; gap: 10px; }
 .ticket__method { display: flex; }
 .ticket__method .seg__btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -70,7 +70,7 @@
 .ticket__quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ticket__quick .fchip { height: 36px; }
 .ticket__change { margin: 8px 0 0; font-size: 15px; color: var(--sub); }
-.ticket__change b { font: 800 20px var(--font-body); color: var(--ok, #1e7a44); }
+.ticket__change b { font: 800 20px var(--font-display); color: var(--ok, #1e7a44); }
 .ticket__change .is-short { font-weight: 700; color: #b4410c; }
 .ticket__recent { margin-top: 2px; }
 .ticket__recent .slist { margin-top: 10px; font-size: 14px; }
@@ -99,4 +99,4 @@
 .receipt__sum b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .receipt__change { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border-radius: 14px; background: #e3f3e8; }
 .receipt__change span { font-weight: 700; color: var(--ok, #1e7a44); }
-.receipt__change b { font: 800 26px var(--font-body); color: var(--ok, #1e7a44); }
+.receipt__change b { font: 800 26px var(--font-display); color: var(--ok, #1e7a44); }

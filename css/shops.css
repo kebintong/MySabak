@@ -128,4 +128,7 @@
 .page--food .finder__title { color: #fff; }
 .page--food .searchbox--float .input { height: 50px; border: 0; border-radius: 25px; background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35); }
 .page--food .finder__sheet { position: relative; border-radius: 0 0 24px 24px; }
+/* The category chips arrive from the script a moment after the page draws: keep their two rows' space, so the
+   list below doesn't jump down when they appear */
+.page--food .fchips:empty { min-height: calc(44px * 2 + 10px); } /* two rows of 44px chips and the gap */
 }

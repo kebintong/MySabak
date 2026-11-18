@@ -41,7 +41,7 @@ function onWheel(e) {
   glideTo((glide.running ? glide.target : scrollY) + e.deltaY * unit);
 }
 function setGlide() {
-  const on = mouse.matches && !still.matches;
+  const on = mouse.matches && !still.matches && !root.classList.contains('lp-lite');
   if (on === glide.on) return;
   glide.on = on;
   root.classList.toggle('lp-glide', on);
@@ -58,14 +58,13 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   const y = id === 'top' ? 0 : el.getBoundingClientRect().top + scrollY - navH();
   if (glide.on) glideTo(y); else scrollTo({ top: y, behavior: still.matches ? 'auto' : 'smooth' });
-  history.replaceState(null, '', `#${id}`);
 });
 
 /* =================== Lean: scroll speed on a spring =================== */
 const lean = { x: 0, v: 0, speed: 0, lastY: scrollY, set: '0' };
 const leaners = [...document.querySelectorAll('[data-lean], [data-rider]')];
 function leanStep(dt) {
-  if (still.matches) return false;
+  if (still.matches || root.classList.contains('lp-lite')) return false;
   const raw = dt > 0 ? (scrollY - lean.lastY) / dt : 0; // px per second
   lean.lastY = scrollY;
   lean.speed += (raw - lean.speed) * (1 - Math.exp(-dt * 14));
@@ -83,10 +82,20 @@ function leanStep(dt) {
 const nav = $('[data-nav]');
 const navLinks = $$('[data-link]');
 const linked = navLinks.map((a) => document.getElementById(a.dataset.link)).filter(Boolean);
+/* Where things are on the page, measured once (on load and resize), so scrolling never asks the browser to lay
+   the page out again: reading positions every frame was the biggest cost while scrolling. */
+const at = { sections: [], day: 0, read: { top: 0, height: 1 }, hero: 1 };
+const docTop = (el) => el.getBoundingClientRect().top + scrollY;
+function measure() {
+  at.sections = linked.map((s) => ({ id: s.id, top: docTop(s), bottom: docTop(s) + s.offsetHeight }));
+  at.day = docTop(day);
+  at.read = { top: docTop(read), height: read.offsetHeight };
+  at.hero = hero.offsetHeight;
+}
 function paintNav() {
   nav.classList.toggle('is-solid', scrollY > 24);
-  const line = innerHeight * 0.35;
-  const on = linked.find((s) => { const r = s.getBoundingClientRect(); return r.top <= line && r.bottom > line; });
+  const line = scrollY + innerHeight * 0.35;
+  const on = at.sections.find((s) => s.top <= line && s.bottom > line);
   navLinks.forEach((a) => (on && a.dataset.link === on.id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
 }
 
@@ -169,7 +178,7 @@ function sizeDay() {
 let dayP = 0;
 function paintDay() {
   if (!slide) return;
-  const p = clamp((-day.getBoundingClientRect().top * SPEED) / slide, 0, 1);
+  const p = clamp(((scrollY - at.day) * SPEED) / slide, 0, 1);
   dayP = p;
   track.style.transform = `translate3d(${(-p * slide).toFixed(1)}px,0,0)`;
   paintScene(pin, p);
@@ -190,8 +199,7 @@ function poseFor(p) {
 }
 function settle() {
   if (!slide) return;
-  const r = day.getBoundingClientRect();
-  if (r.top > 0 || r.bottom < innerHeight) return; // only while the day is on screen
+  if (scrollY < at.day || scrollY > at.day + day.offsetHeight - innerHeight) return; // only while the day is on screen
   const p = dayP;
   if (p < marks[0] - 0.06 || p > marks[marks.length - 1] + 0.06) return; // the start and the end are free
   const m = marks.reduce((a, b) => (Math.abs(p - b) < Math.abs(p - a) ? b : a));
@@ -240,15 +248,16 @@ if (!still.matches) {
   });
   read.classList.add('is-ready');
 }
-let lit = -1;
+let lit = 0;
 function paintRead() {
   if (!words.length) return;
-  const r = read.getBoundingClientRect();
-  const p = clamp((innerHeight * 0.78 - r.top) / (r.height + innerHeight * 0.2), 0, 1);
+  const top = at.read.top - scrollY;
+  const p = clamp((innerHeight * 0.78 - top) / (at.read.height + innerHeight * 0.2), 0, 1);
   const n = Math.round(p * words.length);
   if (n === lit) return;
+  const from = Math.max(0, Math.min(lit, n)), to = Math.max(lit, n);
+  for (let i = from; i < to; i++) words[i].classList.toggle('is-lit', i < n);
   lit = n;
-  words.forEach((w, i) => w.classList.toggle('is-lit', i < n));
 }
 
 /* =================== The fare bar fills to 100% once =================== */
@@ -277,10 +286,14 @@ if (!still.matches && 'IntersectionObserver' in window) {
 const hero = $('.lp-hero');
 const heroRider = $('[data-hero-rider]');
 const city = $('[data-hero-city]');
-function sizeHero() { city.innerHTML = heroCity(city.offsetWidth, city.offsetHeight); }
+const endCity = $('[data-end-city]');
+function sizeHero() {
+  city.innerHTML = heroCity(city.offsetWidth, city.offsetHeight);
+  endCity.innerHTML = heroCity(endCity.offsetWidth, endCity.offsetHeight, 33); // the closing panel: home at night
+}
 function paintHero() {
   if (still.matches) return;
-  const k = clamp(scrollY / hero.offsetHeight, 0, 1);
+  const k = clamp(scrollY / at.hero, 0, 1);
   if (k >= 1 && heroRider.dataset.gone) return;
   heroRider.dataset.gone = k >= 1 ? '1' : '';
   heroRider.style.transform = `translate3d(${(k * innerWidth * 0.3).toFixed(1)}px,${(k * innerHeight * 0.14).toFixed(1)}px,0) rotate(${(k * -7).toFixed(2)}deg) scale(${(1 - k * 0.28).toFixed(3)})`;
@@ -310,6 +323,29 @@ if (mouse.matches && !still.matches) {
   });
 }
 
+/* =================== Lite: a measured fallback for slower devices =================== */
+const LITE_KEY = 'mysabak.lite2';
+const saved = (() => { try { return localStorage.getItem(LITE_KEY); } catch (_) { return null; } })();
+let judged = saved === 'on' || saved === 'auto' || saved === 'off';
+const gaps = [];
+function goLite() {
+  root.classList.add('lp-lite');
+  setGlide(); // plain native wheel scrolling
+  leaners.forEach((el) => el.style.setProperty('--lean', '0'));
+  try { localStorage.setItem(LITE_KEY, 'auto'); } catch (_) { /* this visit only */ }
+}
+function judge(dt) {
+  if (judged || still.matches || Math.abs(lean.speed) < 150) return; // only while really scrolling
+  gaps.push(dt * 1000);
+  if (gaps.length < 90) return;
+  const avg = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+  // frames come in steps of 16.7 ms on a 60 Hz screen: 33.3 ms means one frame missed, so count anything past 30
+  const slow = gaps.filter((g) => g > 30).length / gaps.length;
+  judged = true; // judged once: a smooth device is left alone
+  if (avg > 24 && slow > 0.25) goLite();
+}
+if (saved === 'on' || saved === 'auto') root.classList.add('lp-lite');
+
 /* =================== One loop: runs while something is moving, then sleeps =================== */
 let queued = false;
 let last = performance.now();
@@ -318,6 +354,7 @@ function frame(t) {
   const dt = Math.min(0.05, (t - last) / 1000);
   last = t;
   const gliding = glideStep(dt);
+  judge(dt);
   paintNav();
   paintDay();
   paintRead();
@@ -331,7 +368,9 @@ function requestFrame() {
   requestAnimationFrame(frame);
 }
 addEventListener('scroll', requestFrame, { passive: true });
-const resize = () => { sizeHero(); sizeDay(); requestFrame(); };
+const resize = () => { sizeHero(); sizeDay(); measure(); requestFrame(); };
+// Fonts and pictures can change the page's height after load: measure again when they do
+if ('ResizeObserver' in window) new ResizeObserver(() => { measure(); requestFrame(); }).observe(document.body);
 addEventListener('resize', resize);
 addEventListener('load', () => {
   resize(); // panel sizes settle once fonts and images are in
@@ -339,9 +378,15 @@ addEventListener('load', () => {
 });
 still.addEventListener('change', () => { setGlide(); resize(); });
 mouse.addEventListener('change', setGlide);
+// A reload starts at the top of the page, with a clean address (the hero's entrance plays again)
+if (performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  scrollTo(0, 0);
+}
 setGlide();
 sizeHero();
 sizeDay();
+measure();
 frame(performance.now());
 onRest(); // she starts by waving hello
 

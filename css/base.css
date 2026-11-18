@@ -2,6 +2,8 @@
    latin-ext is the file with the peso sign. */
 @font-face { font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/assets/fonts/figtree/figtree-latin-ext-wght-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 @font-face { font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/assets/fonts/figtree/figtree-latin-wght-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 200 800; font-display: swap; src: url("/assets/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-ext-wght-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 200 800; font-display: swap; src: url("/assets/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 
 /* =========================================================
    mysabak · Ride booking (Design A · Dock bar)
@@ -43,7 +45,7 @@
   --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Font weights: 800 page titles and big numbers · 700 titles, names, values, buttons · 600 section headings,
      tabs, kickers · 500 labels above a value (Pickup, From, field labels) · 400 sub text */
-  --font-display: "Figtree", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Figtree", system-ui, sans-serif; /* headings and big numbers; Figtree is the UI face */
 
   --gutter: 12px;
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -568,7 +570,7 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
   display: flex; align-items: center; justify-content: center;
   transition: background-color .15s var(--ease-out);
 }
-.tab__label { font-size: 11px; font-weight: 500; transition: color .15s var(--ease-out); }
+.tab__label { font-size: 12px; font-weight: 500; transition: color .15s var(--ease-out); }
 .tab .icon { width: 26px; height: 26px; transition: stroke .15s var(--ease-out); }
 .tab:hover { color: var(--brand-deep); }
 .tab:hover .icon { stroke: var(--brand-deep); }
@@ -1056,6 +1058,8 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .content__inner--wide { max-width: 960px; }
 .page-head { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; }
 .page-head__back { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; text-decoration: none; color: var(--brand-deep); }
+/* Headings: the display face (components can still choose their own) */
+h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -.01em; }
 .page-title { margin: 0; font-family: var(--font-display); font-size: 28px; line-height: 1.15; font-weight: 700; color: var(--navy); }
 .lede { margin: 0; font-size: 15px; line-height: 1.5; color: var(--sub); }
 .card {
@@ -1285,8 +1289,8 @@ body.is-picking .maplibregl-canvas-container.maplibregl-interactive { cursor: cr
 .input-wrap .input { padding-right: 72px; }
 .input-wrap__btn {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  height: 34px; padding: 0 10px;
-  border: none; border-radius: 8px; background: transparent;
+  height: 44px; padding: 0 12px;
+  border: none; border-radius: 10px; background: transparent;
   font-size: 13px; font-weight: 700; color: var(--brand-deep);
 }
 .input-wrap__btn:hover { background: var(--tint); }
@@ -1480,7 +1484,7 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .fchips { margin: 0 -18px; padding: 2px 18px 2px; flex-wrap: wrap; }
 .fchip { box-shadow: none; border: 1px solid var(--line-brand); }
 .fchip[aria-pressed="true"] { border-color: var(--brand); }
-.page--food .fchip { height: 36px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 18px; background: rgba(255, 255, 255, .14); color: #fff; font-weight: 500; }
+.page--food .fchip { height: 44px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 18px; background: rgba(255, 255, 255, .14); color: #fff; font-weight: 500; }
 .page--food .fchip:hover { background: rgba(255, 255, 255, .26); border-color: rgba(255, 255, 255, .4); color: #fff; }
 .page--food .fchip[aria-pressed="true"] { background: #fff; border-color: #fff; color: var(--brand-deep); font-weight: 700; }
 .finder__sheet { position: static; height: auto; flex: 1; min-height: 0; border-radius: 0; box-shadow: none; background: transparent; padding-top: 12px; transition: none; }
@@ -1848,7 +1852,9 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
   animation-duration: 26s; animation-direction: alternate-reverse;
 }
 .sky-far { position: absolute; inset: 0; width: 100%; height: 100%; }
-.sky-mid { position: absolute; border-radius: 50%; background: #fff; opacity: .6; animation: sky-blink var(--t, 6s) ease-in-out var(--d, 0s) infinite; }
+.sky-mid { position: absolute; inset: 0; opacity: .6; animation: sky-blink var(--t, 6s) ease-in-out var(--d, 0s) infinite; }
+.sky-dot { position: absolute; border-radius: 50%; background: #fff; }
+.is-still .sky-mid, .is-still .sky-tw, .is-still .sky-aurora, .is-still .sky-shoot { animation-play-state: paused; }
 .sky-tw { position: absolute; transform-origin: 50% 50%; filter: drop-shadow(0 0 3px rgba(255, 226, 154, .7)); animation: sky-twinkle var(--t, 7s) ease-in-out var(--d, 0s) infinite; }
 .sky-shoot {
   position: absolute; left: 18%; top: 12%; width: 120px; height: 2px; margin-left: -120px; border-radius: 2px;
@@ -2240,3 +2246,14 @@ b > span.roll, b > .roll span { font: inherit; color: inherit; letter-spacing: i
 @media (prefers-reduced-motion: reduce) {
 .is-home .hero__inner > *, .is-home .home__grid > *, .page:not(.page--admin):not(.page--merchant) :is(.page-head > :not(.skyfx), .shop-sky__inner > *, .card, .shop-card, .menu-tabs, .wcard, .wsec, .tswitch, .tpanel, .tquick, .dround, .dsheet, .signin__body, .check-layout > *) { animation: none; }
 }
+
+/* ---------- Touch targets: every control at least 44px (the switch keeps its look; its tap area is larger) ---------- */
+.brand { min-height: 44px; align-items: center; }
+.btn { height: 44px; }
+.role-switch__btn { min-height: 44px; }
+.page-head__back { min-height: 44px; }
+.auth-link { display: inline-flex; align-items: center; min-height: 44px; }
+.fchip { height: 44px; }
+.glass-chip { height: 44px; }
+.switch::before { content: ""; position: absolute; inset: -7px -4px; }
+@media (min-width: 900px) { .btn { height: 48px; } }

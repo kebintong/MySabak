@@ -14,7 +14,7 @@
 .wcard__nums { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .wcard__nums p { margin: 0; display: flex; flex-direction: column; gap: 2px; }
 .wcard__nums span { font-size: 12.5px; color: #e2d0f4; }
-.wcard__nums b { font: 800 30px/1.1 var(--font-body); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.wcard__nums b { font: 800 30px/1.1 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .wcard__zero { color: #ffd36b; }
 .wcard__foot { margin: 0; font-size: 12.5px; color: #e2d0f4; }
 .wsec__title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 17px; font-weight: 700; color: var(--navy); }
@@ -41,7 +41,7 @@
 .wrecent__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .wrecent__head .wsec__title { margin: 0; }
 .wrecent__filter { display: flex; gap: 6px; }
-.wfilter { height: 32px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line-brand); background: none; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
+.wfilter { height: 44px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line-brand); background: none; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
 .wfilter:hover { border-color: var(--brand); }
 .wfilter[aria-pressed="true"] { background: var(--brand-deep); border-color: var(--brand-deep); color: #fff; }
 .wrecent__list { list-style: none; margin: 0; padding: 0; }

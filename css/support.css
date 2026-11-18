@@ -17,7 +17,7 @@
 .pct__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .pct__who b { font-size: 15px; font-weight: 700; color: var(--ink); }
 .pct__who span { font-size: 13px; color: var(--sub); }
-.pct__n { font: 800 24px/1 var(--font-body); letter-spacing: -.02em; color: var(--brand-deep); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pct__n { font: 800 24px/1 var(--font-display); letter-spacing: -.02em; color: var(--brand-deep); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pct__n small { font-size: 15px; font-weight: 800; color: var(--brand); }
 .pct--pays .pct__row { min-height: 52px; }
 .pct--pays .pct__who b { font-size: 14.5px; font-weight: 600; }
@@ -28,7 +28,7 @@
 .sfacts p { min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .sfacts p + p { padding-left: 16px; border-left: 1px solid var(--line); }
 .sfacts span { font-size: 12.5px; font-weight: 500; color: var(--sub); }
-.sfacts b { font: 800 24px/1.15 var(--font-body); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sfacts b { font: 800 24px/1.15 var(--font-display); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .sfacts b.is-none { color: #c9bcd8; }
 
 /* Give a tip */

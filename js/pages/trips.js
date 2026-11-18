@@ -169,7 +169,8 @@ const pastOrder = (o) => `<li class="recent__row">${icon('i-food', 'icon--lg')}
 
 
 /* ---------- Go again: with nothing on its way, the two latest drop-offs and the last shop, one tap each ---------- */
-const day = (ts) => new Date(ts).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+const MONTH_DAY = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' }); // built once
+const day = (ts) => MONTH_DAY.format(new Date(ts));
 function drawAgain(count) {
   const seen = new Set();
   const places = rides.filter((t) => t.dropoff && t.dropoff.label && !seen.has(t.dropoff.label) && seen.add(t.dropoff.label)).slice(0, 2);

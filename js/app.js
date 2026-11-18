@@ -434,7 +434,9 @@ const el = {
 /* ---------- Formatting ---------- */
 const isNum = (n) => typeof n === 'number' && Number.isFinite(n);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const peso = (n) => `${CONFIG.currency}${Math.round(n).toLocaleString('en-PH')}`;
+// Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
+const PH_NUM = new Intl.NumberFormat('en-PH');
+const peso = (n) => `${CONFIG.currency}${PH_NUM.format(Math.round(n))}`;
 const vehicleById = (id) => CONFIG.vehicles.find((v) => v.id === id) || CONFIG.vehicles[0];
 
 const fareOf = (v) => faresFor(state.trip)[v.id]; // { total, base, distance } or null
@@ -713,7 +715,7 @@ function countUpFares() {
     const tick = (now) => {
       const t = Math.min(1, (now - start) / 600);
       const v = Math.round(end * (1 - Math.pow(1 - t, 3)));
-      node.textContent = prefix + v.toLocaleString('en-PH');
+      node.textContent = prefix + PH_NUM.format(v);
       if (t < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);

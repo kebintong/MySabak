@@ -44,7 +44,7 @@
 }
 .menu-tabs.is-stuck { box-shadow: 0 6px 16px rgba(41, 10, 69, .08); }
 .menu-tab {
-  flex: none; height: 48px; display: flex; align-items: center;
+  flex: none; height: 48px; min-width: 44px; display: flex; align-items: center; justify-content: center;
   border-bottom: 3px solid transparent; color: var(--sub); font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap;
   transition: color .15s var(--ease-out), border-color .15s var(--ease-out);
 }

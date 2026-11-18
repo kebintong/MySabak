@@ -7,7 +7,9 @@ import { unitPrice, pickLabels } from './menu.js';
 export const isNum = (n) => typeof n === 'number' && Number.isFinite(n);
 
 /** ₱1,234 (whole pesos). */
-export const peso = (n, currency = '₱') => `${currency}${Math.round(n).toLocaleString('en-PH')}`;
+// Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
+const PH_NUM = new Intl.NumberFormat('en-PH');
+export const peso = (n, currency = '₱') => `${currency}${PH_NUM.format(Math.round(n))}`;
 
 /**
  * A tip the customer typed or picked: whole pesos, 0 to max. Anything else is 0 (no tip).

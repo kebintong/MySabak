@@ -38,7 +38,9 @@ export { tag }; // the grey status chip, shared with every page (ui.js)
 /** A note on a grey panel: the status icon, a bold first sentence (in `html`), then plain text. */
 export const notice = (kind, html, extra = '') => `<p class="notice notice--${kind}"${extra}>${icon(KIND_ICON[kind] || KIND_ICON.plain)}<span>${html}</span></p>`;
 export const minSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-export const num = (n) => Number(n).toLocaleString('en-PH');
+// Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
+const PH_NUM = new Intl.NumberFormat('en-PH');
+export const num = (n) => PH_NUM.format(Number(n));
 /** How long ago, in words: "30 secs", "4 mins", "1 hr", "2 days". */
 export const ago = (ts) => {
   const s = Math.floor((Date.now() - ts) / 1000);
