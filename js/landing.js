@@ -179,11 +179,59 @@ function sizeDay() {
   const food = stops.find((s) => s.classList.contains('lp-night'));
   night = food ? clamp((food.offsetLeft - innerWidth * 0.55) / slide, 0, 1) : 1;
   buildScene(pin, { slide, marks, vw: innerWidth, vh: pin.offsetHeight });
+  placeRider();
+}
+
+/* The rider travels with the time of day: from the left edge in the morning to the right by night. At each stop
+   she parks clear of that stop's phone or laptop when she can, and the stop's time sits under her wheels. */
+const spots = []; // her x at each stop (px from where css/landing.css puts her)
+function placeRider() {
+  spots.length = 0;
+  if (!slide) return;
+  const box = pin.getBoundingClientRect();
+  const rw = rider.offsetWidth * 1.3; // the dash pose is wider than her box
+  const top = rider.getBoundingClientRect().top - box.top;
+  const start = rider.offsetLeft;
+  const end = Math.max(start, innerWidth - rw - Math.max(16, innerWidth * 0.04));
+  let prev = start;
+  stops.forEach((s, i) => {
+    const want = start + ((end - start) * i) / Math.max(1, stops.length - 1);
+    // what this stop shows low down when it is centred (the track is untransformed here, so shift by its mark)
+    const busy = [...s.children].map((el) => el.getBoundingClientRect()).filter((r) => r.height && r.bottom - box.top > top + 8)
+      .map((r) => [r.left - marks[i] * slide - 12, r.right - marks[i] * slide + 12]);
+    const free = (x) => busy.every(([a, b]) => x + rw <= a || x >= b);
+    const options = [want, ...busy.flatMap(([a, b]) => [a - rw, b])].filter((x) => x >= prev && x <= end && free(x));
+    const x = options.length ? options.reduce((m, o) => (Math.abs(o - want) < Math.abs(m - want) ? o : m)) : Math.max(want, prev);
+    spots.push(x - start);
+    prev = x;
+  });
+  clock.forEach((li, i) => li.style.setProperty('left', `${start + spots[i] + rider.offsetWidth * 0.45}px`));
+  rider.style.translate = `${riderX(dayP).toFixed(1)}px 0`; // after a resize
+}
+// Between stops she pulls away and brakes into the next one (smoothstep); before the first and after the last she waits
+function riderX(p) {
+  if (!spots.length) return 0;
+  if (p <= marks[0]) return spots[0];
+  for (let i = 0; i < marks.length - 1; i++) {
+    if (p <= marks[i + 1]) {
+      const t = (p - marks[i]) / Math.max(1e-6, marks[i + 1] - marks[i]);
+      return spots[i] + (spots[i + 1] - spots[i]) * t * t * (3 - 2 * t);
+    }
+  }
+  return spots[spots.length - 1];
 }
 let dayP = 0;
+let turnFrom = 0;
 function paintDay() {
   if (!slide) return;
   const p = clamp(((scrollY - at.day) * SPEED) / slide, 0, 1);
+  if (p !== dayP && spots.length) {
+    rider.style.translate = `${riderX(p).toFixed(1)}px 0`;
+    // she faces the way she is going, back toward the morning when scrolling up; the small nudge that settles
+    // her on a stop is too short to turn her round
+    if (Math.abs(p - turnFrom) > 0.03) { rider.classList.toggle('is-back', p < turnFrom); turnFrom = p; }
+    else if ((p > turnFrom) !== rider.classList.contains('is-back')) turnFrom = p; // still going the same way: the turn is measured from here
+  }
   dayP = p;
   track.style.transform = `translate3d(${(-p * slide).toFixed(1)}px,0,0)`;
   paintScene(pin, p);
@@ -195,13 +243,6 @@ function paintDay() {
 const rider = $('[data-rider]', day);
 const poses = $$('.lp-rider__pose', rider);
 let restTimer = 0;
-function poseFor(p) {
-  if (p < marks[0] - 0.08) return 0; // hello
-  if (p > marks[marks.length - 1] + 0.08) return poses.length - 1; // home: jump for joy
-  let best = 0;
-  marks.forEach((m, i) => { if (Math.abs(p - m) < Math.abs(p - marks[best])) best = i; });
-  return best + 1;
-}
 function settle() {
   if (!slide) return;
   if (scrollY < at.day || scrollY > at.day + day.offsetHeight - innerHeight) return; // only while the day is on screen
@@ -214,7 +255,9 @@ function settle() {
 }
 function onRest() {
   if (!slide) return;
-  const i = poseFor(dayP);
+  // the nearest stop picks her pose (waving, phone, map, then round again); before the first stop she waves hello
+  const near = marks.reduce((best, m, i) => (Math.abs(dayP - m) < Math.abs(dayP - marks[best]) ? i : best), 0);
+  const i = dayP < marks[0] - 0.08 ? 0 : near % poses.length;
   poses.forEach((img, k) => img.classList.toggle('is-on', k === i));
   rider.classList.add('is-resting');
   settle();
@@ -382,7 +425,7 @@ if ('ResizeObserver' in window) new ResizeObserver(() => { measure(); requestFra
 addEventListener('resize', resize);
 addEventListener('load', () => {
   resize(); // panel sizes settle once fonts and images are in
-  $$('img[loading="lazy"]', pin).forEach((img) => { img.loading = 'eager'; }); // the day's screens and poses are ready before they're needed
+  $$('img[loading="lazy"]', pin).forEach((img) => { img.loading = 'eager'; }); // the day's screens are ready before they're needed
 });
 still.addEventListener('change', () => { setGlide(); resize(); });
 mouse.addEventListener('change', setGlide);
@@ -396,7 +439,7 @@ sizeHero();
 sizeDay();
 measure();
 frame(performance.now());
-onRest(); // she starts by waving hello
+onRest(); // she starts parked
 
 // Offline support: the same service worker as the app
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});

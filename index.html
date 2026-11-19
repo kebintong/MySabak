@@ -90,7 +90,7 @@
 
         <!-- The mascot, over the city at dawn; she rides off as you scroll on (js/landing.js) -->
         <div class="lp-hero__art" aria-hidden="true">
-          <div class="lp-hero__rider" data-hero-rider><img class="lp-art-mascot" src="/assets/images/3d/mascot-ride-1200.webp" srcset="/assets/images/3d/mascot-ride-480.webp 480w, /assets/images/3d/mascot-ride-1200.webp 1200w" sizes="(min-width: 900px) 34vw, 58vw" alt="" width="1200" height="1832" fetchpriority="high"></div>
+          <div class="lp-hero__rider" data-hero-rider><img class="lp-art-mascot" src="/assets/images/mascot/06-scooter-dash.svg" alt="" width="1024" height="957" fetchpriority="high"></div>
         </div>
       </div>
     </section>
@@ -165,13 +165,11 @@
 
         <!-- Desktop only: the mascot rides along while the day goes by, and a clock -->
         <div class="lp-day__rider" aria-hidden="true" data-rider>
-          <img class="lp-rider__ride" src="/assets/images/3d/mascot-ride-480.webp" alt="" width="480" height="733" loading="lazy">
-          <img class="lp-rider__pose" src="/assets/images/mascot/pose-hello-wave.svg" alt="" width="440" height="540" loading="lazy">
-          <img class="lp-rider__pose" src="/assets/images/mascot/pose-checking-the-map.svg" alt="" width="440" height="540" loading="lazy">
-          <img class="lp-rider__pose" src="/assets/images/mascot/pose-thumbs-up-wink.svg" alt="" width="440" height="540" loading="lazy">
-          <img class="lp-rider__pose" src="/assets/images/mascot/pose-delivery-dash.svg" alt="" width="440" height="540" loading="lazy">
-          <img class="lp-rider__pose" src="/assets/images/mascot/pose-break-on-the-box.svg" alt="" width="440" height="540" loading="lazy">
-          <img class="lp-rider__pose" src="/assets/images/mascot/pose-jump-for-joy.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-rider__ride" src="/assets/images/mascot/06-scooter-dash.svg" alt="" width="1024" height="957" loading="lazy">
+          <!-- At a stop she parks and chats: waving, checking her phone, reading the map (js/landing.js picks one) -->
+          <img class="lp-rider__pose" src="/assets/images/mascot/07-scooter-wave.svg" alt="" width="870" height="1024" loading="lazy" style="height:98%">
+          <img class="lp-rider__pose" src="/assets/images/mascot/05-phone-check.svg" alt="" width="715" height="1024" loading="lazy" style="height:114%">
+          <img class="lp-rider__pose" src="/assets/images/mascot/09-scooter-map.svg" alt="" width="963" height="1024" loading="lazy">
         </div>
         <ol class="lp-day__clock" aria-hidden="true" data-clock>
           <li>7:40 AM</li><li>12:15 PM</li><li>3:00 PM</li><li>7:30 PM</li>
@@ -188,22 +186,30 @@
     </section>
 
     <!-- ============ The fare ============ -->
-    <section class="lp-fare" id="about" aria-labelledby="fareTitle" data-fare>
+    <section class="lp-fare" id="fare" aria-labelledby="fareTitle" data-fare>
       <div class="lp-stars lp-stars--soft" aria-hidden="true">
         <i style="left:8%;top:18%"></i><i style="left:22%;top:72%"></i><i style="left:46%;top:12%"></i><i style="left:66%;top:80%"></i><i style="left:84%;top:30%"></i>
       </div>
       <div class="lp-fare__in lp-wrap">
-        <h2 class="lp-h2" id="fareTitle" data-split>Every peso of the fare goes to <em>your driver.</em></h2>
-        <div class="lp-farebar" data-farebar>
-          <div class="lp-farebar__fill"><span>Your driver</span><b><span data-pct>100</span>%</b></div>
+        <div class="lp-fare__copy">
+          <h2 class="lp-h2" id="fareTitle" data-split>Every peso of the fare goes to <em>your driver.</em></h2>
+          <p class="lp-body lp-fare__say" data-reveal>No commission and no booking fees. If you’d like to support mysabak, you can add a small extra on top. It never comes out of your driver’s fare.</p>
+          <a class="lp-fare__go" href="/pages/drive-signup.html" data-reveal>Drive with mysabak <svg class="lp-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         </div>
-        <p class="lp-farebar__extra" data-reveal>+ a small extra for mysabak, only if you choose to add one</p>
-        <p class="lp-body lp-fare__say" data-reveal>mysabak takes no commission and charges no booking fees. The extra you choose to give supports mysabak and never comes out of a driver’s fare.</p>
+        <!-- A sample receipt: the fare stays a placeholder until real fares are set -->
+        <div class="lp-receipt" data-farebar data-reveal="scale">
+          <p class="lp-receipt__head lp-receipt__line"><span>Sample ride</span><span>Fare ₱[FARE]</span></p>
+          <p class="lp-receipt__row lp-receipt__row--main lp-receipt__line" style="--d:.15s"><span>Your driver gets</span><b>₱[FARE]</b></p>
+          <p class="lp-receipt__share lp-receipt__line" style="--d:.25s"><span class="lp-receipt__bar" aria-hidden="true"><i></i></span><b><span data-pct>100</span>% of the fare</b></p>
+          <p class="lp-receipt__row lp-receipt__line" style="--d:.4s"><span>Commission to mysabak</span><b>₱0</b></p>
+          <p class="lp-receipt__row lp-receipt__line" style="--d:.5s"><span>Booking fee</span><b>₱0</b></p>
+          <p class="lp-receipt__extra lp-receipt__line" style="--d:.65s"><span>Extra for mysabak</span><span>Optional, you choose</span></p>
+        </div>
       </div>
     </section>
 
     <!-- ============ Cebu: real places, licensed photos (credits under each) ============ -->
-    <section class="lp-cebu" aria-labelledby="cebuTitle">
+    <section class="lp-cebu" id="about" aria-labelledby="cebuTitle">
       <div class="lp-wrap">
         <h2 class="lp-h2" id="cebuTitle" data-split>Made for every corner of <em>Cebu.</em></h2>
         <p class="lp-body" data-reveal>From the towers downtown, across the bridge to Mactan, to the rotunda at Fuente and every barangay in between.</p>
@@ -279,7 +285,7 @@
         <div class="lp-end__scene" aria-hidden="true">
           <div class="lp-end__city" data-end-city></div>
           <span class="lp-end__road"></span>
-          <img class="lp-end__mascot" src="/assets/images/mascot/pose-hat-tip-bow.svg" alt="" width="440" height="540" loading="lazy">
+          <img class="lp-end__mascot" src="/assets/images/mascot/02-hat-tip.svg" alt="" width="703" height="1024" loading="lazy">
         </div>
       </div>
     </section>

@@ -22,7 +22,7 @@ const KEYS = ['skyA', 'skyB', 'hill', 'far', 'mid', 'midSh', 'roof', 'palm', 'ne
 const TIMES = {
   dawn: ['#f7c6b0', '#fde8d2', '#ecc6c6', '#e8cbd6', '#dcc1e2', '#c8abd5', '#c88a7c', '#8e6aa8', '#5b3f78', '#f1e3f1'],
   morning: ['#f6dbc8', '#fdf3e8', '#e8d2da', '#e6d6e8', '#d9c8ec', '#c3afe0', '#c99282', '#8a68b0', '#563a7a', '#f2eaf8'],
-  noon: ['#d8d6fb', '#f4f1fd', '#d2ccf0', '#d8d2f3', '#c9bdf0', '#b2a3e6', '#b68aa8', '#7d5fb3', '#4a3274', '#eeeafc'],
+  noon: ['#d8d6fb', '#f4f1fd', '#d2ccf0', '#d8d2f3', '#c9bdf0', '#a492dc', '#b68aa8', '#7d5fb3', '#4a3274', '#eeeafc'],
   golden: ['#f39a7c', '#fdd3a8', '#dda2a5', '#daa5b5', '#ba8bb7', '#a274a6', '#a26172', '#6c4590', '#3f2463', '#f6cba8'],
   dusk: ['#3a1666', '#9c4b8e', '#5c2d77', '#4f2670', '#3c1d5e', '#2f164c', '#4a2050', '#2a1144', '#1c0b30', '#4a2a66'],
   night: ['#12042a', '#3a1466', '#2a0f4c', '#241044', '#1e0c3a', '#170830', '#2a0f3c', '#160828', '#0f0520', '#2a1640'],
@@ -44,6 +44,7 @@ function palette(time) {
     box1: dark ? mix('#e8a23c', near, 0.45) : '#e8a23c', box2: dark ? mix('#7b3fbf', near, 0.45) : '#8d5ad1', box3: mix(roof, '#ffffff', dark ? 0 : 0.2),
     pole: mix(near, midSh, 0.3), crane: mix(midSh, near, 0.25), hull: mix(near, roof, 0.3),
     bench: mix(roof, near, 0.25), benchSh: mix(roof, near, 0.55),
+    rock: mix(midSh, near, 0.35), rockHi: mix(midSh, '#ffffff', dark ? 0.06 : 0.25), cross: dark ? '#e8b46a' : '#9a5f36',
   };
 }
 
@@ -52,7 +53,7 @@ const rect = (x, y, w, h, cls, extra = '') => `<rect x="${f1(x)}" y="${f1(y)}" w
 const path = (d, cls) => `<path d="${d}" class="${cls}"/>`;
 let winN = 0;
 let swayN = 0; // a counter, not r(): a random draw here would reshuffle the whole street
-const win = (x, y, w, h) => rect(x, y, w, h, 'lp-win', ` style="--wd:${(winN++ % 29) * 0.06}s"`);
+const win = (x, y, w, h) => rect(x, y, w, h, 'lp-win', ` style="--wd:${(winN++ % 29) * 0.06}s"`) + (w > 6 ? rect(x - w * 0.08, y + h, w * 1.16, Math.max(1, h * 0.1), 's-midsh') : ''); // with a sill
 function windows(x, top, w, h, cols, rows, r, skip = 0.2) {
   let s = '';
   const gx = w / cols, gy = h / rows;
@@ -90,51 +91,70 @@ function palm(x, base, h, r, cls = 's-leaf', trunkCls = 's-trunk') {
     const t = k / 7, px = x + lean * t * t, py = base - h * t, w = wb * (1 - t * 0.5);
     s += rect(px - w, py, w * 2, 1, 'lp-ring');
   }
-  // fronds: [direction (-1 left, 1 right), reach, rise] — mostly sideways and drooping, a couple higher
-  const L = h * (0.4 + r() * 0.08);
+  const L = h * (0.48 + r() * 0.1);
   // the crown sways in the breeze around the top of the trunk, each palm out of step
   s += `<g class="lp-sway" style="transform-origin:${f1(tx)}px ${f1(ty)}px;--sw:${6 + (swayN % 3) * 1.3}s;animation-delay:${-(swayN++ % 7) * 1.1}s">`;
-  // like a fountain: each frond rises from the crown, then arcs out and down; old ones hang lower
-  const set = [[-1, 1, 0.35], [1, 1, 0.38], [-0.62, 0.86, 0.72], [0.66, 0.84, 0.7], [-1, 0.78, -0.1], [1, 0.8, -0.12], [0.08, 0.58, 0.95]];
+  // fronds: [direction (-1 left, 1 right), reach, rise]; the old drooping ones first, so the fresh ones sit on top
+  const set = [[-1, 0.74, -0.15], [1, 0.76, -0.18], [-0.9, 0.95, 0.15], [0.92, 0.92, 0.18], [-1, 1, 0.4], [1, 1, 0.42], [-0.55, 0.8, 0.75], [0.6, 0.78, 0.72], [0.08, 0.5, 0.95]];
   set.forEach(([d, reach, rise], i) => {
     const len = L * reach * (0.88 + r() * 0.24);
     const cx = tx + d * len * 0.5;
     const cy = ty - len * (0.25 + rise * 0.35);
-    const ex = tx + d * len * (0.92 - rise * 0.25);
-    const ey = ty + len * (0.5 - rise * 0.7);
-    s += frond(tx, ty, cx, cy, ex, ey, len * 0.13, i === 4 || i === 5 ? 's-leafsh' : cls);
+    const ex = tx + d * len * (0.9 - rise * 0.3);
+    const ey = ty + len * (0.62 - rise * 0.7); // the tip droops below the crown
+    s += frond(tx, ty, cx, cy, ex, ey, len * 0.13, i < 2 && cls === 's-leaf' ? 's-leafsh' : cls);
   });
   [[-1.1, 2.6], [1.2, 3.2], [0, 4.2]].forEach(([dx, dy]) => { s += `<circle cx="${f1(tx + dx * wt * 1.4)}" cy="${f1(ty + dy)}" r="${f1(Math.max(1.8, h * 0.024))}" class="s-nut"/>`; });
   return s + '</g>';
 }
-// One frond: a quadratic rib; leaflets hang from both sides, pointing back toward the stem and down (gravity),
-// shorter toward the tip, so it reads as a feathery fringe
-function frond(x0, y0, cx, cy, x1, y1, L, cls) {
-  const N = 12;
+// One frond: a long leaf that arches from the crown and droops at the tip. Its leaflets hang below the rib, so the
+// lower edge is wide and notched (the gaps between leaflets); the upper edge is a thin, lightly notched strip.
+function frond(x0, y0, cx, cy, x1, y1, W, cls) {
+  const N = 18;
   const pt = (t) => [(1 - t) ** 2 * x0 + 2 * (1 - t) * t * cx + t * t * x1, (1 - t) ** 2 * y0 + 2 * (1 - t) * t * cy + t * t * y1];
   const tan = (t) => { const [ax, ay] = pt(Math.max(0, t - 0.01)); const [bx, by] = pt(Math.min(1, t + 0.01)); const l = Math.hypot(bx - ax, by - ay) || 1; return [(bx - ax) / l, (by - ay) / l]; };
-  const top = [], bot = [];
+  const up = [], down = [];
   for (let i = 0; i <= N; i++) {
     const t = i / N;
     const [px, py] = pt(t);
     const [ux, uy] = tan(t);
     let nx = -uy, ny = ux;
-    if (ny > 0) { nx = -nx; ny = -ny; } // n points up; -n points down
-    const l = L * (i === 0 ? 0.3 : 1 - t * 0.7);
-    // upper leaflets: back along the rib, a little up, then fall; lower leaflets: back and well down
-    top.push(`${f1(px - ux * l * 0.35 + nx * l * 0.18)} ${f1(py - uy * l * 0.35 + ny * l * 0.18 + l * 0.12)}`, `${f1(px)} ${f1(py)}`);
-    bot.push(`${f1(px - ux * l * 0.6 - nx * l * 0.45)} ${f1(py - uy * l * 0.6 - ny * l * 0.45 + l * 0.75)}`, `${f1(px)} ${f1(py)}`);
+    if (ny > 0) { nx = -nx; ny = -ny; } // n points up
+    const body = Math.sin(Math.PI * t) ** 0.7; // 0 at the crown and the tip, widest along the middle
+    const wu = W * 0.3 * body * (i % 2 ? 0.55 : 1);
+    const wd = W * body * (i % 2 ? 0.4 : 1); // every other point pulled in: the notches
+    up.push(`${f1(px + nx * wu)} ${f1(py + ny * wu)}`);
+    down.push(`${f1(px - nx * wd - ux * wd * 0.3)} ${f1(py - ny * wd - uy * wd * 0.3 + wd * 0.3)}`); // leaflets hang back and down
   }
-  return path(`M${f1(x0)} ${f1(y0)}L${top.join('L')}L${f1(x1)} ${f1(y1)}L${bot.reverse().join('L')}Z`, cls);
+  return path(`M${up.join('L')}L${down.reverse().join('L')}Z`, cls);
 }
 // A round-canopy tree (mango, acacia): a trunk and overlapping clusters, lit on the left
+// A tapered limb that bends: wide where it leaves the trunk, thin at the tip
+function limb(x0, y0, x1, y1, w, bend) {
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+  const cx = (x0 + x1) / 2 + nx * bend, cy = (y0 + y1) / 2 + ny * bend;
+  return path(`M${f1(x0 + nx * w)} ${f1(y0 + ny * w)}Q${f1(cx + nx * w * 0.5)} ${f1(cy + ny * w * 0.5)} ${f1(x1)} ${f1(y1)}Q${f1(cx - nx * w * 0.5)} ${f1(cy - ny * w * 0.5)} ${f1(x0 - nx * w)} ${f1(y0 - ny * w)}Z`, 's-trunk');
+}
+// A round-canopy tree (mango, acacia): the trunk forks into curved limbs that fork again; the leaves grow in
+// clumps at the ends of the limbs, with gaps where the branches show through
 function tree(x, base, h, r) {
-  const cw = h * (0.55 + r() * 0.2);
-  let s = path(`M${f1(x - h * 0.035)} ${base}L${f1(x - h * 0.02)} ${f1(base - h * 0.5)}L${f1(x + h * 0.02)} ${f1(base - h * 0.5)}L${f1(x + h * 0.035)} ${base}Z`, 's-trunk');
-  const cy = base - h * 0.66;
-  const blobs = [[0, -0.05, 0.5], [-0.42, 0.12, 0.36], [0.42, 0.1, 0.38], [-0.18, -0.32, 0.34], [0.24, -0.28, 0.32]];
-  blobs.forEach(([bx, by, br], i) => { s += `<circle cx="${f1(x + bx * cw)}" cy="${f1(cy + by * cw)}" r="${f1(br * cw * (0.9 + r() * 0.2))}" class="${i % 2 ? 's-leafsh' : 's-leaf'}"/>`; });
-  s += `<circle cx="${f1(x - cw * 0.16)}" cy="${f1(cy - cw * 0.22)}" r="${f1(cw * 0.22)}" class="s-leaf"/>`;
+  const cw = h * (0.6 + r() * 0.2);
+  const fy = base - h * 0.4, tw = Math.max(2.4, h * 0.035);
+  let s = path(`M${f1(x - tw * 1.3)} ${base}Q${f1(x - tw)} ${f1(base - h * 0.2)} ${f1(x - tw * 0.8)} ${f1(fy)}H${f1(x + tw * 0.8)}Q${f1(x + tw)} ${f1(base - h * 0.2)} ${f1(x + tw * 1.3)} ${base}Z`, 's-trunk');
+  const ends = [[-0.42, -0.62, -1], [0.44, -0.66, 1], [0.04, -0.98, 0.3]].map(([ex, ey, d]) => [x + ex * cw, base - h * 0.4 + ey * h * 0.55, d]);
+  const clumps = [];
+  ends.forEach(([ex, ey, d]) => {
+    s += limb(x, fy, ex, ey, tw * 0.75, d * h * 0.05);
+    const mx = x + (ex - x) * 0.55, my = fy + (ey - fy) * 0.55; // a smaller branch forks off part way
+    const tx = ex + d * cw * 0.18 + (d === 0.3 ? cw * 0.1 : 0), ty = ey + h * 0.08;
+    s += limb(mx, my, tx, ty, tw * 0.4, -d * h * 0.03);
+    clumps.push([ex, ey, 0.26], [tx, ty - h * 0.02, 0.19]);
+  });
+  clumps.forEach(([cx, cy, k], i) => {
+    const rr = cw * k * (0.9 + r() * 0.2);
+    s += `<circle cx="${f1(cx + rr * 0.15)}" cy="${f1(cy + rr * 0.2)}" r="${f1(rr)}" class="s-leafsh"/>`; // the shaded underside
+    s += `<circle cx="${f1(cx - rr * 0.1)}" cy="${f1(cy - rr * 0.08)}" r="${f1(rr * 0.86)}" class="s-leaf"/>`;
+  });
   return s;
 }
 function banana(x, base, h) { // broad, split leaves
@@ -164,6 +184,7 @@ function house(kind, x, base, u, r) { // u: size unit (the mid layer's height / 
     const w = u * (4.4 + r()), h = u * 2.4;
     s += rect(x, base - h, w, h, walls) + rect(x + w * 0.72, base - h, w * 0.28, h, 's-midsh');
     s += path(`M${f1(x - u * 0.4)} ${f1(base - h)}L${f1(x + w * 0.5)} ${f1(base - h - u * 1.6)}L${f1(x + w + u * 0.4)} ${f1(base - h)}Z`, roofs);
+    s += path(`M${f1(x + w * 0.5)} ${f1(base - h - u * 1.6)}L${f1(x + w + u * 0.4)} ${f1(base - h)}H${f1(x + w * 0.5)}Z`, 'lp-ring') + rect(x, base - h, w, u * 0.16, 'lp-ring');
     for (let k = 1; k < 5; k++) s += rect(x + w * 0.5 - (w * 0.5 + u * 0.4) * (k / 5) * 0.98, base - h - u * 1.6 * (1 - k / 5), 1, u * 1.6 * (1 - k / 5) * 0.9, 'lp-ring');
     s += rect(x + w * 0.42, base - h * 0.66, w * 0.16, h * 0.66, 's-midsh') + win(x + w * 0.12, base - h * 0.7, w * 0.18, h * 0.3) + win(x + w * 0.66, base - h * 0.7, w * 0.16, h * 0.3);
     return [s, w];
@@ -172,6 +193,7 @@ function house(kind, x, base, u, r) { // u: size unit (the mid layer's height / 
     const w = u * (4 + r()), h = u * 4.6;
     s += rect(x, base - h, w, h, walls) + rect(x + w * 0.74, base - h, w * 0.26, h, 's-midsh');
     s += path(`M${f1(x - u * 0.3)} ${f1(base - h)}L${f1(x + w * 0.22)} ${f1(base - h - u * 1.1)}L${f1(x + w * 0.78)} ${f1(base - h - u * 1.1)}L${f1(x + w + u * 0.3)} ${f1(base - h)}Z`, roofs);
+    s += path(`M${f1(x + w * 0.78)} ${f1(base - h - u * 1.1)}L${f1(x + w + u * 0.3)} ${f1(base - h)}H${f1(x + w * 0.62)}Z`, 'lp-ring') + rect(x, base - h, w, u * 0.16, 'lp-ring');
     s += rect(x - u * 0.2, base - h * 0.52, w + u * 0.4, u * 0.18, 's-midsh');
     for (let i = 0; i < 6; i++) s += rect(x + (w / 6) * i + 1, base - h * 0.52 - u * 0.6, 1.2, u * 0.6, 's-midsh');
     s += windows(x + w * 0.08, base - h * 0.95, w * 0.62, h * 0.36, 2, 1, r, 0) + rect(x + w * 0.16, base - h * 0.4, w * 0.18, h * 0.4, 's-midsh') + win(x + w * 0.48, base - h * 0.36, w * 0.2, h * 0.18);
@@ -180,8 +202,9 @@ function house(kind, x, base, u, r) { // u: size unit (the mid layer's height / 
   if (kind === 'shed') { // a slanted roof
     const w = u * (3.6 + r()), h = u * 2.8;
     s += rect(x, base - h, w, h, walls) + rect(x + w * 0.7, base - h, w * 0.3, h, 's-midsh');
+    s += path(`M${f1(x)} ${f1(base - h)}H${f1(x + w)}V${f1(base - h - u * 0.55)}Z`, walls); // the wall rises under the high end of the roof
     s += path(`M${f1(x - u * 0.4)} ${f1(base - h + u * 0.2)}L${f1(x + w + u * 0.4)} ${f1(base - h - u * 1.1)}L${f1(x + w + u * 0.4)} ${f1(base - h - u * 0.6)}L${f1(x - u * 0.4)} ${f1(base - h + u * 0.7)}Z`, roofs);
-    s += win(x + w * 0.16, base - h * 0.62, w * 0.26, h * 0.3) + rect(x + w * 0.54, base - h * 0.6, w * 0.18, h * 0.6, 's-midsh');
+    s += win(x + w * 0.16, base - h * 0.62, w * 0.26, h * 0.3) + rect(x + w * 0.44, base - h * 0.6, w * 0.18, h * 0.6, 's-midsh');
     return [s, w];
   }
   if (kind === 'tank') { // a flat roof with a water tank on legs
@@ -197,6 +220,7 @@ function house(kind, x, base, u, r) { // u: size unit (the mid layer's height / 
     const w = u * (4 + r() * 0.6), h = u * 2.8;
     s += rect(x, base - h, w, h, walls) + rect(x + w * 0.74, base - h, w * 0.26, h, 's-midsh');
     s += path(`M${f1(x - u * 0.3)} ${f1(base - h)}L${f1(x + w * 0.5)} ${f1(base - h - u * 1.3)}L${f1(x + w + u * 0.3)} ${f1(base - h)}Z`, roofs);
+    s += path(`M${f1(x + w * 0.5)} ${f1(base - h - u * 1.3)}L${f1(x + w + u * 0.3)} ${f1(base - h)}H${f1(x + w * 0.5)}Z`, 'lp-ring') + rect(x, base - h, w, u * 0.14, 'lp-ring');
     for (let i = 0; i < 6; i++) s += rect(x - u * 0.3 + ((w + u * 0.6) / 6) * i, base - h * 0.74, (w + u * 0.6) / 6, u * 0.5, i % 2 ? 's-awn2' : 's-awn');
     s += win(x + w * 0.1, base - h * 0.5, w * 0.6, h * 0.24) + rect(x + w * 0.1, base - h * 0.26, w * 0.6, u * 0.16, 's-midsh');
     return [s, w];
@@ -227,6 +251,7 @@ function tower(x, base, w, h, r, kind = Math.floor(r() * 4)) {
     s += rect(x, top, w, h, 's-mid2') + rect(x + w * 0.74, top, w * 0.26, h, 's-midsh');
     s += rect(x + w * 0.15, top - h * 0.04, w * 0.3, h * 0.04, 's-midsh') + rect(x + w * 0.55, top - h * 0.06, w * 0.14, h * 0.06, 's-midsh');
   }
+  s += rect(x, base - h * 0.07, w, h * 0.07, 'lp-ring'); // the lobby, in the shade of the street
   const bands = Math.max(5, Math.round(h / 12));
   for (let i = 2; i < bands; i++) {
     s += rect(x + w * 0.06, top + (i / bands) * h, w * 0.64, Math.max(1.4, (h / bands) * 0.28), 'lp-band', ` style="--wd:${(winN++ % 29) * 0.06}s"`);
@@ -268,12 +293,14 @@ function powerLine(xs, base, h) { // poles with crossarms, wires that sag betwee
   }
   return s;
 }
-function lamp(x, base, h, dir = 1) { // a curved street lamp; its light switches on after dusk
-  const top = base - h;
-  return `<path d="M${f1(x + dir * h * 0.24)} ${f1(top + h * 0.05)}L${f1(x + dir * h * 0.02)} ${base}H${f1(x + dir * h * 0.5)}Z" class="lp-cone"/>`
-    + rect(x - 1.8, top + h * 0.08, 3.6, h * 0.92, 's-pole')
-    + `<path d="M${f1(x)} ${f1(top + h * 0.1)}Q${f1(x)} ${f1(top)} ${f1(x + dir * h * 0.12)} ${f1(top)}H${f1(x + dir * h * 0.2)}" class="s-arm"/>`
-    + `<path d="M${f1(x + dir * h * 0.16)} ${f1(top - 1)}h${f1(dir * h * 0.14)}l${f1(-dir * h * 0.02)} ${f1(h * 0.035)}h${f1(-dir * h * 0.1)}Z" class="lp-lamp"/>`;
+function lamp(x, base, h, dir = 1) {
+  const top = base - h, hx = x + dir * h * 0.2; // hx: the middle of the lamp head
+  return `<path d="M${f1(hx - h * 0.05)} ${f1(top + h * 0.03)}L${f1(hx - h * 0.24)} ${base}H${f1(hx + h * 0.24)}L${f1(hx + h * 0.05)} ${f1(top + h * 0.03)}Z" class="lp-cone"/>`
+    + path(`M${f1(x - 2.6)} ${base}L${f1(x - 1.4)} ${f1(top + h * 0.1)}H${f1(x + 1.4)}L${f1(x + 2.6)} ${base}Z`, 's-pole')
+    + rect(x - 4.5, base - h * 0.07, 9, h * 0.07, 's-pole')
+    + `<path d="M${f1(x)} ${f1(top + h * 0.12)}Q${f1(x)} ${f1(top)} ${f1(x + dir * h * 0.12)} ${f1(top)}H${f1(hx)}" class="s-arm"/>`
+    + path(`M${f1(hx - h * 0.09)} ${f1(top + h * 0.02)}Q${f1(hx)} ${f1(top - h * 0.05)} ${f1(hx + h * 0.09)} ${f1(top + h * 0.02)}Z`, 's-pole')
+    + rect(hx - h * 0.065, top + h * 0.02, h * 0.13, h * 0.02, 'lp-lamp');
 }
 function stall(x, base, w, h, colours) { // a carinderia stall: a counter, a striped awning, string lights, a sign
   const top = base - h;
@@ -290,7 +317,8 @@ function pavilion(x, base, w) { // the Magellan's Cross pavilion: an octagonal k
   const h = w * 0.95, top = base - h;
   return path(`M${f1(x - w * 0.1)} ${f1(top + h * 0.46)}L${f1(x + w * 0.16)} ${f1(top + h * 0.3)}H${f1(x + w * 0.84)}L${f1(x + w * 1.1)} ${f1(top + h * 0.46)}Z`, 's-roof')
     + path(`M${f1(x + w * 0.14)} ${f1(top + h * 0.3)}L${f1(x + w * 0.5)} ${f1(top + h * 0.02)}L${f1(x + w * 0.86)} ${f1(top + h * 0.3)}Z`, 's-roof2')
-    + rect(x + w * 0.485, top - h * 0.1, w * 0.03, h * 0.13, 's-roof') + rect(x + w * 0.44, top - h * 0.06, w * 0.12, h * 0.02, 's-roof')
+    + `<circle cx="${f1(x + w * 0.5)}" cy="${f1(top - h * 0.1)}" r="${f1(w * 0.15)}" class="lp-halo"/>` // Magellan's Cross: wood by day, a soft glow at night
+    + rect(x + w * 0.481, top - h * 0.26, w * 0.038, h * 0.3, 's-cross') + rect(x + w * 0.42, top - h * 0.185, w * 0.16, w * 0.038, 's-cross')
     + rect(x, top + h * 0.46, w, h * 0.54, 's-mid') + rect(x + w * 0.72, top + h * 0.46, w * 0.28, h * 0.54, 's-midsh')
     + [0.08, 0.38].map((k) => path(`M${f1(x + w * k)} ${base}V${f1(top + h * 0.66)}Q${f1(x + w * (k + 0.12))} ${f1(top + h * 0.54)} ${f1(x + w * (k + 0.24))} ${f1(top + h * 0.66)}V${base}Z`, 's-midsh')).join('');
 }
@@ -305,6 +333,7 @@ function crane(x, base, h) { // a port gantry crane: legs, a lattice boom, a cab
   const top = base - h;
   let s = path(`M${f1(x)} ${base}L${f1(x + h * 0.06)} ${f1(top + h * 0.3)}H${f1(x + h * 0.11)}L${f1(x + h * 0.08)} ${base}Z`, 's-crane')
     + path(`M${f1(x + h * 0.4)} ${base}L${f1(x + h * 0.34)} ${f1(top + h * 0.3)}H${f1(x + h * 0.39)}L${f1(x + h * 0.48)} ${base}Z`, 's-crane');
+  s += `<path d="M${f1(x + h * 0.04)} ${f1(base - h * 0.04)}L${f1(x + h * 0.37)} ${f1(top + h * 0.36)}M${f1(x + h * 0.43)} ${f1(base - h * 0.04)}L${f1(x + h * 0.08)} ${f1(top + h * 0.36)}" class="s-lattice"/>` + rect(x + h * 0.05, top + h * 0.62, h * 0.38, h * 0.025, 's-crane'); // cross-braced legs
   s += rect(x - h * 0.05, top + h * 0.24, h * 0.58, h * 0.07, 's-crane') + rect(x + h * 0.06, top + h * 0.2, h * 0.86, h * 0.045, 's-crane');
   for (let i = 0; i < 9; i++) s += `<path d="M${f1(x + h * (0.08 + i * 0.09))} ${f1(top + h * 0.2)}l${f1(h * 0.045)} ${f1(h * 0.045)}" class="s-lattice"/>`;
   s += rect(x + h * 0.14, top + h * 0.31, h * 0.12, h * 0.08, 's-box1') + rect(x + h * 0.7, top + h * 0.245, 1.2, h * 0.3, 's-crane') + rect(x + h * 0.66, top + h * 0.54, h * 0.08, h * 0.05, 's-crane');
@@ -350,17 +379,50 @@ function water(x, base, w, depth, r) { // the channel, with light on the water
   return s;
 }
 // The near sidewalk: low things, so they never cover the phones
-function bench(x, base, u) {
-  return rect(x, base - u * 1.1, u * 4, u * 0.28, 's-bench') + rect(x, base - u * 2, u * 4, u * 0.24, 's-bench') + rect(x + u * 0.1, base - u * 2, u * 0.24, u * 0.95, 's-benchsh')
-    + rect(x + u * 3.66, base - u * 2, u * 0.24, u * 0.95, 's-benchsh') + rect(x + u * 0.3, base - u * 0.9, u * 0.3, u * 0.9, 's-near') + rect(x + u * 3.4, base - u * 0.9, u * 0.3, u * 0.9, 's-near');
+function bench(x, base, R) {
+  const L = R * 1.2, seat = base - R * 0.3, top = base - R * 0.62, t = R * 0.045;
+  let s = `<ellipse cx="${f1(x + L / 2)}" cy="${f1(base - 1)}" rx="${f1(L * 0.55)}" ry="${f1(R * 0.03)}" class="lp-ring"/>`;
+  s += rect(x + L * 0.06, top, t * 0.8, seat - top, 's-near') + rect(x + L * 0.94 - t * 0.8, top, t * 0.8, seat - top, 's-near'); // back posts
+  [0, 1, 2].forEach((i) => { s += rect(x, top + i * t * 1.5, L, t, i ? 's-benchsh' : 's-bench'); }); // backrest slats
+  s += rect(x - L * 0.02, seat - t * 1.2, L * 1.04, t * 1.2, 's-bench') + rect(x, seat, L, t * 0.5, 's-benchsh'); // the seat and its front edge
+  [0.08, 0.92].forEach((k) => {
+    s += path(`M${f1(x + L * k - t)} ${f1(seat)}L${f1(x + L * k - t * 1.6)} ${base}H${f1(x + L * k - t * 0.4)}L${f1(x + L * k)} ${f1(seat)}Z`, 's-near'); // legs
+    s += rect(x + L * k - t * 1.4, seat - R * 0.14, t * 2.6, t * 0.8, 's-near') + rect(x + L * k - t * 0.4, seat - R * 0.14, t * 0.8, R * 0.14, 's-near'); // armrests
+  });
+  return s;
 }
-function shed(x, base, u) { // a jeepney waiting shed: a curved roof on posts, a bench, a sign
-  return path(`M${f1(x - u * 0.6)} ${f1(base - u * 6)}Q${f1(x + u * 3.5)} ${f1(base - u * 7.4)} ${f1(x + u * 7.6)} ${f1(base - u * 6)}V${f1(base - u * 5.5)}Q${f1(x + u * 3.5)} ${f1(base - u * 6.8)} ${f1(x - u * 0.6)} ${f1(base - u * 5.5)}Z`, 's-roof2')
-    + rect(x, base - u * 5.8, u * 0.35, u * 5.8, 's-near') + rect(x + u * 6.65, base - u * 5.8, u * 0.35, u * 5.8, 's-near')
-    + rect(x + u * 0.8, base - u * 1.4, u * 5.4, u * 0.35, 's-bench') + rect(x + u * 7.6, base - u * 4.6, u * 1.6, u * 1.1, 's-box1') + rect(x + u * 8.2, base - u * 3.5, u * 0.3, u * 3.5, 's-near');
+function shed(x, base, u) { // a jeepney waiting shed: concrete posts, a curved tin roof with a route sign, a half wall, a bench
+  const W = u * 6, top = base - u * 4.2;
+  let s = rect(x + u * 0.3, base - u * 1.7, W - u * 0.6, u * 1.7, 's-mid2') + rect(x + W * 0.7, base - u * 1.7, W * 0.3 - u * 0.3, u * 1.7, 's-midsh'); // the half wall
+  s += rect(x + u * 0.3, top + u * 0.6, W - u * 0.6, u * 0.4, 'lp-ring'); // the roof's shadow
+  s += rect(x + u * 0.8, base - u * 1.05, W - u * 1.6, u * 0.22, 's-bench') + rect(x + u * 1.1, base - u * 0.85, u * 0.18, u * 0.85, 's-benchsh') + rect(x + W - u * 1.3, base - u * 0.85, u * 0.18, u * 0.85, 's-benchsh');
+  [0.12, W / u - 0.5].forEach((k) => { s += rect(x + u * k, top + u * 1, u * 0.38, base - top - u, 's-pole'); }); // posts, under the roof
+  s += path(`M${f1(x - u * 0.5)} ${f1(top + u * 0.75)}Q${f1(x + W / 2)} ${f1(top - u * 0.55)} ${f1(x + W + u * 0.5)} ${f1(top + u * 0.75)}V${f1(top + u * 1.2)}Q${f1(x + W / 2)} ${f1(top - u * 0.05)} ${f1(x - u * 0.5)} ${f1(top + u * 1.2)}Z`, 's-roof2');
+  for (let i = 1; i < 6; i++) s += rect(x - u * 0.3 + ((W + u * 0.6) / 6) * i, top + u * 0.1 + Math.abs(i - 3) * u * 0.14, 1, u * 0.5, 'lp-ring'); // ribs in the tin
+  s += rect(x + W * 0.28, top + u * 1.05, W * 0.44, u * 0.55, 's-box1') + rect(x + W * 0.33, top + u * 1.22, W * 0.34, u * 0.08, 'lp-ring') + rect(x + W * 0.36, top + u * 1.36, W * 0.24, u * 0.07, 'lp-ring'); // the route sign
+  return s;
 }
 const bollard = (x, base, u) => `<rect x="${f1(x)}" y="${f1(base - u * 1.6)}" width="${f1(u * 0.7)}" height="${f1(u * 1.6)}" rx="${f1(u * 0.3)}" class="s-near"/>`;
-const grass = (x, base, u) => path(`M${f1(x)} ${base}l${f1(u * 0.4)} ${f1(-u * 1.2)}l${f1(u * 0.2)} ${f1(u * 1.2)}l${f1(u * 0.4)} ${f1(-u * 1.5)}l${f1(u * 0.2)} ${f1(u * 1.5)}l${f1(u * 0.5)} ${f1(-u)}l${f1(u * 0.1)} ${f1(u)}Z`, 's-leafsh');
+function grass(x, base, u, r) { // a clump of blades of different heights
+  const n = 3 + Math.floor(r() * 4);
+  let d = `M${f1(x)} ${base}`;
+  for (let i = 0; i < n; i++) d += `l${f1(u * 0.3)} ${f1(-u * (0.7 + r() * 0.9))}L${f1(x + u * 0.42 * (i + 1))} ${base}`;
+  return path(d + 'Z', 's-leafsh');
+}
+function rock(x, base, size, r) {
+  const w = size * (1.3 + r() * 0.6), h = size * (0.7 + r() * 0.3), k = 0.4 + r() * 0.2;
+  return `<ellipse cx="${f1(x + w * 0.55)}" cy="${f1(base - 1)}" rx="${f1(w * 0.62)}" ry="${f1(Math.max(1.5, h * 0.08))}" class="lp-ring"/>`
+    + path(`M${f1(x)} ${base}Q${f1(x - w * 0.02)} ${f1(base - h * 0.7)} ${f1(x + w * 0.3)} ${f1(base - h * 0.95)}Q${f1(x + w * k + w * 0.15)} ${f1(base - h * 1.1)} ${f1(x + w * 0.78)} ${f1(base - h * 0.72)}Q${f1(x + w * 1.02)} ${f1(base - h * 0.45)} ${f1(x + w)} ${base}Z`, 's-rock')
+    + path(`M${f1(x + w * 0.1)} ${f1(base - h * 0.6)}Q${f1(x + w * 0.22)} ${f1(base - h * 0.96)} ${f1(x + w * 0.52)} ${f1(base - h * 0.97)}Q${f1(x + w * 0.34)} ${f1(base - h * 0.78)} ${f1(x + w * 0.1)} ${f1(base - h * 0.6)}Z`, 's-rockhi')
+    + path(`M${f1(x + w * 0.4)} ${base}Q${f1(x + w * 0.84)} ${f1(base - h * 0.18)} ${f1(x + w * 0.86)} ${f1(base - h * 0.64)}Q${f1(x + w * 1.02)} ${f1(base - h * 0.42)} ${f1(x + w)} ${base}Z`, 'lp-ring')
+    + grass(x - size * 0.15, base, size * 0.35, r);
+}
+function shrub(x, base, w, r) { // a low green mound, no flowers
+  const n = 3 + Math.floor(r() * 3);
+  let s = '';
+  for (let i = 0; i < n; i++) s += `<circle cx="${f1(x + w * (0.15 + (0.7 * i) / (n - 1)))}" cy="${f1(base - w * (0.12 + r() * 0.12))}" r="${f1(w * (0.16 + r() * 0.1))}" class="${i % 2 ? 's-leaf' : 's-leafsh'}"/>`;
+  return s + rect(x + w * 0.05, base - w * 0.12, w * 0.9, w * 0.12, 's-leafsh');
+}
 const svg = (w, h, inner) => `<svg xmlns="${SVG}" width="${Math.ceil(w)}" height="${Math.ceil(h)}" viewBox="0 0 ${Math.ceil(w)} ${Math.ceil(h)}">${inner}</svg>`;
 
 /* ---------- The layers ---------- */
@@ -384,7 +446,7 @@ function midLayer(W, H, at) {
   const street = (from, to, dense = 1) => {
     for (let x = from; x < to;) {
       const roll = r();
-      if (roll < 0.16 / dense) { front.push(palm(x + 8, base, H * (0.55 + r() * 0.3), r)); x += u * 2.2; continue; }
+      if (roll < 0.12 / dense) { front.push(palm(x + 8, base, H * (0.55 + r() * 0.3), r)); x += u * 2.2; continue; }
       if (roll < 0.26 / dense) { back.push(tree(x + u * 2, base, H * (0.42 + r() * 0.16), r)); x += u * 3.8; continue; }
       if (roll < 0.3 / dense) { front.push(banana(x + u, base, H * 0.3)); x += u * 2; continue; }
       let kind = HOUSES[Math.floor(r() * HOUSES.length)];
@@ -397,61 +459,68 @@ function midLayer(W, H, at) {
   };
   // Morning: homes
   street(-200, X(0.9, at.marks[0]));
+  front.push(shed(X(0.62, at.marks[0]), base, u));
   // Noon: downtown towers, with palms in planters
   const n0 = X(0.02, at.marks[1]);
   street(X(0.9, at.marks[0]), n0, 2);
   let tx = n0;
   for (let i = 0; i < 8; i++) {
     const w = u * (5 + r() * 2.6), h = H * (0.62 + r() * 0.36) * (i === 3 || i === 5 ? 1.15 : 1);
+    if (tx + w > X(0.0, at.marks[2]) - u * 2) break; // downtown ends before the port
     back.push(tower(tx, base, w, Math.min(h, H * 0.98), r));
     tx += w + u * (0.4 + r() * 0.8);
   }
-  for (let x = n0 + u * 2; x < tx; x += u * (6 + r() * 4)) front.push(palm(x, base, H * (0.45 + r() * 0.15), r));
+  for (let x = n0 + u * 2; x < tx - u; x += u * (6 + r() * 4)) front.push(palm(x, base, H * (0.45 + r() * 0.15), r));
   street(tx + u * 2, X(0.0, at.marks[2]) - u * 2, 2);
   // Golden hour: the port on the water, then the bridge
   const g0 = X(0.0, at.marks[2]);
-  const b0 = X(0.4, at.marks[2]);
-  const bw = vw * 0.55;
+  const narrow = vw < 600; // a phone has no room for a docked ship between the cranes and the bridge
+  const b0 = Math.max(X(0.4, at.marks[2]), g0 + u * (narrow ? 14 : 24.5)); // the quay (containers, cranes, a docked ship) ends before the bridge
+  const bw = vw * 0.45;
   const waterTop = base - u * 0.9;
-  back.push(water(g0 - u * 2, base, b0 + bw - g0 + u * 6, u * 0.9, r));
-  back.push(containers(g0, waterTop, 4, 3, u * 0.8, r), crane(g0 + u * 1.5, waterTop, H * 0.66), crane(g0 + u * 10, waterTop, H * 0.56));
-  back.push(ship(g0 + u * 14, waterTop + u * 0.5, u * 13));
+  const e0 = X(0.28, 1); // home again: where the pavilion stands at the end of the day
+  const wEnd = b0 + bw + u * 4;
+  back.push(water(g0 - u * 2, base, wEnd - g0 + u * 2, u * 0.9, r));
+  back.push(containers(g0, waterTop, 4, 3, u * 0.8, r), crane(g0 + u * 1.5, waterTop, H * 0.66), crane(g0 + u * 8, waterTop, H * 0.56));
+  if (!narrow) back.push(ship(g0 + u * 12, waterTop + u * 0.5, u * 11)); // docked under the second crane's boom
   back.push(bridge(b0, base, bw, H * 0.86, waterTop));
   // Night: the carinderia street
-  const d0 = Math.max(b0 + bw + u * 4, X(0.12, at.marks[3]));
+  const d0 = Math.max(wEnd + u * 2, X(0.12, at.marks[3]));
   const awnings = [['s-awn', 's-awn2'], ['s-awnp', 's-awn2'], ['s-awnr', 's-awn2']];
   let sx = d0;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 5 && sx + u * 9 < e0 - u * 4; i++) { // the stalls stop short of the pavilion
     const w = u * (6 + r() * 3);
     back.push(stall(sx, base, w, H * (0.34 + r() * 0.06), awnings[i % 3]));
     sx += w + u * 1.2;
-    if (i % 2) { const [svgH, hw] = house(HOUSES[(i + 2) % HOUSES.length], sx, base, u, r); back.push(svgH); sx += hw + u; }
+    if (i % 2 && sx + u * 6 < e0 - u * 4) { const [svgH, hw] = house(HOUSES[(i + 2) % HOUSES.length], sx, base, u, r); back.push(svgH); sx += hw + u; }
   }
-  street(sx + u, X(0.22, 1));
+  street(sx + u, Math.min(X(0.22, 1), e0 - u * 4));
   // Home again: the pavilion and the church, between palms
-  const e0 = X(0.28, 1);
-  front.push(palm(e0 - u * 2, base, H * 0.7, r));
-  back.push(pavilion(e0, base, u * 12), church(e0 + u * 18, base, u * 15));
-  front.push(palm(e0 + u * 15.5, base, H * 0.62, r));
-  street(e0 + u * 36, W + 100);
+  if (e0 - u * 3 > wEnd) front.push(palm(e0 - u * 2, base, H * 0.7, r)); // never on the water
+  back.push(pavilion(e0, base, u * 8), church(e0 + u * 13, base, u * 7.5)); // sized to stand under the layer's top
+  front.push(palm(e0 + u * 10.5, base, H * 0.62, r));
+  front.push(shed(e0 + u * 24, base, u));
+  street(e0 + u * 31, W + 100);
   // Power poles along the street (not over the water), and street lamps at uneven gaps
   const poles = [];
-  for (let x = 40; x < W; x += u * (16 + r() * 8)) if (x < g0 - u * 3 || x > b0 + bw + u * 3) poles.push(x);
+  for (let x = 40; x < W; x += u * (16 + r() * 8)) if (x < g0 - u * 3 || x > wEnd + u) poles.push(x);
   const lamps = [];
-  for (let x = 160; x < W; x += u * (24 + r() * 22)) if (x < g0 - u * 3 || x > b0 + bw + u * 3) lamps.push(lamp(x, base, H * 0.66, r() < 0.5 ? 1 : -1));
+  for (let x = 160; x < W; x += u * (24 + r() * 22)) if (x < g0 - u * 3 || x > wEnd + u) lamps.push(lamp(x, base, H * 0.66, r() < 0.5 ? 1 : -1));
   return svg(W, H, back.join('') + front.join('') + powerLine(poles, base, H * 0.72) + lamps.join(''));
 }
 function nearLayer(W, H, at) {
   const r = rnd(5);
+  const R = at.rider; // the rider's height on screen
   const u = H / 10, base = H;
   let s = '';
   for (let x = 60; x < W;) {
     const roll = r();
-    if (roll < 0.34) { s += bougainvillea(x, base, u * (6 + r() * 4), r); x += u * 12; }
-    else if (roll < 0.56) { s += bench(x, base, u * 1.2); x += u * 7; }
-    else if (roll < 0.66 && at) { s += shed(x, base, u * 1.05); x += u * 12; }
+    if (roll < 0.22) { s += bougainvillea(x, base, u * (5 + r() * 6), r); x += u * 12; }
+    else if (roll < 0.34) { s += shrub(x, base, u * (5 + r() * 5), r); x += u * 10; }
+    else if (roll < 0.44) { s += rock(x, base, u * (2.6 + r() * 2), r) + rock(x + u * 5.2, base, u * (1.3 + r()), r); x += u * 9; }
+    else if (roll < 0.62) { s += bench(x, base, R); x += R * 1.4; }
     else if (roll < 0.82) { for (let i = 0; i < 3; i++) s += bollard(x + i * u * 2.2, base, u); x += u * 8; }
-    else { s += grass(x, base, u * 1.4) + grass(x + u * 3, base, u); x += u * 6; }
+    else { s += grass(x, base, u * 1.4, r) + grass(x + u * 3, base, u, r); x += u * 6; }
     x += u * (14 + r() * 26);
   }
   return svg(W, H, s);
@@ -478,6 +547,20 @@ export function heroCity(W, H, seed = 21) {
   return svg(W, H, s);
 }
 
+/* ---------- Clouds: 3–6 puffs of different sizes on a flat base, with a soft shaded underside ---------- */
+function cloud(r) {
+  const n = 3 + Math.floor(r() * 4), flat = 0.55 + r() * 0.45;
+  let puffs = '';
+  for (let i = 0; i < n; i++) {
+    const mid = 1 - Math.abs(i - (n - 1) / 2) / n; // taller toward the middle, never quite even
+    const rr = 6 + r() * 6 + mid * 9;
+    puffs += `<circle cx="${f1(14 + (72 * (i + 0.5)) / n + (r() - 0.5) * 8)}" cy="${f1(34 - rr * flat)}" r="${f1(rr)}"/>`;
+  }
+  const body = `${puffs}<rect x="6" y="25" width="88" height="10" rx="5"/>`;
+  return `<svg viewBox="0 -12 100 50" aria-hidden="true"><g class="lp-cloud__sh" transform="translate(0 2.6)">${body}</g><g class="lp-cloud__lit">${body}</g></svg>`;
+}
+const CLOUDS = [['6%', '24vmin', '160s', '-30s'], ['44%', '13vmin', '120s', '-90s'], ['0%', '17vmin', '140s', '-62s'], ['64%', '32vmin', '190s', '-150s']];
+
 /* ---------- Build (on load and resize) ---------- */
 const FAR = 0.15, MID = 0.75, NEAR = 1.25;
 let els = null;
@@ -488,7 +571,7 @@ export function buildScene(pin, { slide, marks, vw, vh }) {
     const scene = document.createElement('div');
     scene.className = 'lp-scene';
     scene.setAttribute('aria-hidden', 'true');
-    scene.innerHTML = `<div class="lp-scene__sky"></div><div class="lp-scene__stars"></div><div class="lp-scene__clouds"><i style="--y:22%;--w:22vmin;--t:150s;--d:-70s"></i><i style="--y:62%;--w:14vmin;--t:115s;--d:-95s"></i><i style="--y:4%;--w:17vmin;--t:135s;--d:-25s"></i></div><span class="lp-scene__sun"></span><span class="lp-scene__moon"></span>
+    scene.innerHTML = `<div class="lp-scene__sky"></div><div class="lp-scene__stars"></div><div class="lp-scene__clouds">${CLOUDS.map(([y, w, t, d], i) => `<i style="--y:${y};--w:${w};--t:${t};--d:${d}">${cloud(rnd(40 + i * 7))}</i>`).join('')}</div><span class="lp-scene__sun"></span><span class="lp-scene__moon"></span>
       <svg class="lp-scene__birds" viewBox="0 0 120 40" width="120" height="40"><path d="M4 20q8-8 16 0q8-8 16 0"/><path d="M50 8q6-6 12 0q6-6 12 0"/><path d="M84 28q7-7 14 0q7-7 14 0"/></svg>
       <div class="lp-layer lp-layer--far"></div><div class="lp-scene__haze"></div><div class="lp-layer lp-layer--mid"></div><div class="lp-scene__jeep"></div>`;
     const near = document.createElement('div');
@@ -510,7 +593,7 @@ export function buildScene(pin, { slide, marks, vw, vh }) {
   const farH = vh * (small ? 0.32 : 0.44), midH = vh * (small ? 0.26 : 0.36), nearH = Math.min(96, vh * 0.11);
   els.far.innerHTML = farLayer(vw + slide * FAR + 40, farH, { vw, shift: slide * FAR, marks });
   els.mid.innerHTML = midLayer(vw + slide * MID + 200, midH, { vw: [vw], shift: slide * MID, marks });
-  els.near.innerHTML = nearLayer(vw + slide * NEAR + 200, nearH, { vw });
+  els.near.innerHTML = nearLayer(vw + slide * NEAR + 200, nearH, { vw, rider: small ? vh * 0.12 : Math.min(vh * 0.2, 190) }); // as css/landing.css sizes .lp-day__rider
   state.jw = Math.max(110, vw * 0.1);
   els.jeep.innerHTML = jeepney(state.jw);
 }
