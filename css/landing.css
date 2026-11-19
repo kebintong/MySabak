@@ -153,7 +153,11 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
 .lp-stars--soft i { opacity: .35; }
 
 /* ---------- Hero ---------- */
-.lp-hero { position: relative; overflow: clip; background: var(--sky); color: #fff; padding-top: var(--nav-h); }
+.lp-hero {
+  --hroad: clamp(44px, 8vh, 84px);
+  position: relative; overflow: clip; color: #fff; padding-top: var(--nav-h);
+  background: radial-gradient(circle at 80% 46%, rgba(205, 165, 255, .34), rgba(205, 165, 255, 0) 44%), var(--sky); /* the sky is lightest around the moon */
+}
 .lp-hero__in { position: relative; display: grid; gap: 8px; padding-top: 20px; }
 .lp-eyebrow { font-size: 15px; font-weight: 700; color: var(--gold-hi); margin-bottom: 16px; }
 .lp-ln { display: block; overflow: hidden; padding-bottom: .1em; margin-bottom: -.1em; }
@@ -161,15 +165,43 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
 .lp-enter { animation: lpRise .9s var(--ease) var(--d, 0s) both; }
 .lp-lead { margin-top: 22px; }
 .lp-hero .lp-ctas { margin-top: 30px; }
-.lp-hero__art { position: relative; aspect-ratio: 600 / 560; margin: 0 calc(var(--pad) * -1); }
-.lp-hero__rider { position: absolute; left: 6%; top: 10%; width: 88%; transform-origin: 50% 90%; will-change: transform; }
-.lp-art-mascot { width: 100%; animation: lpIn 1.4s var(--ease) .7s both, lpFloat 7s ease-in-out 2.1s infinite; }
-.lp-hero__city { position: absolute; left: 0; right: 0; bottom: 0; height: min(30%, 280px); line-height: 0; pointer-events: none; animation: lpRise 1.4s var(--ease) .5s both; }
+/* Her box is the picture's own shape; she sits on the hero's road */
+.lp-hero__art { position: relative; aspect-ratio: 1024 / 957; margin: 0 calc(var(--pad) * -1) calc(var(--hroad) * .38); }
+.lp-hero__rider { position: absolute; inset: 0; transform-origin: 50% 90%; will-change: transform; }
+/* Rim light: a thin moonlit edge on the side that faces the moon, a soft warm glow, and a shadow on the road */
+.lp-art-mascot {
+  position: relative; width: 100%; animation: lpIn 1.4s var(--ease) .7s both, lpFloat 7s ease-in-out 2.1s infinite;
+  filter: drop-shadow(2px -2px 1px rgba(255, 234, 196, .45)) drop-shadow(0 0 22px rgba(255, 214, 150, .2));
+}
+.lp-hero__rider::after {
+  content: ""; position: absolute; left: 14%; right: 6%; bottom: -1.5%; height: 7%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(8, 0, 22, .6), rgba(8, 0, 22, 0)); z-index: -1;
+}
+/* The moon: a pale disc right behind her hat and head, so her dark silhouette stands out against the light */
+.lp-hero__moon {
+  position: absolute; left: 30%; top: -26%; width: 76%; aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #fff6e2 0 35%, #ffe6b4 40%, rgba(255, 214, 150, .32) 46%, rgba(195, 150, 255, .16) 60%, rgba(195, 150, 255, 0) 70%);
+  animation: lpFade 1.8s ease .3s both;
+}
+/* Her headlight on the road ahead */
+.lp-hero__beam {
+  position: absolute; left: 80%; top: 52%; width: 62%; height: 52%; pointer-events: none; z-index: -1; mix-blend-mode: screen;
+  background: linear-gradient(90deg, rgba(255, 238, 190, .5), rgba(255, 238, 190, 0) 90%);
+  clip-path: polygon(0 0, 100% 34%, 100% 100%, 0 14%);
+}
+.lp-hero__road {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--hroad); pointer-events: none; animation: lpRise 1.4s var(--ease) .5s both;
+  background:
+    linear-gradient(90deg, rgba(246, 196, 108, .85) 0 30px, transparent 30px 60px) 0 54% / 60px 3px repeat-x,
+    linear-gradient(180deg, #3a1872 0 3px, rgba(205, 165, 255, .14) 3px, rgba(205, 165, 255, 0) 45%),
+    #180633;
+}
+.lp-hero__city { position: absolute; left: 0; right: 0; bottom: var(--hroad); height: min(30%, 280px); line-height: 0; pointer-events: none; animation: lpRise 1.4s var(--ease) .5s both; }
 .lp-hero__city svg { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; }
 .lp-hero__city .s-mtn { fill: #4d1f8e; } .lp-hero__city .s-hill { fill: #3a1373; } .lp-hero__city .s-far { fill: #45197f; } .lp-hero__city .s-palm, .lp-hero__city .s-nut { fill: #2a0b57; }
 .lp-hero__city .lp-win { fill: #ffd36b; opacity: .75; }
 .lp-hero__in { z-index: 1; }
-@media (min-width: 600px) and (max-width: 899.98px) { .lp-hero__art { width: min(100%, 540px); margin: 0 auto; } }
+@media (min-width: 600px) and (max-width: 899.98px) { .lp-hero__art { width: min(100%, 540px); margin: 0 auto calc(var(--hroad) * .38); } }
 @media (max-width: 599.98px) {
   .lp-hero .lp-ctas { gap: 10px; }
   .lp-hero .lp-ctas .lp-btn { flex: 1 1 auto; padding: 0 16px; height: 52px; font-size: 15.5px; }
@@ -179,7 +211,8 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
     grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: 24px;
     min-height: calc(100svh - var(--nav-h)); padding-block: 32px 56px; max-width: 1440px;
   }
-  .lp-hero__art { margin: 0 calc(var(--pad) * -1) 0 -6%; }
+  /* bigger, at the bottom right, wheels on the road */
+  .lp-hero__art { position: absolute; right: 0; bottom: calc(var(--hroad) * .38); height: min(70svh, 680px, 44vw); margin: 0; }
 }
 
 /* ---------- A day with mysabak ---------- */
@@ -388,7 +421,19 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
   transition: scale .3s var(--ease);
 }
 .lp-day.is-pinned .lp-day__rider.is-back { scale: -1 1; } /* heading back toward the morning */
-.lp-day__rider img { position: absolute; left: 0; bottom: 0; height: 100%; width: auto; transform-origin: 50% 100%; transition: opacity .25s, scale .35s var(--ease), translate .35s var(--ease); }
+.lp-day__rider img { position: absolute; left: 0; bottom: 0; height: 100%; width: auto; transform-origin: 50% 100%; transition: opacity .25s, scale .35s var(--ease), translate .35s var(--ease), filter .8s; }
+/* The scene is soft and hazy, she is crisp and saturated: each hour softens her toward its light, so she sits in it
+   rather than on top of it; at dusk and night the street lamps catch her edges */
+[data-band="dawn"] .lp-day__rider img { filter: sepia(.14) saturate(.88) contrast(.92) brightness(1.02); }
+[data-band="morning"] .lp-day__rider img { filter: sepia(.06) saturate(.9) contrast(.93) brightness(1.02); }
+[data-band="noon"] .lp-day__rider img { filter: saturate(.9) contrast(.93) brightness(1.04); }
+[data-band="golden"] .lp-day__rider img { filter: sepia(.24) saturate(1) contrast(.93) hue-rotate(-8deg); }
+[data-band="dusk"] .lp-day__rider img { filter: brightness(.84) saturate(.86) contrast(.95) drop-shadow(2px -2px 0 rgba(255, 200, 220, .45)); }
+[data-band="night"] .lp-day__rider img { filter: brightness(.8) saturate(.86) drop-shadow(2px -2px 0 rgba(255, 226, 160, .6)) drop-shadow(0 0 14px rgba(255, 214, 140, .22)); }
+.lp-day.is-pinned .lp-day__rider::after { /* her shadow on the road */
+  content: ""; position: absolute; left: 4%; width: 118%; bottom: -4%; height: 9%; border-radius: 50%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(20, 5, 40, .34), rgba(20, 5, 40, 0));
+}
 .lp-rider__ride { animation: lpFloat 1.6s ease-in-out infinite; }
 /* At a stop the riding picture gives way to a parked pose; she hops in, then nods along as if chatting */
 .lp-rider__pose { opacity: 0; scale: .7; translate: 0 10%; }
@@ -725,6 +770,8 @@ a:hover > .lp-arrow, a:focus-visible > .lp-arrow { translate: 4px 0; }
 .lp-lite .lp-ground, .lp-lite .lp-scene__haze, .lp-lite .lp-scene__birds, .lp-lite .lp-scene__jeep, .lp-lite .lp-iphone__screen::after { display: none; }
 .lp-lite .lp-stars b, .lp-lite .lp-day__rider img, .lp-lite .lp-art-mascot, .lp-lite .lp-order__ping { animation: none !important; }
 .lp-lite .lp-photo__img img { filter: none; }
+.lp-lite .lp-art-mascot { filter: drop-shadow(2px -2px 1px rgba(255, 234, 196, .45)); }
+.lp-lite .lp-hero__beam { display: none; }
 
 /* ---------- Less motion: everything shows at once, nothing moves ---------- */
 @media (prefers-reduced-motion: reduce) {

@@ -459,9 +459,11 @@ export function mountMagic() {
    with those effects held still.
    How it decides: it never measures while a page loads (loading drops frames on any computer). Once a page has
    settled (1 s after it loads), it watches 2 s of the moving sky. A computer has to struggle on two separate pages
-   in a row before light mode turns on; a smooth page resets the count. Remembered on this device.
-   ?lite=1 or ?lite=0 in any address turns it on or off by hand (and stops the automatic check). */
-const LITE_KEY = 'mysabak.lite2'; // (the first version, 'mysabak.lite', judged during loading and is ignored now)
+   in a row before light mode turns on; a smooth page resets the count. The automatic switch lasts for this visit
+   only (sessionStorage): the next visit measures again, so one slow moment can't turn the effects off for good.
+   ?lite=1 or ?lite=0 in any address turns it on or off by hand; that choice is remembered on this device. */
+const LITE_KEY = 'mysabak.lite2'; // a choice made by hand: 'on' or 'off' (localStorage)
+const AUTO_KEY = 'mysabak.liteAuto'; // the automatic switch, this visit only (sessionStorage); landing.js shares it
 const STRIKES_KEY = 'mysabak.liteStrikes';
 /** Did these frame times (ms between frames) struggle? Slow on average (under ~38 fps) and many long frames. */
 export function framesStruggle(gaps) {
@@ -476,11 +478,17 @@ export function watchSmoothness() {
     get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) { /* storage off: this page only */ } },
   };
+  const visit = {
+    get: () => { try { return sessionStorage.getItem(AUTO_KEY); } catch (_) { return null; } },
+    set: (v) => { try { if (v) sessionStorage.setItem(AUTO_KEY, v); else sessionStorage.removeItem(AUTO_KEY); } catch (_) { /* this page only */ } },
+  };
   try { localStorage.removeItem('mysabak.lite'); } catch (_) { /* nothing to tidy */ }
+  if (store.get(LITE_KEY) === 'auto') { try { localStorage.removeItem(LITE_KEY); } catch (_) { /* ok */ } } // the old switch that stuck for good
   const asked = new URLSearchParams(location.search).get('lite');
-  if (asked === '1' || asked === '0') { store.set(LITE_KEY, asked === '1' ? 'on' : 'off'); store.set(STRIKES_KEY, '0'); }
+  if (asked === '1' || asked === '0') { store.set(LITE_KEY, asked === '1' ? 'on' : 'off'); store.set(STRIKES_KEY, '0'); visit.set(null); }
   const saved = store.get(LITE_KEY);
-  if (saved === 'on' || saved === 'auto' || (navigator.hardwareConcurrency || 8) <= 2) { html.classList.add('lite'); return; }
+  // (no guess from the processor count: Brave reports a made-up number there to stop fingerprinting)
+  if (saved === 'on' || (saved !== 'off' && visit.get() === '1')) { html.classList.add('lite'); return; } // a choice by hand wins
   if (saved === 'off' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const measure = () => {
     const gaps = [];
@@ -493,7 +501,7 @@ export function watchSmoothness() {
       if (now < until) { requestAnimationFrame(tick); return; }
       const strikes = framesStruggle(gaps) ? Number(store.get(STRIKES_KEY) || 0) + 1 : 0;
       store.set(STRIKES_KEY, String(strikes));
-      if (strikes >= 2) { store.set(LITE_KEY, 'auto'); html.classList.add('lite'); }
+      if (strikes >= 2) { visit.set('1'); html.classList.add('lite'); }
     };
     requestAnimationFrame(tick);
   };

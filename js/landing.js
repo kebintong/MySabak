@@ -372,18 +372,32 @@ if (mouse.matches && !still.matches) {
 }
 
 /* =================== Lite: a measured fallback for slower devices =================== */
+// Shared with the app (js/ui.js): a choice made by hand (?lite=1 / ?lite=0) is kept on this device; the automatic
+// switch lasts for this visit only, so the next visit measures again
 const LITE_KEY = 'mysabak.lite2';
-const saved = (() => { try { return localStorage.getItem(LITE_KEY); } catch (_) { return null; } })();
+const AUTO_KEY = 'mysabak.liteAuto';
+const saved = (() => {
+  try {
+    const asked = new URLSearchParams(location.search).get('lite');
+    if (asked === '1' || asked === '0') { localStorage.setItem(LITE_KEY, asked === '1' ? 'on' : 'off'); sessionStorage.removeItem(AUTO_KEY); }
+    if (localStorage.getItem(LITE_KEY) === 'auto') localStorage.removeItem(LITE_KEY); // the old switch that stuck for good
+    const hand = localStorage.getItem(LITE_KEY);
+    return hand === 'on' || hand === 'off' ? hand : (sessionStorage.getItem(AUTO_KEY) === '1' ? 'auto' : null); // a choice by hand wins
+  } catch (_) { return null; }
+})();
 let judged = saved === 'on' || saved === 'auto' || saved === 'off';
 const gaps = [];
+let calmFrom = Infinity; // not while the page is still loading its pictures (that drops frames on any device)
+addEventListener('load', () => { calmFrom = performance.now() + 2500; }, { once: true });
+if (document.readyState === 'complete') calmFrom = performance.now() + 2500;
 function goLite() {
   root.classList.add('lp-lite');
   setGlide(); // plain native wheel scrolling
   leaners.forEach((el) => el.style.setProperty('--lean', '0'));
-  try { localStorage.setItem(LITE_KEY, 'auto'); } catch (_) { /* this visit only */ }
+  try { sessionStorage.setItem(AUTO_KEY, '1'); } catch (_) { /* this page only */ }
 }
 function judge(dt) {
-  if (judged || still.matches || Math.abs(lean.speed) < 150) return; // only while really scrolling
+  if (judged || still.matches || Math.abs(lean.speed) < 150 || performance.now() < calmFrom) return; // only while really scrolling, once settled
   gaps.push(dt * 1000);
   if (gaps.length < 90) return;
   const avg = gaps.reduce((a, b) => a + b, 0) / gaps.length;

@@ -629,6 +629,7 @@ export function paintScene(pin, p) {
   const time = t < 0.5 ? a : b;
   if (time !== band) {
     band = time;
+    pin.dataset.band = time; // css/landing.css grades the rider to the hour
     Object.entries(palette(time)).forEach(([k, v]) => pin.style.setProperty(`--c-${k}`, v));
   }
   // Sun across the sky until dusk, then the moon and the stars
