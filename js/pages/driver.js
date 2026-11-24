@@ -70,7 +70,7 @@ function sheet(title, body, wire = () => {}) {
     const dlg = document.createElement('dialog');
     dlg.className = 'sheet dsheetx';
     dlg.setAttribute('aria-labelledby', id);
-    dlg.innerHTML = `<div class="sheet__body"><span class="sheet__handle" aria-hidden="true"></span><h2 class="sheet__title" id="${id}">${title}</h2>${body}</div>`;
+    dlg.innerHTML = `<div class="sheet__body"><span class="sheet__handle" aria-hidden="true"></span><h2 class="sheet__title" id="${id}" tabindex="-1" autofocus>${title}</h2>${body}</div>`;
     document.body.appendChild(dlg);
     const done = (v) => { if (!dlg.isConnected) return; dlg.close(); dlg.remove(); resolve(v); };
     dlg.addEventListener('cancel', (e) => { e.preventDefault(); done(null); });
@@ -571,30 +571,70 @@ async function advance(btn) {
   } catch (err) { toast(err.message || errorMessage(err)); btn.disabled = false; }
 }
 
-/* After the job: the money first, then cash collected? and a rating for the rider */
+/* After the job: a small celebration, the money, then two quick answers. For cash, "Done" waits for the cash answer
+   (it's the one thing that matters); the rating is optional. */
+const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg>';
+const CASH_ISSUES = [['short', 'Paid less than the fare'], ['unpaid', 'Didn’t pay at all'], ['other_way', 'Says they paid another way'], ['other', 'Something else']];
+const STAR_WORD = ['', 'Poor', 'Okay', 'Good', 'Great', 'Excellent'];
 async function summary(j) {
   const cash = j.payment === 'cash';
-  let picked = 0;
+  const who = j.kind === 'ride' ? j.rider.name : contactOf({ ...j, status: 'started' }).name;
+  let stars = 0;
   let cashOk = null;
+  let issue = null;
   const result = await sheet(`${j.kind === 'ride' ? 'Trip' : 'Delivery'} complete`,
-    `<p class="dsum__fare">${peso(j.fare)}<span>added to today · you keep 100%</span></p>
-     <dl class="dsum__rows"><div><dt>${esc(j.pickup.label)} → ${esc(j.dropoff.label)}</dt><dd>${j.distanceKm.toFixed(1)} km</dd></div>
+    `<img class="dsum__mascot" src="/assets/images/mascot/14-thumbs-up.svg" alt="" width="932" height="1024">
+     <p class="dsum__fare"><b>${peso(j.fare)}</b><span>Added to today. You keep all of it.</span></p>
+     <ol class="dsum__route" aria-label="Route">
+       <li><span>From</span>${esc(j.pickup.label)}</li>
+       <li><span>To</span>${esc(j.dropoff.label)}</li>
+     </ol>
+     <dl class="dsum__rows"><div><dt>Distance</dt><dd>${j.distanceKm.toFixed(1)} km</dd></div>
        <div><dt>Payment</dt><dd>${cash ? 'Cash' : `${esc(PAY[j.payment] || j.payment)} · paid`}</dd></div></dl>
      ${cash ? `<fieldset class="dsum__q"><legend>Did you collect ${peso(j.fare)} in cash?</legend>
-        <div class="dsum__pair"><button type="button" class="button button--ghost" data-cash="yes" aria-pressed="false">Yes, collected</button><button type="button" class="button button--ghost" data-cash="no" aria-pressed="false">There was a problem</button></div></fieldset>` : ''}
-     <fieldset class="dsum__q"><legend>Rate ${esc(j.kind === 'ride' ? j.rider.name : contactOf({ ...j, status: 'started' }).name)}</legend>
-       <div class="dstars" role="radiogroup" aria-label="Rating">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="false" aria-label="${n} star${n > 1 ? 's' : ''}" data-star="${n}">${icon('i-star')}</button>`).join('')}</div></fieldset>
-     <div class="sheet__actions"><button type="button" class="button" data-finish>Done · back to requests</button></div>`,
+        <div class="dchoice" role="radiogroup" aria-label="Cash collected">
+          <button type="button" class="dchoice__opt" role="radio" aria-checked="false" data-cash="yes">${icon('i-check', 'icon--sm')}Yes, collected</button>
+          <button type="button" class="dchoice__opt dchoice__opt--warn" role="radio" aria-checked="false" data-cash="no">${icon('i-st-alert', 'icon--sm')}There was a problem</button>
+        </div>
+        <div class="dwhy" data-why hidden><p class="dwhy__q" id="whyQ">What happened?</p>
+          <div class="dwhy__opts" role="radiogroup" aria-labelledby="whyQ">${CASH_ISSUES.map(([v, t]) => `<button type="button" class="dchoice__opt" role="radio" aria-checked="false" data-issue="${v}">${esc(t)}</button>`).join('')}</div>
+        </div></fieldset>` : ''}
+     <fieldset class="dsum__q"><legend>How was ${esc(who)}? <span class="dsum__opt">Optional</span></legend>
+       <div class="dstars2" role="radiogroup" aria-label="Rate ${esc(who)}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="false" aria-label="${n} star${n > 1 ? 's' : ''}, ${STAR_WORD[n]}" data-star="${n}">${STAR}</button>`).join('')}
+         <span class="dstars2__word" data-star-word aria-hidden="true"></span></div></fieldset>
+     <div class="dsum__done"><button type="button" class="button" data-finish${cash ? ' disabled' : ''}>Done · back to requests</button>
+       ${cash ? '<p class="dsum__hint" data-hint>Answer the cash question to finish.</p>' : ''}</div>`,
     (dlg, done) => {
+      dlg.classList.add('dsum');
       dlg.addEventListener('click', (e) => {
-        const s = e.target.closest('[data-star]');
-        if (s) { picked = Number(s.dataset.star); $$('[data-star]', dlg).forEach((b) => { const n = Number(b.dataset.star); b.classList.toggle('is-on', n <= picked); b.setAttribute('aria-checked', String(n === picked)); }); }
+        const s1 = e.target.closest('[data-star]');
+        if (s1) {
+          stars = Number(s1.dataset.star);
+          $$('[data-star]', dlg).forEach((b) => { const n = Number(b.dataset.star); b.classList.toggle('is-on', n <= stars); b.setAttribute('aria-checked', String(n === stars)); });
+          $('[data-star-word]', dlg).textContent = STAR_WORD[stars];
+        }
         const c = e.target.closest('[data-cash]');
-        if (c) { cashOk = c.dataset.cash === 'yes'; $$('[data-cash]', dlg).forEach((b) => b.setAttribute('aria-pressed', String(b === c))); }
+        if (c) {
+          cashOk = c.dataset.cash === 'yes';
+          if (cashOk) issue = null;
+          $$('[data-cash]', dlg).forEach((b) => b.setAttribute('aria-checked', String(b === c)));
+          $('[data-why]', dlg).hidden = cashOk;
+        }
+        const w = e.target.closest('[data-issue]');
+        if (w) {
+          issue = w.dataset.issue;
+          $$('[data-issue]', dlg).forEach((b) => b.setAttribute('aria-checked', String(b === w)));
+        }
+        if (c || w) {
+          // a problem needs its reason before "Done"
+          const ready = cashOk === true || (cashOk === false && !!issue);
+          $('[data-finish]', dlg).disabled = !ready;
+          $('[data-hint]', dlg).textContent = cashOk ? '' : issue ? 'Noted. The mysabak team will contact you.' : 'Pick what happened to finish.';
+        }
         if (e.target.closest('[data-finish]')) done('done');
       });
     });
-  try { await closeJob(j.id, { stars: picked || null, cashCollected: cash ? cashOk : null }); } catch (_) { /* the rating is optional */ }
+  try { await closeJob(j.id, { stars: stars || null, cashCollected: cash ? cashOk : null, cashIssue: issue }); } catch (_) { /* the rating is optional */ }
   if (cash && cashOk === false) toast('Noted. The mysabak team will contact you about the payment.');
   else if (result) toast(`${peso(j.fare)} added. Nice work!`);
 }
@@ -626,18 +666,19 @@ async function noShow() {
   try { await cancelJob(job.id, { reason: 'no_show' }); toast('Job ended as a no-show.'); job = null; if (online) listen(); paintAll(); } catch (err) { toast(err.message || errorMessage(err)); }
 }
 
-/* Safety: one tap from every step of a job */
+/* Safety: one tap from every step of a job. Calling for help is the one big red button; the rest say what happens. */
 function safety() {
   if (!job) return;
-  const text = `I’m on a mysabak ${KIND[job.kind].name.toLowerCase()}: ${job.pickup.label} → ${job.dropoff.label}, with ${contactOf(job).name}.`;
+  const c = contactOf(job);
+  const text = `I’m on a mysabak ${KIND[job.kind].name.toLowerCase()}: ${job.pickup.label} → ${job.dropoff.label}, with ${c.name}.`;
   sheet('Safety',
-    `<p class="sheet__sub">If you’re in danger, call emergency services first.</p>
-     <div class="dreasons">
-       <a class="dreasons__row dreasons__row--hot" href="tel:911">${icon('i-phone', 'icon--sm')}Call 911 (emergency)</a>
-       <button type="button" class="dreasons__row" data-share>${icon('i-share', 'icon--sm')}Share this trip with someone</button>
-       <button type="button" class="dreasons__row" data-report>${icon('i-st-alert', 'icon--sm')}Report a problem to mysabak</button>
+    `<p class="sheet__sub">${esc(KIND[job.kind].name)} with ${esc(c.name)} · ${esc(job.pickup.label)} → ${esc(job.dropoff.label)}</p>
+     <a class="dsos911" href="tel:911">${icon('i-phone')}<span><b>Call 911</b><small>Police, fire and ambulance. If you’re in danger, call first.</small></span></a>
+     <div class="dsafe">
+       <button type="button" class="dsafe__row" data-share>${icon('i-share')}<span><b>Share this trip</b><small>Send where you are and who you’re with</small></span>${icon('i-chevron', 'icon--sm dsafe__chev')}</button>
+       <button type="button" class="dsafe__row" data-report>${icon('i-st-alert')}<span><b>Report a problem</b><small>The mysabak safety team calls you back</small></span>${icon('i-chevron', 'icon--sm dsafe__chev')}</button>
      </div>
-     <div class="sheet__actions"><button type="button" class="button button--ghost" data-done="">Close</button></div>`,
+     <button type="button" class="dsheet__close" data-done="">Close</button>`,
     (dlg) => {
       $('[data-share]', dlg).addEventListener('click', async () => {
         try {

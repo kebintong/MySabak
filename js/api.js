@@ -1036,10 +1036,10 @@ export async function cancelJob(jobId, { reason = 'other' } = {}) {
   return { ok: true, outcome };
 }
 
-/** After a finished job: rate the rider (1–5) and, for cash, say whether the fare was collected. DEMO: this browser. */
-export async function closeJob(jobId, { stars = null, cashCollected = null } = {}) {
+/** After a finished job: rate the rider (1–5) and, for cash, say whether the fare was collected (and if not, what happened). DEMO: this browser. */
+export async function closeJob(jobId, { stars = null, cashCollected = null, cashIssue = null } = {}) {
   if (stars !== null && !(Number.isInteger(stars) && stars >= 1 && stars <= 5)) throw Object.assign(new Error('Pick 1 to 5 stars.'), { status: 400 });
-  demo.set('riderRatings', { ...demo.get('riderRatings', {}), [jobId]: { stars, cashCollected, at: Date.now() } });
+  demo.set('riderRatings', { ...demo.get('riderRatings', {}), [jobId]: { stars, cashCollected, cashIssue: cashCollected === false ? cashIssue : null, at: Date.now() } });
   return { ok: true };
 }
 

@@ -634,8 +634,11 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .dmapview:not(.is-full) .dmapview__off b { font-size: 14px; }
 .dmapview:not(.is-full) .dmapview__off span { display: none; }
 .dmapview:not(.is-full) .dmapview__off .button { margin: 0 0 0 auto; min-height: 40px; padding: 0 14px; font-size: 13.5px; }
-/* Request pins: bigger, the fare always shown */
-.page--driver .dmapview .spin { width: 34px; height: 45px; }
+/* Pins: one size for every pin (requests, your job, drop-off), the label always shown; the picked one doesn't grow */
+.page--driver .dmapview :is(.spin, .dest-flag) { width: 34px; height: 45px; }
+.page--driver .dmapview .spin.is-active svg { transform: none; }
+.page--driver .dmapview .spin--icon.is-active .spin__icon { scale: none; translate: -50% -50%; }
+.page--driver .dmapview .spin.is-active .spin__label { transform: translateX(-50%); }
 .page--driver .dmapview .spin__label { opacity: 1; }
 
 /* Cards: white, a stripe and a label in the service colour */
@@ -697,3 +700,89 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 #jobList { align-items: stretch; } /* every card the column's full width */
 .dmini.dcard { width: 100%; min-height: 0; padding: 12px 14px 12px 18px; }
 }
+
+
+/* =========================================================
+   Sheets: Safety and Trip complete
+   ========================================================= */
+/* The reason rows: the arrow at the end only (an icon at the start stays at the start) */
+.dreasons__row > .icon:only-of-type { margin-left: 0; }
+.dsheet__close {
+  align-self: center; min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: none; cursor: pointer;
+  font: 700 15px var(--font-body); color: var(--sub);
+}
+.dsheet__close:hover { color: var(--ink); background: #f6f1fa; }
+.dsheet__close:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Safety: Call 911 is the one big red button */
+.dsos911 {
+  display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 14px 18px; border-radius: 18px; text-decoration: none;
+  background: #c62f1a; color: #fff; box-shadow: 0 10px 24px -12px rgba(198, 47, 26, .8);
+}
+.dsos911 .icon { width: 26px; height: 26px; flex: none; stroke: #fff; }
+.dsos911 span { display: flex; flex-direction: column; gap: 2px; }
+.dsos911 b { font: 800 19px var(--font-display); }
+.dsos911 small { font-size: 13px; color: #ffe4de; line-height: 1.35; }
+.dsos911:hover { background: #ad2614; }
+.dsos911:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.dsafe { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.dsafe__row {
+  display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 10px 16px; border: 0; background: #fff; cursor: pointer;
+  text-align: left; font-family: var(--font-body); color: var(--ink);
+}
+.dsafe__row + .dsafe__row { border-top: 1px solid var(--line); }
+.dsafe__row > .icon:first-child { width: 22px; height: 22px; flex: none; stroke: var(--brand-deep); }
+.dsafe__row span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dsafe__row b { font-size: 15.5px; font-weight: 700; }
+.dsafe__row small { font-size: 13px; color: var(--sub); }
+.dsafe__chev { flex: none; stroke: var(--sub); }
+.dsafe__row:hover { background: #faf6fd; }
+.dsafe__row:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+
+/* Trip complete */
+.dsum .sheet__title { text-align: center; }
+.dsum__mascot { align-self: center; width: auto; height: 96px; margin: -4px 0 -10px; }
+.dsum .dsum__fare { align-items: center; text-align: center; gap: 4px; font: inherit; }
+.dsum .dsum__fare b { font: 800 46px/1 var(--font-display); letter-spacing: -.03em; color: var(--ink); }
+.dsum .dsum__fare span { font-size: 14px; font-weight: 600; color: #1f6b3a; }
+.dsum__route { margin: 0; padding: 12px 14px; list-style: none; border-radius: 14px; background: #f6f1fa; display: flex; flex-direction: column; gap: 8px; position: relative; }
+.dsum__route li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.dsum__route span { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--sub); padding-top: 2px; }
+.dsum .dsum__rows { padding: 0 4px; background: none; }
+.dsum__q legend { display: flex; align-items: center; gap: 8px; width: 100%; }
+.dsum__opt { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--sub); }
+/* The cash answer: two choices, the chosen one filled with a check */
+.dchoice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dchoice__opt {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 12px; border-radius: 14px; cursor: pointer;
+  border: 1.5px solid #d9c7ee; background: #fff; color: var(--brand-deep); font: 700 14.5px var(--font-body);
+}
+.dchoice__opt .icon { stroke: currentColor; opacity: .35; }
+.dchoice__opt[aria-checked="true"] { border-color: var(--brand-deep); background: var(--brand-deep); color: #fff; }
+.dchoice__opt[aria-checked="true"] .icon { opacity: 1; }
+.dchoice__opt--warn[aria-checked="true"] { border-color: #b3311b; background: #b3311b; }
+.dchoice__opt:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* Stars: big, no tiles, gold when chosen, with a word */
+.dstars2 { display: flex; align-items: center; gap: 2px; }
+.dstars2 button { width: 48px; height: 48px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; border-radius: 12px; }
+.dstars2 svg { width: 34px; height: 34px; fill: none; stroke: #c9b7dc; stroke-width: 1.6; stroke-linejoin: round; transition: transform .15s var(--spring), fill .15s; }
+.dstars2 button.is-on svg { fill: var(--gold); stroke: #e3933f; }
+.dstars2 button:active svg { transform: scale(.88); }
+.dstars2 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 0; }
+.dstars2__word { margin-left: 8px; font-weight: 700; color: var(--ink); }
+.dsum__done { display: flex; flex-direction: column; gap: 6px; }
+.dsum__done .button { width: 100%; min-height: 52px; }
+.dsum__done .button:disabled { opacity: .45; cursor: not-allowed; }
+.dsum__hint { margin: 0; text-align: center; font-size: 13px; color: var(--sub); }
+.dsum__hint:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .dstars2 svg { transition: none; } }
+
+/* The cash problem: what happened, before Done */
+.dwhy { margin-top: 12px; padding: 12px; border-radius: 14px; background: #fdf3f0; }
+.dwhy[hidden] { display: none; }
+.dwhy__q { margin: 0 0 8px; font-weight: 700; color: #8a2414; }
+.dwhy__opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dwhy .dchoice__opt { min-height: 48px; padding: 6px 10px; font-size: 13.5px; line-height: 1.25; text-align: center; border-color: #efc4b9; color: #8a2414; }
+.dwhy .dchoice__opt[aria-checked="true"] { border-color: #b3311b; background: #b3311b; color: #fff; }
+/* Sheets open with focus on the title (read first, nothing looks pre-chosen) */
+.dsheetx .sheet__title:focus { outline: none; }
