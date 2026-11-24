@@ -85,9 +85,10 @@ export function shopMap(container, { interactive = true, cooperative = false, on
       shops.forEach((s) => {
         if (pins.has(s.id)) return;
         const el = document.createElement(interactive ? 'button' : 'div');
-        el.className = 'spin';
+        el.className = s.icon ? 'spin spin--icon' : 'spin';
         el.style.setProperty('--pin', s.color);
-        el.innerHTML = `${PIN_SVG}<span class="spin__label">${esc(s.name)}</span>`;
+        // s.icon: an optional inline SVG drawn in the pin's head (the driver's map: a car, a box, a bag)
+        el.innerHTML = `${PIN_SVG}${s.icon ? `<span class="spin__icon" aria-hidden="true">${s.icon}</span>` : ''}<span class="spin__label">${esc(s.name)}</span>`;
         if (interactive) {
           el.type = 'button';
           el.setAttribute('aria-label', `${s.name}, ${s.area}`);

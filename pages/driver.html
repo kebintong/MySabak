@@ -28,43 +28,63 @@
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <!-- Drive is only the work: today in one line, the online switch, then the requests (the nearest as the big
-           card, the rest below; tap one to swap it in). Earnings, Trips and Account are their own tabs. -->
+      <!-- Drive is the work, map first: the status panel (online switch, live status, today's numbers), then the map
+           with every request as a pin in its service's colour, and the requests (or the job) beside it on desktop,
+           under it on phones. Earnings, Trips and Account are their own tabs. -->
       <div class="content__inner content__inner--full dhome" id="driverHome" hidden>
         <header class="page-head dsky">
           <div class="dsky__inner">
-            <!-- Today in one line; the rest of the money is on Earnings -->
-            <p class="dtoday"><span>Today <b data-bind="today">₱0</b></span><span data-bind="todayTrips">0 trips</span><a href="/pages/driver-earnings.html">Earnings →</a></p>
-            <div class="dgo">
-              <p class="dgo__status" id="onlineStatus"><b data-bind="onlineTitle">You’re offline</b><span data-bind="onlineHint">Go online to get Ride, Express and Shop requests.</span></p>
-              <button type="button" class="dgo__switch" id="onlineBtn" role="switch" aria-checked="false" aria-describedby="onlineStatus"><span class="dgo__knob" aria-hidden="true"></span><span class="sr-only" data-bind="onlineAction">Go online</span></button>
-            </div>
+            <section class="dstatus" aria-label="Your status">
+              <div class="dstatus__head">
+                <p class="dgo__status" id="onlineStatus"><b data-bind="onlineTitle">You’re offline</b><span data-bind="onlineHint">Go online to get Ride, Parcel and Food requests.</span></p>
+                <p class="dlive"><span class="dlive__items" id="liveStatus" aria-live="polite"></span><button type="button" class="dlive__item dlive__alerts" id="soundBtn" aria-pressed="true"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span>Alerts on</span></button></p>
+                <button type="button" class="dgo__switch" id="onlineBtn" role="switch" aria-checked="false" aria-describedby="onlineStatus"><span class="dgo__knob" aria-hidden="true"></span><span class="sr-only" data-bind="onlineAction">Go online</span></button>
+              </div>
+              <div class="dstats">
+                <a class="dstat" href="/pages/driver-earnings.html"><small>Today</small><b class="dstat__money" data-bind="today">₱0</b></a>
+                <p class="dstat"><small>Trips</small><b data-bind="todayTrips">0</b></p>
+                <p class="dstat"><small>Online</small><b data-bind="onlineTime">0m</b></p>
+                <p class="dstat"><small>Rating</small><b data-bind="rating">New</b></p>
+              </div>
+            </section>
           </div>
         </header>
 
-        <section class="dreq" aria-labelledby="reqCount">
-          <div class="dreq__head"><h2 class="dreq__title" id="reqCount">Requests</h2><button type="button" class="dreq__map" id="mapBtn"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-pin"/></svg>Map</button></div>
-          <div id="activeJob" aria-live="polite"></div>
-          <div id="jobList" aria-live="polite"></div>
-        </section>
+        <div class="dwork">
+          <section class="dmapcol" aria-labelledby="reqCount">
+            <div class="dreq__head"><h2 class="dreq__title" id="reqCount">Requests</h2>
+              <p class="dlegend" aria-label="Pin colours"><span class="dlegend__ride">Ride</span><span class="dlegend__express">Parcel</span><span class="dlegend__shop">Food</span></p></div>
+            <div class="dmapslot" id="mapSlot">
+              <!-- The live map: here on the page, or full screen for a route preview and turn-by-turn navigation -->
+              <section class="dmapview" id="mapView" aria-label="Map">
+                <div class="map__canvas" id="mapCanvas"></div>
+                <button type="button" class="dmap__full" id="mapBtn">Full map</button>
+                <!-- When the map service doesn't answer: say so, and offer Google Maps -->
+                <p class="dmapview__off" id="mapOff" hidden><b>The map isn’t available right now.</b><span>Your job details still work.</span><a class="button" id="mapOffLink" href="https://www.google.com/maps" target="_blank" rel="noopener">Open in Google Maps</a></p>
+                <div class="dturn" id="turn" hidden>
+                  <span class="dturn__icon" id="turnIcon" aria-hidden="true"></span>
+                  <span class="dturn__text"><b id="turnIn"></b><span id="turnText"></span></span>
+                </div>
+                <p class="dturn__then" id="turnThen" hidden></p>
+                <button type="button" class="dmapview__locate" id="locateBtn" aria-label="Center on my location">
+                  <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
+                </button>
+                <div class="dsheet" id="mapSheet" aria-live="polite"></div>
+              </section>
+            </div>
+            <p class="dmap__caption" id="mapCaption"></p>
+          </section>
 
-        <p class="finder__note">You keep 100% of every fare. Riders can add an optional tip for mysabak on top of it, so nothing is ever taken from yours.</p>
+          <section class="dreq" aria-label="Requests and your job">
+            <!-- No connection, or location off: said once, here, until it's fixed -->
+            <div class="dbanner" id="banner" role="status" hidden></div>
+            <div id="activeJob" aria-live="polite"></div>
+            <div id="jobList" aria-live="polite"></div>
+            <p class="finder__note">You keep 100% of every fare. Riders can add an optional tip for mysabak on top of it, so nothing is ever taken from yours.</p>
+          </section>
+        </div>
       </div>
     </main>
-
-    <!-- Full-screen live map: every request, a route preview, or turn-by-turn navigation to the next stop -->
-    <section class="dmapview" id="mapView" aria-label="Map" hidden>
-      <div class="map__canvas" id="mapCanvas"></div>
-      <div class="dturn" id="turn" hidden>
-        <span class="dturn__icon" id="turnIcon" aria-hidden="true"></span>
-        <span class="dturn__text"><b id="turnIn"></b><span id="turnText"></span></span>
-      </div>
-      <p class="dturn__then" id="turnThen" hidden></p>
-      <button type="button" class="dmapview__locate" id="locateBtn" aria-label="Center on my location">
-        <svg class="icon icon--lg" aria-hidden="true"><use href="/assets/images/icons.svg#i-locate"/></svg>
-      </button>
-      <div class="dsheet" id="mapSheet" aria-live="polite"></div>
-    </section>
 
     <div class="bottom">
       <nav class="dock tabs" data-tabs="drive" aria-label="Main"></nav>

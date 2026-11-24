@@ -1365,6 +1365,11 @@ img.pic, .srow__img img, .picked__img img, .shop-info__ava img, .mcard__img img,
 .spin svg { width: 100%; height: 100%; display: block; overflow: visible; transform-origin: 50% 100%; transition: transform .2s var(--spring); filter: drop-shadow(0 3px 3px rgba(23, 18, 43, .3)); }
 .spin svg path { fill: var(--pin, var(--brand)); stroke: #fff; stroke-width: 2.2; vector-effect: non-scaling-stroke; }
 .spin svg circle { fill: #fff; }
+.spin--icon > svg circle { fill: none; } /* the icon sits where the white dot was */
+.spin__icon { position: absolute; left: 50%; top: 38%; width: 52%; aspect-ratio: 1; translate: -50% -50%; display: grid; place-items: center; pointer-events: none; transition: scale .2s var(--spring); }
+.spin .spin__icon svg, .spin.is-active .spin__icon svg { width: 100%; height: 100%; transform: none; filter: none; overflow: visible; }
+.spin .spin__icon svg :is(path, circle, rect) { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; vector-effect: none; }
+.spin--icon.is-active .spin__icon { scale: 1.4; translate: -50% calc(-50% - 10px); } /* follows the head as the pin grows 1.4× from its tip */
 .spin.is-active { z-index: 3; }
 .spin.is-active svg { transform: scale(1.4); }
 .spin__label {

@@ -898,7 +898,7 @@ export async function driverStatus() {
   const session = demo.get('driverSession', null);
   if (!d) return { status: 'none', signedIn: false, online: false };
   const signedIn = Boolean(session && samePhone(session.phone, d.phone));
-  return { status: d.status, signedIn, name: d.name, email: d.email, vehicle: d.vehicle, plate: d.plate, online: signedIn && Boolean(d.online) };
+  return { status: d.status, signedIn, name: d.name, email: d.email, vehicle: d.vehicle, plate: d.plate, rating: d.rating ?? null, online: signedIn && Boolean(d.online) };
 }
 
 /**
@@ -917,9 +917,11 @@ export async function setOnline(online) {
  * Listen for job requests while online (Ride, Express or Shop delivery).
  * Backend: connect your realtime channel (WebSocket, SSE…) and call `onJob` for each request:
  *   { id, kind:'ride'|'express'|'shop', pickup:{lng,lat,label}, dropoff:{lng,lat,label}, distanceKm, fare,
- *     payment:'cash'|'gcash'|'bank', rider:{name}, shop?:{name}, parcel?:{size, item}, expiresAt:number }
+ *     payment:'cash'|'gcash'|'bank', rider:{name, rating}, note?:string (where to meet),
+ *     shop?:{name}, parcel?:{size, item}, recipient?:{name} (Express and Shop: who receives it), expiresAt:number }
  * DEMO: sends SAMPLE requests (`demo: true`) near `near`: three in the first few seconds, then one every
- * 25 seconds while fewer than five are waiting. Places come from demo-data.js (DEMO_PLACES).
+ * 25 seconds while fewer than five are waiting. Places come from demo-data.js (DEMO_PLACES). The sample number
+ * carries on between sessions, so the request after a finished job is never the same one again.
  * @param {(job:object) => void} onJob
  * @param {{near?:{lng:number, lat:number}}} [opts]  where the driver is
  * @returns {() => void} stop listening
@@ -929,11 +931,12 @@ export function onJobRequest(onJob, { near } = {}) {
   const d = demo.get('driver', {}) || {};
   const vehicle = d.vehicle || 'sedan';
   const timers = [];
-  let count = 0;
   const emit = () => {
     const waiting = demo.get('jobs', []).filter((j) => j.expiresAt > Date.now());
     if (waiting.length >= 5) return;
-    const job = sampleJob(here, vehicle, count++);
+    const n = demo.get('jobSeq', 0);
+    demo.set('jobSeq', n + 1);
+    const job = sampleJob(here, vehicle, n);
     demo.set('jobs', [...waiting, job]);
     onJob(job);
   };
@@ -943,6 +946,7 @@ export function onJobRequest(onJob, { near } = {}) {
 }
 
 const KINDS = ['ride', 'express', 'ride', 'shop'];
+const SAMPLE_NOTES = ['Gate 2, near the guard house', '', 'In front of the jeepney stop', '', 'Call when you’re outside'];
 const SAMPLE_RATES = { motor: [30, 9], sedan: [45, 13], suv: [60, 16] }; // base, per km (sample only)
 function sampleJob(near, vehicle, n) {
   const byDistance = DEMO_PLACES.map((p) => ({ ...p, km: haversineKm(near, p) })).sort((a, b) => a.km - b.km);
@@ -959,10 +963,11 @@ function sampleJob(near, vehicle, n) {
     pickup: kind === 'shop' ? { ...strip(pickup), label: `${DEMO_ACCOUNTS.merchant.shop.name} · ${pickup.label}` } : strip(pickup),
     dropoff: strip(dropoff), distanceKm, fare,
     payment: ['cash', 'gcash', 'cash', 'bank'][n % 4],
-    rider: { name: DEMO_RIDERS[n % DEMO_RIDERS.length] },
-    ...(kind === 'shop' ? { shop: { name: DEMO_ACCOUNTS.merchant.shop.name } } : {}),
-    ...(kind === 'express' ? { parcel: { size: 'small', item: 'Documents' } } : {}),
-    expiresAt: Date.now() + 120000,
+    rider: { name: DEMO_RIDERS[n % DEMO_RIDERS.length], rating: [4.9, 4.7, 5, 4.8, 4.6][n % 5] },
+    ...(SAMPLE_NOTES[n % SAMPLE_NOTES.length] ? { note: SAMPLE_NOTES[n % SAMPLE_NOTES.length] } : {}),
+    ...(kind === 'shop' ? { shop: { name: DEMO_ACCOUNTS.merchant.shop.name }, recipient: { name: DEMO_RIDERS[(n + 1) % DEMO_RIDERS.length] } } : {}),
+    ...(kind === 'express' ? { parcel: { size: 'small', item: 'Documents' }, recipient: { name: DEMO_RIDERS[(n + 2) % DEMO_RIDERS.length] } } : {}),
+    expiresAt: Date.now() + 45000, // a short window, like the big apps: decide, or let it go to the next driver
   };
 }
 
@@ -987,30 +992,54 @@ export async function activeJob() {
 const JOB_FLOW = { to_pickup: 'arrived', arrived: 'started', started: 'completed' };
 /**
  * Move a job along: 'to_pickup' → 'arrived' → 'started' → 'completed'.
- * Express and Shop jobs attach a photo at pickup and delivery (`photo`, optional in the demo).
+ * Express and Shop jobs attach a photo at pickup and delivery (`photo`: a File; the demo only notes that one was
+ * taken, nothing is uploaded).
  * @returns {Promise<{ok:boolean, status:string}>}  409 if the step is out of order
  */
-export async function updateJob(jobId, status, { photo } = {}) { // eslint-disable-line no-unused-vars
+export async function updateJob(jobId, status, { photo } = {}) {
   const job = demo.get('activeJob', null);
   if (!job || job.id !== jobId) throw Object.assign(new Error('Job not found'), { status: 404 });
   if (JOB_FLOW[job.status] !== status) throw Object.assign(new Error('That step isn’t possible now.'), { status: 409 });
   await wait(300);
+  const proof = photo ? { ...(job.proof || {}), [status]: true } : job.proof;
   if (status === 'completed') {
-    const trip = { id: job.id, kind: job.kind, at: Date.now(), fare: job.fare, distanceKm: job.distanceKm, demo: Boolean(job.demo) };
+    const trip = { id: job.id, kind: job.kind, at: Date.now(), fare: job.fare, distanceKm: job.distanceKm, payment: job.payment, demo: Boolean(job.demo), ...(proof ? { proof } : {}) };
     demo.set('driverTrips', [trip, ...demo.get('driverTrips', [])].slice(0, 50));
     demo.set('activeJob', null);
   } else {
-    demo.set('activeJob', { ...job, status });
+    demo.set('activeJob', { ...job, status, ...(status === 'arrived' ? { arrivedAt: Date.now() } : {}), ...(proof ? { proof } : {}) }); // arrivedAt: the wait timer
   }
   return { ok: true, status };
 }
 
-/** Give a job back before pickup (it goes to another driver). */
-export async function cancelJob(jobId) {
+/**
+ * End a job early, with a reason:
+ *  - before pickup ('to_pickup'): any reason; the job goes to another driver;
+ *  - at the pickup ('arrived'): 'no_show' only (the rider or sender didn't come);
+ *  - on the way (Express and Shop only, 'started'): 'recipient_unavailable', 'wrong_address' or 'refused'
+ *    (the parcel or order goes back; returns are handled by the mysabak team).
+ * Backend: record the reason; no-show and failed-delivery rules (fees, returns) are set there.
+ * @param {string} jobId
+ * @param {{reason?:string}} [opts]
+ * @returns {Promise<{ok:boolean, outcome:'cancelled'|'no_show'|'failed'}>}  409 when the reason doesn't fit the step
+ */
+const FAILED_DELIVERY = ['recipient_unavailable', 'wrong_address', 'refused'];
+export async function cancelJob(jobId, { reason = 'other' } = {}) {
   const job = demo.get('activeJob', null);
   if (!job || job.id !== jobId) throw Object.assign(new Error('Job not found'), { status: 404 });
-  if (job.status !== 'to_pickup') throw Object.assign(new Error('You can only cancel before pickup.'), { status: 409 });
+  const outcome = job.status === 'to_pickup' ? 'cancelled'
+    : job.status === 'arrived' && reason === 'no_show' ? 'no_show'
+      : job.status === 'started' && job.kind !== 'ride' && FAILED_DELIVERY.includes(reason) ? 'failed' : null;
+  if (!outcome) throw Object.assign(new Error('You can’t end this job that way now.'), { status: 409 });
   demo.set('activeJob', null);
+  demo.set('jobOutcomes', [{ id: job.id, kind: job.kind, outcome, reason, at: Date.now() }, ...demo.get('jobOutcomes', [])].slice(0, 50));
+  return { ok: true, outcome };
+}
+
+/** After a finished job: rate the rider (1–5) and, for cash, say whether the fare was collected. DEMO: this browser. */
+export async function closeJob(jobId, { stars = null, cashCollected = null } = {}) {
+  if (stars !== null && !(Number.isInteger(stars) && stars >= 1 && stars <= 5)) throw Object.assign(new Error('Pick 1 to 5 stars.'), { status: 400 });
+  demo.set('riderRatings', { ...demo.get('riderRatings', {}), [jobId]: { stars, cashCollected, at: Date.now() } });
   return { ok: true };
 }
 

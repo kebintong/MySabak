@@ -167,7 +167,7 @@ export const DEMO_ACCOUNTS = {
   },
   driver: {
     phone: '09170000001', email: 'driver@mysabak.demo', password: 'mysabak-demo',
-    name: 'Dante Dizon', city: 'Cebu City', vehicle: 'sedan', plate: 'GDX 4821', model: 'Toyota Vios', year: 2021, status: 'approved',
+    name: 'Dante Dizon', city: 'Cebu City', vehicle: 'sedan', plate: 'GDX 4821', model: 'Toyota Vios', year: 2021, status: 'approved', rating: 4.9,
   },
   merchant: {
     phone: '09170000002', email: 'merchant@mysabak.demo', password: 'mysabak-demo',
