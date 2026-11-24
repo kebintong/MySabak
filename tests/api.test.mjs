@@ -102,11 +102,15 @@ test('driver sign-in with mobile number or email; under review can’t go online
 
 test('driver jobs: demo requests are tagged, can be accepted, moved along in order, and pay into earnings', async () => {
   const jobs = [];
+  const other = []; // a second device at the same moment
   const stop = api.onJobRequest((j) => jobs.push(j), { near: { lng: 123.8854, lat: 10.3157 } });
-  await new Promise((r) => setTimeout(r, 1700));
-  stop();
-  assert.equal(jobs.length, 1);
-  const [job] = jobs;
+  const stop2 = api.onJobRequest((j) => other.push(j), { near: { lng: 123.9, lat: 10.33 } });
+  await new Promise((r) => setTimeout(r, 50));
+  stop(); stop2();
+  assert.equal(jobs.length, 5, 'always five waiting');
+  assert.deepEqual(other.map((j) => j.id), jobs.map((j) => j.id), 'every device gets the same requests');
+  assert.ok(jobs.every((j) => j.expiresAt > Date.now() && j.expiresAt - Date.now() <= api.JOB_OPEN_MS));
+  const job = jobs[jobs.length - 1];
   assert.equal(job.demo, true);
   assert.ok(['ride', 'express', 'shop'].includes(job.kind));
   assert.ok(job.fare > 0 && job.distanceKm > 0 && job.pickup.label && job.dropoff.label);
@@ -114,6 +118,11 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
   const before = (await api.driverEarnings()).today;
   const { job: active } = await api.acceptJob(job.id);
   assert.equal(active.status, 'to_pickup');
+  const again = [];
+  const stop3 = api.onJobRequest((j) => again.push(j));
+  await new Promise((r) => setTimeout(r, 50));
+  stop3();
+  assert.ok(!again.some((j) => j.id === job.id), 'an accepted request never comes back');
   assert.deepEqual(await api.activeJob(), active);
   await assert.rejects(api.updateJob(job.id, 'completed'), { status: 409 });
   for (const step of ['arrived', 'started', 'completed']) assert.equal((await api.updateJob(job.id, step)).status, step);

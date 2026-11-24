@@ -400,6 +400,7 @@ function renderJobs() {
   const shown = visibleJobs();
   if (!shown.some((j) => j.id === picked)) picked = null;
   const hero = shown.find((j) => j.id === picked) || shown[0];
+  picked = hero ? hero.id : null; // the big card stays put while new requests arrive, until it's taken, skipped or gone
   $('#reqCount').textContent = job ? 'Your job' : online && shown.length && netUp() ? `${shown.length} request${shown.length === 1 ? '' : 's'} near you` : 'Requests';
   let html;
   if (job) html = '';
@@ -417,10 +418,12 @@ function renderJobs() {
   else if (mapMode !== 'nav') { paintSheet(); paintMap(); }
 }
 
+const skipped = new Set(); // skipped requests stay gone, even after going offline and back
+let lastChime = 0;
 function addJob(j) {
-  if (jobs.some((x) => x.id === j.id)) return;
+  if (skipped.has(j.id) || jobs.some((x) => x.id === j.id)) return;
   jobs.push(j);
-  if (online && !job) chime();
+  if (online && !job && Date.now() - lastChime > 2000) { lastChime = Date.now(); chime(); } // five at once: one chime
   renderJobs();
 }
 
@@ -730,6 +733,7 @@ $('#jobList').addEventListener('click', (e) => {
   if (!card) return;
   const id = card.dataset.id;
   if (e.target.closest('[data-skip]')) {
+    skipped.add(id);
     jobs = jobs.filter((j) => j.id !== id);
     picked = null;
     renderJobs();

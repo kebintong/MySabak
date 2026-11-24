@@ -919,36 +919,47 @@ export async function setOnline(online) {
  *   { id, kind:'ride'|'express'|'shop', pickup:{lng,lat,label}, dropoff:{lng,lat,label}, distanceKm, fare,
  *     payment:'cash'|'gcash'|'bank', rider:{name, rating}, note?:string (where to meet),
  *     shop?:{name}, parcel?:{size, item}, recipient?:{name} (Express and Shop: who receives it), expiresAt:number }
- * DEMO: sends SAMPLE requests (`demo: true`) near `near`: three in the first few seconds, then one every
- * 25 seconds while fewer than five are waiting. Places come from demo-data.js (DEMO_PLACES). The sample number
- * carries on between sessions, so the request after a finished job is never the same one again.
+ * DEMO: SAMPLE requests (`demo: true`) picked by the clock, so every phone and computer sees the same ones at the
+ * same moment: a new one every 9 s, each open 45 s, so always five waiting. Checked every second and when the page
+ * wakes (phones pause timers while the screen is off). Places: demo-data.js (DEMO_PLACES) around the city centre.
+ * A request this browser accepted never comes back.
  * @param {(job:object) => void} onJob
  * @param {{near?:{lng:number, lat:number}}} [opts]  where the driver is
  * @returns {() => void} stop listening
  */
-export function onJobRequest(onJob, { near } = {}) {
-  const here = near || { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };
+export const JOB_EVERY_MS = 9000;
+export const JOB_OPEN_MS = 45000;
+// eslint-disable-next-line no-unused-vars
+export function onJobRequest(onJob, { near } = {}) { // near: for the real backend; the demo uses the city centre so devices match
+  const centre = { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };
   const d = demo.get('driver', {}) || {};
   const vehicle = d.vehicle || 'sedan';
-  const timers = [];
-  const emit = () => {
-    const waiting = demo.get('jobs', []).filter((j) => j.expiresAt > Date.now());
-    if (waiting.length >= 5) return;
-    const n = demo.get('jobSeq', 0);
-    demo.set('jobSeq', n + 1);
-    const job = sampleJob(here, vehicle, n);
-    demo.set('jobs', [...waiting, job]);
-    onJob(job);
+  const sent = new Set();
+  const check = () => {
+    const now = Date.now();
+    const taken = demo.get('jobsTaken', []);
+    const open = [];
+    for (let slot = Math.floor((now - JOB_OPEN_MS) / JOB_EVERY_MS) + 1; slot <= Math.floor(now / JOB_EVERY_MS); slot++) {
+      const job = sampleJob(centre, vehicle, slot);
+      if (job.expiresAt > now && !taken.includes(job.id)) open.push(job);
+    }
+    demo.set('jobs', open);
+    open.filter((j) => !sent.has(j.id)).forEach((j) => { sent.add(j.id); onJob(j); });
   };
-  [1500, 4000, 7500].forEach((ms) => timers.push(setTimeout(emit, ms)));
-  timers.push(setInterval(emit, 25000));
-  return () => timers.forEach((t) => { clearTimeout(t); clearInterval(t); });
+  const wake = () => { if (document.visibilityState !== 'hidden') check(); };
+  const t0 = setTimeout(check, 0);
+  const t = setInterval(check, 1000);
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', wake);
+  return () => {
+    clearTimeout(t0); clearInterval(t);
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', wake);
+  };
 }
 
 const KINDS = ['ride', 'express', 'ride', 'shop'];
 const SAMPLE_NOTES = ['Gate 2, near the guard house', '', 'In front of the jeepney stop', '', 'Call when you’re outside'];
 const SAMPLE_RATES = { motor: [30, 9], sedan: [45, 13], suv: [60, 16] }; // base, per km (sample only)
-function sampleJob(near, vehicle, n) {
+function sampleJob(near, vehicle, n) { // n: the clock slot, so the same n gives the same request everywhere
   const byDistance = DEMO_PLACES.map((p) => ({ ...p, km: haversineKm(near, p) })).sort((a, b) => a.km - b.km);
   const pickup = byDistance[n % Math.min(5, byDistance.length)];
   const others = byDistance.filter((p) => p !== pickup);
@@ -959,7 +970,7 @@ function sampleJob(near, vehicle, n) {
   const fare = Math.round((base + perKm * distanceKm) / 5) * 5;
   const strip = ({ km, ...p }) => p; // eslint-disable-line no-unused-vars
   return {
-    id: demo.id('JOB'), kind, demo: true,
+    id: `JOB-${n.toString(36)}`, kind, demo: true,
     pickup: kind === 'shop' ? { ...strip(pickup), label: `${DEMO_ACCOUNTS.merchant.shop.name} · ${pickup.label}` } : strip(pickup),
     dropoff: strip(dropoff), distanceKm, fare,
     payment: ['cash', 'gcash', 'cash', 'bank'][n % 4],
@@ -967,7 +978,7 @@ function sampleJob(near, vehicle, n) {
     ...(SAMPLE_NOTES[n % SAMPLE_NOTES.length] ? { note: SAMPLE_NOTES[n % SAMPLE_NOTES.length] } : {}),
     ...(kind === 'shop' ? { shop: { name: DEMO_ACCOUNTS.merchant.shop.name }, recipient: { name: DEMO_RIDERS[(n + 1) % DEMO_RIDERS.length] } } : {}),
     ...(kind === 'express' ? { parcel: { size: 'small', item: 'Documents' }, recipient: { name: DEMO_RIDERS[(n + 2) % DEMO_RIDERS.length] } } : {}),
-    expiresAt: Date.now() + 45000, // a short window, like the big apps: decide, or let it go to the next driver
+    expiresAt: n * JOB_EVERY_MS + JOB_OPEN_MS, // a short window, like the big apps: decide, or let it go to the next driver
   };
 }
 
@@ -981,6 +992,7 @@ export async function acceptJob(jobId) {
   const active = { ...job, status: 'to_pickup', acceptedAt: Date.now() };
   demo.set('activeJob', active);
   demo.set('jobs', jobs.filter((j) => j.id !== jobId));
+  demo.set('jobsTaken', [jobId, ...demo.get('jobsTaken', [])].slice(0, 20));
   return { ok: true, job: active };
 }
 
