@@ -154,10 +154,10 @@ $('#soundBtn').addEventListener('click', () => {
 /* ---------- Map (full screen, drawn only while open) ---------- */
 const map = shopMap($('#mapCanvas'), {
   cooperative: true, // on the page: one finger scrolls the page, two move the map
-  onPin: (id) => { if (!job) { picked = id; renderJobs(); if (mapMode) openMap('preview'); else $(`.dhero`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } },
+  onPin: (id) => { if (!job) { picked = id; renderJobs(); if (mapMode) openMap('preview'); else $('.rq.is-open')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } },
   padding: () => (mapMode
     ? { top: mapMode === 'nav' ? 170 : 70, bottom: ($('#mapSheet').offsetHeight || 220) + 30, left: 40, right: 40 }
-    : { top: 80, bottom: 36, left: 60, right: 60 }), // room for the pins and their labels
+    : $('#mapSlot').offsetHeight < 260 ? { top: 48, bottom: 10, left: 36, right: 36 } : { top: 80, bottom: 36, left: 60, right: 60 }), // room for the pins and their labels (less on the phone's short map)
 });
 // The map service didn't answer: say so instead of showing an empty map
 if (map.map) map.map.on('error', () => { if (!map.map.isStyleLoaded()) $('#mapOff').hidden = false; });
@@ -220,10 +220,12 @@ function paintInline() {
 }
 function paintCaption() {
   const n = visibleJobs().length;
-  $('#mapCaption').textContent = job
+  const cap = $('#mapCaption');
+  cap.textContent = job
     ? (job.status === 'started' ? `Route to ${job.dropoff.label}. Full map for turn-by-turn.` : `Route to the pickup at ${job.pickup.label}. Full map for turn-by-turn.`)
     : !online ? 'Go online to see requests on the map.'
-      : n ? `${n} request${n === 1 ? '' : 's'} near you, nearest first. Tap a pin to see it.` : 'Waiting for requests nearby.';
+      : n ? '' : 'Waiting for requests nearby.';
+  cap.hidden = !cap.textContent;
 }
 
 function openMap(mode) {
@@ -277,7 +279,7 @@ function paintSheet() {
     sheetEl.innerHTML = `<h2>${esc(KIND[p.kind].name)} · ${peso(p.fare)}</h2>
       <p>${esc(p.pickup.label)} → ${esc(p.dropoff.label)} · ~${mins(p.distanceKm)} min · ${p.distanceKm.toFixed(1)} km trip · ${mins(kmAway(p.pickup))} min from you</p>
       <div class="dsheet__actions"><button type="button" class="button button--ghost" data-close>Close</button>
-        <button type="button" class="button" data-accept="${esc(p.id)}">Accept ${peso(p.fare)}</button></div>`;
+        <button type="button" class="button" data-accept="${esc(p.id)}"${accepting ? ' disabled aria-busy="true"' : ''}>${accepting === p.id ? 'Accepting…' : `Accept ${peso(p.fare)}`}</button></div>`;
     return;
   }
   const n = visibleJobs().length;
@@ -352,67 +354,80 @@ function paintOnline() {
   } else {
     btn.disabled = false;
     bindAll('onlineTitle', online ? 'You’re online' : 'You’re offline');
-    bindAll('onlineHint', online ? 'Requests near you show below.' : 'Go online to get Ride, Express and Shop requests.');
+    bindAll('onlineHint', online ? 'Requests near you show below.' : 'Go online to get Ride, Parcel and Food requests.');
     bindAll('onlineAction', online ? 'Go offline' : 'Go online');
   }
   document.body.classList.toggle('is-online', online);
   paintLive();
 }
 
-/* ---------- Requests: the big card and the rest ---------- */
-const visibleJobs = () => jobs
-  .filter((j) => j.expiresAt > Date.now())
-  .sort((a, b) => kmAway(a.pickup) - kmAway(b.pickup));
+/* ---------- Requests: one card each, the picked one open with its actions ---------- */
+// A request the server says is gone stays a moment, locked and saying why, so the list never jumps under a finger
+const GONE_MS = 1600;
+const GONE_WORDS = { taken: 'Another driver accepted it', cancelled: 'The customer cancelled', expired: 'Expired', withdrawn: 'No longer available' };
+const gone = new Map(); // id → reason
+let accepting = null;   // id of the request being accepted (its buttons locked)
+const byNear = (a, b) => kmAway(a.pickup) - kmAway(b.pickup);
+const visibleJobs = () => jobs.filter((j) => !gone.has(j.id)).sort(byNear); // still open: the count and the pins
+const listedJobs = () => [...jobs].sort(byNear);                            // the cards: gone ones too, for a moment
 const stars = (r) => (r ? ` ★ ${Number(r).toFixed(1)}` : '');
 
-function heroCard(j) {
+function requestCard(j, open) {
   const k = KIND[j.kind];
   const km = kmAway(j.pickup);
+  const why = gone.get(j.id);
+  const busy = accepting === j.id;
   const who = j.kind === 'ride' ? `${esc(j.rider.name)}${stars(j.rider.rating)}`
     : j.kind === 'express' ? `${esc(j.parcel ? j.parcel.item : 'Parcel')} · from ${esc(j.rider.name)} to ${esc(j.recipient ? j.recipient.name : 'the recipient')}`
       : `Order for ${esc(j.recipient ? j.recipient.name : j.rider.name)}`;
-  return `<article class="dhero dcard" style="${kindStyle(k)}" data-id="${esc(j.id)}">
-      <span class="dhero__kind">${kindLabel(k)}<span>${mins(km)} min away · ${km.toFixed(1)} km</span></span>
-      <span class="dhero__timer"><b data-expires="${j.expiresAt}">${mmss(j.expiresAt - Date.now())}</b> left</span>
-      <h3 class="dhero__from">${esc(j.pickup.label)}</h3>
-      <p class="dhero__to">to ${esc(j.dropoff.label)} · ~${mins(j.distanceKm)} min · ${j.distanceKm.toFixed(1)} km trip
-        <span class="dhero__who">${esc(PAY[j.payment] || j.payment)} · ${who}</span>
-        ${j.note ? `<span class="dhero__note">“${esc(j.note)}”</span>` : ''}</p>
-      <p class="dhero__fare">${peso(j.fare)}</p>
-      <div class="dhero__actions">
-        <button type="button" class="button" data-accept>Accept ${peso(j.fare)}</button>
-        <button type="button" class="button button--ghost" data-skip>Skip</button>
-        <button type="button" class="dhero__route" data-route>Preview the route</button>
-      </div>
+  const lock = busy ? ' disabled' : '';
+  return `<article class="rq${open ? ' is-open' : ''}${why ? ' is-gone' : ''}" style="${kindStyle(k)}" data-id="${esc(j.id)}">
+      ${open || why ? '' : `<button type="button" class="rq__pick" data-pick aria-label="${esc(`${k.name}, ${peso(j.fare)}, ${j.pickup.label} to ${j.dropoff.label}, ${mins(km)} minutes away. Show details`)}"></button>`}
+      <p class="rq__top">${kindLabel(k)}<span>${mins(km)} min away · ${km.toFixed(1)} km</span></p>
+      <p class="rq__fare">${peso(j.fare)}</p>
+      <ol class="rq__route"><li><span class="sr-only">Pickup: </span>${esc(j.pickup.label)}</li><li><span class="sr-only">Drop-off: </span>${esc(j.dropoff.label)}</li></ol>
+      <p class="rq__meta"><span>${j.distanceKm.toFixed(1)} km · ~${mins(j.distanceKm)} min trip</span><span>${esc(PAY[j.payment] || j.payment)}</span>${why
+        ? `<b class="rq__why" role="status">${esc(GONE_WORDS[why] || GONE_WORDS.withdrawn)}</b>`
+        : `<span class="rq__left"><b data-expires="${j.until}">${mmss(j.until - Date.now())}</b> left</span>`}</p>
+      ${open && !why ? `<p class="rq__who">${who}${j.note ? `<span>“${esc(j.note)}”</span>` : ''}</p>
+      <div class="rq__actions">
+        <button type="button" class="button" data-accept${lock}${busy ? ' aria-busy="true"' : ''}>${busy ? 'Accepting…' : 'Accept'}</button>
+        <button type="button" class="button button--ghost" data-skip${lock}>Skip</button>
+        <button type="button" class="rq__map" data-route${lock}>${icon('i-pin', 'icon--sm')}Route</button>
+      </div>` : ''}
     </article>`;
 }
-function miniCard(j) {
-  const k = KIND[j.kind];
-  return `<button type="button" class="dmini dcard" style="${kindStyle(k)}" data-pick="${esc(j.id)}" aria-label="${esc(`${k.name}, ${peso(j.fare)}, from ${j.pickup.label}, ${mins(kmAway(j.pickup))} minutes away. Show it`)}">
-      ${svgIcon(k.svg, 'dmini__ic')}
-      <span class="dmini__kind">${esc(k.name)} · ${mins(kmAway(j.pickup))} min</span>
-      <span class="dmini__from">${esc(j.pickup.label)}</span>
-      <span class="dmini__fare">${peso(j.fare)}</span>
-    </button>`;
+
+// Keyboard users keep their place when the list is redrawn (a new request every few seconds)
+function focusKey() {
+  const a = document.activeElement;
+  const c = a && a.closest && a.closest('#jobList .rq');
+  return c ? [c.dataset.id, ['data-accept', 'data-skip', 'data-route', 'data-pick'].find((k) => a.hasAttribute(k))] : null;
+}
+function refocus(key) {
+  if (!key) return;
+  const c = $(`#jobList .rq[data-id="${CSS.escape(key[0])}"]`);
+  const el = c && (c.querySelector(`[${key[1]}]:not([disabled])`) || c.querySelector('[data-accept], [data-pick]'));
+  if (el) el.focus({ preventScroll: true });
 }
 
 function renderJobs() {
-  const shown = visibleJobs();
-  if (!shown.some((j) => j.id === picked)) picked = null;
-  const hero = shown.find((j) => j.id === picked) || shown[0];
-  picked = hero ? hero.id : null; // the big card stays put while new requests arrive, until it's taken, skipped or gone
-  $('#reqCount').textContent = job ? 'Your job' : online && shown.length && netUp() ? `${shown.length} request${shown.length === 1 ? '' : 's'} near you` : 'Requests';
+  const open = visibleJobs();
+  const listed = listedJobs();
+  if (!listed.some((j) => j.id === picked)) picked = null;
+  if (!picked && open[0]) picked = open[0].id; // the open card stays put while new requests arrive, until it's taken, skipped or gone
+  $('#reqCount').textContent = job ? 'Your job' : online && open.length && netUp() ? `${open.length} request${open.length === 1 ? '' : 's'} near you` : 'Requests';
   let html;
   if (job) html = '';
   else if (!approved) html = '<div class="dempty dcard"><h3>Application under review</h3><p>We’ll email you when you’re approved. Then you can go online here.</p></div>';
   else if (!online) html = `<div class="dempty dempty--quiet"><ul class="list">${emptyRows('No requests yet', 'They show up here while you’re online.')}</ul></div>`; // the sky above already says you're offline
   else if (!netUp()) html = '<div class="dempty dcard"><h3>Requests are paused</h3><p>They come back as soon as you’re connected again.</p></div>';
-  else if (!shown.length) html = '<div class="dempty dcard"><p class="jobs-wait">Waiting for requests nearby…</p><p>They show here, nearest first, with a chime.</p></div>';
-  else {
-    const rest = shown.filter((j) => j !== hero);
-    html = heroCard(hero) + (rest.length ? `<div class="dminis">${rest.slice(0, 5).map(miniCard).join('')}</div>` : '');
-  }
+  else if (!listed.length) html = '<div class="dempty dcard"><p class="jobs-wait">Waiting for requests nearby…</p><p>They show here, nearest first, with a chime.</p></div>';
+  else html = `<div class="rqs">${[...listed.filter((j) => j.id === picked), ...listed.filter((j) => j.id !== picked)] // the open one first: Accept is always in the same place
+    .map((j) => requestCard(j, j.id === picked)).join('')}</div>`;
+  const key = focusKey();
   $('#jobList').innerHTML = html;
+  refocus(key);
   paintCaption();
   if (!mapMode) paintInline();
   else if (mapMode !== 'nav') { paintSheet(); paintMap(); }
@@ -422,9 +437,17 @@ const skipped = new Set(); // skipped requests stay gone, even after going offli
 let lastChime = 0;
 function addJob(j) {
   if (skipped.has(j.id) || jobs.some((x) => x.id === j.id)) return;
-  jobs.push(j);
+  jobs.push({ ...j, until: j.expiresAt - ((j.serverTime ?? Date.now()) - Date.now()) }); // the server's time left, on this phone's clock
   if (online && !job && Date.now() - lastChime > 2000) { lastChime = Date.now(); chime(); } // five at once: one chime
   renderJobs();
+}
+// The server says a request is no longer open (taken, cancelled, expired, withdrawn): say why, then remove it and its pin
+function goneJob(id, reason) {
+  if ((job && job.id === id) || gone.has(id) || !jobs.some((j) => j.id === id)) return;
+  gone.set(id, reason);
+  if (mapMode === 'preview' && picked === id) toast(`${GONE_WORDS[reason] || GONE_WORDS.withdrawn}.`);
+  renderJobs();
+  setTimeout(() => { gone.delete(id); jobs = jobs.filter((j) => j.id !== id); renderJobs(); }, GONE_MS);
 }
 
 /* ---------- Accepted job ---------- */
@@ -506,21 +529,23 @@ function paintAll() {
   if (mapMode) { paintSheet(); paintMap(); }
 }
 
-async function accept(id, btn) {
-  if (!needNet()) return;
-  btn.disabled = true;
+async function accept(id) {
+  if (accepting || gone.has(id) || !needNet()) return;
+  accepting = id;
+  renderJobs();
   try {
     ({ job } = await acceptJob(id));
+    accepting = null;
     jobs = jobs.filter((j) => j.id !== id);
     picked = null;
     toast(`Accepted. Head to ${job.pickup.label}.`);
-    edgeGlow('reward', btn);
     paintAll();
+    edgeGlow('reward', $('#activeJob .activejob') || $('#activeJob'));
     if (mapMode) openMap('nav');
   } catch (err) {
-    toast(err.status === 410 || err.status === 409 ? err.message : errorMessage(err));
-    if (err.status === 410) { jobs = jobs.filter((j) => j.id !== id); renderJobs(); }
-    btn.disabled = false;
+    accepting = null;
+    if (['taken', 'expired', 'cancelled'].includes(err.code)) { goneJob(id, err.code); if (mapMode) toast(err.message); }
+    else { toast(err.status === 409 ? err.message : errorMessage(err)); renderJobs(); }
   }
 }
 
@@ -727,17 +752,23 @@ function holdStop(btn) { clearTimeout(holdTimer); btn.classList.remove('is-holdi
 
 /* ---------- Events ---------- */
 $('#jobList').addEventListener('click', (e) => {
-  const mini = e.target.closest('[data-pick]');
-  if (mini) { picked = mini.dataset.pick; renderJobs(); return; }
-  const card = e.target.closest('.dhero');
-  if (!card) return;
+  const card = e.target.closest('.rq');
+  if (!card || gone.has(card.dataset.id)) return;
   const id = card.dataset.id;
+  if (e.target.closest('[data-pick]')) {
+    picked = id;
+    renderJobs();
+    $('.rq.is-open')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    $('.rq.is-open [data-accept]')?.focus({ preventScroll: true });
+    return;
+  }
+  if (accepting) return;
   if (e.target.closest('[data-skip]')) {
     skipped.add(id);
     jobs = jobs.filter((j) => j.id !== id);
     picked = null;
     renderJobs();
-  } else if (e.target.closest('[data-accept]')) accept(id, e.target.closest('[data-accept]'));
+  } else if (e.target.closest('[data-accept]')) accept(id);
   else if (e.target.closest('[data-route]')) { picked = id; openMap('preview'); }
 });
 
@@ -775,7 +806,7 @@ $('#mapSheet').addEventListener('click', (e) => {
   if (e.target.closest('[data-close]')) closeMap();
   else if (e.target.closest('[data-nav]')) openMap('nav');
   else if (e.target.closest('[data-next]')) advance(e.target.closest('[data-next]'));
-  else if (e.target.closest('[data-accept]')) { const b = e.target.closest('[data-accept]'); accept(b.dataset.accept, b); }
+  else if (e.target.closest('[data-accept]')) accept(e.target.closest('[data-accept]').dataset.accept);
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mapMode && !document.querySelector('dialog[open]')) closeMap(); });
 $('#mapBtn').addEventListener('click', () => openMap(job ? 'nav' : 'all'));
@@ -803,18 +834,16 @@ async function toggleOnline() {
 }
 function listen() {
   stopJobs();
-  stopJobs = online ? onJobRequest(addJob, { near: me }) : () => {};
-  if (!online) { jobs = []; picked = null; }
+  stopJobs = online ? onJobRequest(addJob, { near: me, onGone: goneJob }) : () => {};
+  if (!online) { jobs = []; picked = null; gone.clear(); }
 }
 
-// Every second: request countdowns (expired ones drop off), the pickup wait timer, and when a no-show is allowed
+// Every second: request countdowns, the pickup wait timer, and when a no-show is allowed
 function tick() {
-  let expired = false;
   $$('[data-expires]').forEach((n) => {
     const left = Number(n.dataset.expires) - Date.now();
     n.textContent = mmss(left);
-    n.closest('.dhero__timer')?.classList.toggle('is-low', left < 15000);
-    if (left <= 0) expired = true;
+    n.closest('.rq__left')?.classList.toggle('is-low', left < 15000);
   });
   $$('[data-wait]').forEach((n) => { n.textContent = mmss(Date.now() - Number(n.dataset.wait)); });
   const ns = $('[data-noshow]');
@@ -823,9 +852,8 @@ function tick() {
     ns.disabled = left > 0;
     $('[data-noshow-left]', ns).textContent = left > 0 ? ` · in ${mmss(left)}` : '';
   }
-  return expired;
 }
-setInterval(() => { if (tick()) { jobs = jobs.filter((j) => j.expiresAt > Date.now()); renderJobs(); } }, 1000);
+setInterval(() => { tick(); jobs.filter((j) => j.until <= Date.now() - 1000).forEach((j) => goneJob(j.id, 'expired')); }, 1000);
 
 // Today in one line (the rest is on Earnings); the amount rolls like the analytics numbers
 async function loadEarnings() {
@@ -867,6 +895,9 @@ async function start() {
   const d = await driverStatus();
   if (!d.signedIn) { location.replace('/pages/drive.html'); return; } // sign in first
   $('#driverHome').hidden = false;
+  // Once the status panel has scrolled up under the top bar, a sky bar goes behind the logo, so nothing scrolls under it
+  const bandH = parseFloat(getComputedStyle($('.content')).paddingTop) - 10;
+  new IntersectionObserver(([e]) => document.body.classList.toggle('is-scrolled', !e.isIntersecting), { root: $('.content'), rootMargin: `-${bandH}px 0px 0px 0px` }).observe($('.dsky'));
   // The map was made while the page was hidden: size it to its box now, and whenever the box changes
   if ('ResizeObserver' in window) new ResizeObserver(() => { map.resize(); if (!mapMode) { routeKey = ''; inlineKey = ''; paintInline(); } }).observe($('#mapSlot'));
   approved = d.status === 'approved';

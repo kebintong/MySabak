@@ -51,9 +51,12 @@ async function start() {
   bindAll('todayLabel', n === 1 ? 'trip today' : 'trips today');
   bindAll('weekCount', String(week.length));
   bindAll('weekAvg', peso(week.length ? Math.round(e.week / week.length) : 0));
+  bindAll('feeRule', `${peso(e.feePerTrip)} for each completed trip`);
+  bindAll('weekFees', e.feesWeek ? `−${peso(e.feesWeek)}` : peso(0));
+  bindAll('weekNet', peso(e.week - e.feesWeek));
   bindAll('payout', e.payout.method || 'Add GCash or a bank to get paid.');
   bindAll('payoutAction', e.payout.method ? 'Change' : 'Set up');
-  $$('[data-bind="today"], [data-bind="week"], [data-bind="weekCount"], [data-bind="weekAvg"]').forEach((b) => rollNumber(b));
+  $$('[data-bind="today"], [data-bind="week"], [data-bind="weekCount"], [data-bind="weekAvg"], [data-bind="weekNet"]').forEach((b) => rollNumber(b));
   paintWeek(e.trips);
 }
 start();

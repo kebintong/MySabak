@@ -60,6 +60,7 @@
 .dgo__switch[aria-checked="true"] .dgo__knob { transform: translateX(24px); }
 .dgo__switch:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .dgo__switch:disabled { opacity: .45; cursor: default; }
+.dgo__switch::after { content: ""; position: absolute; inset: -6px; } /* a 46 px tap area */
 @media (max-width: 379.98px) {
 .page--driver .dsky { padding-bottom: 84px; }
 .dearn__value { font-size: 44px; }
@@ -81,72 +82,12 @@
 
 /* ---------- Requests: one big card, the rest as service cards ---------- */
 .dreq { margin-top: -84px; position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; }
-.dreq__title { margin: 0 4px; font: 700 18px var(--font-display); color: #fff; }
-.page--driver.has-job .dreq__title { visibility: hidden; }
 #jobList { display: flex; flex-direction: column; gap: 12px; }
-.dtone--lilac { background: #f2e9fa url("/assets/images/v3/glow-lilac.svg") right -50px top -30px / 260px 230px no-repeat; }
-.dtone--peach { background: #fcefd9 url("/assets/images/v3/glow-peach.svg") right -50px top -30px / 260px 230px no-repeat; }
-/* Each card's own colour for its lighter buttons (Skip, I've arrived, Google Maps, Call): lilac on Ride, peach on Express */
-.dtone--lilac { --tone-soft: #e6d6f7; --tone-soft-on: #dcc6f3; --tone-ink: var(--brand-deep); }
-.dtone--peach { --tone-soft: #f8dcb3; --tone-soft-on: #f3cd94; --tone-ink: #7a4108; }
-:is(.dhero, .activejob) :is(.button--ghost, .btn-soft) { background: var(--tone-soft); color: var(--tone-ink); }
-:is(.dhero, .activejob) :is(.button--ghost, .btn-soft):hover { background: var(--tone-soft-on); color: var(--tone-ink); }
-:is(.dhero, .activejob) :is(.button--ghost, .btn-soft) .icon { stroke: var(--tone-ink); }
-.dhero .dhero__route { color: var(--tone-ink); }
+/* The lighter buttons (Skip, I've arrived, Google Maps): soft lilac */
+:is(.rq, .activejob) :is(.button--ghost, .btn-soft) { background: var(--tone-soft); color: var(--tone-ink); }
+:is(.rq, .activejob) :is(.button--ghost, .btn-soft):hover { background: var(--tone-soft-on); color: var(--tone-ink); }
+:is(.rq, .activejob) :is(.button--ghost, .btn-soft) .icon { stroke: var(--tone-ink); }
 
-/* The big card is a grid, so the picture always has its own column and never covers the words or buttons */
-.dhero {
-  position: relative; overflow: hidden; padding: 16px 18px; border-radius: 22px; border: 2px solid var(--gold);
-  display: grid; grid-template-columns: minmax(0, 1fr) clamp(110px, 38%, 260px); column-gap: 12px; row-gap: 4px; align-content: start;
-  grid-template-areas: "kind kind" "from art" "to art" "fare art" "actions actions";
-  box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .18); animation: m-in .3s var(--ease-out) backwards;
-}
-/* the kind line leaves room on the right for the time */
-.dhero__kind { grid-area: kind; padding-right: 96px; font-size: 13px; font-weight: 600; color: var(--sub); min-height: 28px; display: flex; align-items: center; }
-.dhero__timer {
-  position: absolute; right: 14px; top: 12px; z-index: 1; height: 28px; padding: 0 11px; border-radius: 999px;
-  display: inline-flex; align-items: center; gap: 4px; background: #fff; box-shadow: 0 2px 8px rgba(41, 10, 69, .12);
-  font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap;
-}
-.dhero__timer b { font-weight: 700; font-variant-numeric: tabular-nums; }
-.dhero__from { grid-area: from; margin: 0; font: 800 20px/1.2 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
-.dhero__to { grid-area: to; margin: 0; font-size: 13.5px; color: var(--sub); }
-.dhero__fare { grid-area: fare; margin: 4px 0 0; font: 800 32px var(--font-display); letter-spacing: -.02em; color: var(--ink); }
-.dhero__art { grid-area: art; align-self: center; justify-self: center; width: 100%; max-height: 140px; object-fit: contain; pointer-events: none; }
-.dhero__actions { grid-area: actions; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.dhero__actions .button { min-height: 46px; font-size: 15px; }
-.dhero__actions .button:first-child { flex: 1 1 160px; max-width: 300px; } /* never a full-width bar on a wide card */
-.dhero__route {
-  min-height: 46px; padding: 0 10px; border: 0; background: none; cursor: pointer;
-  font: 700 15px var(--font-body); color: var(--brand-deep); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px;
-  transition: text-decoration-color .15s var(--ease-out);
-}
-.dhero__route:hover { text-decoration-color: currentColor; }
-.dhero__route:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 10px; }
-
-/* Small cards: the name gets the full width, the fare and the picture share the bottom row */
-.dminis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.dmini {
-  position: relative; overflow: hidden; min-height: 128px; padding: 14px; border: 0; border-radius: 18px;
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 46%); grid-template-rows: auto auto 1fr; column-gap: 8px; row-gap: 2px;
-  grid-template-areas: "kind kind" "from from" "fare art";
-  font: inherit; color: var(--ink); text-align: left; cursor: pointer;
-  transition: transform .15s var(--spring), box-shadow .2s var(--ease-out);
-}
-.dmini:hover { box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
-.dmini:active { transform: scale(.97); }
-.dmini__kind { grid-area: kind; font-size: 13px; font-weight: 600; color: var(--sub); }
-.dmini__from { grid-area: from; font-size: 15px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.dmini__fare { grid-area: fare; align-self: end; padding-bottom: 2px; font: 800 22px/1 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-/* the picture by height, so a wide car and a winged parcel look the same size and stay inside the card */
-.dmini__art { grid-area: art; align-self: end; justify-self: end; height: 44px; width: auto; max-width: 100%; object-fit: contain; object-position: right bottom; pointer-events: none; } /* never wider than its half, so it can't reach the fare */
-@media (min-width: 900px) {
-#jobList { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
-.dminis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.dmini { min-height: 150px; padding: 16px; }
-.dhero:only-child { grid-column: 1 / -1; }
-.dmini__art { height: 54px; max-width: 120px; }
-}
 .dempty--quiet { display: block !important; padding: 4px 0 !important; background: #fff; }
 .dempty--quiet .erows { padding: 10px 16px 14px; }
 .dempty__ic { width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--tint); display: grid; place-items: center; }
@@ -181,27 +122,6 @@
 .activejob__gmaps { flex: 0 0 auto; }
 .activejob .trip__cancel { flex-basis: auto; align-self: center; }
 
-@media (min-width: 600px) and (max-width: 899.98px) {
-.dminis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-/* Phones: the big card more compact and the other requests as short rows, so several fit on one screen */
-@media (max-width: 599.98px) {
-.dhero { padding: 14px 16px; grid-template-columns: minmax(0, 1fr) 96px; }
-.dhero__from { font-size: 18px; }
-.dhero__to { font-size: 13px; }
-.dhero__fare { margin-top: 2px; font-size: 26px; }
-.dhero__art { max-height: 72px; }
-.dhero__actions { margin-top: 6px; }
-.dhero__actions .button { min-height: 44px; }
-.dminis { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.dmini {
-  min-height: 0; padding: 10px 14px; border-radius: 16px; column-gap: 12px; row-gap: 0; align-items: center;
-  grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; grid-template-areas: "art kind fare" "art from fare";
-}
-.dmini__art { height: 30px; max-width: 48px; justify-self: center; align-self: center; object-position: center; }
-.dmini__from { font-size: 14.5px; -webkit-line-clamp: 1; }
-.dmini__fare { align-self: center; padding: 0; font-size: 18px; }
-}
 
 /* ---------- The last 7 days, shortcuts, trips, payout. Desktop: the trips beside the rest ---------- */
 .dgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -362,7 +282,7 @@
 .dmapview__locate { bottom: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
-.dmapview, .dhero { animation: none; }
+.dmapview, .rq { animation: none; transition: none; }
 }
 
 
@@ -378,7 +298,6 @@
 .dtoday b { color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
 .dtoday a { margin-left: auto; font-weight: 700; color: #ffd36b; text-decoration: none; }
 .dtoday a:hover { text-decoration: underline; }
-.dreq__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .dreq__map { /* solid white: it sits where the sky meets the cream edge, so it has to read on both */
   display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 0; border-radius: 999px; cursor: pointer;
   background: #fff; color: var(--brand-deep); font: 700 13.5px var(--font-body); box-shadow: 0 4px 12px rgba(41, 10, 69, .18);
@@ -396,7 +315,10 @@
 .dglance__rows > div + div { border-top: 1px solid var(--line); }
 .dglance__rows dt { font-size: 14px; color: var(--sub); }
 .dglance__rows dd { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-.dglance__zero { color: #a8670c !important; }
+.dglance__rows dt span { display: block; font-size: 12.5px; color: var(--sub); opacity: .85; }
+.dglance__rows .dglance__fee { color: #a32711; }
+.dglance__rows > .dglance__net dt { font-weight: 700; color: var(--ink); }
+.dglance__rows > .dglance__net dd { font-size: 17px; }
 
 /* ---------- Driver account: rows with plain icons in the ink of their words ---------- */
 .dwho--page .dwho__ava { width: 56px; height: 56px; font-size: 18px; }
@@ -466,11 +388,6 @@
 .dtoday { font-size: 14px; }
 .dtoday b { font-size: 16px; color: var(--gold); }
 
-/* Request card: who, and where to meet */
-.dhero__who, .dhero__note { display: block; margin-top: 2px; }
-.dhero__who { color: var(--ink); font-weight: 600; }
-.dhero__note { font-style: italic; }
-.dhero__timer.is-low { background: #fde8e4; color: #a32711; }
 
 /* The accepted job */
 .activejob__top .dsos {
@@ -553,10 +470,9 @@
 .dmapview__off b { color: var(--ink); font-size: 16px; }
 .dmapview__off .button { align-self: flex-start; margin-top: 6px; }
 
-/* Desktop: the job card at a readable width, and room for the floating tab bar */
+/* Desktop: the job card at a readable width (the content's own bottom padding already clears the tab bar) */
 @media (min-width: 900px) {
 .activejob { width: 100%; max-width: 760px; margin: 0 auto; }
-.page--driver .dhome { padding-bottom: 110px; }
 }
 
 /* =========================================================
@@ -605,13 +521,18 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 /* The work: the map, then the requests (desktop: side by side) */
 .dwork { display: flex; flex-direction: column; gap: 16px; }
 .dmapcol { display: flex; flex-direction: column; gap: 10px; }
-.dreq__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.page--driver .dreq__title, .page--driver.has-job .dreq__title { visibility: visible; margin: 0; font: 800 18px var(--font-display); color: var(--ink); }
-.dlegend { margin: 0; display: flex; gap: 12px; font-size: 12.5px; font-weight: 700; color: var(--sub); }
+.page--driver .dreq__title { margin: 0; font: 800 18px var(--font-display); color: var(--ink); }
+/* The pin colours, in words, on the map's corner (the full map has its own sheet) */
+.dlegend {
+  position: absolute; left: 10px; top: 10px; z-index: 2; margin: 0; display: flex; gap: 10px; padding: 0 12px; min-height: 32px; align-items: center;
+  border-radius: 999px; background: rgba(255, 255, 255, .94); box-shadow: 0 2px 10px rgba(41, 10, 69, .14);
+  font-size: 12px; font-weight: 700; color: var(--ink);
+}
 .dlegend span { display: inline-flex; align-items: center; gap: 5px; }
 .dlegend span::before { content: ""; width: 9px; height: 9px; border-radius: 50%; }
 .dlegend__ride::before { background: #5630d8; } .dlegend__express::before { background: #E0782F; } .dlegend__shop::before { background: #1E7A44; }
-.page--driver.has-job .dlegend { visibility: hidden; }
+.page--driver.has-job .dlegend, .dmapview.is-full .dlegend { display: none; }
+@media (max-width: 599.98px) { .dlegend { display: none; } } /* the phone's short map has no room; each card names its service */
 
 /* The map on the page; full screen when opened */
 .dmapslot { position: relative; height: 300px; }
@@ -643,25 +564,12 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 
 /* Cards: white, a stripe and a label in the service colour */
 .dcard { --tone-soft: #f1eaf8; --tone-soft-on: #e6daf2; --tone-ink: var(--brand-deep); }
-.dhero.dcard, .dmini.dcard, .activejob.dcard, .dempty.dcard {
+.activejob.dcard, .dempty.dcard {
   position: relative; overflow: hidden; border: 0; background: #fff; box-shadow: 0 8px 24px -10px rgba(59, 26, 120, .22);
 }
-.dhero.dcard::before, .dmini.dcard::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--kind); }
 .activejob.dcard::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--kind); }
 .dkind { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--kind-ink); }
 .dkind__ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.dhero.dcard { padding: 14px 16px 14px 20px; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "kind kind" "from fare" "to to" "actions actions"; column-gap: 12px; }
-.dhero.dcard .dhero__kind { gap: 8px; color: var(--sub); }
-.dhero.dcard .dhero__fare { margin: 0; align-self: start; font-size: 28px; }
-.dmini.dcard {
-  min-height: 0; padding: 12px 14px 12px 18px; border-radius: 16px; align-items: center; column-gap: 12px; row-gap: 0;
-  grid-template-columns: 22px minmax(0, 1fr) auto; grid-template-rows: auto auto; grid-template-areas: "ic kind fare" "ic from fare";
-}
-.dmini__ic { grid-area: ic; width: 20px; height: 20px; fill: none; stroke: var(--kind-ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.dmini.dcard .dmini__kind { color: var(--kind-ink); font-weight: 700; }
-.dmini.dcard .dmini__from { -webkit-line-clamp: 1; font-size: 14.5px; }
-.dmini.dcard .dmini__fare { align-self: center; padding: 0; font-size: 18px; }
-.dminis { grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .activejob.dcard { padding-top: 18px; }
 .activejob.dcard .activejob__top { color: var(--sub); }
 .dempty.dcard .jobs-wait { color: var(--brand-deep); }
@@ -690,15 +598,12 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .dstat small { font-size: 11px; }
 .dstat b { font-size: 24px; margin-top: 2px; }
 .dstat .dstat__money { font-size: 30px; }
-.dwork { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 28px; align-items: start; max-width: 1180px; margin: 4px auto 0; width: 100%; }
+.dwork { display: grid; grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); gap: 24px; align-items: start; max-width: 1180px; margin: 4px auto 0; width: 100%; }
+.dwork > .dreq { order: -1; }
 .dmapcol { position: sticky; top: calc(var(--content-top, 0px) + 12px); }
-.dmapslot { height: 440px; }
 #jobList { display: flex; flex-direction: column; gap: 12px; }
-.dhero:only-child { grid-column: auto; }
 .activejob { max-width: none; margin: 0; }
-.dminis, #jobList .dminis { grid-template-columns: minmax(0, 1fr); }
 #jobList { align-items: stretch; } /* every card the column's full width */
-.dmini.dcard { width: 100%; min-height: 0; padding: 12px 14px 12px 18px; }
 }
 
 
@@ -786,3 +691,79 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .dwhy .dchoice__opt[aria-checked="true"] { border-color: #b3311b; background: #b3311b; color: #fff; }
 /* Sheets open with focus on the title (read first, nothing looks pre-chosen) */
 .dsheetx .sheet__title:focus { outline: none; }
+
+
+/* =========================================================
+   Requests (Drive): one card per request. Service as an icon and a word, the fare top right, the route as two
+   stops, then trip length, payment and time left. The picked card opens with Accept, Skip and Route.
+   ========================================================= */
+.page--driver .dhome .dreq { margin-top: 0; gap: 12px; }
+.rqs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.rq {
+  --tone-soft: #f1eaf8; --tone-soft-on: #e6daf2; --tone-ink: var(--brand-deep);
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "top fare" "route fare" "meta meta";
+  column-gap: 12px; row-gap: 6px; padding: 14px 16px; border-radius: 18px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(41, 10, 69, .06), 0 6px 18px -10px rgba(59, 26, 120, .28);
+  transition: box-shadow .2s var(--ease-out), opacity .3s var(--ease-out);
+}
+.rq.is-open { grid-template-areas: "top fare" "route fare" "meta meta" "who who" "actions actions"; box-shadow: 0 0 0 2px var(--brand), 0 10px 26px -12px rgba(59, 26, 120, .4); }
+.rq__pick { position: absolute; inset: 0; z-index: 1; width: 100%; padding: 0; border: 0; border-radius: inherit; background: none; cursor: pointer; }
+.rq__pick:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.rq:has(.rq__pick):hover { box-shadow: 0 0 0 1px #d9c6ef, 0 10px 22px -10px rgba(59, 26, 120, .35); }
+.rq__top { grid-area: top; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--sub); }
+.rq__top .dkind { font-weight: 700; }
+.rq__fare { grid-area: fare; margin: 0; align-self: start; font: 800 24px/1.1 var(--font-display); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rq.is-open .rq__fare { font-size: 28px; }
+/* the route: two stops joined by a line, pickup filled, drop-off a ring */
+.rq__route { grid-area: route; margin: 2px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; min-width: 0; }
+.rq__route li { position: relative; padding-left: 20px; font-size: 14px; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rq__route li:first-child { font: 700 16px/1.3 var(--font-display); color: var(--ink); }
+.rq__route li::before { content: ""; position: absolute; left: 3px; top: .45em; width: 9px; height: 9px; border-radius: 50%; box-sizing: border-box; }
+.rq__route li:first-child::before { background: var(--ink); }
+.rq__route li:last-child::before { border: 2px solid var(--sub); }
+.rq__route li:first-child::after { content: ""; position: absolute; left: 7px; top: calc(.45em + 11px); height: calc(100% - 4px); border-left: 1.5px dotted #b9a9cc; }
+.rq.is-open .rq__route li { white-space: normal; }
+.rq__meta { grid-area: meta; margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; color: var(--sub); }
+.rq__left { margin-left: auto; white-space: nowrap; }
+.rq__left b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rq__left.is-low, .rq__left.is-low b { color: #a32711; }
+.rq__who { grid-area: who; margin: 4px 0 0; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.rq__who span { font-weight: 400; font-style: italic; color: var(--sub); }
+.rq__actions { grid-area: actions; display: flex; gap: 8px; margin-top: 4px; }
+.rq__actions .button { min-height: 48px; font-size: 15.5px; }
+.rq__actions [data-accept] { flex: 1 1 auto; }
+.rq__actions [data-skip] { flex: 0 0 auto; padding: 0 20px; }
+.rq__map {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 12px; border: 0; border-radius: 14px; background: none; cursor: pointer;
+  font: 700 14.5px var(--font-body); color: var(--brand-deep);
+}
+.rq__map .icon { stroke: var(--brand-deep); }
+.rq__map:hover { background: #f6f1fa; }
+.rq__map:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.rq__actions [disabled] { opacity: .6; cursor: progress; }
+.rq__actions [aria-busy="true"] { opacity: 1; }
+/* gone (taken, cancelled, expired): greyed and locked for a moment, with the reason in words */
+.rq.is-gone { opacity: .62; box-shadow: 0 0 0 1px rgba(41, 10, 69, .08); }
+.rq.is-gone .rq__fare { text-decoration: line-through; text-decoration-thickness: 2px; }
+.rq__why { margin-left: auto; font-weight: 700; color: #a32711; }
+
+/* Phones: a short map, then the requests, so the first request and its Accept fit on the first screen */
+.page--driver .dhome .dmapslot { height: 190px; }
+@media (min-width: 600px) {
+.page--driver .dhome .dmapslot { height: 300px; }
+.rqs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rq.is-open, .rq.is-gone.is-open { grid-column: 1 / -1; }
+}
+@media (min-width: 900px) {
+.page--driver .dhome .dmapslot { height: clamp(380px, calc(100dvh - var(--content-top, 0px) - var(--content-bottom, 0px) - 24px), 720px); }
+.rqs { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The sky bar behind the top bar, once the status panel has scrolled up under it (driver.js sets is-scrolled) */
+.page--driver .app::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: calc(var(--content-top) - 4px); pointer-events: none;
+  background: linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf) center top / 100% 320px no-repeat;
+  box-shadow: 0 6px 16px -10px rgba(20, 8, 42, .6); opacity: 0; transition: opacity .2s var(--ease-out);
+}
+.page--driver.is-scrolled .app::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .page--driver .app::before { transition: none; } }

@@ -1300,7 +1300,7 @@ export function openTipSheet({ orderId, orderType, title, subtitle = '', lines =
         ${demoNote ? `<p class="demo-note">${esc(demoNote)}</p>` : ''}
         ${lines.length ? `<dl class="receipt">${lines.map((l) => `<div class="receipt__row"><dt>${esc(l.label)}<span>${esc(l.to)}</span></dt><dd>${esc(l.amount)}</dd></div>`).join('')}</dl>` : ''}
         <section class="tip" aria-labelledby="tipHead">
-          <h3 class="tip__head" id="tipHead">Tip mysabak <span>· keeps rides fee-free for drivers</span></h3>
+          <h3 class="tip__head" id="tipHead">Tip mysabak <span>· helps keep mysabak running</span></h3>
           <div data-picker></div>
           <p class="tip__note">${icon('i-shield', 'icon--sm')}${esc(TIP_NOTE[orderType] || TIP_NOTE.ride)}</p>
         </section>
@@ -1329,7 +1329,7 @@ export function openTipSheet({ orderId, orderType, title, subtitle = '', lines =
       try {
         await sendTip({ orderId, orderType, amount, method: picker.method() });
         edgeGlow('reward', send);
-        toast(`Thank you! Your ${peso(amount)} tip keeps mysabak fee-free for drivers.`);
+        toast(`Thank you! Your ${peso(amount)} tip helps keep mysabak running.`);
         done({ amount });
       } catch (err) {
         toast(err.status === 400 ? err.message : errorMessage(err));

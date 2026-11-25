@@ -51,8 +51,10 @@
           <h2 class="card__title" id="glanceTitle">The last 7 days, in numbers</h2>
           <dl class="dglance__rows">
             <div><dt>Trips</dt><dd data-bind="weekCount">0</dd></div>
-            <div><dt>Average per trip</dt><dd data-bind="weekAvg">₱0</dd></div>
-            <div><dt>Booking fees taken</dt><dd class="dglance__zero">₱0</dd></div>
+            <div><dt>Fares</dt><dd data-bind="week">₱0</dd></div>
+            <div><dt>Platform fees<span data-bind="feeRule">₱10 for each completed trip</span></dt><dd class="dglance__fee" data-bind="weekFees">₱0</dd></div>
+            <div class="dglance__net"><dt>After fees</dt><dd data-bind="weekNet">₱0</dd></div>
+            <div><dt>Average fare</dt><dd data-bind="weekAvg">₱0</dd></div>
           </dl>
         </section>
 
@@ -60,7 +62,7 @@
           <div class="dpay__text"><h2 id="payTitle">Payout method</h2><p data-bind="payout">Add GCash or a bank to get paid.</p></div>
           <button type="button" class="dpay__btn" data-payout data-bind="payoutAction">Set up</button>
         </section>
-        <p class="finder__note">You keep 100% of every fare. Riders can add an optional tip for mysabak on top of it, so nothing is ever taken from yours.</p>
+        <p class="finder__note">You keep the whole fare. mysabak charges a flat ₱10 platform fee for each completed trip, never a percentage.</p>
       </div>
     </main>
 

@@ -36,6 +36,11 @@ export const CONFIG = {
     { id: 'large',  name: 'Large',  hint: 'Bigger boxes; pick Sedan or SUV' },
   ],
 
+  // The platform fee: a flat amount for each completed trip, charged to the driver, never a percentage and never taken
+  // from the fare the customer pays (drivers keep the whole fare). Approved for Ride, Parcel and Food.
+  // shortcut: Cargo is left out until management approves a Cargo fee; add 'cargo' to kinds then.
+  platformFee: { perTrip: 10, kinds: ['ride', 'express', 'shop'] },
+
   // Tips: optional, nothing picked by default, 100% to mysabak (drivers keep 100% of the fare).
   // On rides the tip is added to the price when booking (any payment method, see ridePayments).
   // Tips sent separately (after a trip, from a shop order, on the Support page) are e-wallet or card only.

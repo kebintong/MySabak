@@ -1013,23 +1013,37 @@ export async function setOnline(online) {
 }
 
 /**
- * Listen for job requests while online (Ride, Express or Shop delivery).
- * Backend: connect your realtime channel (WebSocket, SSE…) and call `onJob` for each request:
- *   { id, kind:'ride'|'express'|'shop', pickup:{lng,lat,label}, dropoff:{lng,lat,label}, distanceKm, fare,
- *     payment:'cash'|'gcash'|'bank', rider:{name, rating}, note?:string (where to meet),
- *     shop?:{name}, parcel?:{size, item}, recipient?:{name} (Express and Shop: who receives it), expiresAt:number }
+ * Listen for job requests while online (Ride, Parcel or Food delivery).
+ * Backend: connect your realtime channel (WebSocket, SSE…) and send two events:
+ *  - a new request → `onJob(job)`:
+ *    { id, kind:'ride'|'express'|'shop', pickup:{lng,lat,label}, dropoff:{lng,lat,label}, distanceKm, fare,
+ *      payment:'cash'|'gcash'|'bank', rider:{name, rating}, note?:string (where to meet),
+ *      shop?:{name}, parcel?:{size, item}, recipient?:{name} (Parcel and Food: who receives it),
+ *      expiresAt:number, serverTime:number }  (both server clock, ms; the page counts down from their difference,
+ *      so a phone with a wrong clock still shows the right time left)
+ *  - a request is no longer open to this driver → `onGone(id, reason)`, reason: 'taken' (another driver accepted),
+ *    'cancelled' (the customer cancelled), 'expired', 'withdrawn' (the system or an admin). The server decides; the
+ *    page never drops a request on its own clock alone.
  * DEMO: SAMPLE requests (`demo: true`) picked by the clock, so every phone and computer sees the same ones at the
- * same moment: a new one every 9 s, each open 45 s, so always five waiting. Checked every second and when the page
- * wakes (phones pause timers while the screen is off). Places: demo-data.js (DEMO_PLACES) around the city centre.
- * A request this browser accepted never comes back.
+ * same moment: a new one every 9 s, each open 45 s. Some end early, the same way on every device (demoFate): another
+ * driver takes one, a customer cancels one. A request accepted in this browser leaves its other tabs as 'taken'.
+ * Checked every second and when the page wakes (phones pause timers while the screen is off).
+ * Places: demo-data.js (DEMO_PLACES) around the city centre.
  * @param {(job:object) => void} onJob
- * @param {{near?:{lng:number, lat:number}}} [opts]  where the driver is
+ * @param {{near?:{lng:number, lat:number}, onGone?:(id:string, reason:string) => void}} [opts]  near: where the driver is
  * @returns {() => void} stop listening
  */
 export const JOB_EVERY_MS = 9000;
 export const JOB_OPEN_MS = 45000;
+// DEMO: how a sample request ends early, by its clock slot (the same on every device). null: it stays open until it expires
+function demoFate(n) {
+  if (n % 7 === 3) return { reason: 'taken', at: n * JOB_EVERY_MS + 18000 };
+  if (n % 11 === 6) return { reason: 'cancelled', at: n * JOB_EVERY_MS + 25000 };
+  return null;
+}
+const slotOf = (jobId) => parseInt(String(jobId).replace(/^JOB-/, ''), 36);
 // eslint-disable-next-line no-unused-vars
-export function onJobRequest(onJob, { near } = {}) { // near: for the real backend; the demo uses the city centre so devices match
+export function onJobRequest(onJob, { near, onGone = () => {} } = {}) { // near: for the real backend; the demo uses the city centre so devices match
   const centre = { lng: CONFIG.startCenter[0], lat: CONFIG.startCenter[1] };
   const d = demo.get('driver', {}) || {};
   const vehicle = d.vehicle || 'sedan';
@@ -1040,10 +1054,18 @@ export function onJobRequest(onJob, { near } = {}) { // near: for the real backe
     const open = [];
     for (let slot = Math.floor((now - JOB_OPEN_MS) / JOB_EVERY_MS) + 1; slot <= Math.floor(now / JOB_EVERY_MS); slot++) {
       const job = sampleJob(centre, vehicle, slot);
-      if (job.expiresAt > now && !taken.includes(job.id)) open.push(job);
+      const fate = demoFate(slot);
+      if (job.expiresAt > now && !taken.includes(job.id) && !(fate && fate.at <= now)) open.push(job);
     }
     demo.set('jobs', open);
-    open.filter((j) => !sent.has(j.id)).forEach((j) => { sent.add(j.id); onJob(j); });
+    const ids = new Set(open.map((j) => j.id));
+    sent.forEach((id) => {
+      if (ids.has(id)) return;
+      sent.delete(id);
+      const fate = demoFate(slotOf(id));
+      onGone(id, taken.includes(id) ? 'taken' : fate && fate.at <= now ? fate.reason : 'expired');
+    });
+    open.filter((j) => !sent.has(j.id)).forEach((j) => { sent.add(j.id); onJob({ ...j, serverTime: now }); });
   };
   const wake = () => { if (document.visibilityState !== 'hidden') check(); };
   const t0 = setTimeout(check, 0);
@@ -1081,13 +1103,29 @@ function sampleJob(near, vehicle, n) { // n: the clock slot, so the same n gives
   };
 }
 
-/** Accept a job request. 410 when it expired or someone else took it. @returns {Promise<{ok:boolean, job:object}>} */
+/**
+ * Accept a job request. The backend makes this atomic (one winner per request) and checks the request is still open
+ * and this driver is still eligible. Accepting the job you already hold returns it again (a double tap is safe).
+ * Errors carry `code`: 409 'taken' (another driver got it first) · 409 'busy' (finish your current job) ·
+ * 410 'expired' · 410 'cancelled' (the customer cancelled). Later: 402 'wallet_low' (see driver-wallet-plan.md).
+ * @returns {Promise<{ok:boolean, job:object}>}
+ */
+const jobErr = (message, status, code) => Object.assign(new Error(message), { status, code });
 export async function acceptJob(jobId) {
-  if (demo.get('activeJob', null)) throw Object.assign(new Error('Finish your current job first.'), { status: 409 });
+  const held = demo.get('activeJob', null);
+  if (held && held.id === jobId) return { ok: true, job: held };
+  if (held) throw jobErr('Finish your current job first.', 409, 'busy');
+  const opened = slotOf(jobId) * JOB_EVERY_MS;
+  if (!(opened <= Date.now() && opened > Date.now() - JOB_OPEN_MS)) throw jobErr('This request has expired.', 410, 'expired'); // unknown, or past its window
+  const fate = demoFate(slotOf(jobId));
+  const goneFirst = () => demo.get('jobsTaken', []).includes(jobId) || (fate && fate.reason === 'taken' && fate.at <= Date.now());
+  if (goneFirst()) throw jobErr('Another driver accepted this request first.', 409, 'taken');
+  if (fate && fate.reason === 'cancelled' && fate.at <= Date.now()) throw jobErr('The customer cancelled this request.', 410, 'cancelled');
   const jobs = demo.get('jobs', []);
   const job = jobs.find((j) => j.id === jobId);
-  if (!job || job.expiresAt < Date.now()) throw Object.assign(new Error('That request is no longer available.'), { status: 410 });
+  if (!job || job.expiresAt < Date.now()) throw jobErr('This request has expired.', 410, 'expired');
   await wait(400);
+  if (goneFirst()) throw jobErr('Another driver accepted this request first.', 409, 'taken'); // another tab won while we waited
   const active = { ...job, status: 'to_pickup', acceptedAt: Date.now() };
   demo.set('activeJob', active);
   demo.set('jobs', jobs.filter((j) => j.id !== jobId));
@@ -1155,19 +1193,29 @@ export async function closeJob(jobId, { stars = null, cashCollected = null, cash
 }
 
 /**
- * Driver earnings: fares only (drivers keep 100%; tips go to mysabak).
- * DEMO: the jobs completed in this browser.
- * @returns {Promise<{today:number, week:number, trips:Array<{id, kind, at:number, fare:number, distanceKm:number}>,
+ * Driver earnings. Drivers keep the whole fare; mysabak charges a flat platform fee for each completed trip
+ * (CONFIG.platformFee, ₱10 on Ride, Parcel and Food), never a percentage. Tips go to mysabak.
+ * Backend: the fee is charged from the driver's wallet on verified completion (driver-wallet-plan.md); send each
+ * trip's own `fee`, since the amount or the services can change over time.
+ * DEMO: the jobs completed in this browser; the fee worked out from CONFIG.
+ * @returns {Promise<{today:number, week:number, feesToday:number, feesWeek:number, feePerTrip:number,
+ *   trips:Array<{id, kind, at:number, fare:number, fee:number, distanceKm:number}>,
  *   tipsToMysabak:number, payout:{method:string|null, next:string|null}}>}
  */
 export async function driverEarnings() {
-  const trips = demo.get('driverTrips', []);
+  const { perTrip, kinds } = CONFIG.platformFee;
+  const trips = demo.get('driverTrips', []).map((t) => ({ ...t, fee: t.fee ?? (kinds.includes(t.kind) ? perTrip : 0) }));
   const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const sum = (list) => list.reduce((n, t) => n + t.fare, 0);
+  const sum = (list, k = 'fare') => list.reduce((n, t) => n + t[k], 0);
+  const today = trips.filter((t) => t.at >= midnight.getTime());
+  const week = trips.filter((t) => t.at >= weekAgo);
   return {
-    today: sum(trips.filter((t) => t.at >= midnight.getTime())),
-    week: sum(trips.filter((t) => t.at >= weekAgo)),
+    today: sum(today),
+    week: sum(week),
+    feesToday: sum(today, 'fee'),
+    feesWeek: sum(week, 'fee'),
+    feePerTrip: perTrip,
     trips,
     tipsToMysabak: 0,
     payout: { method: null, next: null },

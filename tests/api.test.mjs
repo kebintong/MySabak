@@ -107,7 +107,7 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
   const stop2 = api.onJobRequest((j) => other.push(j), { near: { lng: 123.9, lat: 10.33 } });
   await new Promise((r) => setTimeout(r, 50));
   stop(); stop2();
-  assert.equal(jobs.length, 5, 'always five waiting');
+  assert.ok(jobs.length >= 3 && jobs.length <= 5, 'up to five waiting (some end early: taken or cancelled)');
   assert.deepEqual(other.map((j) => j.id), jobs.map((j) => j.id), 'every device gets the same requests');
   assert.ok(jobs.every((j) => j.expiresAt > Date.now() && j.expiresAt - Date.now() <= api.JOB_OPEN_MS));
   const job = jobs[jobs.length - 1];
@@ -115,7 +115,7 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
   assert.ok(['ride', 'express', 'shop'].includes(job.kind));
   assert.ok(job.fare > 0 && job.distanceKm > 0 && job.pickup.label && job.dropoff.label);
   await assert.rejects(api.acceptJob('JOB-nope'), { status: 410 });
-  const before = (await api.driverEarnings()).today;
+  const { today: before, feesToday: feesBefore } = await api.driverEarnings();
   const { job: active } = await api.acceptJob(job.id);
   assert.equal(active.status, 'to_pickup');
   const again = [];
@@ -128,8 +128,46 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
   for (const step of ['arrived', 'started', 'completed']) assert.equal((await api.updateJob(job.id, step)).status, step);
   assert.equal(await api.activeJob(), null);
   const e = await api.driverEarnings();
-  assert.equal(e.today, before + job.fare);
+  assert.equal(e.today, before + job.fare, 'the whole fare is the driver’s');
+  assert.equal(e.feesToday, feesBefore + 10, 'a flat ₱10 platform fee for the completed trip');
   assert.equal(e.trips[0].id, job.id);
+  assert.equal(e.trips[0].fee, 10);
+});
+
+test('driver requests: the server says when one is gone and why; accepting twice is safe', async () => {
+  const realNow = Date.now;
+  let n = Math.floor(realNow() / api.JOB_EVERY_MS);
+  while (n % 7 !== 3) n--; // a slot another driver takes 18 s after it opens (demoFate)
+  let now = n * api.JOB_EVERY_MS + 1000;
+  Date.now = () => now;
+  const id = `JOB-${n.toString(36)}`;
+  const got = [];
+  const gone = [];
+  const stop = api.onJobRequest((j) => got.push(j), { onGone: (g, why) => gone.push([g, why]) });
+  const tick = () => new Promise((r) => setTimeout(r, 1100));
+  try {
+    await new Promise((r) => setTimeout(r, 30));
+    const j = got.find((x) => x.id === id);
+    assert.ok(j, 'the request arrives');
+    assert.equal(j.serverTime, now, 'with the server time, so the countdown ignores a wrong phone clock');
+    now += 18000;
+    await tick();
+    assert.deepEqual(gone.find(([g]) => g === id), [id, 'taken'], 'taken by another driver: gone, with the reason');
+    await assert.rejects(api.acceptJob(id), { status: 409, code: 'taken' });
+    now += 60000;
+    await tick();
+    assert.ok(gone.length >= 5 && gone.every(([, why]) => ['taken', 'cancelled', 'expired'].includes(why)), 'every old request ends with a reason');
+    const fresh = got[got.length - 1]; // opened less than 9 s ago, so still open
+    const first = await api.acceptJob(fresh.id);
+    const again = await api.acceptJob(fresh.id);
+    assert.deepEqual(again.job, first.job, 'a double tap returns the same job');
+    const other = got.find((x) => x.id !== fresh.id && x.expiresAt > now);
+    if (other) await assert.rejects(api.acceptJob(other.id), { status: 409, code: 'busy' });
+    await api.cancelJob(fresh.id, { reason: 'other' });
+  } finally {
+    stop();
+    Date.now = realNow;
+  }
 });
 
 test('shop: list, order with delivery fee unknown until rates are set, order stays "placed"', async () => {

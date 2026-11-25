@@ -28,9 +28,10 @@
     <header class="topbar" data-topbar></header>
 
     <main class="content">
-      <!-- Drive is the work, map first: the status panel (online switch, live status, today's numbers), then the map
-           with every request as a pin in its service's colour, and the requests (or the job) beside it on desktop,
-           under it on phones. Earnings, Trips and Account are their own tabs. -->
+      <!-- Drive is the work: the status panel (online switch, live status, today's numbers), then the requests (or the
+           job) and the map with every request as a pin in its service's colour. Phones: a short map, then the
+           requests. Desktop: the requests on the left, the map beside them, staying in view. Earnings, Trips and
+           Account are their own tabs. -->
       <div class="content__inner content__inner--full dhome" id="driverHome" hidden>
         <header class="page-head dsky">
           <div class="dsky__inner">
@@ -51,13 +52,12 @@
         </header>
 
         <div class="dwork">
-          <section class="dmapcol" aria-labelledby="reqCount">
-            <div class="dreq__head"><h2 class="dreq__title" id="reqCount">Requests</h2>
-              <p class="dlegend" aria-label="Pin colours"><span class="dlegend__ride">Ride</span><span class="dlegend__express">Parcel</span><span class="dlegend__shop">Food</span></p></div>
+          <section class="dmapcol" aria-label="Map">
             <div class="dmapslot" id="mapSlot">
               <!-- The live map: here on the page, or full screen for a route preview and turn-by-turn navigation -->
               <section class="dmapview" id="mapView" aria-label="Map">
                 <div class="map__canvas" id="mapCanvas"></div>
+                <p class="dlegend" aria-label="Pin colours"><span class="dlegend__ride">Ride</span><span class="dlegend__express">Parcel</span><span class="dlegend__shop">Food</span></p>
                 <button type="button" class="dmap__full" id="mapBtn">Full map</button>
                 <!-- When the map service doesn't answer: say so, and offer Google Maps -->
                 <p class="dmapview__off" id="mapOff" hidden><b>The map isn’t available right now.</b><span>Your job details still work.</span><a class="button" id="mapOffLink" href="https://www.google.com/maps" target="_blank" rel="noopener">Open in Google Maps</a></p>
@@ -75,12 +75,13 @@
             <p class="dmap__caption" id="mapCaption"></p>
           </section>
 
-          <section class="dreq" aria-label="Requests and your job">
+          <section class="dreq" aria-labelledby="reqCount">
+            <h2 class="dreq__title" id="reqCount">Requests</h2>
             <!-- No connection, or location off: said once, here, until it's fixed -->
             <div class="dbanner" id="banner" role="status" hidden></div>
             <div id="activeJob" aria-live="polite"></div>
             <div id="jobList" aria-live="polite"></div>
-            <p class="finder__note">You keep 100% of every fare. Riders can add an optional tip for mysabak on top of it, so nothing is ever taken from yours.</p>
+            <p class="finder__note">You keep the whole fare. mysabak charges a flat ₱10 platform fee for each completed trip, never a percentage.</p>
           </section>
         </div>
       </div>

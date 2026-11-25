@@ -44,7 +44,7 @@ give.addEventListener('click', async () => {
   try {
     await sendTip({ orderId: null, orderType: 'direct', amount, method: picker.method() });
     edgeGlow('reward', give);
-    toast(`Thank you! ${peso(amount)} keeps mysabak fee-free for drivers.`);
+    toast(`Thank you! ${peso(amount)} helps keep mysabak running.`);
     picker.reset();
     loadMine();
   } catch (err) {
