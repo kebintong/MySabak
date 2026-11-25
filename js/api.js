@@ -1019,13 +1019,15 @@ export async function setOnline(online) {
  *    { id, kind:'ride'|'express'|'shop', pickup:{lng,lat,label}, dropoff:{lng,lat,label}, distanceKm, fare,
  *      payment:'cash'|'gcash'|'bank', rider:{name, rating}, note?:string (where to meet),
  *      shop?:{name}, parcel?:{size, item}, recipient?:{name} (Parcel and Food: who receives it),
- *      expiresAt:number, serverTime:number }  (both server clock, ms; the page counts down from their difference,
- *      so a phone with a wrong clock still shows the right time left)
+ *      postedAt:number, serverTime:number, expiresAt?:number }  (server clock, ms. The card shows how long ago it
+ *      was posted, worked out from postedAt and serverTime so a phone with a wrong clock still says it right; no
+ *      countdown: on a shared list a request ends when it's taken, cancelled or closed. expiresAt, if sent, is only a
+ *      fallback for when onGone never arrives)
  *  - a request is no longer open to this driver → `onGone(id, reason)`, reason: 'taken' (another driver accepted),
  *    'cancelled' (the customer cancelled), 'expired', 'withdrawn' (the system or an admin). The server decides; the
  *    page never drops a request on its own clock alone.
  * DEMO: SAMPLE requests (`demo: true`) picked by the clock, so every phone and computer sees the same ones at the
- * same moment: a new one every 9 s, each open 45 s. Some end early, the same way on every device (demoFate): another
+ * same moment: a new one every 36 s, each open 3 min (about five waiting, from New to 2 min old). Some end early, the same way on every device (demoFate): another
  * driver takes one, a customer cancels one. A request accepted in this browser leaves its other tabs as 'taken'.
  * Checked every second and when the page wakes (phones pause timers while the screen is off).
  * Places: demo-data.js (DEMO_PLACES) around the city centre.
@@ -1033,8 +1035,8 @@ export async function setOnline(online) {
  * @param {{near?:{lng:number, lat:number}, onGone?:(id:string, reason:string) => void}} [opts]  near: where the driver is
  * @returns {() => void} stop listening
  */
-export const JOB_EVERY_MS = 9000;
-export const JOB_OPEN_MS = 45000;
+export const JOB_EVERY_MS = 36000;
+export const JOB_OPEN_MS = 180000;
 // DEMO: how a sample request ends early, by its clock slot (the same on every device). null: it stays open until it expires
 function demoFate(n) {
   if (n % 7 === 3) return { reason: 'taken', at: n * JOB_EVERY_MS + 18000 };
@@ -1099,7 +1101,8 @@ function sampleJob(near, vehicle, n) { // n: the clock slot, so the same n gives
     ...(SAMPLE_NOTES[n % SAMPLE_NOTES.length] ? { note: SAMPLE_NOTES[n % SAMPLE_NOTES.length] } : {}),
     ...(kind === 'shop' ? { shop: { name: DEMO_ACCOUNTS.merchant.shop.name }, recipient: { name: DEMO_RIDERS[(n + 1) % DEMO_RIDERS.length] } } : {}),
     ...(kind === 'express' ? { parcel: { size: 'small', item: 'Documents' }, recipient: { name: DEMO_RIDERS[(n + 2) % DEMO_RIDERS.length] } } : {}),
-    expiresAt: n * JOB_EVERY_MS + JOB_OPEN_MS, // a short window, like the big apps: decide, or let it go to the next driver
+    postedAt: n * JOB_EVERY_MS,
+    expiresAt: n * JOB_EVERY_MS + JOB_OPEN_MS, // DEMO: the server closes an untaken request after 3 min (onGone 'expired')
   };
 }
 

@@ -153,12 +153,13 @@ test('driver requests: the server says when one is gone and why; accepting twice
     await until(() => got.some((x) => x.id === id));
     const j = got.find((x) => x.id === id);
     assert.ok(j, 'the request arrives');
-    assert.equal(j.serverTime, now, 'with the server time, so the countdown ignores a wrong phone clock');
+    assert.equal(j.serverTime, now, 'with the server time, so the age ignores a wrong phone clock');
+    assert.equal(j.postedAt, n * api.JOB_EVERY_MS, 'and when it was posted');
     now += 18000;
     await until(() => isGone(j));
     assert.deepEqual(gone.find(([g]) => g === id), [id, 'taken'], 'taken by another driver: gone, with the reason');
     await assert.rejects(api.acceptJob(id), { status: 409, code: 'taken' });
-    now += 60000;
+    now += api.JOB_OPEN_MS + 20000; // past every old request's window
     const ended = () => got.filter((x) => x.expiresAt <= now);
     const open = () => got.filter((x) => x.expiresAt > now && !isGone(x));
     await until(() => ended().every(isGone) && open().length);

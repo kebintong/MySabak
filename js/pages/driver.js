@@ -372,7 +372,7 @@ function requestCard(j, open) {
       <ol class="rq__route"><li><span class="sr-only">Pickup: </span>${esc(j.pickup.label)}</li><li><span class="sr-only">Drop-off: </span>${esc(j.dropoff.label)}</li></ol>
       <p class="rq__meta"><span>${j.distanceKm.toFixed(1)} km · ~${mins(j.distanceKm)} min trip</span><span>${esc(PAY[j.payment] || j.payment)}</span>${why
         ? `<b class="rq__why" role="status">${esc(GONE_WORDS[why] || GONE_WORDS.withdrawn)}</b>`
-        : `<span class="rq__left"><b data-expires="${j.until}">${mmss(j.until - Date.now())}</b> left</span>`}</p>
+        : `<span class="rq__age" data-posted="${j.since}">${agoWords(j.since)}</span>`}</p>
       ${open && !why ? `<p class="rq__who">${who}${j.note ? `<span>“${esc(j.note)}”</span>` : ''}</p>
       <div class="rq__actions">
         <button type="button" class="button" data-accept${lock}${busy ? ' aria-busy="true"' : ''}>${busy ? 'Accepting…' : 'Accept'}</button>
@@ -421,7 +421,8 @@ const skipped = new Set(); // skipped requests stay gone, even after going offli
 let lastChime = 0;
 function addJob(j) {
   if (skipped.has(j.id) || jobs.some((x) => x.id === j.id)) return;
-  jobs.push({ ...j, until: j.expiresAt - ((j.serverTime ?? Date.now()) - Date.now()) }); // the server's time left, on this phone's clock
+  const skew = (j.serverTime ?? Date.now()) - Date.now(); // the server's clock minus this phone's
+  jobs.push({ ...j, since: (j.postedAt ?? j.serverTime ?? Date.now()) - skew, until: j.expiresAt ? j.expiresAt - skew : Infinity });
   if (online && !job && Date.now() - lastChime > 2000) { lastChime = Date.now(); chime(); } // five at once: one chime
   renderJobs();
 }
@@ -831,12 +832,16 @@ function listen() {
   if (!online) { jobs = []; picked = null; gone.clear(); }
 }
 
-// Every second: request countdowns, the pickup wait timer, and when a no-show is allowed
+// How long ago a request came in: "New" for the first minute, then "2 min ago"
+function agoWords(since) {
+  const m = Math.floor((Date.now() - since) / 60000);
+  return m < 1 ? 'New' : `${m} min ago`;
+}
+// Every second: each request's age, the pickup wait timer, and when a no-show is allowed
 function tick() {
-  $$('[data-expires]').forEach((n) => {
-    const left = Number(n.dataset.expires) - Date.now();
-    n.textContent = mmss(left);
-    n.closest('.rq__left')?.classList.toggle('is-low', left < 15000);
+  $$('[data-posted]').forEach((n) => {
+    n.textContent = agoWords(Number(n.dataset.posted));
+    n.classList.toggle('is-new', n.textContent === 'New');
   });
   $$('[data-wait]').forEach((n) => { n.textContent = mmss(Date.now() - Number(n.dataset.wait)); });
   const ns = $('[data-noshow]');
@@ -846,6 +851,7 @@ function tick() {
     $('[data-noshow-left]', ns).textContent = left > 0 ? ` · in ${mmss(left)}` : '';
   }
 }
+// The server says when a request closes (onGone); this only covers a lost message: 1 s past expiresAt, if one was sent
 setInterval(() => { tick(); jobs.filter((j) => j.until <= Date.now() - 1000).forEach((j) => goneJob(j.id, 'expired')); }, 1000);
 
 // Today in one line (the rest is on Earnings); the amount rolls like the analytics numbers

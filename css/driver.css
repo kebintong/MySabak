@@ -728,9 +728,9 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .rq__route li:first-child::after { content: ""; position: absolute; left: 7px; top: calc(.45em + 11px); height: calc(100% - 4px); border-left: 1.5px dotted #b9a9cc; }
 .rq.is-open .rq__route li { white-space: normal; }
 .rq__meta { grid-area: meta; margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; color: var(--sub); }
-.rq__left { margin-left: auto; white-space: nowrap; }
-.rq__left b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-.rq__left.is-low, .rq__left.is-low b { color: #a32711; }
+/* How long ago it came in, at the end of the line: "New" in the brand colour, then "2 min ago" in grey */
+.rq__age { margin-left: auto; white-space: nowrap; }
+.rq__age.is-new { font-weight: 700; color: var(--brand-deep); }
 .rq__who { grid-area: who; margin: 4px 0 0; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; font-size: 14px; font-weight: 600; color: var(--ink); }
 .rq__who span { font-weight: 400; font-style: italic; color: var(--sub); }
 .rq__actions { grid-area: actions; display: flex; gap: 8px; margin-top: 4px; }
