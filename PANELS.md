@@ -178,7 +178,7 @@ Vans and trucks, **one pickup and one drop-off**. Same screen as Ride and Parcel
 - Capacities, rates, helpers and the service area (a box around mainland Cebu and Mactan) are SAMPLE values in
   `CONFIG.cargo`.
 - Photos are shown on the sheet but not uploaded.
-- The backend handoff is `CARGO_BACKEND_HANDOFF.md`, outside the repo. The driver side of Cargo is the next round.
+- The backend handoff is [`docs/CARGO_BACKEND_HANDOFF.md`](docs/CARGO_BACKEND_HANDOFF.md). The driver side of Cargo is the next round.
 
 ---
 
