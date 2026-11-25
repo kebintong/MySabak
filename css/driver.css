@@ -837,3 +837,18 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .dongoing__go .icon { stroke: var(--brand-deep); }
 .dongoing:hover .dongoing__go { text-decoration: underline; text-underline-offset: 4px; }
 .dongoing:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+
+
+
+/* =========================================================
+   Account: read-only facts as label and value, a switch on white, a note under a card
+   ========================================================= */
+.dacct .dglance__rows dd { text-align: right; overflow-wrap: anywhere; }
+.dacct__note { margin: 8px 0 0; font-size: 13px; color: var(--sub); }
+.drows > li.drow { gap: 14px; }
+.drows > li.drow > svg.icon { width: 21px; height: 21px; flex: none; fill: none; stroke: var(--ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.dswitch { background: #ddd2ea; box-shadow: inset 0 0 0 1px rgba(41, 10, 69, .08); }
+.dswitch .dgo__knob { box-shadow: 0 1px 4px rgba(41, 10, 69, .3); }
+.dswitch[aria-checked="true"] { background: var(--brand); }
+.dsheetx .dglance__rows dd a { font-weight: 700; color: var(--brand-deep); }
+

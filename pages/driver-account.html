@@ -27,7 +27,7 @@
 
     <main class="content">
       <div class="content__inner">
-        <!-- Who's driving on the sky; then your driving, help, and sign out -->
+        <!-- Who's driving on the sky; then the profile, the vehicle, settings, help and the rules, and sign out -->
         <header class="page-head">
           <div class="dwho dwho--page">
             <span class="dwho__ava" aria-hidden="true"></span>
@@ -38,20 +38,44 @@
           </div>
         </header>
 
-        <section class="card dacct" aria-labelledby="drivingTitle">
-          <h2 class="card__title" id="drivingTitle">Your driving</h2>
+        <!-- Read-only facts (changed by the mysabak team), then settings that work here, then help and the rules -->
+        <section class="card dacct" aria-labelledby="profileTitle">
+          <h2 class="card__title" id="profileTitle">Profile</h2>
+          <dl class="dglance__rows">
+            <div><dt>Name</dt><dd data-bind="name">Driver</dd></div>
+            <div><dt>Mobile number</dt><dd data-bind="phone">Not added</dd></div>
+            <div><dt>Email</dt><dd data-bind="email">Not added</dd></div>
+          </dl>
+          <p class="dacct__note">To change these, ask the Driver Hub (Get help, below).</p>
+        </section>
+
+        <section class="card dacct" aria-labelledby="vehicleTitle">
+          <h2 class="card__title" id="vehicleTitle">Vehicle</h2>
+          <dl class="dglance__rows">
+            <div><dt>Type</dt><dd data-bind="vehicleName">Vehicle</dd></div>
+            <div><dt>Plate</dt><dd data-bind="plate">Not added</dd></div>
+            <div><dt>Status</dt><dd data-bind="statusTag"></dd></div>
+            <div><dt>Requests you get</dt><dd>Ride, Parcel and Food</dd></div>
+          </dl>
+        </section>
+
+        <section class="card dacct" aria-labelledby="settingsTitle">
+          <h2 class="card__title" id="settingsTitle">Settings</h2>
           <ul class="drows">
-            <li class="drow"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-user"/></svg><span class="drow__text"><b>Profile</b><span data-bind="contact">Mobile number and email</span></span></li>
-            <li class="drow"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-car"/></svg><span class="drow__text"><b>Vehicle and documents</b><span data-bind="vehicleLong">Your vehicle</span></span></li>
-            <li><button type="button" class="drow drow--go" data-payout><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg><span class="drow__text"><b>Payout method</b><span>Not set up yet</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button></li>
+            <li class="drow"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>
+              <span class="drow__text" id="alertsText"><b>Request alerts</b><span>A chime and a buzz for each new request</span></span>
+              <button type="button" class="dgo__switch dswitch" id="alertsSwitch" role="switch" aria-checked="true" aria-labelledby="alertsText"><span class="dgo__knob" aria-hidden="true"></span></button></li>
+            <li class="drow"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-wallet"/></svg><span class="drow__text"><b>Payout method</b><span>GCash or a bank: coming soon</span></span></li>
           </ul>
         </section>
 
         <section class="card dacct" aria-labelledby="helpTitle">
-          <h2 class="card__title" id="helpTitle">Help</h2>
+          <h2 class="card__title" id="helpTitle">Help and rules</h2>
           <ul class="drows">
-            <li><a class="drow drow--go" href="/pages/support.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg><span class="drow__text"><b>Support mysabak</b><span>How mysabak earns: tips, and ₱10 a trip</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
-            <li><button type="button" class="drow drow--go" data-help><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-chat"/></svg><span class="drow__text"><b>Get help</b><span>A ride, a payment, your account</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button></li>
+            <li><button type="button" class="drow drow--go" data-help><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-chat"/></svg><span class="drow__text"><b>Get help</b><span>The Driver Hub: phone, address, hours</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></button></li>
+            <li><a class="drow drow--go" href="/pages/support.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-heart"/></svg><span class="drow__text"><b>How mysabak earns</b><span>Tips, and ₱10 for each completed trip</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+            <li><a class="drow drow--go" href="/pages/terms.html#drivers"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-receipt"/></svg><span class="drow__text"><b>Driver terms</b><span>What you agree to as a driver</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
+            <li><a class="drow drow--go" href="/pages/privacy.html"><svg class="icon" aria-hidden="true"><use href="/assets/images/icons.svg#i-shield"/></svg><span class="drow__text"><b>Privacy</b><span>How mysabak uses your information</span></span><svg class="icon drow__chev" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></a></li>
           </ul>
         </section>
 

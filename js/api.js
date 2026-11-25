@@ -997,7 +997,7 @@ export async function driverStatus() {
   const session = demo.get('driverSession', null);
   if (!d) return { status: 'none', signedIn: false, online: false };
   const signedIn = Boolean(session && samePhone(session.phone, d.phone));
-  return { status: d.status, signedIn, name: d.name, email: d.email, vehicle: d.vehicle, plate: d.plate, rating: d.rating ?? null, online: signedIn && Boolean(d.online) };
+  return { status: d.status, signedIn, name: d.name, phone: d.phone, email: d.email, vehicle: d.vehicle, plate: d.plate, rating: d.rating ?? null, online: signedIn && Boolean(d.online) };
 }
 
 /**
