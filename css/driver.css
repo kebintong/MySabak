@@ -767,3 +767,44 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 }
 .page--driver.is-scrolled .app::before { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .page--driver .app::before { transition: none; } }
+
+
+/* =========================================================
+   Earnings: the period switch on the sky, then each day (or today's trips), the breakdown and the payout.
+   Desktop: the breakdown beside the rest.
+   ========================================================= */
+.eperiod { display: inline-flex; gap: 2px; margin-top: 12px; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22); }
+.eperiod button {
+  flex: 1; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: none; cursor: pointer;
+  font: 700 14px var(--font-body); color: #f1e6fb; transition: background-color .15s var(--ease-out), color .15s var(--ease-out);
+}
+.eperiod button:hover { background: rgba(255, 255, 255, .12); }
+.eperiod button[aria-pressed="true"] { background: #fff; color: var(--brand-deep); }
+.eperiod button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.esub { margin: 0; font-size: 14px; color: #e2d0f4; }
+.egrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 600px) { .eperiod { align-self: flex-start; } .eperiod button { flex: 0 0 auto; min-width: 96px; } }
+.egrid > [hidden] { display: none; }
+.dweek__head .card__title { margin: 0; }
+/* 7 days: the amount above each bar */
+.dweek__bars { grid-template-columns: repeat(var(--n, 7), minmax(0, 1fr)); height: auto; min-height: 112px; align-items: end; }
+.dweek__val { font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; min-height: 14px; }
+/* 30 days: thin bars, dates at the two ends only */
+.dweek__bars--thin { gap: 3px; min-height: 96px; }
+.dweek__bars--thin .dweek__plot i { border-radius: 3px; }
+.dweek__bars--thin .dweek__day { overflow: visible; }
+.dweek__bars--thin .dweek__col:first-child .dweek__day { align-self: flex-start; }
+.dweek__bars--thin .dweek__col:last-child .dweek__day { align-self: flex-end; }
+.dweek__bars--thin .dweek__col:not(:first-child):not(:last-child) .dweek__day { visibility: hidden; }
+/* the breakdown: three small groups */
+.dglance__sub { margin: 16px 0 0; font-size: 13px; font-weight: 700; color: var(--sub); }
+.dglance__rows dt .icon { margin-right: 8px; vertical-align: -3px; stroke: var(--ink); }
+.dglance #byKind dt { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0; }
+.dglance #byKind dt span { flex-basis: 100%; padding-left: 26px; }
+@media (min-width: 900px) {
+.egrid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-areas: "main glance" "pay glance"; grid-template-rows: auto 1fr; align-items: start; gap: 16px 20px; }
+.egrid > .dweek, .egrid > .dtrips { grid-area: main; }
+.egrid > .dglance { grid-area: glance; }
+.egrid > .dpay { grid-area: pay; }
+.page--driver .content__inner:has(.egrid) { max-width: 1000px; }
+}

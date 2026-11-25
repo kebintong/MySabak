@@ -27,41 +27,56 @@
 
     <main class="content">
       <div class="content__inner">
-        <!-- Today and the last 7 days on the sky; the week as bars; the week in numbers; the payout -->
+        <!-- One period at a time (Today, 7 days, 30 days): the fares on the sky, then each day (or today's trips), the
+             breakdown (fees, how you were paid, by service) and the payout. Desktop: the breakdown beside the rest. -->
         <header class="page-head">
           <h1 class="page-title">Earnings</h1>
-          <div class="dsum dsum--page">
-            <p class="dearn"><span class="dearn__label">Today</span><span class="dearn__value" data-bind="today">₱0</span></p>
-            <div class="dstats">
-              <p><b data-bind="week">₱0</b><span>last 7 days</span></p>
-              <p><b data-bind="todayCount">0</b><span data-bind="todayLabel">trips today</span></p>
-            </div>
+          <div class="eperiod" id="period" role="group" aria-label="Period">
+            <button type="button" data-period="today" aria-pressed="true">Today</button>
+            <button type="button" data-period="7d" aria-pressed="false">7 days</button>
+            <button type="button" data-period="30d" aria-pressed="false">30 days</button>
+          </div>
+          <div class="dsum dsum--page" aria-live="polite">
+            <p class="dearn"><span class="dearn__label" data-bind="periodLabel">Fares today</span><span class="dearn__value" data-bind="fares">₱0</span></p>
+            <p class="esub" data-bind="sub"></p>
           </div>
         </header>
 
-        <section class="card dweek" aria-labelledby="weekTitle">
-          <div class="dweek__head">
-            <div class="dweek__sum"><h2 class="dweek__title" id="weekTitle">This week</h2><b class="dweek__value" data-bind="week">₱0</b></div>
-            <span class="dweek__delta" id="weekDelta" hidden></span>
-          </div>
-          <div class="dweek__bars skel-block" style="--skel-h: 96px" id="weekBars" role="group" aria-label="Earnings each day"></div>
-        </section>
+        <div class="egrid">
+          <section class="card dweek" id="chartCard" aria-labelledby="chartTitle" hidden>
+            <div class="dweek__head">
+              <h2 class="card__title" id="chartTitle">Each day</h2>
+              <span class="dweek__delta" id="delta" hidden></span>
+            </div>
+            <div class="dweek__bars skel-block" style="--skel-h: 96px" id="bars" role="group" aria-label="Fares each day"></div>
+          </section>
 
-        <section class="card dglance" aria-labelledby="glanceTitle">
-          <h2 class="card__title" id="glanceTitle">The last 7 days, in numbers</h2>
-          <dl class="dglance__rows">
-            <div><dt>Trips</dt><dd data-bind="weekCount">0</dd></div>
-            <div><dt>Fares</dt><dd data-bind="week">₱0</dd></div>
-            <div><dt>Platform fees<span data-bind="feeRule">₱10 for each completed trip</span></dt><dd class="dglance__fee" data-bind="weekFees">₱0</dd></div>
-            <div class="dglance__net"><dt>After fees</dt><dd data-bind="weekNet">₱0</dd></div>
-            <div><dt>Average fare</dt><dd data-bind="weekAvg">₱0</dd></div>
-          </dl>
-        </section>
+          <section class="card dtrips dtrips--today" id="todayCard" aria-labelledby="todayTitle">
+            <div class="dtrips__head"><h2 class="card__title" id="todayTitle">Today’s trips</h2><span class="dtrips__note" id="todaySum"></span></div>
+            <ul class="tdays skel-rows" id="todayList"></ul>
+          </section>
 
-        <section class="card dpay" aria-labelledby="payTitle">
-          <div class="dpay__text"><h2 id="payTitle">Payout method</h2><p data-bind="payout">Add GCash or a bank to get paid.</p></div>
-          <button type="button" class="dpay__btn" data-payout data-bind="payoutAction">Set up</button>
-        </section>
+          <section class="card dglance" aria-labelledby="glanceTitle">
+            <h2 class="card__title" id="glanceTitle">Breakdown</h2>
+            <dl class="dglance__rows">
+              <div><dt>Fares</dt><dd data-bind="fares">₱0</dd></div>
+              <div><dt>Platform fees<span data-bind="feeRule">₱10 for each completed trip</span></dt><dd class="dglance__fee" data-bind="fees">₱0</dd></div>
+              <div class="dglance__net"><dt>After fees</dt><dd data-bind="net">₱0</dd></div>
+            </dl>
+            <h3 class="dglance__sub">How you were paid</h3>
+            <dl class="dglance__rows">
+              <div><dt>Cash<span>You collected it</span></dt><dd data-bind="cash">₱0</dd></div>
+              <div><dt>GCash and online banking<span>Paid out to you by mysabak</span></dt><dd data-bind="digital">₱0</dd></div>
+            </dl>
+            <h3 class="dglance__sub">By service</h3>
+            <dl class="dglance__rows" id="byKind"></dl>
+          </section>
+
+          <section class="card dpay" aria-labelledby="payTitle">
+            <div class="dpay__text"><h2 id="payTitle">Payout method</h2><p data-bind="payout">Add GCash or a bank to get paid.</p></div>
+            <button type="button" class="dpay__btn" data-payout data-bind="payoutAction">Set up</button>
+          </section>
+        </div>
         <p class="finder__note">You keep the whole fare. mysabak charges a flat ₱10 platform fee for each completed trip, never a percentage.</p>
       </div>
     </main>

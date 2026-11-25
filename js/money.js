@@ -45,6 +45,21 @@ export function splitPrice({ fare = null, price = null, tip = 0, max }) {
   return { fare: known ? fare : null, tip: cleanExtra, total: known ? fare + cleanExtra : null };
 }
 
+/**
+ * A driver's earnings from trips at `from` (ms) or later: fares, platform fees, what's left after fees, cash vs
+ * digital, and by service. Whole pesos. Each trip: { at, fare, fee, payment, kind }.
+ */
+export function earningsSince(trips, from) {
+  const list = trips.filter((t) => t.at >= from);
+  const sum = (l, k = 'fare') => l.reduce((n, t) => n + (t[k] || 0), 0);
+  const fares = sum(list);
+  const fees = sum(list, 'fee');
+  const cash = sum(list.filter((t) => t.payment === 'cash'));
+  const byKind = {};
+  list.forEach((t) => { const k = byKind[t.kind] || (byKind[t.kind] = { fares: 0, count: 0 }); k.fares += t.fare; k.count += 1; });
+  return { trips: list, count: list.length, fares, fees, net: fares - fees, cash, digital: fares - cash, byKind };
+}
+
 /** Centavos as pesos: ₱1,234 when whole, ₱1,234.50 otherwise. */
 const PH_CENTS = new Intl.NumberFormat('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const pesoCents = (c, currency = '₱') => (c % 100 === 0 ? peso(c / 100, currency) : `${currency}${PH_CENTS.format(c / 100)}`);

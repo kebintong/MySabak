@@ -1,7 +1,7 @@
 // Tests for the pure money helpers (js/money.js). Run: node --test "tests/*.test.mjs"
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanTip, rateFor, cartTotals, haversineKm, peso, splitPrice } from '../js/money.js';
+import { cleanTip, rateFor, cartTotals, haversineKm, peso, splitPrice, earningsSince } from '../js/money.js';
 
 test('tips: whole pesos, capped, anything else means no tip', () => {
   assert.equal(cleanTip(20, 500), 20);
@@ -45,3 +45,21 @@ test('your price: fare + tip; the fare never goes down; the tip is capped', () =
   assert.deepEqual(splitPrice({ fare: null, tip: 'abc', max: 500 }), { fare: null, tip: 0, total: null });
 });
 
+
+test('driver earnings for a period: fares, the flat fee, after fees, cash vs digital, by service', () => {
+  const trips = [
+    { at: 100, fare: 120, fee: 10, payment: 'cash', kind: 'ride' },
+    { at: 200, fare: 80, fee: 10, payment: 'gcash', kind: 'express' },
+    { at: 300, fare: 60, fee: 10, payment: 'cash', kind: 'ride' },
+    { at: 50, fare: 999, fee: 10, payment: 'cash', kind: 'shop' }, // before the period
+  ];
+  const e = earningsSince(trips, 100);
+  assert.equal(e.count, 3);
+  assert.equal(e.fares, 260);
+  assert.equal(e.fees, 30);
+  assert.equal(e.net, 230);
+  assert.equal(e.cash, 180);
+  assert.equal(e.digital, 80);
+  assert.deepEqual(e.byKind, { ride: { fares: 180, count: 2 }, express: { fares: 80, count: 1 } });
+  assert.equal(earningsSince(trips, 1000).net, 0, 'an empty period is all zeros');
+});

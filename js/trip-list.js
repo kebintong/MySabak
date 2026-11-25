@@ -1,7 +1,7 @@
 /* The driver's trips as rows grouped by day, each day with its total: the Drive page's latest trips and the Trips page. */
 import { esc, peso, icon } from './ui.js';
 
-export const TRIP_KIND = { ride: ['Ride', 'i-car'], express: ['Express', 'i-box'], shop: ['Shop delivery', 'i-bag'] };
+export const TRIP_KIND = { ride: ['Ride', 'i-car'], express: ['Parcel', 'i-box'], shop: ['Food', 'i-bag'] }; // the same names as the Drive page
 
 const dayKey = (ts) => new Date(ts).toDateString();
 // Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
