@@ -290,7 +290,7 @@
 
 /* ---------- Trips page (pages/driver-trips.html): type chips, trips by day, numbered pages ---------- */
 .page--driver .content__inner:has(#tripList) { padding-bottom: 88px; } /* room above the floating tab bar */
-.tfilter .fchip { height: 36px; border: 1px solid var(--line-brand); box-shadow: none; background: #fff; color: var(--sub); }
+.tfilter .fchip { height: 40px; border: 1px solid var(--line-brand); box-shadow: none; background: #fff; color: var(--sub); }
 .tfilter .fchip:hover { border-color: var(--brand); color: var(--brand-deep); }
 .tfilter .fchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .tfilter .fchip span { margin-left: 2px; font-weight: 500; opacity: .75; }
@@ -518,6 +518,8 @@
 .dstat b { font: 800 18px/1.1 var(--font-display); letter-spacing: -.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .dstat .dstat__money { color: var(--gold); }
 a.dstat:hover b { text-decoration: underline; text-underline-offset: 4px; }
+a.dstat { position: relative; }
+a.dstat::after { content: ""; position: absolute; inset: -6px -4px; } /* a 48 px tap area */
 a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: 6px; }
 
 /* The work: the map, then the requests (desktop: side by side) */
@@ -768,6 +770,8 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
   box-shadow: 0 6px 16px -10px rgba(20, 8, 42, .6); opacity: 0; transition: opacity .2s var(--ease-out);
 }
 .page--driver.is-scrolled .app::before { opacity: 1; }
+/* The sky's stars and glow stop while the sky is scrolled out of view: they cost a slow phone about 50 ms every second */
+.page--driver.is-scrolled .page-head :is(*, *::before, *::after) { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .page--driver .app::before { transition: none; } }
 
 

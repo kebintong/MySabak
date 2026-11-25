@@ -428,6 +428,17 @@ function addJob(j) {
 // The server says a request is no longer open (taken, cancelled, expired, withdrawn): say why, then remove it and its pin
 function goneJob(id, reason) {
   if ((job && job.id === id) || gone.has(id) || !jobs.some((j) => j.id === id)) return;
+  if (reason === 'taken' && !job) { // maybe taken by you, on your other phone or tab: then it's your job here too
+    activeJob().then((mine) => {
+      if (mine && mine.id === id && !job) { job = mine; jobs = jobs.filter((j) => j.id !== id); picked = null; toast(`You accepted this on another device. Head to ${job.pickup.label}.`); paintAll(); }
+      else markGone(id, reason);
+    }, () => markGone(id, reason));
+    return;
+  }
+  markGone(id, reason);
+}
+function markGone(id, reason) {
+  if (gone.has(id) || !jobs.some((j) => j.id === id)) return;
   gone.set(id, reason);
   if (mapMode === 'preview' && picked === id) toast(`${GONE_WORDS[reason] || GONE_WORDS.withdrawn}.`);
   renderJobs();
