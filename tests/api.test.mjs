@@ -144,20 +144,25 @@ test('driver requests: the server says when one is gone and why; accepting twice
   const got = [];
   const gone = [];
   const stop = api.onJobRequest((j) => got.push(j), { onGone: (g, why) => gone.push([g, why]) });
-  const tick = () => new Promise((r) => setTimeout(r, 1100));
+  // wait for the listener's next once-a-second check (timers run late on a busy CI machine, so no fixed sleep)
+  const until = async (ok) => { for (let i = 0; i < 60 && !ok(); i++) await new Promise((r) => setTimeout(r, 100)); };
+  const isGone = (x) => gone.some(([g]) => g === x.id);
   try {
-    await new Promise((r) => setTimeout(r, 30));
+    await until(() => got.some((x) => x.id === id));
     const j = got.find((x) => x.id === id);
     assert.ok(j, 'the request arrives');
     assert.equal(j.serverTime, now, 'with the server time, so the countdown ignores a wrong phone clock');
     now += 18000;
-    await tick();
+    await until(() => isGone(j));
     assert.deepEqual(gone.find(([g]) => g === id), [id, 'taken'], 'taken by another driver: gone, with the reason');
     await assert.rejects(api.acceptJob(id), { status: 409, code: 'taken' });
     now += 60000;
-    await tick();
-    assert.ok(gone.length >= 5 && gone.every(([, why]) => ['taken', 'cancelled', 'expired'].includes(why)), 'every old request ends with a reason');
-    const fresh = got[got.length - 1]; // opened less than 9 s ago, so still open
+    const ended = () => got.filter((x) => x.expiresAt <= now);
+    const open = () => got.filter((x) => x.expiresAt > now && !isGone(x));
+    await until(() => ended().every(isGone) && open().length);
+    assert.ok(ended().length && ended().every(isGone), 'every old request is gone');
+    assert.ok(gone.every(([, why]) => ['taken', 'cancelled', 'expired'].includes(why)), 'each with a reason');
+    const fresh = open().at(-1); // sent on the latest check, so still open
     const first = await api.acceptJob(fresh.id);
     const again = await api.acceptJob(fresh.id);
     assert.deepEqual(again.job, first.job, 'a double tap returns the same job');
