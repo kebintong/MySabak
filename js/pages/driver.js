@@ -17,7 +17,8 @@ import {
 import { haversineKm } from '../money.js';
 import { routeProgress, nextStep } from '../nav.js';
 import { shopMap, knownLocation, askLocation } from '../shop-map.js';
-import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava, emptyRows, rollNumber } from '../ui.js';
+import { $, $$, mountChrome, toast, peso, esc, icon, edgeGlow, ava, emptyRows, rollNumber, sheet } from '../ui.js';
+import { CANCEL_REASONS, FAIL_REASONS } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
 
@@ -62,23 +63,6 @@ const metres = (m) => (m >= 950 ? `${(m / 1000).toFixed(1)} km` : `${Math.max(10
 const targetOf = (j) => (j.status === 'started' ? j.dropoff : j.pickup);
 const netUp = () => navigator.onLine !== false;
 
-/* ---------- Sheets (bottom sheets on phones, dialogs on desktop) ---------- */
-let sheetN = 0;
-function sheet(title, body, wire = () => {}) {
-  return new Promise((resolve) => {
-    const id = `dsheet${++sheetN}`;
-    const dlg = document.createElement('dialog');
-    dlg.className = 'sheet dsheetx';
-    dlg.setAttribute('aria-labelledby', id);
-    dlg.innerHTML = `<div class="sheet__body"><span class="sheet__handle" aria-hidden="true"></span><h2 class="sheet__title" id="${id}" tabindex="-1" autofocus>${title}</h2>${body}</div>`;
-    document.body.appendChild(dlg);
-    const done = (v) => { if (!dlg.isConnected) return; dlg.close(); dlg.remove(); resolve(v); };
-    dlg.addEventListener('cancel', (e) => { e.preventDefault(); done(null); });
-    dlg.addEventListener('click', (e) => { const b = e.target.closest('[data-done]'); if (b) done(b.dataset.done); });
-    wire(dlg, done);
-    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
-  });
-}
 const needNet = () => { if (netUp()) return true; toast('No connection. Try again when you’re back online.'); return false; };
 
 /* ---------- Connection and location: always visible while working ---------- */
@@ -668,8 +652,6 @@ async function summary(j) {
 }
 
 /* Ending a job early: why, in a sheet (not a browser pop-up) */
-const CANCEL_REASONS = [['rider_asked', 'The rider asked me to cancel'], ['too_far', 'The pickup is too far or in the wrong place'], ['vehicle', 'A problem with my vehicle'], ['safety', 'I don’t feel safe'], ['other', 'Something else']];
-const FAIL_REASONS = [['recipient_unavailable', 'The recipient isn’t there'], ['wrong_address', 'The address is wrong'], ['refused', 'The recipient refused it']];
 async function endEarly(kind) {
   if (!job || !needNet()) return;
   const reasons = kind === 'fail' ? FAIL_REASONS : CANCEL_REASONS;

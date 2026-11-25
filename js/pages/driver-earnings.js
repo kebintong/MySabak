@@ -4,7 +4,7 @@
 import { driverStatus, driverEarnings } from '../api.js';
 import { $, $$, mountChrome, toast, peso, esc, icon, rollNumber } from '../ui.js';
 import { earningsSince } from '../money.js';
-import { tripsByDay, TRIP_KIND } from '../trip-list.js';
+import { tripsByDay, tripSheet, TRIP_KIND } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
 
@@ -95,6 +95,11 @@ $('#bars').addEventListener('click', (e) => {
   $$('.dweek__col', $('#bars')).forEach((c) => c.classList.toggle('is-pick', pick && c === col));
 });
 $$('[data-payout]').forEach((b) => b.addEventListener('click', () => toast('Payout setup (GCash or bank) is coming soon.')));
+$('#todayList').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-trip]');
+  const t = b && trips.find((x) => x.id === b.dataset.trip);
+  if (t) tripSheet(t).then(() => b.focus());
+});
 
 async function start() {
   const d = await driverStatus();

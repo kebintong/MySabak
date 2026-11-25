@@ -132,6 +132,8 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
   assert.equal(e.feesToday, feesBefore + 10, 'a flat ₱10 platform fee for the completed trip');
   assert.equal(e.trips[0].id, job.id);
   assert.equal(e.trips[0].fee, 10);
+  assert.equal(e.trips[0].from, job.pickup.label, 'the route is kept for the trip details');
+  assert.equal(e.trips[0].to, job.dropoff.label);
 });
 
 test('driver requests: the server says when one is gone and why; accepting twice is safe', async () => {
@@ -169,6 +171,10 @@ test('driver requests: the server says when one is gone and why; accepting twice
     const other = got.find((x) => x.id !== fresh.id && x.expiresAt > now);
     if (other) await assert.rejects(api.acceptJob(other.id), { status: 409, code: 'busy' });
     await api.cancelJob(fresh.id, { reason: 'other' });
+    const [last] = (await api.driverEarnings()).endedEarly;
+    assert.equal(last.id, fresh.id, 'a cancelled job is listed in the history');
+    assert.equal(last.outcome, 'cancelled');
+    assert.equal(last.from, fresh.pickup.label);
   } finally {
     stop();
     Date.now = realNow;

@@ -1152,7 +1152,7 @@ export async function updateJob(jobId, status, { photo } = {}) {
   await wait(300);
   const proof = photo ? { ...(job.proof || {}), [status]: true } : job.proof;
   if (status === 'completed') {
-    const trip = { id: job.id, kind: job.kind, at: Date.now(), fare: job.fare, distanceKm: job.distanceKm, payment: job.payment, demo: Boolean(job.demo), ...(proof ? { proof } : {}) };
+    const trip = { id: job.id, kind: job.kind, at: Date.now(), fare: job.fare, distanceKm: job.distanceKm, payment: job.payment, from: job.pickup.label, to: job.dropoff.label, demo: Boolean(job.demo), ...(proof ? { proof } : {}) };
     demo.set('driverTrips', [trip, ...demo.get('driverTrips', [])].slice(0, 50));
     demo.set('activeJob', null);
   } else {
@@ -1181,7 +1181,7 @@ export async function cancelJob(jobId, { reason = 'other' } = {}) {
       : job.status === 'started' && job.kind !== 'ride' && FAILED_DELIVERY.includes(reason) ? 'failed' : null;
   if (!outcome) throw Object.assign(new Error('You can’t end this job that way now.'), { status: 409 });
   demo.set('activeJob', null);
-  demo.set('jobOutcomes', [{ id: job.id, kind: job.kind, outcome, reason, at: Date.now() }, ...demo.get('jobOutcomes', [])].slice(0, 50));
+  demo.set('jobOutcomes', [{ id: job.id, kind: job.kind, outcome, reason, at: Date.now(), fare: job.fare, distanceKm: job.distanceKm, payment: job.payment, from: job.pickup.label, to: job.dropoff.label }, ...demo.get('jobOutcomes', [])].slice(0, 50));
   return { ok: true, outcome };
 }
 
@@ -1199,7 +1199,8 @@ export async function closeJob(jobId, { stars = null, cashCollected = null, cash
  * trip's own `fee`, since the amount or the services can change over time.
  * DEMO: the jobs completed in this browser; the fee worked out from CONFIG.
  * @returns {Promise<{today:number, week:number, feesToday:number, feesWeek:number, feePerTrip:number,
- *   trips:Array<{id, kind, at:number, fare:number, fee:number, distanceKm:number}>,
+ *   trips:Array<{id, kind, at:number, fare:number, fee:number, distanceKm:number, payment, from?:string, to?:string}>,
+ *   endedEarly:Array<{id, kind, at:number, outcome:'cancelled'|'no_show'|'failed', reason:string, fare, from?, to?}>,
  *   tipsToMysabak:number, payout:{method:string|null, next:string|null}}>}
  */
 export async function driverEarnings() {
@@ -1217,6 +1218,7 @@ export async function driverEarnings() {
     feesWeek: sum(week, 'fee'),
     feePerTrip: perTrip,
     trips,
+    endedEarly: demo.get('jobOutcomes', []), // no fare and no fee
     tipsToMysabak: 0,
     payout: { method: null, next: null },
   };

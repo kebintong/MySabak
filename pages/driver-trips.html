@@ -32,7 +32,13 @@
           <p class="lede" id="tripsSum" aria-live="polite"></p>
         </header>
 
-        <!-- Today's trips in their own card; past trips below, 10 a page, grouped by day (js/pages/driver-trips.js) -->
+        <!-- A job in progress first (back to it on Drive); then today's trips in their own card, past trips below,
+             10 a page, grouped by day. A row opens the trip's details (js/pages/driver-trips.js, js/trip-list.js). -->
+        <a class="card dongoing" id="ongoing" href="/pages/driver.html" hidden>
+          <span class="dongoing__dot" aria-hidden="true"></span>
+          <span class="dongoing__text"><b>Job in progress</b><span data-bind="ongoing"></span></span>
+          <span class="dongoing__go">Back to it<svg class="icon icon--sm" aria-hidden="true"><use href="/assets/images/icons.svg#i-chevron"/></svg></span>
+        </a>
         <div class="fchips tfilter" id="tripKinds" role="group" aria-label="Show"></div>
         <section class="card dtrips dtrips--today" aria-labelledby="todayTitle">
           <div class="dtrips__head"><h2 class="card__title" id="todayTitle">Today</h2><span class="dtrips__note" id="todaySum"></span></div>

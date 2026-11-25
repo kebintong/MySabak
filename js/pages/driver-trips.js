@@ -1,8 +1,9 @@
-/* The driver's trips (pages/driver-trips.html?kind=ride&page=2): filter by type; today's trips in their own card,
-   past trips below, 10 a page grouped by day, with numbered pages. */
-import { driverStatus, driverEarnings } from '../api.js';
+/* The driver's trips (pages/driver-trips.html?kind=ride&page=2): a job in progress first; filter by type; today's
+   trips in their own card, past trips below, 10 a page grouped by day, with numbered pages. Completed trips and jobs
+   that ended early (cancelled, no-show, not delivered) are listed together; a row opens the trip's details. */
+import { driverStatus, driverEarnings, activeJob } from '../api.js';
 import { $, mountChrome, peso, esc } from '../ui.js';
-import { tripsByDay, TRIP_KIND } from '../trip-list.js';
+import { tripsByDay, tripSheet, TRIP_KIND } from '../trip-list.js';
 
 mountChrome({ roles: ['driver'] });
 
@@ -23,7 +24,12 @@ function render() {
   $('#tripKinds').innerHTML = ['all', ...Object.keys(TRIP_KIND)].filter((k) => k === 'all' || count(k))
     .map((k) => `<button type="button" class="fchip" data-kind="${k}" aria-pressed="${k === kind}">${k === 'all' ? 'All' : esc(TRIP_KIND[k][0])} <span>${count(k)}</span></button>`).join('');
 
-  const sum = (l) => (l.length ? `${l.length} trip${l.length === 1 ? '' : 's'} · ${peso(l.reduce((s, t) => s + t.fare, 0))}` : '');
+  // "3 trips · ₱291 · 1 ended early": the fare counts completed trips only
+  const sum = (l) => {
+    const done = l.filter((t) => !t.outcome);
+    const ended = l.length - done.length;
+    return [done.length ? `${done.length} trip${done.length === 1 ? '' : 's'} · ${peso(done.reduce((s, t) => s + t.fare, 0))}` : '', ended ? `${ended} ended early` : ''].filter(Boolean).join(' · ');
+  };
   $('#tripsSum').textContent = sum(list);
   // Today in its own card; the pages are for past trips
   const midnight = new Date().setHours(0, 0, 0, 0);
@@ -49,6 +55,12 @@ function render() {
   $('#pageNote').textContent = past.length ? `Showing ${from + 1}–${Math.min(from + PER_PAGE, past.length)} of ${past.length} past trips` : '';
 }
 
+// A row opens the trip's details
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-trip]');
+  const t = b && all.find((x) => x.id === b.dataset.trip);
+  if (t) tripSheet(t).then(() => b.focus());
+});
 $('#tripKinds').addEventListener('click', (e) => {
   const b = e.target.closest('[data-kind]');
   if (!b || b.dataset.kind === kind) return;
@@ -68,8 +80,14 @@ $('#pageNav').addEventListener('click', (e) => {
 async function start() {
   const d = await driverStatus();
   if (!d.signedIn) { location.replace('/pages/drive.html'); return; } // sign in first
-  all = [...(await driverEarnings()).trips].sort((a, b) => b.at - a.at);
+  const e = await driverEarnings();
+  all = [...e.trips, ...e.endedEarly].sort((a, b) => b.at - a.at);
   render();
+  const job = await activeJob();
+  if (job) {
+    $('[data-bind="ongoing"]').textContent = `${(TRIP_KIND[job.kind] || [job.kind])[0]} · ${job.status === 'started' ? `to ${job.dropoff.label}` : `pickup at ${job.pickup.label}`}`;
+    $('#ongoing').hidden = false;
+  }
 }
 
 start();

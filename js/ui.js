@@ -1157,6 +1157,24 @@ export function wirePasswordReveal(root = document) {
   }));
 }
 
+/* ---------- Sheets (bottom sheets on phones, dialogs on desktop): resolves with the [data-done] value, or null ---------- */
+let sheetN = 0;
+export function sheet(title, body, wire = () => {}) {
+  return new Promise((resolve) => {
+    const id = `dsheet${++sheetN}`;
+    const dlg = document.createElement('dialog');
+    dlg.className = 'sheet dsheetx';
+    dlg.setAttribute('aria-labelledby', id);
+    dlg.innerHTML = `<div class="sheet__body"><span class="sheet__handle" aria-hidden="true"></span><h2 class="sheet__title" id="${id}" tabindex="-1" autofocus>${title}</h2>${body}</div>`;
+    document.body.appendChild(dlg);
+    const done = (v) => { if (!dlg.isConnected) return; dlg.close(); dlg.remove(); resolve(v); };
+    dlg.addEventListener('cancel', (e) => { e.preventDefault(); done(null); });
+    dlg.addEventListener('click', (e) => { const b = e.target.closest('[data-done]'); if (b) done(b.dataset.done); });
+    wire(dlg, done);
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  });
+}
+
 /* ---------- Toast ---------- */
 let toastTimer;
 export function toast(msg) {
