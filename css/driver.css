@@ -132,7 +132,9 @@
 .dtrips { grid-area: trips; }
 .dpay { grid-area: pay; }
 }
-.page--driver .card { border: 0; border-radius: 22px; box-shadow: 0 8px 24px -4px rgba(59, 26, 120, .14); }
+/* One card look on every driver page (Drive, Earnings, Trips, Account): 18 px corners, a hairline and a soft shadow */
+.page--driver { --dcard-radius: 18px; --dcard-shadow: 0 0 0 1px rgba(41, 10, 69, .06), 0 6px 18px -10px rgba(59, 26, 120, .28); }
+.page--driver .card, .page--driver .activejob.dcard, .page--driver .dempty.dcard { border: 0; border-radius: var(--dcard-radius); box-shadow: var(--dcard-shadow); }
 .page--driver .card__title { font-size: 17px; font-weight: 700; color: var(--ink); }
 /* the tab bar floats over the bottom of the page: room so it never covers the last line */
 .page--driver .dhome > .finder__note { margin-bottom: 72px; }
@@ -521,7 +523,7 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 /* The work: the map, then the requests (desktop: side by side) */
 .dwork { display: flex; flex-direction: column; gap: 16px; }
 .dmapcol { display: flex; flex-direction: column; gap: 10px; }
-.page--driver .dreq__title { margin: 0; font: 800 18px var(--font-display); color: var(--ink); }
+.page--driver .dreq__title { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink); } /* the same as a card title */
 /* The pin colours, in words, on the map's corner (the full map has its own sheet) */
 .dlegend {
   position: absolute; left: 10px; top: 10px; z-index: 2; margin: 0; display: flex; gap: 10px; padding: 0 12px; min-height: 32px; align-items: center;
@@ -702,8 +704,8 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .rq {
   --tone-soft: #f1eaf8; --tone-soft-on: #e6daf2; --tone-ink: var(--brand-deep);
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "top fare" "route fare" "meta meta";
-  column-gap: 12px; row-gap: 6px; padding: 14px 16px; border-radius: 18px; background: #fff;
-  box-shadow: 0 0 0 1px rgba(41, 10, 69, .06), 0 6px 18px -10px rgba(59, 26, 120, .28);
+  column-gap: 12px; row-gap: 6px; padding: 14px 16px; border-radius: var(--dcard-radius); background: #fff;
+  box-shadow: var(--dcard-shadow);
   transition: box-shadow .2s var(--ease-out), opacity .3s var(--ease-out);
 }
 .rq.is-open { grid-template-areas: "top fare" "route fare" "meta meta" "who who" "actions actions"; box-shadow: 0 0 0 2px var(--brand), 0 10px 26px -12px rgba(59, 26, 120, .4); }

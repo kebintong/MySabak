@@ -877,9 +877,6 @@ async function start() {
   const d = await driverStatus();
   if (!d.signedIn) { location.replace('/pages/drive.html'); return; } // sign in first
   $('#driverHome').hidden = false;
-  // Once the status panel has scrolled up under the top bar, a sky bar goes behind the logo, so nothing scrolls under it
-  const bandH = parseFloat(getComputedStyle($('.content')).paddingTop) - 10;
-  new IntersectionObserver(([e]) => document.body.classList.toggle('is-scrolled', !e.isIntersecting), { root: $('.content'), rootMargin: `-${bandH}px 0px 0px 0px` }).observe($('.dsky'));
   // The map was made while the page was hidden: size it to its box now, and whenever the box changes
   if ('ResizeObserver' in window) new ResizeObserver(() => { map.resize(); if (!mapMode) { routeKey = ''; inlineKey = ''; paintInline(); } }).observe($('#mapSlot'));
   approved = d.status === 'approved';

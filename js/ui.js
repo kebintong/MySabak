@@ -577,6 +577,7 @@ export function mountChrome({ roles = null } = {}) {
   if (from) $$('a[data-back]').forEach((a) => { a.href = from; });
   registerServiceWorker();
   mountMagic();
+  skyBar();
   return currentUser().catch(() => null).then((user) => {
     if (guardRole(user, roles)) return user;
     if (top) mountAccount($('[data-account]', top), user);
@@ -598,6 +599,17 @@ export function mountChrome({ roles = null } = {}) {
     }
     return user;
   });
+}
+
+/* Driver pages: once the sky header has scrolled up under the top bar, a sky bar goes behind the logo, so nothing
+   scrolls under it (css/driver.css: .page--driver.is-scrolled). An observer, not a scroll listener. */
+function skyBar() {
+  const head = $('.page--driver .page-head');
+  const content = $('.content');
+  if (!head || !content || !('IntersectionObserver' in window)) return;
+  const bandH = parseFloat(getComputedStyle(content).paddingTop) - 10;
+  new IntersectionObserver(([e]) => document.body.classList.toggle('is-scrolled', !e.isIntersecting && e.boundingClientRect.height > 0), // a hidden head (Drive before sign-in) isn't scrolled away
+    { root: content, rootMargin: `-${bandH}px 0px 0px 0px` }).observe(head);
 }
 
 /* What the round button shows besides its icons: the shop order (Cart step: its total). One gold badge holds a live
