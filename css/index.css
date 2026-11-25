@@ -2265,3 +2265,69 @@ body.is-status-hidden .panel--trip {
     opacity: .7;
   }
 }
+
+/* =========================================================
+   Cargo (Ride screen → Cargo): the Home card, the cargo details sheet, the fare lines and the delivery code.
+   Phones first: one column, big tap targets; the sheet scrolls.
+   ========================================================= */
+/* Home: four service cards under Ride. Phones: two by two; tablets: one row; desktop: Ride + four */
+.home__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 600px) { .home__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .home__grid { grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); } }
+.svc--cargo .svc__art { width: 96px; right: -4px; bottom: 6px; }
+
+.cargosheet .sheet__body { gap: 16px; }
+.cargosheet .sheet__sub { margin-top: 4px; }
+.is-cargo .v-meta { white-space: pre-line; line-height: 1.35; }
+.is-cargo .v-eta, .is-cargo .v-away { display: none; }
+.cargo__nums { display: grid; grid-template-columns: 1fr 96px; gap: 12px; }
+.cargo__unit { position: relative; display: block; }
+.cargo__unit span { position: absolute; right: 14px; top: 50%; translate: 0 -50%; font-size: 14px; font-weight: 600; color: var(--sub); pointer-events: none; }
+.cargo__unit .input { padding-right: 44px; }
+.cargo__size { margin: 0; padding: 0; border: 0; min-width: 0; }
+.cargo__size legend { padding: 0; margin-bottom: 8px; }
+.cargo__dims { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 6px; }
+.cargo__dims > span { padding-bottom: 14px; color: var(--sub); font-weight: 600; }
+.cargo__dims label { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 12px; font-weight: 600; color: var(--sub); }
+.cargo__dims .input { text-align: center; padding-left: 6px; padding-right: 6px; }
+.cargo__fit {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 14px; border-radius: 14px;
+  background: #fdf1ee; color: #8a2414; font-size: 14px; font-weight: 600; line-height: 1.4;
+}
+.cargo__fit .icon { flex: none; stroke: currentColor; }
+.cargo__fit > span { flex: 1 1 180px; }
+.cargo__fit .btn-soft { min-height: 44px; }
+.cargo__fit.is-ok { background: #eaf6ee; color: #1f6b3a; }
+.cargo__switch { display: flex; align-items: center; gap: 12px; min-height: 48px; cursor: pointer; }
+.cargo__switch input { width: 22px; height: 22px; flex: none; accent-color: var(--brand-deep); }
+.cargo__switch > span { display: flex; flex-direction: column; }
+.cargo__switch small { font-size: 12.5px; color: var(--sub); }
+.cargo__helpers[hidden] { display: none; }
+.cargo__photos { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cargo__add {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 14px;
+  border: 1.5px dashed #c9b3e6; color: var(--brand-deep); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.cargo__add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cargo__add small { font-weight: 500; color: var(--sub); }
+.cargo__add:focus-within { outline: 3px solid rgba(91, 37, 150, 0.45); outline-offset: 2px; }
+.cargo__thumbs { display: flex; gap: 8px; }
+.cargo__thumbs img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; }
+.cargo__error { margin: 0; padding: 10px 14px; border-radius: 12px; background: #fdf1ee; color: #8a2414; font-size: 14px; font-weight: 600; }
+
+/* Pay sheet: the Cargo quote's lines sit above "Fare" in a lighter weight */
+.receipt__row--part dt, .receipt__row--part dd { font-size: 13.5px; font-weight: 500; color: var(--sub); }
+.receipt__row--part { padding: 6px 0; }
+.receipt__row--part + .receipt__row--part { border-top: 0; }
+
+/* Trip card: the delivery code to give the receiver */
+.trip__code {
+  margin: 0; display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; padding: 10px 14px;
+  border-radius: 14px; background: #f6f1fa; font-size: 13px; font-weight: 600; color: var(--sub);
+}
+.trip__code b { grid-row: span 2; order: -1; font: 800 26px/1 var(--font-display); letter-spacing: .12em; color: var(--brand-deep); font-variant-numeric: tabular-nums; }
+.trip__code span { font-weight: 500; font-size: 12.5px; }
+.trip__code[hidden] { display: none; }
+/* Five Cargo vehicles fill the desktop panel: it scrolls, and the pay row and Book button keep their height */
+.panel--choose > .pay, .panel--choose > .book { flex-shrink: 0; }
+@media (min-width: 900px) { .ride .panel--choose > .book { position: sticky; bottom: 0; z-index: 1; } } /* always one tap away */

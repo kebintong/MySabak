@@ -146,6 +146,40 @@ Purple header with a check, "You've arrived" (Express: "Parcel delivered") and t
 driver, Tip 100% to mysabak, Total + payment method); **Tip mysabak** if they didn't tip (→ `sendTip()`); Done.
 Built by `showTripDone(order)` in `app.js`.
 
+### Cargo (Ride screen → **Cargo**, `/app#cargo`; Home's Cargo card)
+Vans and trucks, **one pickup and one drop-off**. Same screen as Ride and Parcel. The steps:
+1. **Choose a vehicle:** Motorcycle · Sedan · MPV / SUV · Van · Truck, each with its limits ("Up to 600 kg · 2.1 × 1.2 × 1.2 m")
+   and a "from" fare (`cargoFares(trip)`: base + distance, no extras).
+2. **Book → "What are you sending?"** The sheet asks for:
+   - the type and a description;
+   - the total weight, the number of pieces, and the biggest item's L × W × H (cm);
+   - Fragile, and helpers for loading (only when `helpers.available`);
+   - up to 3 photos (optional);
+   - the receiver's name and mobile, and notes.
+
+   A live fit check says "Fits in a Van" or why not, with **Switch to [the smallest vehicle that fits]**.
+3. **See the price** → `cargoQuote(...)`. The server prices it from its own rules and route, and checks the fit and
+   the service area. The pay sheet shows the quote's lines (base, distance, fragile, helpers), then the existing
+   Fare / Tip / You pay rows and the payment choice.
+4. **Find a driver** → `cargoBook({ quoteId, payment, tip, recipient, notes, photoCount, key })`.
+   - The fare comes from the quote; only the tip comes from the screen.
+   - `key` makes a retry book once.
+   - It returns a 4-digit **delivery code**: the trip card shows it, and the receiver gives it to the driver at
+     drop-off.
+   - After that, the booking is a normal trip with `kind: 'cargo'`: `findDriver`, `onTripUpdate`, `myActiveTrip`,
+     `cancelRide`, `myTrips` and `rateRide` work unchanged.
+
+| Call | Returns | Errors |
+|---|---|---|
+| `cargoQuote({ pickup, dropoff, trip, vehicle, cargo:{ type, description, weightKg, lengthCm, widthCm, heightCm, pieces, fragile }, helpers })` | `{ quoteId, expiresAt, vehicle, distanceKm, lines:[{ id, label, amount }], fare, helpers, ruleVersion }`, **money in centavos** | 400 details · 409 doesn't fit (`suggest`: a vehicle id or null) · 422 outside the Cargo area |
+| `cargoBook(...)` | `{ id, deliveryCode, demo }` | 400 receiver · 410 quote expired or unknown |
+
+**DEMO / SAMPLE:**
+- Capacities, rates, helpers and the service area (a box around mainland Cebu and Mactan) are SAMPLE values in
+  `CONFIG.cargo`.
+- Photos are shown on the sheet but not uploaded.
+- The backend handoff is `CARGO_BACKEND_HANDOFF.md`, outside the repo. The driver side of Cargo is the next round.
+
 ---
 
 ## Trips (`pages/trips.html`; the "Trips" tab)

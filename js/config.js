@@ -49,6 +49,26 @@ export const CONFIG = {
     ],
   },
 
+  // Cargo (Ride screen → Cargo): vans and trucks. SAMPLE capacities and rates for the demo only: the live app
+  // gets them from the server (cargoQuote() in api.js). Sizes in cm, weight in kg, money in centavos (₱1 = 100).
+  cargo: {
+    ruleVersion: 'sample-2026-11',
+    vehicles: [
+      { id: 'motor', name: 'Motorcycle', icon: 'i-motor', art: 'moto', maxKg: 20, lengthCm: 50, widthCm: 40, heightCm: 50, base: 4900, perKm: 600 },
+      { id: 'sedan', name: 'Sedan', icon: 'i-car', art: 'car', maxKg: 200, lengthCm: 100, widthCm: 60, heightCm: 50, base: 10000, perKm: 1500 },
+      { id: 'mpv', name: 'MPV / SUV', icon: 'i-suv', art: 'suv', maxKg: 300, lengthCm: 150, widthCm: 100, heightCm: 90, base: 15000, perKm: 1800 },
+      { id: 'van', name: 'Van', icon: 'i-truck', art: 'van', maxKg: 600, lengthCm: 210, widthCm: 120, heightCm: 120, base: 25000, perKm: 2200 },
+      { id: 'truck', name: 'Truck', icon: 'i-truck', art: 'truck', maxKg: 2000, lengthCm: 400, widthCm: 180, heightCm: 180, base: 60000, perKm: 3000 },
+    ],
+    defaultVehicle: 'van',
+    types: ['Furniture', 'Appliances', 'Boxes', 'Construction', 'Equipment', 'Other'],
+    fragileFee: 5000,
+    helpers: { available: true, max: 2, fee: 15000 }, // loading and unloading, only when real staff can go
+    quoteMinutes: 10, // a quote holds its price this long
+    // shortcut: a box around mainland Cebu and Mactan, not real roads, islands or ferries; the server decides the area
+    area: { name: 'Cebu', west: 123.25, east: 124.08, south: 9.4, north: 11.3 },
+  },
+
   // Where walk-in driver applicants go (Drive → Sign up → Walk in).
   // SAMPLE details for the demo: replace with the real office.
   driverOffice: {

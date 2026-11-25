@@ -604,7 +604,7 @@ export function mountChrome({ roles = null } = {}) {
    ride's minutes and the cart's count, taking turns when there are both. Rides and food orders on their way are
    counted on the Trips & Orders tab. */
 const order = { count: 0, total: '' };
-let trip = null; // { kind:'ride'|'express', fare:'₱120'|'', status, eta:number|null }
+let trip = null; // { kind:'ride'|'express'|'cargo', fare:'₱120'|'', status, eta:number|null }
 let ongoing = 0; // live rides plus food orders on their way: the Trips & Orders tab's count
 let onChange = () => {}; // set by armLoop: the dial follows the order and the trip
 
@@ -705,8 +705,8 @@ export function turnDelta(prev, next) {
   return d > 180 ? d - 360 : d;
 }
 
-// The live trip's step: Parcel for an Express delivery, Ride otherwise
-const tripStep = () => (trip ? (trip.kind === 'express' ? PARCEL : RIDE) : -1);
+// The live trip's step: Parcel for a delivery (Express or Cargo), Ride otherwise
+const tripStep = () => (trip ? (trip.kind === 'ride' ? RIDE : PARCEL) : -1);
 // Something live on a step: an order on the Cart, the trip on its step (screen readers hear the other one too)
 const isLive = (i) => (i === CART && order.count > 0) || i === tripStep();
 // A step's money in place of its icon: the Cart's order total ('' = the icon; the trip's step keeps its icon)
@@ -715,7 +715,7 @@ const face = (i) => (i === CART ? order.total : '');
 // Alone it's just its text; two take turns, each with its icon
 function badgeItems(i) {
   const ride = trip && (trip.status === 'arrived' ? 'Here' : isNum(trip.eta) ? `${trip.eta}m` : '');
-  const items = ride ? [{ icon: trip.kind === 'express' ? 'i-box' : 'i-car', text: ride }] : [];
+  const items = ride ? [{ icon: { express: 'i-box', cargo: 'i-truck' }[trip.kind] || 'i-car', text: ride }] : [];
   if (order.count) items[i === CART ? 'unshift' : 'push']({ icon: 'i-cart', text: String(order.count) });
   return items;
 }

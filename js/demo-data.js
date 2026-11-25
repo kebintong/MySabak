@@ -18,6 +18,10 @@ export const DEMO_DRIVERS = {
   motor: { name: 'Jun D.', rating: 4.9, trips: 1240, vehicle: { model: 'Honda Click 125', color: 'Red', plate: '123 ABC' } },
   sedan: { name: 'Mark R.', rating: 4.8, trips: 860, vehicle: { model: 'Toyota Vios', color: 'White', plate: 'ABC 1234' } },
   suv: { name: 'Liza M.', rating: 4.9, trips: 530, vehicle: { model: 'Toyota Innova', color: 'Silver', plate: 'NBC 5678' } },
+  // Cargo
+  mpv: { name: 'Liza M.', rating: 4.9, trips: 530, vehicle: { model: 'Toyota Innova', color: 'Silver', plate: 'NBC 5678' } },
+  van: { name: 'Rodel P.', rating: 4.8, trips: 410, vehicle: { model: 'Mitsubishi L300 FB', color: 'White', plate: 'GAB 2210' } },
+  truck: { name: 'Nonoy S.', rating: 4.9, trips: 290, vehicle: { model: 'Isuzu Elf closed van', color: 'Blue', plate: 'LAD 7781' } },
 };
 
 /** A required "Size" (or other) choice whose prices are added to the item price. */

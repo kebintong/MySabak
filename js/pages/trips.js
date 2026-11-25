@@ -11,7 +11,10 @@ mountChrome({ roles: ['client'] });
 
 const RECENT_KEY = 'mysabak.recent'; // same list as the Ride screen's recent places (app.js)
 const DONE = ['delivered', 'cancelled'];
-const vehicleName = (id) => (CONFIG.vehicles.find((v) => v.id === id) || { name: id }).name;
+const vehicleName = (id, kind) => ((kind === 'cargo' ? CONFIG.cargo.vehicles : CONFIG.vehicles).find((v) => v.id === id) || { name: id }).name;
+// Each booking kind: its word, icon, the Ride screen link and the "go again" icon
+const KIND = { ride: ['Ride', 'i-car', 'ride', 'k-place'], express: ['Parcel', 'i-box', 'parcel', 'k-parcel'], cargo: ['Cargo', 'i-truck', 'cargo', 'k-parcel'] };
+const kindOf = (t) => KIND[t.kind] || KIND.ride;
 const stepName = (id) => (ORDER_STEPS.find((s) => s.id === id) || { name: id }).name;
 
 // What a live ride is doing, and which of its four steps it's on
@@ -55,7 +58,7 @@ function liveCard({ key, iconId, tone, at, steps, title, sub, end, label, more }
 
 
 function rideCard(t) {
-  const express = t.kind === 'express';
+  const [kindName, kindIcon, link] = kindOf(t);
   const b = t.booking;
   const d = t.driver;
   const words = TRIP_WORDS[t.status] || 'Booked';
@@ -68,11 +71,11 @@ function rideCard(t) {
       <button type="button" class="lcard__act" aria-label="Chat with ${esc(d.name)}">${icon('i-chat')}</button>
     </div>` : '<p class="lcard__wait">Finding a driver near you…</p>';
   return liveCard({
-    key: 'ride', iconId: express ? 'i-box' : 'i-car', tone: 'ride', at: TRIP_STEP[t.status] ?? 0, steps: RIDE_STEPS,
+    key: 'ride', iconId: kindIcon, tone: 'ride', at: TRIP_STEP[t.status] ?? 0, steps: RIDE_STEPS,
     title: words, sub: `To ${b.dropoff.label}`,
-    label: `${express ? 'Parcel' : 'Ride'} to ${b.dropoff.label}, ${words.toLowerCase()}${time ? `, ${time}` : ''}`,
+    label: `${kindName} to ${b.dropoff.label}, ${words.toLowerCase()}${time ? `, ${time}` : ''}`,
     end: time ? `<span class="lcard__eta">${esc(time)}</span>` : `<span class="lcard__price">${pesoOr(b.price && b.price.total, '[FARE]')}</span>`,
-    more: `${driver}<a class="button button--block lcard__go" href="/app#${express ? 'parcel' : 'ride'}">${icon('i-pin')}Track ${express ? 'parcel' : 'ride'}</a>`,
+    more: `${driver}<a class="button button--block lcard__go" href="/app#${link}">${icon('i-pin')}Track ${kindName.toLowerCase()}</a>`,
   });
 }
 
@@ -157,9 +160,9 @@ function placeMap() {
   mapNow.api.resize();
 }
 
-const pastRide = (t) => `<li class="recent__row">${icon(t.kind === 'express' ? 'i-box' : 'i-car', 'icon--lg')}
+const pastRide = (t) => `<li class="recent__row">${icon(kindOf(t)[1], 'icon--lg')}
     <span class="recent__text"><span class="recent__name">${esc((t.dropoff && t.dropoff.label) || 'Pinned location')}</span>
-      <span class="recent__meta">${t.kind === 'express' ? 'Parcel' : 'Ride'} · ${esc(vehicleName(t.vehicle))} · ${esc(when(t.at))} · ${pesoOr(t.price && t.price.total, '[FARE]')}</span></span>
+      <span class="recent__meta">${kindOf(t)[0]} · ${esc(vehicleName(t.vehicle, t.kind))} · ${esc(when(t.at))} · ${pesoOr(t.price && t.price.total, '[FARE]')}</span></span>
     <button type="button" class="btn-soft" data-rebook="${esc(t.id)}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`;
 
 const pastOrder = (o) => `<li class="recent__row">${icon('i-food', 'icon--lg')}
@@ -176,8 +179,8 @@ function drawAgain(count) {
   const places = rides.filter((t) => t.dropoff && t.dropoff.label && !seen.has(t.dropoff.label) && seen.add(t.dropoff.label)).slice(0, 2);
   const lastShop = orders.find((o) => o.status === 'delivered') || orders.find((o) => o.status !== 'cancelled');
   const rows = [
-    ...places.map((t) => `<li class="tagain__row"><span class="tagain__ic">${icon(t.kind === 'express' ? 'k-parcel' : 'k-place')}</span>
-      <span class="tagain__text"><b>${esc(t.dropoff.label)}</b><span>${t.kind === 'express' ? 'Parcel' : 'Ride'} · last on ${esc(day(t.at))}</span></span>
+    ...places.map((t) => `<li class="tagain__row"><span class="tagain__ic">${icon(kindOf(t)[3])}</span>
+      <span class="tagain__text"><b>${esc(t.dropoff.label)}</b><span>${kindOf(t)[0]} · last on ${esc(day(t.at))}</span></span>
       <button type="button" class="btn-soft" data-rebook="${esc(t.id)}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`),
     ...(lastShop ? [`<li class="tagain__row"><span class="tagain__ic">${icon('k-shop')}</span>
       <span class="tagain__text"><b>${esc(lastShop.shop.name)}</b><span>Food${lastShop.lines && lastShop.lines[0] ? ` · ${esc(lastShop.lines[0].name)}` : ''}</span></span>
@@ -261,7 +264,7 @@ $('.tpanel').addEventListener('click', (e) => {
     const list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').filter((p) => p.title !== label);
     localStorage.setItem(RECENT_KEY, JSON.stringify([{ title: label, lng, lat }, ...list].slice(0, 5)));
   } catch (_) { /* storage off: the Ride screen still opens */ }
-  location.href = '/app#rebook';
+  location.href = trip.kind === 'cargo' ? '/app#rebook-cargo' : '/app#rebook'; // Cargo rebooks in Cargo, with its vehicles
 });
 
 /* ---------- Start ---------- */

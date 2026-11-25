@@ -15,7 +15,7 @@
    Search this file for "DEMO" to find what to replace.
    ========================================================= */
 import { CONFIG } from './config.js';
-import { isNum, haversineKm, rateFor, cleanTip } from './money.js';
+import { isNum, haversineKm, rateFor, cleanTip, cargoFit, cargoBestFit, cargoPrice } from './money.js';
 import {
   SHOPS, SHOP_CATEGORIES, DEMO_DRIVERS, DEMO_ACCOUNTS, DEMO_PLACES, DEMO_RIDERS, DEMO_MERCHANT_ORDERS, DEMO_MERCHANT_WEEK,
   DEMO_BRANCHES, DEMO_BRANCH_ORDERS, BRANCH_AREAS, DEMO_APPLICATIONS, DEMO_ADMIN, DEMO_USERS,
@@ -277,7 +277,7 @@ export async function bookRide(booking) {
   if (!CONFIG.ridePayments.some((m) => m.id === booking.payment)) throw Object.assign(new Error('Choose how you’ll pay.'), { status: 400 });
   const tip = cleanTip(booking.price && booking.price.tip, CONFIG.tips.max);
   await wait(600);
-  const id = demo.id(booking.kind === 'express' ? 'EXP' : 'RIDE');
+  const id = demo.id({ express: 'EXP', cargo: 'CRG' }[booking.kind] || 'RIDE');
   const record = { id, ...booking, price: { ...booking.price, tip }, at: Date.now() };
   demo.set('lastBooking', record);
   // Live from now on, on every page (myActiveTrip): first looking for a driver, until endTrip() or cancelRide()
@@ -472,6 +472,105 @@ export async function rateRide(bookingId, stars) {
   if (!(n >= 1 && n <= 5)) throw Object.assign(new Error('Pick 1 to 5 stars.'), { status: 400 });
   demo.set('ratings', { ...demo.get('ratings', {}), [bookingId]: n });
   return { ok: true };
+}
+
+/* =========================================================
+   Cargo: vans and trucks, one pickup and one drop-off (Ride screen → Cargo).
+   The flow: cargoQuote() (the server prices it and checks the vehicle fits) → the pay sheet → cargoBook().
+   After booking, a Cargo trip is a normal booking with kind 'cargo': findDriver(), onTripUpdate(), myActiveTrip(),
+   cancelRide(), myTrips() and rateRide() work the same. Money here is in centavos (₱1 = 100).
+   DEMO: rates, sizes and the service area are SAMPLE values from CONFIG.cargo; nothing is sent anywhere.
+   Backend: price on the server from your own rules and route, never from what the browser sends.
+   ========================================================= */
+
+/** "From" fares for the vehicle list (base + distance, no extras), shaped like faresFor(). */
+export function cargoFares(trip) {
+  const out = {};
+  CONFIG.cargo.vehicles.forEach((v) => {
+    const p = cargoPrice(CONFIG.cargo, { km: trip && trip.distanceKm, vehicleId: v.id });
+    out[v.id] = p && { total: p.fare / 100, base: p.lines[0].amount / 100, distance: p.lines[1].amount / 100 };
+  });
+  return out;
+}
+
+const inCargoArea = (p) => {
+  const a = CONFIG.cargo.area;
+  return p && isNum(p.lng) && isNum(p.lat) && p.lng >= a.west && p.lng <= a.east && p.lat >= a.south && p.lat <= a.north;
+};
+const cargoErr = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
+
+/**
+ * Price a Cargo delivery and check the cargo fits the vehicle. The quote holds its price for CONFIG.cargo.quoteMinutes.
+ * @param {{pickup:{lng,lat,label}, dropoff:{lng,lat,label}, trip:object, vehicle:string,
+ *   cargo:{type, description, weightKg, lengthCm, widthCm, heightCm, pieces, fragile}, helpers:number}} req
+ * @returns {Promise<{quoteId, expiresAt:number, vehicle:string, distanceKm:number, lines:Array<{id,label,amount}>,
+ *   fare:number, helpers:number, ruleVersion:string}>}
+ *   400 bad details · 409 doesn't fit ({ suggest: vehicle id or null }) · 422 outside the Cargo area
+ */
+export async function cargoQuote({ pickup, dropoff, trip, vehicle, cargo = {}, helpers = 0 }) {
+  const rules = CONFIG.cargo;
+  const v = rules.vehicles.find((x) => x.id === vehicle);
+  if (!v) throw cargoErr('Choose a vehicle.');
+  if (!inCargoArea(pickup) || !inCargoArea(dropoff)) throw cargoErr(`Cargo only picks up and delivers within ${rules.area.name} for now.`, 422);
+  const whole = (n, max) => { const x = Math.round(Number(n)); return x >= 1 && x <= max ? x : null; };
+  const c = {
+    type: rules.types.includes(cargo.type) ? cargo.type : null,
+    description: String(cargo.description || '').trim().slice(0, 120),
+    weightKg: whole(cargo.weightKg, 10000), lengthCm: whole(cargo.lengthCm, 2000), widthCm: whole(cargo.widthCm, 1000),
+    heightCm: whole(cargo.heightCm, 1000), pieces: whole(cargo.pieces, 99), fragile: Boolean(cargo.fragile),
+  };
+  if (!c.type) throw cargoErr('Pick what kind of cargo it is.');
+  if (!c.description) throw cargoErr('Say what you’re sending.');
+  if (!c.weightKg || !c.lengthCm || !c.widthCm || !c.heightCm || !c.pieces) throw cargoErr('Enter the weight, size and number of pieces.');
+  const fit = cargoFit(v, c);
+  if (!fit.ok) {
+    const best = cargoBestFit(rules.vehicles, c);
+    throw cargoErr(fit.reason, 409, { suggest: best ? best.id : null });
+  }
+  // DEMO: the route the screen already has; the server routes it itself (with truck limits)
+  const km = trip && isNum(trip.distanceKm) ? trip.distanceKm : haversineKm(pickup, dropoff) * 1.3;
+  const price = cargoPrice(rules, { km, vehicleId: v.id, fragile: c.fragile, helpers });
+  await wait(500);
+  const quote = {
+    quoteId: demo.id('CQ'), expiresAt: Date.now() + rules.quoteMinutes * 60e3, vehicle: v.id, cargo: c,
+    helpers: price.lines.some((l) => l.id === 'helpers') ? Math.round(Number(helpers)) : 0,
+    distanceKm: km, lines: price.lines, fare: price.fare, ruleVersion: rules.ruleVersion,
+    pickup: { lng: pickup.lng, lat: pickup.lat, label: pickup.label }, dropoff: { lng: dropoff.lng, lat: dropoff.lat, label: dropoff.label },
+  };
+  demo.set('cargoQuotes', [quote, ...demo.get('cargoQuotes', [])].slice(0, 10));
+  return quote;
+}
+
+/**
+ * Book a quoted Cargo delivery. `key` makes it safe to retry: the same key returns the same booking.
+ * The fare comes from the saved quote; only the tip comes from the screen (capped like every tip).
+ * @param {{quoteId:string, payment:string, tip:number, recipient:{name, phone}, notes?:string, photoCount?:number,
+ *   key:string, trip?:object}} req
+ * @returns {Promise<{id:string, deliveryCode:string, demo:boolean}>}  400 bad details · 410 quote expired or unknown
+ */
+export async function cargoBook({ quoteId, payment, tip = 0, recipient = {}, notes = '', photoCount = 0, key, trip }) {
+  const keys = demo.get('cargoKeys', {});
+  if (key && keys[key]) return keys[key];
+  const q = demo.get('cargoQuotes', []).find((x) => x.quoteId === quoteId);
+  if (!q || q.expiresAt < Date.now()) throw cargoErr('That price has expired. Check the new price and book again.', 410);
+  const name = String(recipient.name || '').trim().slice(0, 60);
+  const phone = String(recipient.phone || '').replace(/[^\d+]/g, '');
+  if (!name || !/^\+?\d{10,15}$/.test(phone)) throw cargoErr('Enter the receiver’s name and mobile number.');
+  const t = cleanTip(tip, CONFIG.tips.max);
+  const fare = q.fare / 100;
+  const digits = new Uint32Array(1);
+  (globalThis.crypto || { getRandomValues: (a) => { a[0] = Math.random() * 1e9; return a; } }).getRandomValues(digits);
+  const deliveryCode = String(digits[0] % 10000).padStart(4, '0');
+  const { id } = await bookRide({
+    kind: 'cargo', vehicle: q.vehicle, pickup: q.pickup, dropoff: q.dropoff,
+    trip: trip && trip.coords ? trip : { coords: null, distanceKm: q.distanceKm, minutes: null },
+    payment, price: { fare, tip: t, total: fare + t },
+    cargo: { ...q.cargo, helpers: q.helpers, lines: q.lines, quoteId: q.quoteId, ruleVersion: q.ruleVersion,
+      recipient: { name, phone }, notes: String(notes || '').trim().slice(0, 200), photos: Math.min(3, Math.max(0, Number(photoCount) || 0)), deliveryCode },
+  });
+  const res = { id, deliveryCode, demo: true };
+  if (key) demo.set('cargoKeys', { ...keys, [key]: res });
+  return res;
 }
 
 /* =========================================================

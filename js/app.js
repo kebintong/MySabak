@@ -3,9 +3,10 @@
    Vanilla JS modules, no build step.
 
    app.html (/app) opens on the Home dashboard. Ride links switch to the ride screen without a reload:
-     #ride / #where (search) = Ride, #moto = Ride with Motor picked, #parcel = Express,
+     #ride / #where (search) = Ride, #moto = Ride with Motor picked, #parcel = Express, #cargo = Cargo,
      #rebook = Choose your ride for the latest recent place (Trips → Rebook). Back = Home.
-   Two modes: Ride (passengers) and Express (parcels), same screen.
+   Three modes on the same screen: Ride (passengers), Express (parcels) and Cargo (vans and trucks: the cargo
+   details sheet, then a server quote with a fare breakdown, then the pay sheet; a delivery code on the trip).
    Steps:
      1. "request" – set a drop-off (search, a recent place, or pick on map)
      2. "choose"  – pick Motor / Sedan / SUV, see the fare, tap Book
@@ -25,10 +26,11 @@ import { CONFIG } from './config.js';
 import {
   searchPlaces, placeLocation, addressFor, routeBetween, straightLine, faresFor, bookRide, errorMessage,
   findDriver, cancelRide, onTripUpdate, rateRide, currentUser, myTrips, myActiveTrip, endTrip,
+  cargoFares, cargoQuote, cargoBook,
 } from './api.js';
 import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
 import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr, trackTrip, ava, avaTone } from './ui.js';
-import { splitPrice, cleanTip } from './money.js';
+import { splitPrice, cleanTip, cargoFit, cargoBestFit, cargoSize, pesoCents } from './money.js';
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const DESKTOP = window.matchMedia('(min-width: 900px)');
@@ -49,8 +51,11 @@ const state = {
   trip: emptyTrip(),
   loadingTrip: false,
   picking: false,
-  mode: 'ride',   // 'ride' | 'express'
+  mode: 'ride',   // 'ride' | 'express' | 'cargo'
   parcel: null,   // Express: { receiverName, receiverPhone, size, item, notes }
+  cargo: null,    // Cargo: { type, description, weightKg, pieces, lengthCm, widthCm, heightCm, fragile, helpers, photos, recipient, notes }
+  quote: null,    // Cargo: the server's quote (+ key: retrying the booking can't book twice)
+  deliveryCode: null, // Cargo: the receiver gives it to the driver at drop-off
   payment: CONFIG.defaultRidePayment, // 'cash' | 'gcash' | 'bank'
   price: null,    // { fare, tip, total } chosen on the pay sheet
   booking: null,  // { id, demo }
@@ -63,7 +68,7 @@ let stopTrip = () => {};
 /* Words that change between Ride and Express */
 const MODES = {
   ride: {
-    askTitle: 'Saan tayo?', askHint: 'Set your drop-off above.', placeholder: 'Where to?',
+    askTitle: 'Saan tayo?', askHint: 'Set your drop-off above.', placeholder: 'Where to?', chooseTitle: 'Choose your ride',
     bookVerb: 'Book', seeLabel: 'See rides', capacity: (v) => v.capacity,
     payTitle: 'Confirm your ride', searchTitle: 'Finding you a driver',
     steps: ['On the way', 'On the trip', 'Arrived'],
@@ -74,7 +79,7 @@ const MODES = {
     doneTitle: 'You’ve arrived',
   },
   express: {
-    askTitle: 'Saan ipapadala?', askHint: 'Set where it goes above.', placeholder: 'Deliver to?',
+    askTitle: 'Saan ipapadala?', askHint: 'Set where it goes above.', placeholder: 'Deliver to?', chooseTitle: 'Choose your ride',
     bookVerb: 'Send with', seeLabel: 'See options', capacity: (v) => v.parcel,
     payTitle: 'Confirm your delivery', searchTitle: 'Finding a driver for your parcel',
     steps: ['Picking up', 'Delivering', 'Delivered'],
@@ -83,6 +88,17 @@ const MODES = {
       on_trip: 'Your parcel is on the way', completed: 'Parcel delivered',
     },
     doneTitle: 'Parcel delivered',
+  },
+  cargo: {
+    askTitle: 'Saan ihahatid?', askHint: 'Set where the cargo goes above.', placeholder: 'Deliver to?', chooseTitle: 'Choose a vehicle',
+    bookVerb: 'Book', seeLabel: 'See vehicles', capacity: (v) => `Up to ${PH_NUM.format(v.maxKg)} kg\nSpace ${cargoSize(v)}`, // two lines (pre-line)
+    payTitle: 'Confirm your cargo', searchTitle: 'Finding a driver for your cargo',
+    steps: ['Picking up', 'Delivering', 'Delivered'],
+    status: {
+      arriving: 'Your driver is coming for the cargo', arrived: 'Your driver is at the pickup',
+      on_trip: 'Your cargo is on the way', completed: 'Cargo delivered',
+    },
+    doneTitle: 'Cargo delivered',
   },
 };
 const words = () => MODES[state.mode];
@@ -102,12 +118,17 @@ async function estimateTrip(from, to) {
 function book() {
   if (state.loadingTrip || state.step !== 'choose') return;
   if (state.mode === 'express' && !state.parcel) { openParcelSheet(); return; }
+  if (state.mode === 'cargo') { openCargoSheet(); return; } // the quote depends on the details, so ask every time
   openPaySheet();
 }
 
 /* ---------- Pay sheet: payment method + "Your price" ---------- */
 const paymentById = (id) => CONFIG.ridePayments.find((m) => m.id === id) || CONFIG.ridePayments[0];
-const fareNumber = () => { const f = fareOf(vehicleById(state.vehicle)); return f ? Math.round(f.total) : null; };
+const fareNumber = () => {
+  if (state.mode === 'cargo') return state.quote ? state.quote.fare / 100 : null;
+  const f = fareOf(vehicleById(state.vehicle));
+  return f ? Math.round(f.total) : null;
+};
 let tipDraft = 0;
 let customOpen = false; // the "Custom" chip shows a box to type a price (or a tip while the fare is unknown)
 const draftPrice = () => splitPrice({ fare: fareNumber(), tip: tipDraft, max: CONFIG.tips.max });
@@ -137,7 +158,9 @@ function renderPrice() {
   const input = $('#customPrice');
   input.placeholder = fare !== null ? String(fare) : '0';
   input.min = fare !== null ? String(fare) : '0';
-  $('#priceBreakdown').innerHTML = `
+  const cargoLines = state.mode === 'cargo' && state.quote
+    ? state.quote.lines.map((l) => `<div class="receipt__row receipt__row--part"><dt>${esc(l.label)}</dt><dd>${pesoCents(l.amount)}</dd></div>`).join('') : '';
+  $('#priceBreakdown').innerHTML = `${cargoLines}
     <div class="receipt__row"><dt>Fare<span>100% to your driver</span></dt><dd>${fare !== null ? peso(fare) : `${CONFIG.currency}[FARE]`}</dd></div>
     <div class="receipt__row"><dt>Tip<span>100% to mysabak</span></dt><dd>${p.tip ? peso(p.tip) : 'No tip'}</dd></div>
     <div class="receipt__row receipt__row--total"><dt>You pay</dt><dd>${totalText(p)}</dd></div>`;
@@ -214,7 +237,10 @@ async function startBooking() {
   render();
   requestAnimationFrame(() => frame());
   try {
-    const res = await bookRide({
+    const res = state.mode === 'cargo' ? await cargoBook({
+      quoteId: state.quote.quoteId, payment: state.payment, tip: state.price.tip, recipient: state.cargo.recipient,
+      notes: state.cargo.notes, photoCount: state.cargo.photos, key: state.quote.key, trip: state.trip,
+    }) : await bookRide({
       kind: state.mode,
       vehicle: vehicle.id,
       pickup: { ...state.pickup, label: state.pickupLabel },
@@ -226,6 +252,7 @@ async function startBooking() {
     });
     if (token !== bookingToken) { cancelRide(res.id).catch(() => {}); return; } // cancelled while it was sending
     state.booking = { id: res.id, demo: res.demo };
+    state.deliveryCode = res.deliveryCode || null;
     trackTrip(); // the round button shows the search, and the trip after it
     await awaitDriver(res.id, token);
   } catch (err) {
@@ -291,7 +318,7 @@ async function cancelBooking({ ask = false } = {}) {
   const id = state.booking && state.booking.id;
   backToChoose();
   if (id) { try { await cancelRide(id); } catch (err) { console.warn(err); } }
-  toast(state.mode === 'express' ? 'Delivery cancelled.' : 'Ride cancelled.');
+  toast(state.mode === 'ride' ? 'Ride cancelled.' : 'Delivery cancelled.');
 }
 
 /**
@@ -358,6 +385,8 @@ function showTripDone(order) {
     dlg.close();
     dlg.remove();
     state.parcel = null;
+    state.quote = null;
+    state.deliveryCode = null;
     state.price = null;
     state.driver = null;
     state.booking = null;
@@ -409,9 +438,111 @@ function setupParcelSheet() {
 
 function setMode(mode) {
   if (state.mode === mode) return;
+  const wasCargo = state.mode === 'cargo';
   state.mode = mode;
   state.parcel = null;
+  state.quote = null;
+  // Cargo has its own vehicles: switching in or out of it picks that list's default
+  if (wasCargo || mode === 'cargo') {
+    if (!fleet().some((v) => v.id === state.vehicle)) state.vehicle = mode === 'cargo' ? CONFIG.cargo.defaultVehicle : CONFIG.defaultVehicle;
+    buildVehicles();
+  }
   render();
+}
+
+/* ---------- Cargo: what's being sent, the fit check, then the server's quote ---------- */
+let cargoPhotoUrls = [];
+const newKey = () => (globalThis.crypto && crypto.randomUUID ? crypto.randomUUID() : `k-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+
+function readCargo() {
+  const f = $('#cargoForm');
+  const n = (name) => Number(f.elements[name].value) || 0;
+  const type = $('input[name="type"]:checked', f);
+  const helpers = $('input[name="helpers"]:checked', f);
+  return {
+    type: type ? type.value : null, description: f.elements.description.value.trim(),
+    weightKg: n('weightKg'), pieces: n('pieces') || 1, lengthCm: n('lengthCm'), widthCm: n('widthCm'), heightCm: n('heightCm'),
+    fragile: f.elements.fragile.checked, helpers: helpers ? Number(helpers.value) : 0, photos: cargoPhotoUrls.length,
+    recipient: { name: f.elements.receiverName.value.trim(), phone: f.elements.receiverPhone.value.replace(/\s+/g, '') },
+    notes: f.elements.notes.value.trim(),
+  };
+}
+
+// Under the size: nothing until weight and size are in; then "Fits in a Van", or why not and the vehicle that fits
+function renderCargoFit() {
+  const c = readCargo();
+  const box = $('#cargoFit');
+  const v = vehicleById(state.vehicle);
+  setBind('vehicleSpace', `up to ${PH_NUM.format(v.maxKg)} kg · ${cargoSize(v)}`);
+  if (!c.weightKg || !c.lengthCm || !c.widthCm || !c.heightCm) { box.hidden = true; return true; }
+  const fit = cargoFit(v, c);
+  box.hidden = false;
+  box.classList.toggle('is-ok', fit.ok);
+  if (fit.ok) { box.innerHTML = `${icon('i-check', 'icon--sm')}<span>Fits in a ${esc(v.name)}.</span>`; return true; }
+  const best = cargoBestFit(CONFIG.cargo.vehicles, c);
+  box.innerHTML = `${icon('i-st-alert', 'icon--sm')}<span>${esc(fit.reason)}${best ? '' : ' Split it into smaller loads, or message us for a bigger truck.'}</span>
+    ${best ? `<button type="button" class="btn-soft" data-switch="${best.id}">Switch to ${esc(best.name)}</button>` : ''}`;
+  return false;
+}
+
+function openCargoSheet() {
+  const dlg = $('#cargoSheet');
+  $('#cargoError').hidden = true;
+  renderCargoFit();
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+}
+
+function setupCargoSheet() {
+  const dlg = $('#cargoSheet');
+  const form = $('#cargoForm');
+  const rules = CONFIG.cargo;
+  $('#cargoTypes').insertAdjacentHTML('beforeend', rules.types.map((t) => `
+    <label class="pill-radio"><input type="radio" name="type" value="${esc(t)}"><span>${esc(t)}</span></label>`).join(''));
+  const helpers = $('#cargoHelpers');
+  helpers.hidden = !rules.helpers.available;
+  helpers.insertAdjacentHTML('beforeend', Array.from({ length: rules.helpers.max + 1 }, (_, n) => `
+    <label class="pill-radio"><input type="radio" name="helpers" value="${n}"${n ? '' : ' checked'}><span>${n ? `${n} helper${n > 1 ? 's' : ''} · ${pesoCents(n * rules.helpers.fee)}` : 'No help'}</span></label>`).join(''));
+  setBind('fragileFee', `+${pesoCents(rules.fragileFee)}`);
+  form.addEventListener('input', renderCargoFit);
+  dlg.addEventListener('click', (e) => {
+    const sw = e.target.closest('[data-switch]');
+    if (sw) { selectVehicle(sw.dataset.switch); renderCargoFit(); }
+  });
+  $('#cargoPhotos').addEventListener('change', (e) => {
+    cargoPhotoUrls.forEach((u) => URL.revokeObjectURL(u));
+    cargoPhotoUrls = Array.from(e.target.files || []).slice(0, 3).map((f) => URL.createObjectURL(f)); // DEMO: shown here, not uploaded
+    $('#cargoThumbs').innerHTML = cargoPhotoUrls.map((u, i) => `<img src="${u}" alt="Cargo photo ${i + 1}" width="56" height="56">`).join('');
+  });
+  $('[data-close]', dlg).addEventListener('click', () => dlg.close());
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('#cargoError');
+    err.hidden = true;
+    const c = readCargo();
+    if (!c.type) { err.textContent = 'Pick what kind of cargo it is.'; err.hidden = false; $('input[name="type"]', form).focus(); return; }
+    if (!form.reportValidity()) return;
+    if (!renderCargoFit()) { $('#cargoFit').scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+    const btn = $('#cargoNext');
+    btn.disabled = true;
+    btn.textContent = 'Getting the price…';
+    try {
+      const q = await cargoQuote({
+        pickup: { ...state.pickup, label: state.pickupLabel }, dropoff: { ...state.destPoint, label: state.dest },
+        trip: state.trip, vehicle: state.vehicle, cargo: c, helpers: c.helpers,
+      });
+      state.cargo = c;
+      state.quote = { ...q, key: newKey() };
+      dlg.close();
+      openPaySheet();
+    } catch (ex) {
+      if (ex.status === 409) renderCargoFit();
+      err.textContent = errorMessage(ex);
+      err.hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'See the price';
+    }
+  });
 }
 
 /* ---------- Elements ---------- */
@@ -437,13 +568,14 @@ const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 // Formatters built once: toLocaleString() makes a new one on every call, which was slow in long lists and charts
 const PH_NUM = new Intl.NumberFormat('en-PH');
 const peso = (n) => `${CONFIG.currency}${PH_NUM.format(Math.round(n))}`;
-const vehicleById = (id) => CONFIG.vehicles.find((v) => v.id === id) || CONFIG.vehicles[0];
+const fleet = () => (state.mode === 'cargo' ? CONFIG.cargo.vehicles : CONFIG.vehicles); // Cargo has its own vehicles
+const vehicleById = (id) => fleet().find((v) => v.id === id) || fleet()[0];
 
-const fareOf = (v) => faresFor(state.trip)[v.id]; // { total, base, distance } or null
+const fareOf = (v) => (state.mode === 'cargo' ? cargoFares : faresFor)(state.trip)[v.id]; // { total, base, distance } or null
 function fareFor(v) {
   if (state.loadingTrip) return `${CONFIG.currency}…`;
   const f = fareOf(v);
-  return f ? peso(f.total) : `${CONFIG.currency}[FARE]`;
+  return f ? `${state.mode === 'cargo' ? 'from ' : ''}${peso(f.total)}` : `${CONFIG.currency}[FARE]`; // Cargo: extras come in the quote
 }
 const baseFor = (v) => (fareOf(v) ? peso(fareOf(v).base) : `${CONFIG.currency}[AMOUNT]`);
 const distanceFareFor = (v) => (fareOf(v) ? peso(fareOf(v).distance) : `${CONFIG.currency}[AMOUNT]`);
@@ -533,12 +665,12 @@ const latestRecent = () => store.get(RECENT_KEY, [])[0] || null;
    Vehicles
    ========================================================= */
 function buildVehicles() {
-  el.vehicles.innerHTML = CONFIG.vehicles.map((v, i) => `
+  el.vehicles.innerHTML = fleet().map((v, i) => `
     <button type="button" class="vehicle" role="radio" data-vehicle="${v.id}" aria-checked="false" tabindex="-1" style="--i:${i}">
       <img class="v-icon" src="assets/images/3d/${v.art}.svg" alt="" width="80" height="50">
       <span class="v-text">
         <span class="v-name">${v.name}</span>
-        <span class="v-meta"><span class="v-cap">${v.capacity} · </span><span class="v-eta"></span><span class="v-away"> away</span></span>
+        <span class="v-meta"><span class="v-cap">${words().capacity(v)} · </span><span class="v-eta"></span><span class="v-away"> away</span></span>
       </span>
       <span class="v-fare"></span>
     </button>`).join('');
@@ -596,13 +728,17 @@ function render() {
   else setBind('priceTotal', fareFor(v));
   renderTrip();
   const w = words();
-  ['askTitle', 'askHint', 'bookVerb', 'seeLabel', 'payTitle', 'searchTitle'].forEach((k) => setBind(k, w[k]));
+  ['askTitle', 'askHint', 'bookVerb', 'seeLabel', 'payTitle', 'searchTitle', 'chooseTitle'].forEach((k) => setBind(k, w[k]));
+  $('#tripCode').hidden = !(state.mode === 'cargo' && state.deliveryCode);
+  setBind('deliveryCode', state.deliveryCode || '');
   if (state.step === 'search') { setBind('barTitle', `${w.searchTitle}…`); setBind('barSub', `${v.name} · ${pay.name}`); }
   setBind('stepArriving', w.steps[0]);
   setBind('stepTrip', w.steps[1]);
   setBind('stepDone', w.steps[2]);
   el.destInputs.forEach((input) => { input.placeholder = w.placeholder; });
   el.body.classList.toggle('is-express', state.mode === 'express');
+  el.body.classList.toggle('is-cargo', state.mode === 'cargo'); // Cargo rows: the limits instead of an ETA
+  $('#cancelTrip').textContent = state.mode === 'ride' ? 'Cancel ride' : 'Cancel delivery';
   $$('.mode__btn').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === state.mode)));
 
   const recent = latestRecent();
@@ -616,7 +752,7 @@ function render() {
     btn.tabIndex = on ? 0 : -1;
     $('.v-eta', btn).textContent = etaFor(veh);
     $('.v-fare', btn).textContent = fareFor(veh);
-    $('.v-cap', btn).textContent = `${w.capacity(veh)} · `;
+    $('.v-cap', btn).textContent = `${w.capacity(veh)}${state.mode === 'cargo' ? '' : ' · '}`;
     btn.setAttribute('aria-label', `${veh.name}, ${w.capacity(veh)}, ${fareFor(veh)}, ${etaFor(veh)} away`);
   });
 
@@ -638,7 +774,7 @@ function renderTrip() {
   const sub = {
     arriving: eta ? `Arriving in ${eta} min` : 'Arriving soon',
     arrived: `Look for a ${d.vehicle.color.toLowerCase()} ${d.vehicle.model} · ${d.vehicle.plate}`,
-    on_trip: eta ? `About ${eta} min to go` : (state.mode === 'express' ? 'On the way to the receiver' : 'Enjoy the ride'),
+    on_trip: eta ? `About ${eta} min to go` : (state.mode === 'ride' ? 'Enjoy the ride' : 'On the way to the receiver'),
     completed: '',
   }[d.status];
   setBind('tripSub', sub || '');
@@ -972,6 +1108,7 @@ el.pickOnMap.addEventListener('click', () => {
 
 $$('.mode__btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
 setupParcelSheet();
+setupCargoSheet();
 setupPaySheet();
 $('#clearDest').addEventListener('click', () => goToRequest({ clear: true }));
 
@@ -983,7 +1120,7 @@ el.vehicles.addEventListener('keydown', (e) => {
   const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'];
   if (!keys.includes(e.key)) return;
   e.preventDefault();
-  const ids = CONFIG.vehicles.map((v) => v.id);
+  const ids = fleet().map((v) => v.id);
   const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
   selectVehicle(ids[(ids.indexOf(state.vehicle) + dir + ids.length) % ids.length], true);
 });
@@ -1032,7 +1169,8 @@ const dayOf = (ts) => {
   if (days < 7) return d.toLocaleDateString('en-PH', { weekday: 'short' });
   return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
 };
-const vehicleNameOf = (id) => (CONFIG.vehicles.find((v) => v.id === id) || { name: 'Ride' }).name;
+const vehicleNameOf = (id, kind) => ((kind === 'cargo' ? CONFIG.cargo.vehicles : CONFIG.vehicles).find((v) => v.id === id) || { name: 'Ride' }).name;
+const KIND_ICON = { express: 'i-box', cargo: 'i-truck' };
 let homeTrips = [];
 // Book again: the drop-off goes first in the recent places, then "Choose your ride" opens for it
 function rebookTrip(trip, from) {
@@ -1040,7 +1178,7 @@ function rebookTrip(trip, from) {
   if (!d) return;
   rememberPlace(d.label, d);
   edgeGlow('arrive', from);
-  location.hash = 'ride';
+  location.hash = trip.kind === 'cargo' ? 'cargo' : 'ride';
   goToChoose(d.label || 'Pinned location', d);
 }
 async function renderHomeTrips() {
@@ -1049,14 +1187,14 @@ async function renderHomeTrips() {
   $('#magicPick').hidden = !last;
   if (last) {
     setBind('pickPlace', last.dropoff.label);
-    setBind('pickMeta', `${vehicleNameOf(last.vehicle)} · Last trip ${dayOf(last.at)} · ${pesoOr(last.price && last.price.fare, '[FARE]')}`);
+    setBind('pickMeta', `${vehicleNameOf(last.vehicle, last.kind)} · Last trip ${dayOf(last.at)} · ${pesoOr(last.price && last.price.fare, '[FARE]')}`);
   }
   const recent = homeTrips.slice(0, 2);
   $('[data-recent-list]').hidden = !recent.length;
   $('#recentList').innerHTML = recent.map((t, i) => `<li class="recent__row">
-      ${icon(t.kind === 'express' ? 'i-box' : 'i-car', 'icon--lg')}
+      ${icon(KIND_ICON[t.kind] || 'i-car', 'icon--lg')}
       <span class="recent__text"><span class="recent__name">${esc(t.dropoff.label)}</span>
-        <span class="recent__meta">${t.kind === 'express' ? 'Parcel' : esc(vehicleNameOf(t.vehicle))} · ${esc(dayOf(t.at))} · ${pesoOr(t.price && t.price.total, '[FARE]')}</span></span>
+        <span class="recent__meta">${t.kind === 'express' ? 'Parcel' : t.kind === 'cargo' ? `Cargo · ${esc(vehicleNameOf(t.vehicle, 'cargo'))}` : esc(vehicleNameOf(t.vehicle))} · ${esc(dayOf(t.at))} · ${pesoOr(t.price && t.price.total, '[FARE]')}</span></span>
       <button type="button" class="btn-soft cta" data-trip="${i}">${icon('i-rebook', 'icon--sm icon--deep')}Rebook</button></li>`).join('');
 }
 $('#pickBook').addEventListener('click', (e) => rebookTrip(homeTrips[0], e.currentTarget));
@@ -1085,7 +1223,7 @@ $('#claimOffer').addEventListener('click', (e) => {
 /* =========================================================
    Home ↔ ride screen (by URL hash, so the phone's Back button works)
    ========================================================= */
-const RIDE_LINKS = ['ride', 'where', 'moto', 'parcel', 'rebook']; // #rebook: from Trips, the latest recent place
+const RIDE_LINKS = ['ride', 'where', 'moto', 'parcel', 'cargo', 'rebook', 'rebook-cargo']; // #rebook: from Trips, the latest recent place
 function route() {
   const link = location.hash.slice(1);
   const ride = RIDE_LINKS.includes(link);
@@ -1093,12 +1231,12 @@ function route() {
   el.body.classList.toggle('is-home', !ride);
   $('#map').inert = !ride; // under the home: keep it out of tab order and screen readers
   if (!ride) { renderHomeTrips(); return; }
-  if (!state.booking) setMode(link === 'parcel' ? 'express' : 'ride'); // a booked trip keeps its mode
+  if (!state.booking) setMode({ parcel: 'express', cargo: 'cargo', 'rebook-cargo': 'cargo' }[link] || 'ride'); // a booked trip keeps its mode
   if (link === 'moto') selectVehicle('motor');
-  if (link === 'rebook') {
+  if (link === 'rebook' || link === 'rebook-cargo') {
     const r = latestRecent();
     if (r) goToChoose(r.title, r);
-    history.replaceState(null, '', '#ride'); // a reload shouldn't rebook again
+    history.replaceState(null, '', link === 'rebook' ? '#ride' : '#cargo'); // a reload shouldn't rebook again
   }
   requestAnimationFrame(() => {
     frame({ animate: false });
@@ -1170,12 +1308,14 @@ async function resumeTrip() {
   const searching = t.status === 'searching';
   Object.assign(state, {
     mode: b.kind, vehicle: b.vehicle, payment: b.payment, price: b.price, parcel: b.parcel || null, trip: b.trip,
+    deliveryCode: (b.cargo && b.cargo.deliveryCode) || null,
     pickup: { lng: b.pickup.lng, lat: b.pickup.lat }, pickupLabel: b.pickup.label,
     dest: b.dropoff.label, destPoint: { lng: b.dropoff.lng, lat: b.dropoff.lat },
     booking: { id: t.id, demo: true },
     driver: searching ? null : { ...t.driver, status: t.status, pos: null, eta: t.etaMinutes },
     step: searching ? 'search' : 'trip', loadingTrip: false, picking: false,
   });
+  buildVehicles(); // the trip's mode may have its own vehicles (Cargo)
   render();
   requestAnimationFrame(() => frame({ animate: false }));
   if (!searching) { stopTrip = onTripUpdate(t.id, onTrip); return; }

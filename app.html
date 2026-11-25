@@ -122,6 +122,7 @@
           <div class="mode" role="radiogroup" aria-label="What do you need?">
             <button type="button" class="mode__btn" role="radio" aria-checked="true" data-mode="ride"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-car"/></svg>Ride</button>
             <button type="button" class="mode__btn" role="radio" aria-checked="false" data-mode="express"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-box"/></svg>Parcel</button>
+            <button type="button" class="mode__btn" role="radio" aria-checked="false" data-mode="cargo"><svg class="icon" aria-hidden="true"><use href="assets/images/icons.svg#i-truck"/></svg>Cargo</button>
           </div>
           <p class="panel__hint"><span data-bind="askTitle">Saan tayo?</span> <span data-bind="askHint">Set your drop-off above.</span></p>
           <div class="chips" role="group" aria-label="Quick places">
@@ -136,7 +137,7 @@
         <section class="panel panel--choose" data-show="choose" aria-labelledby="chooseTitle">
           <div class="choose__head">
             <div>
-              <h2 id="chooseTitle" class="choose__title">Choose your ride</h2>
+              <h2 id="chooseTitle" class="choose__title" data-bind="chooseTitle">Choose your ride</h2>
               <p class="choose__summary"><span data-bind="distance">[Distance]</span> · <span data-bind="duration">[Travel time]</span> · fixed fares</p>
             </div>
             <img class="choose__sparkle" src="assets/images/v3/sparkle-ride.svg" alt="" width="22" height="22">
@@ -196,6 +197,7 @@
             <li data-step="on_trip"><span data-bind="stepTrip">On the trip</span></li>
             <li data-step="completed"><span data-bind="stepDone">Arrived</span></li>
           </ol>
+          <p class="trip__code" id="tripCode" hidden>Delivery code <b data-bind="deliveryCode"></b><span>Give it to the receiver. The driver asks for it at drop-off.</span></p>
           <div class="driver">
             <span class="ava ava--t0 driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
             <div class="driver__main">
@@ -274,6 +276,13 @@
           <span class="svc__ground" aria-hidden="true"></span>
           <img class="svc__art" src="assets/images/3d/parcel.svg" alt="" width="80" height="50">
           <img class="svc__sparkle" src="assets/images/v3/sparkle-peach.svg" alt="" width="8" height="8">
+        </a>
+        <a class="svc svc--lilac svc--cargo" href="#cargo">
+          <span class="glitter" aria-hidden="true"><i style="--star-x:14%;--star-y:66%;--star-size:8px;--star-delay:0.3s"></i><i class="l" style="--star-x:52%;--star-y:50%;--star-size:6px;--star-delay:1.4s"></i></span>
+          <span class="svc__copy"><span class="svc__name">Cargo</span><span class="svc__sub">Van &amp; truck</span></span>
+          <span class="svc__ground" aria-hidden="true"></span>
+          <img class="svc__art" src="assets/images/3d/truck.svg" alt="" width="80" height="36">
+          <img class="svc__sparkle" src="assets/images/v3/sparkle-lilac.svg" alt="" width="8" height="8">
         </a>
         <a class="svc svc--peach" href="pages/shops.html">
           <span class="glitter" aria-hidden="true"><i style="--star-x:14%;--star-y:66%;--star-size:8px;--star-delay:0.3s"></i><i class="l" style="--star-x:52%;--star-y:50%;--star-size:6px;--star-delay:1.4s"></i></span>
@@ -381,6 +390,56 @@
         <div class="sheet__actions">
           <button type="button" class="button button--ghost" data-close>Cancel</button>
           <button type="submit" class="button">Send with <span data-bind="vehicle">Sedan</span></button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Cargo: what you're sending (asked when booking in Cargo mode), then the quote and the pay sheet -->
+    <dialog class="sheet cargosheet" id="cargoSheet" aria-labelledby="cargoTitle">
+      <form class="sheet__body form" id="cargoForm" method="dialog" autocomplete="off" novalidate>
+        <span class="sheet__handle" aria-hidden="true"></span>
+        <div>
+          <h2 class="sheet__title" id="cargoTitle">What are you sending?</h2>
+          <p class="sheet__sub"><span data-bind="vehicle">Van</span> · <span data-bind="vehicleSpace"></span></p>
+        </div>
+        <fieldset class="pills cargo__types" id="cargoTypes"><legend>Type</legend><!-- from CONFIG.cargo.types --></fieldset>
+        <label class="field"><span class="field__label">What is it?</span>
+          <input class="input" name="description" required maxlength="120" placeholder="e.g. a 3-seater sofa and 4 boxes"></label>
+        <div class="cargo__nums">
+          <label class="field"><span class="field__label">Total weight</span>
+            <span class="cargo__unit"><input class="input" name="weightKg" type="number" inputmode="numeric" min="1" step="1" required><span>kg</span></span></label>
+          <label class="field"><span class="field__label">Pieces</span>
+            <input class="input" name="pieces" type="number" inputmode="numeric" min="1" max="99" step="1" required value="1"></label>
+        </div>
+        <fieldset class="cargo__size"><legend class="field__label">Biggest item (cm)</legend>
+          <div class="cargo__dims">
+            <label><span>Length</span><input class="input" name="lengthCm" type="number" inputmode="numeric" min="1" step="1" required></label>
+            <span aria-hidden="true">×</span>
+            <label><span>Width</span><input class="input" name="widthCm" type="number" inputmode="numeric" min="1" step="1" required></label>
+            <span aria-hidden="true">×</span>
+            <label><span>Height</span><input class="input" name="heightCm" type="number" inputmode="numeric" min="1" step="1" required></label>
+          </div>
+        </fieldset>
+        <div class="cargo__fit" id="cargoFit" role="status" aria-live="polite" hidden></div>
+        <label class="cargo__switch"><input type="checkbox" name="fragile"><span><b>Fragile</b><small>Handled with extra care · <span data-bind="fragileFee"></span></small></span></label>
+        <fieldset class="pills cargo__helpers" id="cargoHelpers"><legend>Help with loading</legend><!-- from CONFIG.cargo.helpers --></fieldset>
+        <div class="cargo__photos">
+          <label class="cargo__add"><input type="file" accept="image/*" multiple name="photos" id="cargoPhotos"><svg class="icon icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-plus"/></svg><span>Add photos <small>(optional, up to 3)</small></span></label>
+          <div class="cargo__thumbs" id="cargoThumbs"></div>
+        </div>
+        <div class="form-grid">
+          <label class="field"><span class="field__label">Receiver’s name</span>
+            <input class="input" name="receiverName" required maxlength="60"></label>
+          <label class="field"><span class="field__label">Receiver’s mobile number</span>
+            <input class="input" name="receiverPhone" type="tel" inputmode="tel" required pattern="[+0-9 ]{10,16}" placeholder="09XX XXX XXXX"></label>
+        </div>
+        <label class="field"><span class="field__label">Notes for the driver <span class="muted">(optional)</span></span>
+          <textarea class="textarea" name="notes" maxlength="200" placeholder="Floor, gate, parking, or how to handle it"></textarea></label>
+        <p class="field__hint">Not allowed: cash, illegal or dangerous goods, live animals.</p>
+        <p class="cargo__error" id="cargoError" role="alert" hidden></p>
+        <div class="sheet__actions">
+          <button type="button" class="button button--ghost" data-close>Back</button>
+          <button type="submit" class="button" id="cargoNext">See the price</button>
         </div>
       </form>
     </dialog>
