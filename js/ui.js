@@ -637,7 +637,7 @@ export function trackTrip() {
   Promise.all([myActiveTrip(), myOrders()]).then(([t, orders]) => {
     const live = t && t.status !== 'completed' ? t : null;
     const p = live && live.booking.price;
-    trip = live && { kind: live.kind, status: live.status, eta: live.etaMinutes, fare: p && isNum(p.total) ? peso(p.total) : '' };
+    trip = live && { kind: live.kind, vehicle: live.booking.vehicle, status: live.status, eta: live.etaMinutes, fare: p && isNum(p.total) ? peso(p.total) : '' };
     ongoing = (live ? 1 : 0) + orders.filter((o) => !DONE.includes(o.status)).length;
     onChange();
     showOngoing();
@@ -708,6 +708,7 @@ export function loopStep(path, hash, tab) {
   if (path.startsWith('/pages/cart') || path.startsWith('/pages/checkout')) return CART;
   if (tab === 'food' || (path !== '/app' && path !== '/app.html')) return FOOD;
   if (hash === '#parcel') return PARCEL;
+  if (['#cargo', '#rebook-cargo'].includes(hash)) return PARCEL; // Cargo is a delivery: never the fork and knife
   return ['#ride', '#where', '#moto', '#rebook'].includes(hash) ? RIDE : FOOD;
 }
 
@@ -719,6 +720,8 @@ export function turnDelta(prev, next) {
 
 // The live trip's step: Parcel for a delivery (Express or Cargo), Ride otherwise
 const tripStep = () => (trip ? (trip.kind === 'ride' ? RIDE : PARCEL) : -1);
+// The live trip's icon: what was booked (a Parcel shows its box; a ride or Cargo shows the vehicle)
+export const tripIcon = (t) => (t.kind === 'express' ? 'i-box' : { motor: 'i-motor', suv: 'i-suv', mpv: 'i-suv', van: 'i-truck', truck: 'i-truck' }[t.vehicle] || (t.kind === 'cargo' ? 'i-truck' : 'i-car'));
 // Something live on a step: an order on the Cart, the trip on its step (screen readers hear the other one too)
 const isLive = (i) => (i === CART && order.count > 0) || i === tripStep();
 // A step's money in place of its icon: the Cart's order total ('' = the icon; the trip's step keeps its icon)
@@ -727,7 +730,7 @@ const face = (i) => (i === CART ? order.total : '');
 // Alone it's just its text; two take turns, each with its icon
 function badgeItems(i) {
   const ride = trip && (trip.status === 'arrived' ? 'Here' : isNum(trip.eta) ? `${trip.eta}m` : '');
-  const items = ride ? [{ icon: { express: 'i-box', cargo: 'i-truck' }[trip.kind] || 'i-car', text: ride }] : [];
+  const items = ride ? [{ icon: tripIcon(trip), text: ride }] : [];
   if (order.count) items[i === CART ? 'unshift' : 'push']({ icon: 'i-cart', text: String(order.count) });
   return items;
 }
@@ -744,7 +747,7 @@ function says(i) {
 // The money is smaller when long, so ₱12,345 still fits the circle
 const artInner = (i) => (face(i)
   ? `<b class="tab__total${face(i).length > 6 ? ' tab__total--long' : ''}">${esc(face(i))}</b>`
-  : icon(LOOP[i].icon));
+  : icon(i === tripStep() ? tripIcon(trip) : LOOP[i].icon)); // the trip's step wears the booked vehicle
 const loopArt = (i) => `<span class="tab__art" data-face="${esc(face(i))}">${artInner(i)}</span>`;
 // The icon tilts with the finger between steps, so it feels attached (at most ±36°)
 const tilt = (deg) => (deg ? `rotate(${(deg * 0.4).toFixed(1)}deg)` : '');
@@ -837,8 +840,10 @@ function armLoop(nav) {
     if (step === was && rested !== was) { turn(1, rested); return; }
     const art = shown();
     const before = art.dataset.face;
-    if (before !== face(step)) {
+    const nowIcon = step === tripStep() ? tripIcon(trip) : ''; // a trip that starts (or ends) on the shown step changes its icon
+    if (before !== face(step) || (art.dataset.icon || '') !== nowIcon) {
       art.dataset.face = face(step);
+      art.dataset.icon = nowIcon;
       art.innerHTML = artInner(step);
       if (before && face(step)) pop(box, 1.1); // a changed total bounces; the first one arriving on load doesn't
     }

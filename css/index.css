@@ -332,9 +332,9 @@ body:not([data-state="request"]) .map-controls {
   animation: twinkle 2.8s ease-in-out infinite;
 }
 
-.v-icon {
-  width: 80px;
-  height: 50px;
+.v-icon { /* the isometric vehicle art (assets/images/iso): squarer than a side view */
+  width: 72px;
+  height: 56px;
   flex-shrink: 0;
   object-fit: contain;
   transition: transform .2s var(--spring);
@@ -944,8 +944,8 @@ body.is-loading [data-book] {
 
 @media (max-height: 700px) and (max-width: 899.98px) {
   .v-icon {
-    width: 64px;
-    height: 40px;
+    width: 60px;
+    height: 46px;
   }
 }
 
@@ -1368,8 +1368,7 @@ body.is-loading .choose__summary {
   display: block;
   width: 100%;
   height: 100%;
-  rotate: var(--heading, 0deg);
-  transition: rotate .4s var(--ease-out);
+  rotate: var(--heading, 0deg); /* map.js steers it frame by frame (no CSS transition, which spun the long way past north) */
 }
 
 .mk__rider svg {
@@ -2331,3 +2330,10 @@ body.is-status-hidden .panel--trip {
 /* Five Cargo vehicles fill the desktop panel: it scrolls, and the pay row and Book button keep their height */
 .panel--choose > .pay, .panel--choose > .book { flex-shrink: 0; }
 @media (min-width: 900px) { .ride .panel--choose > .book { position: sticky; bottom: 0; z-index: 1; } } /* always one tap away */
+
+
+/* The driver card: the vehicle in full (colour and make, up to two lines, never cut off), and its picture over the plate */
+.driver__car { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.driver__side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.driver__art { display: block; width: 64px; height: 48px; object-fit: contain; }
+

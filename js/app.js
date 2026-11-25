@@ -28,7 +28,7 @@ import {
   findDriver, cancelRide, onTripUpdate, rateRide, currentUser, myTrips, myActiveTrip, endTrip,
   cargoFares, cargoQuote, cargoBook,
 } from './api.js';
-import { initMap, updateMap, frame, zoomIn, zoomOut } from './map.js';
+import { initMap, updateMap, frame, zoomIn, zoomOut, setRiderArt } from './map.js';
 import { openTipSheet, setupInstall, mountAccount, filterTabs, guardRole, mountMagic, edgeGlow, icon, pesoOr, trackTrip, ava, avaTone } from './ui.js';
 import { splitPrice, cleanTip, cargoFit, cargoBestFit, cargoSize, pesoCents } from './money.js';
 
@@ -570,6 +570,8 @@ const PH_NUM = new Intl.NumberFormat('en-PH');
 const peso = (n) => `${CONFIG.currency}${PH_NUM.format(Math.round(n))}`;
 const fleet = () => (state.mode === 'cargo' ? CONFIG.cargo.vehicles : CONFIG.vehicles); // Cargo has its own vehicles
 const vehicleById = (id) => fleet().find((v) => v.id === id) || fleet()[0];
+// The vehicle's picture: a Ride Motor carries a passenger, not a delivery box
+const artFor = (v) => (v.art === 'moto' && state.mode === 'ride' ? 'moto-ride' : v.art || 'car');
 
 const fareOf = (v) => (state.mode === 'cargo' ? cargoFares : faresFor)(state.trip)[v.id]; // { total, base, distance } or null
 function fareFor(v) {
@@ -667,7 +669,7 @@ const latestRecent = () => store.get(RECENT_KEY, [])[0] || null;
 function buildVehicles() {
   el.vehicles.innerHTML = fleet().map((v, i) => `
     <button type="button" class="vehicle" role="radio" data-vehicle="${v.id}" aria-checked="false" tabindex="-1" style="--i:${i}">
-      <img class="v-icon" src="assets/images/3d/${v.art}.svg" alt="" width="80" height="50">
+      <img class="v-icon" src="assets/images/iso/${artFor(v)}.svg" alt="" width="72" height="56">
       <span class="v-text">
         <span class="v-name">${v.name}</span>
         <span class="v-meta"><span class="v-cap">${words().capacity(v)} · </span><span class="v-eta"></span><span class="v-away"> away</span></span>
@@ -724,6 +726,7 @@ function render() {
   setBind('payment', pay.name);
   $$('[data-pay-icon]').forEach((u) => u.setAttribute('href', `assets/images/icons.svg#${pay.icon}`));
   $$('[data-vehicle-icon], [data-driver-icon]').forEach((u) => u.setAttribute('href', `assets/images/icons.svg#${v.icon}`));
+  setRiderArt(v.art); // the driver on the map is the vehicle that was booked
   if (state.price) setBind('priceTotal', totalText(state.price));
   else setBind('priceTotal', fareFor(v));
   renderTrip();
@@ -790,6 +793,7 @@ function renderTrip() {
   $('[data-bind="driverInitials"]').className = `${avaTone(d.name)} driver__ava`;
   setBind('driverRating', d.rating.toFixed(1));
   setBind('driverCar', `${d.vehicle.color} ${d.vehicle.model}`);
+  $('[data-driver-art]').src = `assets/images/iso/${artFor(vehicleById(d.vehicle.type))}.svg`; // what to look for on the street
   setBind('driverPlate', d.vehicle.plate);
   $('#cancelTrip').hidden = d.status === 'on_trip' || d.status === 'completed';
 }

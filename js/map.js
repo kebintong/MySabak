@@ -17,6 +17,25 @@ const TT_HOSTS = /^https:\/\/([a-d]\.)?api\.tomtom\.com/;
 // The rider on a scooter from above, heading up (Rider A: the mascot's top hat as the head). The viewBox is centred
 // on the rider (32, 50) so it turns about its middle. Used for every driver and rider on the maps.
 export const RIDER_SVG = '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="58" rx="20" ry="36" fill="#170730" opacity=".18"/><path d="M32 2 L22 -16 H42 Z" fill="#ffe29a" opacity=".35"/><rect x="27" y="4" width="10" height="16" rx="5" fill="#1b0b2e"/><rect x="27" y="80" width="10" height="17" rx="5" fill="#1b0b2e"/><path d="M20 22 C20 14 26 10 32 10 C38 10 44 14 44 22 L46 76 C46 86 40 92 32 92 C24 92 18 86 18 76 Z" fill="#6a2fb0"/><path d="M24 18 C26 14 29 13 32 13 C35 13 38 14 40 18" fill="none" stroke="#f6c46c" stroke-width="3" stroke-linecap="round"/><rect x="29" y="11" width="6" height="4" rx="2" fill="#ffe29a"/><path d="M22 64 H42 V82 C42 86 38 88 32 88 C26 88 22 86 22 82 Z" fill="#2a1240"/><rect x="12" y="23" width="40" height="5" rx="2.5" fill="#1b0b2e"/><rect x="8" y="22" width="8" height="7" rx="3.5" fill="#f6c46c"/><rect x="48" y="22" width="8" height="7" rx="3.5" fill="#f6c46c"/><path d="M18 52 C16 44 14 36 12 28" fill="none" stroke="#3a0f6a" stroke-width="7" stroke-linecap="round"/><path d="M46 52 C48 44 50 36 52 28" fill="none" stroke="#3a0f6a" stroke-width="7" stroke-linecap="round"/><rect x="14" y="44" width="36" height="22" rx="11" fill="#4a1680"/><circle cx="32" cy="50" r="15" fill="#1b0b2e"/><circle cx="32" cy="50" r="10.5" fill="#f6c46c"/><circle cx="32" cy="50" r="8" fill="#2c1747"/><path d="M27.5 46.5 A6 6 0 0 1 36 45.5" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round"/></svg>';
+// The other vehicles, drawn the same way (from above, front up, mysabak purple and gold), so the customer sees on the
+// map what they booked: a van for a van, a truck for a truck. Keyed by the vehicle's art name (CONFIG vehicles[].art).
+export const VEHICLE_SVG = {
+  moto: RIDER_SVG,
+  car: '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="52" rx="22" ry="46" fill="#170730" opacity=".18"/><path d="M22 4 L15 -16 H29 Z" fill="#ffe29a" opacity=".35"/><path d="M42 4 L35 -16 H49 Z" fill="#ffe29a" opacity=".35"/><rect x="14" y="6" width="36" height="88" rx="13" fill="#6a2fb0"/><rect x="11" y="32" width="5" height="7" rx="2" fill="#1b0b2e"/><rect x="48" y="32" width="5" height="7" rx="2" fill="#1b0b2e"/><path d="M18 26 H46 L42 40 H22 Z" fill="#2c1747"/><rect x="20" y="40" width="24" height="28" rx="5" fill="#4a1680"/><rect x="27" y="50" width="10" height="6" rx="2" fill="#f6c46c"/><path d="M22 68 H42 L45 78 H19 Z" fill="#2c1747"/><rect x="18" y="7" width="8" height="4" rx="2" fill="#f6c46c"/><rect x="38" y="7" width="8" height="4" rx="2" fill="#f6c46c"/><rect x="18" y="89" width="8" height="3" rx="1.5" fill="#e0607e"/><rect x="38" y="89" width="8" height="3" rx="1.5" fill="#e0607e"/></svg>',
+  suv: '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="52" rx="24" ry="48" fill="#170730" opacity=".18"/><path d="M21 4 L14 -16 H28 Z" fill="#ffe29a" opacity=".35"/><path d="M43 4 L36 -16 H50 Z" fill="#ffe29a" opacity=".35"/><rect x="12" y="4" width="40" height="94" rx="10" fill="#6a2fb0"/><rect x="9" y="30" width="5" height="7" rx="2" fill="#1b0b2e"/><rect x="50" y="30" width="5" height="7" rx="2" fill="#1b0b2e"/><path d="M16 22 H48 L45 34 H19 Z" fill="#2c1747"/><rect x="18" y="34" width="28" height="44" rx="5" fill="#4a1680"/><line x1="21" y1="38" x2="21" y2="74" stroke="#1b0b2e" stroke-width="2.5" stroke-linecap="round"/><line x1="43" y1="38" x2="43" y2="74" stroke="#1b0b2e" stroke-width="2.5" stroke-linecap="round"/><rect x="27" y="52" width="10" height="6" rx="2" fill="#f6c46c"/><path d="M19 78 H45 L46 88 H18 Z" fill="#2c1747"/><rect x="16" y="5" width="9" height="4" rx="2" fill="#f6c46c"/><rect x="39" y="5" width="9" height="4" rx="2" fill="#f6c46c"/></svg>',
+  van: '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="54" rx="24" ry="54" fill="#170730" opacity=".18"/><path d="M21 4 L14 -16 H28 Z" fill="#ffe29a" opacity=".35"/><path d="M43 4 L36 -16 H50 Z" fill="#ffe29a" opacity=".35"/><rect x="12" y="0" width="40" height="106" rx="8" fill="#6a2fb0"/><rect x="9" y="22" width="5" height="7" rx="2" fill="#1b0b2e"/><rect x="50" y="22" width="5" height="7" rx="2" fill="#1b0b2e"/><path d="M15 12 H49 L47 24 H17 Z" fill="#2c1747"/><rect x="16" y="26" width="32" height="76" rx="4" fill="#4a1680"/><line x1="16" y1="50" x2="48" y2="50" stroke="#6a2fb0" stroke-width="2"/><line x1="16" y1="76" x2="48" y2="76" stroke="#6a2fb0" stroke-width="2"/><rect x="24" y="58" width="16" height="10" rx="3" fill="#f6c46c"/><rect x="16" y="1" width="9" height="4" rx="2" fill="#f6c46c"/><rect x="39" y="1" width="9" height="4" rx="2" fill="#f6c46c"/></svg>',
+  truck: '<svg viewBox="0 -16 64 132" aria-hidden="true"><ellipse cx="32" cy="54" rx="26" ry="56" fill="#170730" opacity=".18"/><path d="M21 4 L14 -16 H28 Z" fill="#ffe29a" opacity=".35"/><path d="M43 4 L36 -16 H50 Z" fill="#ffe29a" opacity=".35"/><rect x="14" y="-2" width="36" height="28" rx="7" fill="#6a2fb0"/><path d="M17 6 H47 L45 15 H19 Z" fill="#2c1747"/><rect x="11" y="10" width="4" height="7" rx="2" fill="#1b0b2e"/><rect x="49" y="10" width="4" height="7" rx="2" fill="#1b0b2e"/><rect x="18" y="-1" width="8" height="4" rx="2" fill="#f6c46c"/><rect x="38" y="-1" width="8" height="4" rx="2" fill="#f6c46c"/><rect x="26" y="26" width="12" height="4" fill="#1b0b2e"/><rect x="9" y="30" width="46" height="82" rx="4" fill="#4a1680"/><rect x="13" y="34" width="38" height="74" rx="2" fill="none" stroke="#6a2fb0" stroke-width="2"/><rect x="20" y="62" width="24" height="12" rx="3" fill="#f6c46c"/></svg>',
+};
+let riderArt = 'moto';
+/** Draw the driver's marker as this vehicle (art name: moto, car, suv, van, truck; unknown: the scooter). */
+export function setRiderArt(art) {
+  const a = VEHICLE_SVG[art] ? art : 'moto';
+  const el = document.querySelector('#mkDriver .mk__rider');
+  if (!el || (a === riderArt && el.firstChild)) return;
+  riderArt = a;
+  el.innerHTML = VEHICLE_SVG[a];
+  el.closest('#mkDriver')?.setAttribute('data-art', a);
+}
 /** Compass heading from a to b in degrees (0 = north, 90 = east), to turn the rider the way it's going. */
 export const heading = (a, b) => (Math.atan2((b.lng - a.lng) * Math.cos((b.lat * Math.PI) / 180), b.lat - a.lat) * 180) / Math.PI;
 export const zoomIn = () => map && map.zoomIn();
@@ -133,7 +152,7 @@ export function initMap(ctx) {
   markers.origin = new maplibregl.Marker({ element: document.getElementById('mkOrigin'), anchor: 'center' }).setLngLat(state.pickup).addTo(map);
   markers.dest = new maplibregl.Marker({ element: document.getElementById('mkDest'), anchor: 'bottom' }).setLngLat(state.pickup);
   markers.time = new maplibregl.Marker({ element: document.getElementById('mkTime'), anchor: 'bottom', offset: [0, -10] }).setLngLat(state.pickup);
-  document.querySelector('#mkDriver .mk__rider').innerHTML = RIDER_SVG;
+  document.querySelector('#mkDriver .mk__rider').innerHTML = VEHICLE_SVG[riderArt];
   markers.driver = new maplibregl.Marker({ element: document.getElementById('mkDriver'), anchor: 'center' }).setLngLat(state.pickup);
   markers.driver.getElement().addEventListener('animationend', (e) => { if (e.animationName === 'mascot-pop') e.currentTarget.classList.remove('is-pop'); });
 
@@ -398,7 +417,7 @@ export function updateMap() {
   if (pos) {
     moveDriver(pos);
     markers.driver.getElement().classList.toggle('is-arrived', state.driver.status === 'arrived');
-  } else { markers.driver.remove(); driverAnim.to = null; cancelAnimationFrame(driverAnim.raf); }
+  } else { markers.driver.remove(); driverAnim.to = null; driverAnim.angle = null; cancelAnimationFrame(driverAnim.raf); }
 
   placeLabels();
 
@@ -417,7 +436,12 @@ export function updateMap() {
 
 /* Driver marker: each position update glides over the time since the last one,
    so it moves smoothly even when updates arrive every second or two. */
-const driverAnim = { from: null, to: null, start: 0, dur: 0, last: 0, raf: 0 };
+const driverAnim = { from: null, to: null, start: 0, dur: 0, last: 0, raf: 0, angle: null, target: 0, tPrev: 0 };
+// Turning: the marker steers into each new direction frame by frame, the short way round, and bigger vehicles turn a
+// little slower (ms to cover ~63% of a turn), so a truck feels heavier than the scooter
+const TURN_MS = { moto: 140, car: 200, suv: 220, van: 260, truck: 320 };
+const shortest = (from, to) => ((((to - from) % 360) + 540) % 360) - 180;
+const metresBetween = (a, b) => Math.hypot((b.lng - a.lng) * Math.cos((b.lat * Math.PI) / 180), b.lat - a.lat) * 111320;
 const lerp = (a, b, t) => ({ lng: a.lng + (b.lng - a.lng) * t, lat: a.lat + (b.lat - a.lat) * t });
 function driverNow(now) {
   if (!driverAnim.from) return driverAnim.to;
@@ -440,14 +464,30 @@ function moveDriver(pos) {
   if (driverAnim.to.lng === pos.lng && driverAnim.to.lat === pos.lat) { el.dataset.motion = 'stop'; return; }
   el.dataset.motion = 'run';
   const from = driverNow(now);
-  el.style.setProperty('--heading', `${heading(from, pos)}deg`); // the map doesn't rotate, so north is up
-  Object.assign(driverAnim, { from, to: pos, start: now, dur: Math.min(2000, Math.max(120, now - driverAnim.last)), last: now });
-  if (REDUCED_MOTION.matches) { markers.driver.setLngLat([pos.lng, pos.lat]); return; }
+  // The new direction (the map doesn't rotate, so north is up), kept as one running angle so it never spins the long
+  // way past north; a GPS wiggle of a metre or two doesn't turn it
+  if (metresBetween(from, pos) > 2) {
+    const h = heading(from, pos);
+    if (driverAnim.angle === null) driverAnim.angle = driverAnim.target = h;
+    else driverAnim.target += shortest(driverAnim.target, h);
+  }
+  Object.assign(driverAnim, { from, to: pos, start: now, dur: Math.min(2000, Math.max(120, now - driverAnim.last)), last: now, tPrev: now });
+  if (REDUCED_MOTION.matches) {
+    driverAnim.angle = driverAnim.target;
+    el.style.setProperty('--heading', `${driverAnim.angle}deg`);
+    markers.driver.setLngLat([pos.lng, pos.lat]);
+    return;
+  }
   cancelAnimationFrame(driverAnim.raf);
   const step = (t) => {
     const p = driverNow(t);
     markers.driver.setLngLat([p.lng, p.lat]);
-    if (t - driverAnim.start < driverAnim.dur) driverAnim.raf = requestAnimationFrame(step);
+    // ease the angle toward the new direction: quick at first, settling gently, like a steered turn
+    const k = 1 - Math.exp(-Math.max(0, t - driverAnim.tPrev) / (TURN_MS[riderArt] || 200));
+    driverAnim.tPrev = t;
+    driverAnim.angle += (driverAnim.target - driverAnim.angle) * k;
+    el.style.setProperty('--heading', `${driverAnim.angle.toFixed(2)}deg`);
+    if (t - driverAnim.start < driverAnim.dur || Math.abs(driverAnim.target - driverAnim.angle) > 0.3) driverAnim.raf = requestAnimationFrame(step);
   };
   driverAnim.raf = requestAnimationFrame(step);
 }

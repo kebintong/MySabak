@@ -45,3 +45,14 @@ test('the turn between two angles goes the short way, even across the ±180° se
   assert.equal(turnDelta(-170, 170), -20);
   assert.equal(turnDelta(0, 0), 0);
 });
+
+test('a live trip shows what was booked: Cargo is a delivery (never the fork and knife), the vehicle on the button', async () => {
+  const { tripIcon } = await import('../js/ui.js');
+  assert.equal(loopStep('/app', '#cargo', undefined), 2);
+  assert.equal(loopStep('/app', '#rebook-cargo', undefined), 2);
+  assert.equal(tripIcon({ kind: 'cargo', vehicle: 'van' }), 'i-truck');
+  assert.equal(tripIcon({ kind: 'cargo', vehicle: 'mpv' }), 'i-suv');
+  assert.equal(tripIcon({ kind: 'ride', vehicle: 'motor' }), 'i-motor');
+  assert.equal(tripIcon({ kind: 'ride', vehicle: 'sedan' }), 'i-car');
+  assert.equal(tripIcon({ kind: 'express', vehicle: 'suv' }), 'i-box');
+});

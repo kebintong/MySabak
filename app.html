@@ -202,9 +202,11 @@
             <span class="ava ava--t0 driver__ava" data-bind="driverInitials" aria-hidden="true">MR</span>
             <div class="driver__main">
               <span class="driver__name"><span data-bind="driverName">Driver</span></span>
-              <span class="driver__meta">★ <span data-bind="driverRating">4.9</span> · <span data-bind="driverCar">White Toyota Vios</span></span>
+              <span class="driver__meta">★ <span data-bind="driverRating">4.9</span></span>
+              <span class="driver__car" data-bind="driverCar">White Toyota Vios</span>
             </div>
-            <span class="driver__plate" data-bind="driverPlate">ABC 1234</span>
+            <!-- What to look for on the street: the booked vehicle's picture and its plate -->
+            <span class="driver__side"><img class="driver__art" data-driver-art src="assets/images/iso/car.svg" alt="" width="64" height="48"><span class="driver__plate" data-bind="driverPlate">ABC 1234</span></span>
           </div>
           <div class="trip__actions">
             <button type="button" class="btn-soft" id="callDriver"><svg class="icon icon--sm icon--deep" aria-hidden="true"><use href="assets/images/icons.svg#i-phone"/></svg>Call</button>

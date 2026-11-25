@@ -109,7 +109,7 @@
 }
 .pick__name { font-size: 15px; font-weight: 700; color: var(--ink); }
 .pick__hint { font-size: 11.5px; color: var(--sub); }
-.pick__art { height: 44px; width: auto; max-width: 100%; margin-bottom: 2px; }
+.pick__art { height: 52px; width: auto; max-width: 100%; margin-bottom: 2px; }
 /* the picked one: a purple ring and a tick */
 .pick input:checked + .pick__box::after {
   content: ""; position: absolute; right: 6px; top: 6px; width: 18px; height: 18px; border-radius: 50%;
