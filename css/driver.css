@@ -398,10 +398,12 @@
 }
 .activejob__top .dsos .icon { stroke: #b3311b; }
 .activejob__top .dsos:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.activejob__top .dsos { position: relative; }
+.activejob__top .dsos::after { content: ""; position: absolute; inset: -5px -2px; } /* a 46 px tap area */
 .activejob__wait { font-weight: 700; color: var(--sub); font-variant-numeric: tabular-nums; }
 .dcheck {
   margin: 0; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 14px;
-  background: #fff; border: 1.5px dashed var(--gold); font-size: 14px; color: var(--ink);
+  background: #f7f2fb; border: 0; font-size: 14px; color: var(--ink); /* a plain soft note, no dashed border */
 }
 .dcheck .icon { flex: none; margin-top: 2px; stroke: var(--brand-deep); }
 .activejob .driver .btn-soft + .btn-soft { margin-left: 6px; }
@@ -534,7 +536,7 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 }
 .dlegend span { display: inline-flex; align-items: center; gap: 5px; }
 .dlegend span::before { content: ""; width: 9px; height: 9px; border-radius: 50%; }
-.dlegend__ride::before { background: #5630d8; } .dlegend__express::before { background: #E0782F; } .dlegend__shop::before { background: #1E7A44; }
+.dlegend__ride::before { background: #4a1680; } .dlegend__express::before { background: #d9822b; } .dlegend__shop::before { background: #c2185b; } /* Jewel, the same as the pins */
 .page--driver.has-job .dlegend, .dmapview.is-full .dlegend { display: none; }
 @media (max-width: 599.98px) { .dlegend { display: none; } } /* the phone's short map has no room; each card names its service */
 
@@ -571,8 +573,7 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .activejob.dcard, .dempty.dcard {
   position: relative; overflow: hidden; border: 0; background: #fff; box-shadow: 0 8px 24px -10px rgba(59, 26, 120, .22);
 }
-.activejob.dcard::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--kind); }
-.dkind { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--kind-ink); }
+.dkind { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--ink); } /* the service in words and an icon, no colour */
 .dkind__ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .activejob.dcard { padding-top: 18px; }
 .activejob.dcard .activejob__top { color: var(--sub); }
@@ -857,4 +858,29 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .dswitch .dgo__knob { box-shadow: 0 1px 4px rgba(41, 10, 69, .3); }
 .dswitch[aria-checked="true"] { background: var(--brand); }
 .dsheetx .dglance__rows dd a { font-weight: 700; color: var(--brand-deep); }
+
+
+/* =========================================================
+   The job card on a phone: one big button, the next step under it (both full width), the person with Message and
+   Call as plain icons, Cancel as a quiet link at the end. No colour stripe.
+   ========================================================= */
+.activejob.dcard { padding: 16px; gap: 12px; }
+.activejob .driver { padding: 12px 0; border-radius: 0; background: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.activejob .driver__meta { font-size: 13px; }
+.dlink--icon { position: relative; width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 50%; flex: none; }
+.dlink--icon .icon { width: 22px; height: 22px; }
+.dlink--icon:hover { background: #f6f1fa; text-decoration: none; }
+.dlink__n { position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+.activejob__actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.activejob__actions .button { width: 100%; min-height: 50px; font-size: 15.5px; }
+.activejob__end { align-self: center; min-height: 44px; margin-top: -4px; }
+@media (min-width: 600px) and (max-width: 899.98px) { /* tablets: the job card is wide enough for the two buttons side by side (desktop's job column is narrow) */
+.activejob__actions { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.activejob__actions > :only-child, .activejob__actions .activejob__noshow { grid-column: 1 / -1; }
+}
+
+/* Service colours (Jewel): only the pins, the legend and each card's small service icon. The words stay dark. */
+.dkind .dkind__ic { stroke: var(--kind-ink, var(--ink)); }
+/* The picked pin keeps its size and gets a gold ring */
+.page--driver .dmapview .spin.is-active svg path { stroke: var(--gold); stroke-width: 3.5; }
 

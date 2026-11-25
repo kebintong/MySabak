@@ -30,10 +30,10 @@ const SVG = {
   bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
 };
 const svgIcon = (d, cls = 'dkind__ic') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-const KIND = {
-  ride: { name: 'Ride', color: '#5630d8', ink: '#5b2596', svg: SVG.car },
-  express: { name: 'Parcel', color: '#E0782F', ink: '#8a4b0f', svg: SVG.box },
-  shop: { name: 'Food', color: '#1E7A44', ink: '#1f6b3a', svg: SVG.bag },
+const KIND = { // the "Jewel" colours: royal purple, warm amber, raspberry
+  ride: { name: 'Ride', color: '#4a1680', ink: '#4a1680', svg: SVG.car },
+  express: { name: 'Parcel', color: '#d9822b', ink: '#a85f16', svg: SVG.box },
+  shop: { name: 'Food', color: '#c2185b', ink: '#a3134c', svg: SVG.bag },
 };
 const kindStyle = (k) => `--kind:${k.color};--kind-ink:${k.ink}`;
 const kindLabel = (k) => `<span class="dkind">${svgIcon(k.svg)}${esc(k.name)}</span>`;
@@ -479,21 +479,18 @@ function renderActive() {
   const at = STEPS.indexOf(job.status);
   const c = contactOf(job);
   const waiting = job.status === 'arrived';
-  const money = job.payment === 'cash' ? `Collect ${peso(job.fare)} in cash` : `Paid by ${esc(PAY[job.payment] || job.payment)} · ${peso(job.fare)}`;
+  const money = job.payment === 'cash' ? `Collect ${peso(job.fare)} in cash` : `Paid by ${esc(PAY[job.payment] || job.payment)}`;
   const sent = (messages.get(job.id) || []).length;
   let main;
   if (job.status === 'to_pickup') {
     main = `<button type="button" class="button activejob__nav" data-nav>${icon('i-arrow', 'icon--sm icon--white')}Navigate to ${esc(job.pickup.label)}</button>
-      <button type="button" class="button button--ghost activejob__next" data-next>${esc(w.next)}</button>
-      <a class="activejob__gmaps" href="${dirUrl(job.pickup)}" target="_blank" rel="noopener">Google Maps</a>`;
+      <button type="button" class="button button--ghost activejob__next" data-next>${esc(w.next)}</button>`;
   } else if (waiting) {
-    main = `<button type="button" class="button activejob__next activejob__next--wide" data-next>${esc(w.next)}</button>
+    main = `<button type="button" class="button activejob__next" data-next>${esc(w.next)}</button>
       <button type="button" class="button button--ghost activejob__noshow" data-noshow disabled>${esc(c.name)} didn’t show up<span data-noshow-left></span></button>`;
   } else {
     main = `<button type="button" class="button activejob__nav" data-nav>${icon('i-arrow', 'icon--sm icon--white')}Navigate to ${esc(job.dropoff.label)}</button>
-      <button type="button" class="button button--ghost activejob__next activejob__hold" data-next><span class="activejob__fill" aria-hidden="true"></span><span class="activejob__label">${esc(w.next)}</span></button>
-      <a class="activejob__gmaps" href="${dirUrl(job.dropoff)}" target="_blank" rel="noopener">Google Maps</a>
-      ${job.kind !== 'ride' ? '<button type="button" class="trip__cancel" data-fail>Can’t deliver</button>' : ''}`;
+      <button type="button" class="button button--ghost activejob__next activejob__hold" data-next><span class="activejob__fill" aria-hidden="true"></span><span class="activejob__label">${esc(w.next)}</span></button>`;
   }
   box.innerHTML = `<article class="activejob dcard" style="${kindStyle(k)}">
       <div class="activejob__top">${kindLabel(k)}<b>${peso(job.fare)}</b>
@@ -509,11 +506,12 @@ function renderActive() {
         ${ava(c.name, 'driver__ava')}
         <div class="driver__main"><span class="driver__name">${esc(c.name)}${job.kind === 'ride' ? stars(job.rider.rating) : ''}</span>
           <span class="driver__meta">${c.role} · ${money}</span></div>
-        <button type="button" class="dlink" data-msg>${icon('i-chat', 'icon--sm')}${sent ? `Chat (${sent})` : 'Message'}</button>
-        <button type="button" class="dlink" data-call aria-label="Call ${esc(c.name)}">${icon('i-phone', 'icon--sm')}<span class="dlink__word">Call</span></button>
+        <button type="button" class="dlink dlink--icon" data-msg aria-label="Message ${esc(c.name)}${sent ? `, ${sent} sent` : ''}">${icon('i-chat')}${sent ? `<span class="dlink__n" aria-hidden="true">${sent}</span>` : ''}</button>
+        <button type="button" class="dlink dlink--icon" data-call aria-label="Call ${esc(c.name)}">${icon('i-phone')}</button>
       </div>
       <div class="activejob__actions">${main}</div>
-      ${job.status === 'to_pickup' ? '<button type="button" class="trip__cancel" data-cancel-job>Cancel job</button>' : ''}
+      ${job.status === 'to_pickup' ? '<button type="button" class="trip__cancel activejob__end" data-cancel-job>Cancel job</button>'
+        : job.status === 'started' && job.kind !== 'ride' ? '<button type="button" class="trip__cancel activejob__end" data-fail>Can’t deliver</button>' : ''}
     </article>`;
   tick();
 }
