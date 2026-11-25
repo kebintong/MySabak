@@ -34,7 +34,14 @@ jobs:
         run: for f in sw.js js/*.js js/pages/*.js dev/worker.js dev/build.mjs; do node --check "$f"; done
 
       - name: Tests (money rules, data layer, demo server, no keys committed)
-        run: node --test tests/*.test.mjs
+        # A failure is also posted as an annotation, so it can be read without opening the log
+        run: |
+          set -o pipefail
+          node --test --test-reporter=spec tests/*.test.mjs 2>&1 | tee "$RUNNER_TEMP/tests.txt" || {
+            msg=$(awk '/failing tests:/{f=1} f' "$RUNNER_TEMP/tests.txt" | head -80 | sed -e 's/%/%25/g' -e 's/\r//g' | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Failing tests::${msg:-see the log}"
+            exit 1
+          }
 
       - name: Website builds and Cloudflare config is valid
         run: $WRANGLER deploy --dry-run --outdir "$RUNNER_TEMP/out"
