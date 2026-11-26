@@ -605,7 +605,7 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .dstat .dstat__money { font-size: 30px; }
 .dwork { display: grid; grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); gap: 24px; align-items: start; max-width: 1180px; margin: 4px auto 0; width: 100%; }
 .dwork > .dreq { order: -1; }
-.dmapcol { position: sticky; top: calc(var(--content-top, 0px) + 12px); }
+.dmapcol { position: sticky; top: 12px; } /* sticky already counts the scroller's top padding (the top bar), so only the gap goes here */
 #jobList { display: flex; flex-direction: column; gap: 12px; }
 .activejob { max-width: none; margin: 0; }
 #jobList { align-items: stretch; } /* every card the column's full width */
@@ -761,7 +761,7 @@ a.dstat:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; bor
 .rq.is-open, .rq.is-gone.is-open { grid-column: 1 / -1; }
 }
 @media (min-width: 900px) {
-.page--driver .dhome .dmapslot { height: clamp(380px, calc(100dvh - var(--content-top, 0px) - var(--content-bottom, 0px) - 24px), 720px); }
+.page--driver .dhome .dmapslot { height: clamp(360px, calc(100dvh - var(--content-top, 0px) - var(--content-bottom, 0px) - 30px), 720px); } /* the stuck map fits between the top bar and the tab bar */
 .rqs { grid-template-columns: minmax(0, 1fr); }
 }
 

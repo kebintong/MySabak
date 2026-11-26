@@ -619,18 +619,8 @@ body:not([data-state="request"]) .map-controls {
 
 .svc__art {
   position: absolute;
-  right: -6px;
-  bottom: -2px;
-  width: 82px;
-  height: auto;
   transform-origin: 50% 100%;
   transition: transform .25s var(--spring);
-}
-
-.svc--ride .svc__art {
-  right: -42px;
-  bottom: -10px;
-  width: 222px;
 }
 
 .svc__sparkle {
@@ -840,14 +830,6 @@ body:not([data-state="request"]) .map-controls {
 
   .svc--ride {
     grid-column: auto;
-  }
-
-  .svc--ride .svc__art {
-    width: 250px;
-  }
-
-  .svc__art {
-    width: 108px;
   }
 
   .promo {
@@ -1876,24 +1858,6 @@ body.is-status-hidden .panel--trip {
   z-index: 1;
 }
 
-/* the flat art sits whole inside its card; one height for the three small cards so they weigh the same */
-.svc--ride .svc__art {
-  right: -28px;
-  bottom: 4px;
-  width: auto;
-  height: 90px;
-  max-width: none;
-}
-
-.svc__art {
-  right: 6px;
-  bottom: 6px;
-  width: auto;
-  height: 40px;
-  max-width: 80%;
-  object-fit: contain;
-  object-position: right bottom;
-}
 
 /* a soft shadow on the ground under each picture */
 .svc__ground {
@@ -2162,18 +2126,6 @@ body.is-status-hidden .panel--trip {
     height: 136px;
   }
 
-  .svc--ride .svc__art {
-    right: -36px;
-    bottom: 5px;
-    height: 116px;
-  }
-
-  .svc__art {
-    right: 6px;
-    bottom: 6px;
-    height: 50px;
-  }
-
   .promo-wrap {
     grid-column: 2 / -1;
     margin-top: 0;
@@ -2269,11 +2221,10 @@ body.is-status-hidden .panel--trip {
    Cargo (Ride screen → Cargo): the Home card, the cargo details sheet, the fare lines and the delivery code.
    Phones first: one column, big tap targets; the sheet scrolls.
    ========================================================= */
-/* Home: four service cards under Ride. Phones: two by two; tablets: one row; desktop: Ride + four */
+/* Home: four service cards under Ride. Phones and small tablets: two by two; tablets from 760px: one row; desktop: Ride + four */
 .home__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (min-width: 600px) { .home__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .home__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } } /* narrower than that, four in a row leaves no room beside the words for the art */
 @media (min-width: 900px) { .home__grid { grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); } }
-.svc--cargo .svc__art { width: 96px; right: -4px; bottom: 6px; }
 
 .cargosheet .sheet__body { gap: 16px; }
 .cargosheet .sheet__sub { margin-top: 4px; }
@@ -2337,14 +2288,19 @@ body.is-status-hidden .panel--trip {
 .driver__side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .driver__art { display: block; width: 64px; height: 48px; object-fit: contain; }
 
-/* Home service cards with the isometric art (assets/images/iso): it brings its own soft shadow, and it's squarer than
-   the old side views, so a little taller */
+/* Home service cards' art: the one place it is sized and placed (assets/images/iso). Each small card's art is about
+   two thirds of the card's height, sitting bottom right; --art-k evens out how big each shape looks (the moto is
+   thin, the bowl is wide). The Ride car is centred top to bottom with room on the right. */
 .svc .svc__ground { display: none; }
-.svc__art { right: 4px; bottom: 2px; width: auto; height: 56px; max-width: 70%; }
-.svc--cargo .svc__art { width: auto; right: 4px; bottom: 2px; }
-.svc--ride .svc__art { right: -6px; bottom: -2px; height: 108px; max-width: none; }
+.svc { --art-h: 68px; --art-r: 10px; --art-b: 8px; --art-k: 1; }
+.svc__art { right: var(--art-r); bottom: var(--art-b); width: auto; height: calc(var(--art-h) * var(--art-k)); max-width: none; object-fit: contain; object-position: right bottom; }
+.svc--moto { --art-k: 1.12; }
+.svc--parcel { --art-k: .97; }
+.svc--cargo { --art-k: 1.03; }
+.svc--food { --art-k: .9; }
+.svc--ride { --art-h: 88px; --art-r: 18px; --art-b: 8px; }
 @media (min-width: 900px) {
-.svc__art { height: 64px; }
-.svc--ride .svc__art { right: -8px; height: 132px; }
+.svc { --art-h: 80px; --art-r: 14px; --art-b: 12px; }
+.svc--ride { --art-h: 112px; --art-r: 22px; --art-b: 12px; }
 }
 
