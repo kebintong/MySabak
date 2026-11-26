@@ -1,12 +1,12 @@
 /* mysabak · shop styles. Loaded after base.css. */
 
-.shop-info__ava { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; display: block; }
+.shop-info__ava { width: 64px; height: 64px; border-radius: var(--shape-tile); corner-shape: var(--shape-curve); overflow: hidden; display: block; }
 .shop-about { display: none; margin: 3px 0 0; font-size: 14px; line-height: 1.4; color: #e2d0f4; }
 /* The facts card over the sky's bottom edge: rating, open until, distance split by thin lines, then the actions */
 .shop-card {
   position: relative; z-index: 1; margin: -52px 0 0; padding: 14px;
   display: flex; flex-direction: column; gap: 12px;
-  border-radius: 20px; background: #fff; box-shadow: var(--shadow-card);
+  border-radius: var(--shape-card); corner-shape: var(--shape-curve); background: #fff; box-shadow: var(--shadow-card);
 }
 .shop-facts { display: flex; }
 .shop-fact { flex: 1; min-width: 0; padding: 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
@@ -19,7 +19,7 @@
 .shop-fact.is-shut b { color: #9a5b0a; }
 .shop-card__actions { display: flex; gap: 10px; }
 .shop-card__btn {
-  flex: 1; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  flex: 1; min-height: 44px; padding: 0 16px; border-radius: var(--shape-button);
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: var(--tint); color: var(--brand-deep); font-size: 14.5px; font-weight: 700; text-decoration: none; white-space: nowrap;
   transition: background-color .15s var(--ease-out);
@@ -31,7 +31,7 @@
 .shop-hero .spin__label { display: none; }
 /* the header names it */
 .shop-hero__canvas { position: absolute; inset: 0; }
-.shop-hero__eta { display: block; padding: 9px 14px; border-radius: 999px; background: rgba(14, 2, 32, .55); color: #ffd15c; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.shop-hero__eta { display: block; padding: 9px 14px; border-radius: var(--shape-chip); background: rgba(14, 2, 32, .55); color: #ffd15c; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .shop-hero__eta[hidden] { display: none; }
 .is-missing .shop-main, .is-missing .shop-card, .is-missing .shop-info__ava, .is-missing .shop-hero { display: none; }
 .shop-layout { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; }
@@ -59,7 +59,7 @@
 .mcard {
   position: relative; min-height: 196px;
   display: flex; flex-direction: column; gap: 3px; padding: 12px;
-  border: 0; border-radius: 20px; background: var(--tint); color: var(--ink);
+  border: 0; border-radius: var(--shape-card); corner-shape: var(--shape-curve); background: var(--tint); color: var(--ink);
   font: inherit; text-align: left; cursor: pointer;
   transition: box-shadow .2s var(--ease-out), transform .2s var(--ease-out);
 }
@@ -70,46 +70,46 @@
 .mcard.is-sold:hover .mcard__img { transform: none; }
 /* Branch picker under the address (shops with branches) */
 .branch-pick { margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #e2d0f4; }
-.branch-pick select { height: 36px; max-width: 100%; padding: 0 32px 0 12px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px;
+.branch-pick select { height: 36px; max-width: 100%; padding: 0 32px 0 12px; border: 1px solid rgba(255, 255, 255, .3); border-radius: var(--shape-input);
   background: rgba(255, 255, 255, .14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 12px center;
   appearance: none; font: 700 13.5px var(--font-body); color: #fff; cursor: pointer; }
 .branch-pick select option { color: var(--ink); }
-.mcard__img { width: 64px; height: 64px; margin-bottom: 4px; border-radius: 50%; background: #fff; display: block; overflow: hidden; transition: transform .25s var(--spring); }
+.mcard__img { width: 64px; height: 64px; margin-bottom: 4px; border-radius: var(--shape-circle); background: #fff; display: block; overflow: hidden; transition: transform .25s var(--spring); }
 @media (hover: hover) {
 .mcard:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px #e3d1f5, 0 10px 22px rgba(41, 10, 69, .12); }
 .mcard:hover .mcard__img { transform: scale(1.08); }
 }
 
-.mcard__tag { position: absolute; left: 14px; top: 14px; padding: 2px 7px; border-radius: 6px; background: var(--hot); color: #fff; font-size: 10px; font-weight: 800; font-style: normal; }
+.mcard__tag { position: absolute; left: 14px; top: 14px; padding: 2px 7px; border-radius: var(--shape-tile); corner-shape: var(--shape-curve); background: var(--hot); color: #fff; font-size: 10px; font-weight: 800; font-style: normal; }
 .mcard__name { font-size: 15px; font-weight: 600; line-height: 1.25; }
 .mcard__note { font-size: 12px; line-height: 1.3; color: var(--sub); }
 .mcard__foot { margin-top: auto; padding-top: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 16px; font-weight: 700; color: var(--ink); }
 .bund {
   display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: center;
-  padding: 12px; border-radius: 20px; background: var(--night); color: #fff;
+  padding: 12px; border-radius: var(--shape-lg); background: var(--night); color: #fff;
 }
-.bund__img { width: 72px; height: 72px; padding: 4px; border-radius: 12px; background: rgba(255, 255, 255, .1); display: block; overflow: hidden; }
+.bund__img { width: 72px; height: 72px; padding: 4px; border-radius: var(--shape-icon); corner-shape: var(--shape-curve); background: rgba(255, 255, 255, .1); display: block; overflow: hidden; }
 .bund__foot { margin-top: 8px; display: flex; align-items: center; justify-content: space-between; font-weight: 800; }
-.bund__add { padding: 9px 16px; border: 0; border-radius: 999px; background: var(--hot); color: #fff; font: 800 13px var(--font-body); cursor: pointer; }
+.bund__add { padding: 9px 16px; border: 0; border-radius: var(--shape-chip); background: var(--hot); color: #fff; font: 800 13px var(--font-body); cursor: pointer; }
 .bund__add:hover { background: var(--hot-deep); }
 /* Buttons for ordering */
 .hot-btn {
   min-height: 52px; padding: 0 20px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border: 0; border-radius: 999px; background: var(--hot); color: #fff;
+  border: 0; border-radius: var(--shape-chip); background: var(--hot); color: #fff;
   font: 700 15px var(--font-body); font-variant-numeric: tabular-nums; text-decoration: none; cursor: pointer;
   transition: background-color .15s var(--ease-out), transform .12s var(--ease-out);
 }
 .hot-btn:hover { background: var(--hot-deep); color: #fff; }
 .hot-btn:active { transform: scale(.98); }
 .hot-btn--block { width: 100%; }
-.icon-btn { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--field); display: grid; place-items: center; cursor: pointer; }
+.icon-btn { width: 40px; height: 40px; border: 0; border-radius: var(--shape-circle); background: var(--field); display: grid; place-items: center; cursor: pointer; }
 .icon-btn:hover { background: var(--tint); }
 /* Your order: a sheet on phones, a centred dialog on desktop (the round button turned to Cart opens it, ui.js armLoop) */
 .cart-panel {
   width: 100%; max-width: 520px; max-height: 85dvh;
   margin: auto auto 0; padding: 0; border: 0;
-  border-radius: 24px 24px 0 0; background: #fff; color: var(--ink);
+  border-radius: var(--shape-sheet) var(--shape-sheet) 0 0; corner-shape: var(--shape-curve); background: #fff; color: var(--ink);
   box-shadow: var(--shadow-lg); overflow: hidden;
 }
 .cart-panel[open] { display: flex; flex-direction: column; }
@@ -138,7 +138,7 @@
 .mopen__head .mcard__img { margin: 0; }
 .mopen__title h3, .mopen__title p { margin: 0; }
 .mopen__title p { margin-top: 2px; }
-.mopen__x { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #fff; display: grid; place-items: center; cursor: pointer; }
+.mopen__x { width: 44px; height: 44px; border: 0; border-radius: var(--shape-circle); background: #fff; display: grid; place-items: center; cursor: pointer; }
 .mcard--open .ogroup { padding: 10px 0 2px; border-top: 0; }
 .mopen__note-btn { align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--brand-deep); font: 600 14px var(--font-body); cursor: pointer; }
 .mopen__note { display: flex; flex-direction: column; gap: 6px; }
@@ -155,16 +155,16 @@
 .ochips { display: flex; flex-wrap: wrap; gap: 8px; }
 .ochip {
   min-height: 40px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 6px;
-  border: 1.5px solid var(--line-brand); border-radius: 999px; background: #fff; color: var(--ink);
+  border: 1.5px solid var(--line-brand); border-radius: var(--shape-chip); background: #fff; color: var(--ink);
   font: 600 13.5px var(--font-body); cursor: pointer; transition: background-color .12s var(--ease-out), border-color .12s var(--ease-out);
 }
 .ochip:hover { border-color: var(--brand); }
 .ochip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .ochip[aria-pressed="true"] small { color: rgba(255, 255, 255, .8); }
 @media (min-width: 900px) {
-.shop-info__ava { width: 88px; height: 88px; border-radius: 22px; }
+.shop-info__ava { width: 88px; height: 88px; border-radius: var(--shape-tile); corner-shape: var(--shape-curve); }
 .shop-about { display: block; }
-.shop-hero { position: relative; top: auto; right: auto; height: 132px; border-radius: 20px; overflow: hidden; border: 2px solid rgba(255, 255, 255, .5); background: var(--map-ground); }
+.shop-hero { position: relative; top: auto; right: auto; height: 132px; border-radius: var(--shape-card); corner-shape: var(--shape-curve); overflow: hidden; border: 2px solid rgba(255, 255, 255, .5); background: var(--map-ground); }
 .shop-hero__eta { position: absolute; left: 10px; bottom: 10px; z-index: 2; padding: 5px 10px; font-size: 12px; }
 /* a small map: a small pin, without its name (the name is the page title) */
 .shop-hero .spin { width: 22px; height: 29px; }
@@ -172,7 +172,7 @@
 .shop-hero .spin__label { display: none; }
 .shop-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
 /* Stuck tabs sit under the logo; the strip covers what scrolls past above them */
-.menu-tabs { top: 84px; margin: 20px 0 16px; padding: 0 20px; border: 1px solid var(--line-brand); border-radius: 16px; flex-wrap: wrap; gap: 0 26px; }
+.menu-tabs { top: 84px; margin: 20px 0 16px; padding: 0 20px; border: 1px solid var(--line-brand); border-radius: var(--shape-modal); corner-shape: var(--shape-curve); flex-wrap: wrap; gap: 0 26px; }
 .menu-tabs.is-stuck::before { content: ""; position: absolute; inset: -85px -9px 100%; background: var(--shop-bg); z-index: -1; }
 /* The facts card: as wide as the menu, facts on the left, actions on the right */
 .shop-card { width: 100%; max-width: 1120px; margin: -56px auto 0; padding: 16px 20px; flex-direction: row; align-items: center; gap: 24px; }
@@ -183,7 +183,7 @@
 .msec__row { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; padding: 2px 0 14px; }
 .mcard { padding: 14px; }
 .msec__row--bundles { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-.cart-panel:modal { margin: auto; border-radius: 24px; animation: dialog-in .22s var(--ease-out); }
+.cart-panel:modal { margin: auto; border-radius: var(--shape-sheet); corner-shape: var(--shape-curve); animation: dialog-in .22s var(--ease-out); }
 .cart-panel.is-closing { animation: dialog-out .15s var(--ease-out) forwards; }
 .mcard--open { grid-column: span 2; scroll-margin: 150px 0 130px; }
 }

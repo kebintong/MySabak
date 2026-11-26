@@ -138,8 +138,10 @@ test('driver jobs: demo requests are tagged, can be accepted, moved along in ord
 
 test('driver requests: the server says when one is gone and why; accepting twice is safe', async () => {
   const realNow = Date.now;
-  let n = Math.floor(realNow() / api.JOB_EVERY_MS);
-  while (n % 7 !== 3) n--; // a slot another driver takes 18 s after it opens (demoFate)
+  // a slot another driver takes 18 s after it opens (demoFate), well before now: the test above accepts the newest
+  // request, and when that was this same slot (1 time in 7) it never arrived here, so this test failed now and then
+  let n = Math.floor(realNow() / api.JOB_EVERY_MS) - 20;
+  while (n % 7 !== 3) n--;
   let now = n * api.JOB_EVERY_MS + 1000;
   Date.now = () => now;
   const id = `JOB-${n.toString(36)}`;

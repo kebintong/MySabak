@@ -35,7 +35,7 @@
 .sgive__line { margin: -4px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
 .sgive .tip { display: flex; flex-direction: column; gap: 14px; }
 .sgive .tip__amounts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.sgive .tip__amount { min-width: 0; height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; }
+.sgive .tip__amount { min-width: 0; height: 52px; border-radius: var(--shape-md); font-size: 16px; font-weight: 700; }
 .sgive .tip__note { margin: 0; font-size: 12.5px; color: var(--muted); }
 
 @media (min-width: 900px) {

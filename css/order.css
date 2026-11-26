@@ -8,7 +8,7 @@
 
 /* The live map (shop-map.js). .map is full-screen elsewhere; here it's a card. The drawn map shows until it loads. */
 .omap.map {
-  position: relative; inset: auto; height: 210px; border-radius: 20px; overflow: hidden;
+  position: relative; inset: auto; height: 210px; border-radius: var(--shape-card); corner-shape: var(--shape-curve); overflow: hidden;
   background: url("/assets/images/map-bg.svg") center / cover no-repeat, var(--map-ground);
   box-shadow: 0 10px 30px rgba(41, 10, 69, .18);
 }
@@ -17,7 +17,7 @@
 /* The ticket: a receipt with punched notches at each tear line */
 .ticket {
   position: relative; display: flex; flex-direction: column; gap: 14px; padding: 20px 20px 18px;
-  background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px rgba(41, 10, 69, .14);
+  background: var(--surface); border-radius: var(--shape-card); corner-shape: var(--shape-curve); box-shadow: 0 10px 30px rgba(41, 10, 69, .14);
 }
 .ticket__shop { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.15; color: var(--ink); }
 .ticket__meta { margin: 4px 0 0; font-size: 13.5px; font-weight: 400; color: var(--sub); }
@@ -29,7 +29,7 @@
 .osteps::after { background: var(--accent); transform: scaleX(var(--done, 0)); transform-origin: left; transition: transform .6s var(--ease-out); }
 .osteps li { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .osteps i {
-  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: var(--shape-pill); display: grid; place-items: center;
   background: #fff; box-shadow: 0 0 0 2px #ece4f6; transition: background-color .3s var(--ease-out), box-shadow .3s var(--ease-out);
 }
 .osteps .icon { width: 22px; height: 22px; stroke: #b8a9c9; --icon-fill: #b8a9c9; transition: stroke .3s var(--ease-out); }
@@ -43,7 +43,7 @@
 /* The tear line: dashed, with a notch punched out of each side */
 .cut { position: relative; height: 0; margin: 4px -20px; border-top: 2px dashed #e6dcef; }
 .cut::before, .cut::after {
-  content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%;
+  content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: var(--shape-circle);
   background: #faf5f3; /* the page behind the ticket */ box-shadow: inset 0 2px 5px rgba(41, 10, 69, .12);
 }
 /* only the half inside the ticket is drawn, so the ticket's edge and shadow run on round the hole */
@@ -68,14 +68,14 @@
 .odet b { color: var(--ink); font-weight: 700; text-align: right; }
 
 .ticket__id {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: var(--shape-tile); corner-shape: var(--shape-curve);
   background: #f6f1fa; font-size: 12px; font-weight: 600; color: var(--sub);
 }
 .ticket__id code { font: 700 12px/1.2 ui-monospace, Consolas, monospace; color: var(--brand-deep); overflow-wrap: anywhere; text-align: right; }
 
 /* Tip mysabak */
 .otip {
-  height: 52px; border: 0; border-radius: 16px; background: var(--gold); color: var(--ink); cursor: pointer;
+  height: 52px; border: 0; border-radius: var(--shape-md); background: var(--gold); color: var(--ink); cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 8px; font: 800 15px/1 var(--font-body);
   transition: transform .15s var(--ease-out);
 }

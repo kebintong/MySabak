@@ -370,14 +370,17 @@ function requestCard(j, open) {
       <p class="rq__top">${kindLabel(k)}<span>${mins(km)} min away · ${km.toFixed(1)} km</span></p>
       <p class="rq__fare">${peso(j.fare)}</p>
       <ol class="rq__route"><li><span class="sr-only">Pickup: </span>${esc(j.pickup.label)}</li><li><span class="sr-only">Drop-off: </span>${esc(j.dropoff.label)}</li></ol>
-      <p class="rq__meta"><span>${j.distanceKm.toFixed(1)} km · ~${mins(j.distanceKm)} min trip</span><span>${esc(PAY[j.payment] || j.payment)}</span>${why
-        ? `<b class="rq__why" role="status">${esc(GONE_WORDS[why] || GONE_WORDS.withdrawn)}</b>`
-        : `<span class="rq__age" data-posted="${j.since}">${agoWords(j.since)}</span>`}</p>
-      ${open && !why ? `<p class="rq__who">${who}${j.note ? `<span>“${esc(j.note)}”</span>` : ''}</p>
+      <dl class="rq__facts">
+        <div><dt>Trip</dt><dd>${j.distanceKm.toFixed(1)} km · ${mins(j.distanceKm)} min</dd></div>
+        <div><dt>Payment</dt><dd>${esc(PAY[j.payment] || j.payment)}</dd></div>
+        ${why ? `<div class="rq__why" role="status"><dt>Status</dt><dd>${esc(GONE_WORDS[why] || GONE_WORDS.withdrawn)}</dd></div>`
+          : `<div><dt>Posted</dt><dd class="rq__age" data-posted="${j.since}">${agoWords(j.since)}</dd></div>`}
+      </dl>
+      ${open && !why ? `<p class="rq__who">${icon('i-user', 'icon--sm')}<span><b>${who}</b>${j.note ? `<i>“${esc(j.note)}”</i>` : ''}</span></p>
       <div class="rq__actions">
         <button type="button" class="button" data-accept${lock}${busy ? ' aria-busy="true"' : ''}>${busy ? 'Accepting…' : 'Accept'}</button>
         <button type="button" class="button button--ghost" data-skip${lock}>Skip</button>
-        <button type="button" class="rq__map" data-route${lock}>${icon('i-pin', 'icon--sm')}Route</button>
+        <button type="button" class="button button--ghost rq__map" data-route${lock}>${icon('i-pin', 'icon--sm')}Route</button>
       </div>` : ''}
     </article>`;
 }
@@ -606,7 +609,7 @@ async function summary(j) {
   let issue = null;
   const result = await sheet(`${j.kind === 'ride' ? 'Trip' : 'Delivery'} complete`,
     `<img class="dsum__mascot" src="/assets/images/mascot/14-thumbs-up.svg" alt="" width="932" height="1024">
-     <p class="dsum__fare"><b>${peso(j.fare)}</b><span>Added to today. You keep all of it.</span></p>
+     <p class="dsum__fare"><b>${peso(j.fare)}</b><span>Added to today. The ₱10 platform fee is charged separately.</span></p>
      <ol class="dsum__route" aria-label="Route">
        <li><span>From</span>${esc(j.pickup.label)}</li>
        <li><span>To</span>${esc(j.dropoff.label)}</li>
@@ -627,7 +630,7 @@ async function summary(j) {
      <div class="dsum__done"><button type="button" class="button" data-finish${cash ? ' disabled' : ''}>Done · back to requests</button>
        ${cash ? '<p class="dsum__hint" data-hint>Answer the cash question to finish.</p>' : ''}</div>`,
     (dlg, done) => {
-      dlg.classList.add('dsum');
+      dlg.classList.add('dsumx'); // its own name: .dsum is the Earnings header, whose desktop rule broke this sheet's layout
       dlg.addEventListener('click', (e) => {
         const s1 = e.target.closest('[data-star]');
         if (s1) {

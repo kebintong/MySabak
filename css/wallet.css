@@ -3,14 +3,14 @@
 .wallet__main { display: flex; flex-direction: column; gap: 28px; }
 /* Your mysabak card */
 .wcard {
-  flex: 1 1 100%; min-width: 0; overflow: hidden; padding: 20px; border-radius: 22px; min-height: 176px; color: #fff;
+  flex: 1 1 100%; min-width: 0; overflow: hidden; padding: 20px; border-radius: var(--shape-card); corner-shape: var(--shape-curve); min-height: 176px; color: #fff;
   display: flex; flex-direction: column; justify-content: space-between; gap: 16px;
   background: linear-gradient(135deg, #2a0a52, #5b1c8f 55%, #8e3fc9); box-shadow: 0 18px 40px -18px rgba(62, 18, 112, .7);
 }
-.wcard::before { content: ""; position: absolute; right: -50px; top: -50px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(closest-side, rgba(246, 196, 108, .35), transparent); pointer-events: none; }
+.wcard::before { content: ""; position: absolute; right: -50px; top: -50px; width: 200px; height: 200px; border-radius: var(--shape-circle); background: radial-gradient(closest-side, rgba(246, 196, 108, .35), transparent); pointer-events: none; }
 .wcard__top { display: flex; align-items: center; justify-content: space-between; }
 .wcard__brand { font: 800 19px var(--font-body); letter-spacing: -.02em; }
-.wcard__chip { width: 38px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #ffe29a, #e3933f); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.wcard__chip { width: 38px; height: 28px; border-radius: var(--shape-2xs); background: linear-gradient(135deg, #ffe29a, #e3933f); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
 .wcard__nums { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .wcard__nums p { margin: 0; display: flex; flex-direction: column; gap: 2px; }
 .wcard__nums span { font-size: 12.5px; color: #e2d0f4; }
@@ -26,7 +26,7 @@
 .wpay__name { font-size: 14px; font-weight: 700; color: var(--ink); }
 .wpay__hint { font-size: 12px; line-height: 1.35; color: var(--sub); }
 .wpays--soon { display: flex; flex-direction: column; gap: 8px; }
-.wpays--soon .wpay { flex-direction: row; gap: 12px; padding: 10px 12px; text-align: left; border: 1.5px dashed #d9c6f0; border-radius: 14px; }
+.wpays--soon .wpay { flex-direction: row; gap: 12px; padding: 10px 12px; text-align: left; border: 1.5px dashed #d9c6f0; border-radius: var(--shape-md); }
 .wpays--soon .wpay__icon { width: auto; height: auto; background: none; }
 .wpays--soon .wpay__icon .icon { width: 20px; height: 20px; stroke: var(--muted); }
 .wpays--soon .wpay__name { font-weight: 600; }
@@ -41,7 +41,7 @@
 .wrecent__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .wrecent__head .wsec__title { margin: 0; }
 .wrecent__filter { display: flex; gap: 6px; }
-.wfilter { height: 44px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line-brand); background: none; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
+.wfilter { height: 44px; padding: 0 13px; border-radius: var(--shape-chip); border: 1px solid var(--line-brand); background: none; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
 .wfilter:hover { border-color: var(--brand); }
 .wfilter[aria-pressed="true"] { background: var(--brand-deep); border-color: var(--brand-deep); color: #fff; }
 .wrecent__list { list-style: none; margin: 0; padding: 0; }

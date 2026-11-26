@@ -1,7 +1,7 @@
 /* mysabak service worker — caches the app shell so it opens offline.
    Bump CACHE when you change any of the files below.
    It sits at the top of the site so it can look after every page. */
-const CACHE = 'mysabak-v185';
+const CACHE = 'mysabak-v187';
 const SHELL = [
   '/',
   '/app',
@@ -37,6 +37,8 @@ const SHELL = [
   '/assets/images/iso/suv.svg',
   '/assets/images/iso/van.svg',
   '/assets/images/iso/truck.svg',
+  '/assets/images/iso/parcel.svg',
+  '/assets/images/iso/food.svg',
   '/assets/images/3d/suv.svg',
   '/assets/images/pin.svg',
   '/assets/images/3d/moto.svg',

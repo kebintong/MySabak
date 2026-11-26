@@ -3,25 +3,25 @@
 /* The switch in the sky: Ongoing (with its count) / Rides / Food */
 .tswitch {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 12px;
-  padding: 4px; border-radius: 16px; background: rgba(255, 255, 255, .16);
+  padding: 4px; border-radius: var(--shape-md); background: rgba(255, 255, 255, .16);
 }
 .tswitch button {
-  height: 44px; border: 0; border-radius: 12px; background: transparent; color: #fff; cursor: pointer;
+  height: 44px; border: 0; border-radius: var(--shape-sm); background: transparent; color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 6px; font: 700 14px/1 var(--font-body);
   transition: background-color .2s var(--ease-out), color .2s var(--ease-out), transform .15s var(--ease-out);
 }
 .tswitch button:active { transform: scale(.96); }
 .tswitch button[aria-pressed="true"] { background: var(--surface); color: var(--brand-deep); box-shadow: 0 2px 8px rgba(23, 18, 43, .18); }
 .tswitch button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.tswitch__n { min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: var(--gold); color: var(--ink); font: 800 11px/18px var(--font-body); text-align: center; }
+.tswitch__n { min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: var(--shape-xs); background: var(--gold); color: var(--ink); font: 800 11px/18px var(--font-body); text-align: center; }
 
 .tpanel { display: flex; flex-direction: column; gap: 14px; }
 .tlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 /* Rides and Food: one white card of rows */
-.tlist--rides, .tlist--food { gap: 0; padding: 4px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line-brand); }
+.tlist--rides, .tlist--food { gap: 0; padding: 4px 18px; border-radius: var(--shape-lg); background: var(--surface); border: 1px solid var(--line-brand); }
 .tlist--rides > li + li, .tlist--food > li + li { border-top: 1px solid var(--line); }
 .tlist--rides .recent__row, .tlist--food .recent__row { padding: 10px 0; }
-.tlist__empty { padding: 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line-brand); text-align: center; font-size: 14px; color: var(--sub); }
+.tlist__empty { padding: 18px; border-radius: var(--shape-lg); background: var(--surface); border: 1px solid var(--line-brand); text-align: center; font-size: 14px; color: var(--sub); }
 .tlist--rides .tlist__empty, .tlist--food .tlist__empty { border: 0; padding: 18px 0; }
 /* rows slide in, top first, when the list changes */
 .tlist > li { animation: trow-in .35s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 45ms); }
@@ -30,7 +30,7 @@
 /* Ongoing: a live card each. Its top opens it in place: a live map, the four steps, then the driver (ride) or the
    order's link (food). One open at a time. */
 .lcard {
-  border-radius: 20px; background: var(--surface); overflow: hidden;
+  border-radius: var(--shape-card); corner-shape: var(--shape-curve); background: var(--surface); overflow: hidden;
   box-shadow: 0 1px 2px rgba(41, 10, 69, .06), 0 8px 24px rgba(41, 10, 69, .08);
 }
 .lcard__head {
@@ -38,7 +38,7 @@
   color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform .15s var(--ease-out);
 }
 .lcard__head:active { transform: scale(.985); }
-.lcard__head:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; border-radius: 20px; }
+.lcard__head:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; border-radius: var(--shape-card); corner-shape: var(--shape-curve); }
 .lcard__icon { width: 32px; height: 32px; flex: none; display: grid; place-items: center; }
 .lcard__icon .icon { width: 28px; height: 28px; stroke: var(--brand-deep); }
 .lcard--ride .lcard__icon .icon { animation: ring-drive 2.4s ease-in-out infinite; }
@@ -50,7 +50,7 @@
 .lcard__text span { font-size: 13.5px; font-weight: 400; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lcard__end { display: flex; align-items: center; min-height: 24px; }
 .lcard__chev { margin-top: 4px; }
-.lcard__eta { padding: 5px 9px; border-radius: 999px; background: var(--gold); color: var(--ink); font-size: 13px; font-weight: 800; white-space: nowrap; animation: eta-in .4s var(--ease-out) .3s backwards; }
+.lcard__eta { padding: 5px 9px; border-radius: var(--shape-chip); background: var(--gold); color: var(--ink); font-size: 13px; font-weight: 800; white-space: nowrap; animation: eta-in .4s var(--ease-out) .3s backwards; }
 @keyframes eta-in { from { opacity: 0; transform: scale(.7); } }
 .lcard__price { font-size: 13px; font-weight: 700; color: var(--sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .lcard__chev { width: 16px; height: 16px; flex: none; stroke: var(--sub); transform: rotate(90deg); transition: transform .25s var(--ease-out); }
@@ -72,7 +72,7 @@
 .lcard__body { padding: 0 14px 14px; display: flex; flex-direction: column; animation: lcard-open .3s var(--ease-out); }
 @keyframes lcard-open { from { opacity: 0; transform: translateY(-6px); } }
 .lcard__map.map {
-  position: relative; inset: auto; height: 170px; border-radius: 16px; overflow: hidden;
+  position: relative; inset: auto; height: 170px; border-radius: var(--shape-card); corner-shape: var(--shape-curve); overflow: hidden;
   background: url("/assets/images/map-bg.svg") center / cover no-repeat, var(--map-ground);
 }
 .lcard__driver { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -80,7 +80,7 @@
 .lcard__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .lcard__who b { font-size: 15px; font-weight: 700; color: var(--ink); }
 .lcard__who span { font-size: 13px; font-weight: 400; color: var(--sub); }
-.lcard__act { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--tint); display: grid; place-items: center; cursor: pointer; }
+.lcard__act { width: 44px; height: 44px; flex: none; border: 0; border-radius: var(--shape-circle); background: var(--tint); display: grid; place-items: center; cursor: pointer; }
 .lcard__act .icon { width: 20px; height: 20px; stroke: var(--brand-deep); }
 .lcard__wait { margin: 14px 0 0; font-size: 14px; color: var(--sub); }
 .lcard__go { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
@@ -91,7 +91,7 @@
 .tquick[hidden] { display: none; }
 .tquick__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tquick__go {
-  height: 52px; border-radius: 16px; background: var(--tint); color: var(--brand-deep); text-decoration: none;
+  height: 52px; border-radius: var(--shape-button); background: var(--tint); color: var(--brand-deep); text-decoration: none;
   display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 700;
   transition: transform .15s var(--ease-out);
 }
@@ -113,19 +113,19 @@ a.btn-soft { text-decoration: none; } /* "View" is a link styled as the Rebook b
 .tlist--rides > li.erows, .tlist--food > li.erows { padding: 8px 0 16px; animation: none; }
 
 /* Ongoing with nothing on its way: the empty card, Go again, then Book a ride / Order food */
-.tlist--ongoing > li.erows { padding: 10px 18px 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line-brand); }
+.tlist--ongoing > li.erows { padding: 10px 18px 16px; border-radius: var(--shape-lg); background: var(--surface); border: 1px solid var(--line-brand); }
 .tagain { display: flex; flex-direction: column; gap: 8px; }
 .tagain[hidden] { display: none; }
 .tagain__title { margin: 6px 0 0; font-size: 16px; font-weight: 700; color: var(--ink); }
-.tagain__list { list-style: none; margin: 0; padding: 4px 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line-brand); }
+.tagain__list { list-style: none; margin: 0; padding: 4px 16px; border-radius: var(--shape-lg); background: var(--surface); border: 1px solid var(--line-brand); }
 .tagain__row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
 .tagain__row + .tagain__row { border-top: 1px solid var(--line); }
-.tagain__ic { width: 42px; height: 42px; flex: none; border-radius: 13px; background: #f4ecfb; display: grid; place-items: center; }
+.tagain__ic { width: 42px; height: 42px; flex: none; border-radius: var(--shape-icon); corner-shape: var(--shape-curve); background: #f4ecfb; display: grid; place-items: center; }
 .tagain__ic .icon { width: 28px; height: 28px; } /* two-tone drawings (icons.svg k-*) */
 .tagain__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .tagain__text b { font-size: 15px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tagain__text span { font-size: 13px; color: var(--sub); }
 .tagain__row .btn-soft { flex: none; }
-.tquick__go { border-radius: 999px; height: 50px; font-size: 15px; }
+.tquick__go { border-radius: var(--shape-button); height: 50px; font-size: 15px; }
 .tquick__go--main { background: var(--accent); color: #fff; }
 .tquick__go--main .icon { stroke: #fff; }

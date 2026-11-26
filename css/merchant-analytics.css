@@ -19,7 +19,7 @@
   gap: 4px;
   min-height: 40px;
   padding: 0 14px 0 8px;
-  border-radius: 999px;
+  border-radius: var(--shape-chip);
   background: rgba(255, 255, 255, .14);
   border: 1px solid rgba(255, 255, 255, .24);
   color: #fff;
@@ -82,7 +82,7 @@
   flex-direction: column;
   gap: 3px;
   padding: 16px 18px;
-  border-radius: 20px;
+  border-radius: var(--shape-lg);
   background: #fff;
   box-shadow: var(--shadow-card);
 }
@@ -177,7 +177,7 @@
 .schart__bar {
   width: 100%;
   height: var(--h);
-  border-radius: 10px;
+  border-radius: var(--shape-xs);
   background: var(--line-brand);
   transform-origin: bottom;
   animation: bar-grow .55s var(--ease-out) backwards;
@@ -197,7 +197,7 @@
   z-index: 3;
   translate: -50% 0;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--shape-sm);
   background: var(--tip-bg);
   box-shadow: var(--tip-shadow);
   display: flex;

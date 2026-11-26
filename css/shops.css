@@ -4,21 +4,21 @@
 .searchbox { position: relative; }
 .searchbox .input { padding-left: 44px; background: var(--surface); }
 .finder__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.searchbox--float .input { height: 48px; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 6px 16px -6px rgba(36, 25, 87, .35); }
-.picked__img { width: 62px; height: 62px; border-radius: 14px; overflow: hidden; display: block; }
+.searchbox--float .input { height: 48px; border: 0; border-radius: var(--shape-input); background: #fff; box-shadow: 0 6px 16px -6px rgba(36, 25, 87, .35); }
+.picked__img { width: 62px; height: 62px; border-radius: var(--shape-icon); corner-shape: var(--shape-curve); overflow: hidden; display: block; }
 .picked__body { min-width: 0; display: flex; flex-direction: column; font-size: 12px; }
-.picked__go { padding: 10px 18px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; transition: background-color .15s var(--ease-out); }
+.picked__go { padding: 10px 18px; border-radius: var(--shape-button); background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; transition: background-color .15s var(--ease-out); }
 .picked__go:hover { background: var(--accent-deep); color: #fff; }
 .srows { list-style: none; margin: 0; padding: 0; }
 .srows > li + li { border-top: 1px solid var(--line); }
 .srow {
   display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 14px; align-items: center;
-  width: 100%; padding: 10px 8px; border: 0; border-radius: 14px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  width: 100%; padding: 10px 8px; border: 0; border-radius: var(--shape-md); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
   transition: background-color .15s var(--ease-out);
 }
 .srow:hover { background: #fff; color: inherit; }
 .srow.is-picked { background: var(--tint); }
-.srow__img { width: 58px; height: 58px; border-radius: 14px; overflow: hidden; display: block; }
+.srow__img { width: 58px; height: 58px; border-radius: var(--shape-icon); corner-shape: var(--shape-curve); overflow: hidden; display: block; }
 .srow__body { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--sub); }
 .srow__name { font-size: 16px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .srow__km { align-self: start; padding-top: 2px; font-size: 13.5px; font-weight: 600; color: var(--sub); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -37,7 +37,7 @@
 .finder__searchrow .searchbox { flex: 1; min-width: 0; }
 .browse-btn {
   flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  width: 48px; height: 48px; padding: 0; border: 0; border-radius: 14px; background: #fff;
+  width: 48px; height: 48px; padding: 0; border: 0; border-radius: var(--shape-button); background: #fff;
   box-shadow: 0 6px 16px -6px rgba(36, 25, 87, .35); color: var(--brand-deep); font: 700 14px var(--font-body); cursor: pointer;
 }
 .browse-btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -48,13 +48,13 @@
 .browse__title { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: #fff; }
 .browse__map {
   flex: none; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px;
-  border: 1px solid rgba(255, 255, 255, .22); border-radius: 19px; background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .22); border-radius: var(--shape-lg); background: rgba(255, 255, 255, .14);
   color: #fff; font: 600 14px var(--font-body); cursor: pointer;
 }
 .browse__map:hover { background: rgba(255, 255, 255, .26); }
 .browse__search {
   height: 50px; padding: 0 18px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;
-  border-radius: 25px; background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35);
+  border-radius: var(--shape-input); background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35);
   transition: box-shadow .2s var(--ease-out);
 }
 .browse__search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .45), 0 8px 20px rgba(20, 5, 36, .35); }
@@ -62,7 +62,7 @@
 .btile {
   position: relative; grid-column: span 2; height: 96px; padding: 10px 12px; overflow: hidden;
   display: flex; flex-direction: column; align-items: flex-start; text-align: left;
-  border: 1px solid #f6dcbf; border-radius: 18px; background: linear-gradient(160deg, #fff4e6, #fde6cc);
+  border: 1px solid #f6dcbf; border-radius: var(--shape-card); corner-shape: var(--shape-curve); background: linear-gradient(160deg, #fff4e6, #fde6cc);
   font-family: var(--font-body); color: var(--navy); cursor: pointer;
   transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out);
 }
@@ -96,7 +96,7 @@
 
 .browse-btn:active { transform: scale(.94); }
 @media (min-width: 900px) {
-.page--food .browse-btn { width: auto; height: 50px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 25px; background: rgba(255, 255, 255, .14); box-shadow: none; color: #fff; }
+.page--food .browse-btn { width: auto; height: 50px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, .22); border-radius: var(--shape-button); background: rgba(255, 255, 255, .14); box-shadow: none; color: #fff; }
 .page--food .browse-btn:hover { background: rgba(255, 255, 255, .26); }
 .page--food .browse-btn .icon { stroke: #fff; }
 .browse-btn__label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
@@ -105,7 +105,7 @@
 .browse__title { font-size: 34px; }
 .browse__search { max-width: 640px; height: 52px; font-size: 16px; }
 .browse__tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
-.btile, .btile:nth-child(-n+2) { grid-column: span 1; height: 150px; padding: 14px 16px; border-radius: 22px; }
+.btile, .btile:nth-child(-n+2) { grid-column: span 1; height: 150px; padding: 14px 16px; border-radius: var(--shape-card); corner-shape: var(--shape-curve); }
 .btile__name, .btile:nth-child(-n+2) .btile__name { font-size: 18px; }
 .btile__count { font-size: 13px; }
 .btile__art { right: 14px; bottom: 12px; width: 56px; height: 56px; stroke-width: 1.6; }
@@ -120,14 +120,14 @@
 .page--food .finder { background: #faf5f3; overflow: visible; }
 /* the preview card sits beside the panel */
 .page--food .finder__top {
-    padding: 20px 18px 16px; border: 0; border-radius: 24px 24px 0 0;
+    padding: 20px 18px 16px; border: 0; border-radius: var(--shape-lg) var(--shape-lg) 0 0; corner-shape: var(--shape-curve);
     background:
       radial-gradient(60% 90% at 85% 0%, rgba(190, 120, 255, .35), transparent 70%),
       linear-gradient(165deg, #1e0638, #4a1680 55%, #7b3fbf);
   }
 .page--food .finder__title { color: #fff; }
-.page--food .searchbox--float .input { height: 50px; border: 0; border-radius: 25px; background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35); }
-.page--food .finder__sheet { position: relative; border-radius: 0 0 24px 24px; }
+.page--food .searchbox--float .input { height: 50px; border: 0; border-radius: var(--shape-input); background: #fff; box-shadow: 0 2px 6px rgba(20, 5, 36, .35); }
+.page--food .finder__sheet { position: relative; border-radius: 0 0 var(--shape-lg) var(--shape-lg); corner-shape: var(--shape-curve); }
 /* The category chips arrive from the script a moment after the page draws: keep their two rows' space, so the
    list below doesn't jump down when they appear */
 .page--food .fchips:empty { min-height: calc(44px * 2 + 10px); } /* two rows of 44px chips and the gap */

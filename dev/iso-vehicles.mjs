@@ -1,7 +1,7 @@
 // mysabak isometric vehicles: bodies built from cross-sections ("stations") along the vehicle, joined into a solid
 // shell, then lit per surface by the direction it faces. Wheels are real cylinders: tyre tread, sidewall and a recessed
 // rim. Everything is projected to flat SVG paths (no 3D models, no images).
-// Run: node dev/iso-vehicles.mjs   → assets/images/iso/{moto,car,suv,van,truck,fleet}.svg
+// Run: node dev/iso-vehicles.mjs   → assets/images/iso/{moto,moto-ride,car,suv,van,truck,parcel,food,fleet}.svg
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 /* ---------- Camera and light (shared by every vehicle) ---------- */
@@ -470,10 +470,81 @@ function fleet(made) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}"><defs>${defs}</defs>${body}</svg>`;
 }
 
+
+/* ---------- Service art: a parcel and a bowl of noodles, in the same light and camera ---------- */
+// a side outline [radius, z] spun round a vertical axis (bowls, cups): rings joined band by band, each lit by its normal
+function lathe(g, profile, mat, { cx = 0, cy = 0, n = 44, bias = 0 } = {}) {
+  const save = g.center; g.center = [cx, cy, profile.reduce((s, p) => s + p[1], 0) / profile.length];
+  const rings = profile.map(([r, z]) => Array.from({ length: n }, (_, i) => { const t = (i / n) * Math.PI * 2; return [cx + r * Math.cos(t), cy + r * Math.sin(t), z]; }));
+  for (let i = 0; i < rings.length - 1; i++) {
+    for (let j = 0; j < n; j++) {
+      const k = (j + 1) % n;
+      g.add([rings[i][j], rings[i][k], rings[i + 1][k], rings[i + 1][j]], typeof mat === 'function' ? mat(i) : mat, { bias });
+    }
+  }
+  g.center = save;
+}
+const disc = (cx, cy, z, r, n = 44) => Array.from({ length: n }, (_, i) => { const t = (i / n) * Math.PI * 2; return [cx + r * Math.cos(t), cy + r * Math.sin(t), z]; });
+
+function parcel() {
+  const g = new Drawing([28, 28, 24], 'parcel');
+  ground(g, 0, 56, 0, 56);
+  const S = 56; const H = 46;
+  box(g, [0, 0, 0], [S, S, H], 'paint');
+  // gold tape: one band over the top along x, one across it, running down the visible sides
+  const tw = 6;
+  g.add([[0, S / 2 - tw / 2, H + 0.1], [S, S / 2 - tw / 2, H + 0.1], [S, S / 2 + tw / 2, H + 0.1], [0, S / 2 + tw / 2, H + 0.1]], 'gold', { bias: 300, cull: false });
+  g.add([[S / 2 - tw / 2, 0, H + 0.12], [S / 2 + tw / 2, 0, H + 0.12], [S / 2 + tw / 2, S, H + 0.12], [S / 2 - tw / 2, S, H + 0.12]], lit('gold', [0, 0, 1]), { bias: 301, cull: false });
+  onSide(g, S + 0.1, [[S / 2 - tw / 2, 0], [S / 2 + tw / 2, 0], [S / 2 + tw / 2, H], [S / 2 - tw / 2, H]], lit('gold', [0, 1, 0]), 302);
+  onFront(g, S + 0.1, 0, [[S / 2 - tw / 2, 0], [S / 2 + tw / 2, 0], [S / 2 + tw / 2, H], [S / 2 - tw / 2, H]].map(([y, z]) => [y, z]), lit('gold', [1, 0, 0]), 302);
+  // a shipping label on the near side: white, with three grey lines
+  onSide(g, S + 0.12, [[6, 10], [22, 10], [22, 24], [6, 24]], '#f6f2fa', 310);
+  for (const z of [13, 16.5, 20]) onSide(g, S + 0.14, [[8.5, z], [19.5 - (z === 20 ? 5 : 0), z], [19.5 - (z === 20 ? 5 : 0), z + 1.3], [8.5, z + 1.3]], '#bdb0d0', 311);
+  return g;
+}
+
+function food() {
+  const g = new Drawing([0, 0, 16], 'food');
+  ground(g, -30, 30, -30, 30);
+  // the bowl: purple outside, a gold rim, the soup inside
+  lathe(g, [[12, 0], [15, 1.5], [24, 7], [30, 14], [33, 21], [34, 25]], 'paint');
+  g.add(disc(0, 0, 25.1, 34), lit('gold', [0, 0, 1]), { bias: 200, cull: false });   // the rim
+  g.add(disc(0, 0, 25.2, 31), '#e7a54a', { bias: 201, cull: false });                 // the broth
+  // noodles: pale curls across the broth
+  const curl = (y0, x0, x1, amp, ph) => {
+    const top = []; const bot = [];
+    for (let i = 0; i <= 18; i++) { const t = i / 18; const x = x0 + (x1 - x0) * t; const y = y0 + amp * Math.sin(t * Math.PI * 3 + ph); top.push([x, y - 1.1, 25.4]); bot.push([x, y + 1.1, 25.4]); }
+    g.add([...top, ...bot.reverse()], '#fbe7b5', { bias: 210, cull: false });
+  };
+  [[-14, -22, 18, 2.5, 0], [-7, -26, 22, 3, 1.2], [0, -27, 20, 2.6, 2.1], [7, -24, 22, 3, 0.6], [14, -20, 16, 2.2, 1.7]].forEach((c) => curl(...c));
+  // a halved egg and some spring onion
+  g.add(disc(10, -12, 25.7, 7.5, 28), '#fffaf0', { bias: 220, cull: false });
+  g.add(disc(10, -12, 25.8, 3.8, 24), '#f5b52e', { bias: 221, cull: false });
+  for (const [x, y] of [[-12, 8], [-8, 13], [-15, 14], [-4, 10], [-10, 18]]) g.add(disc(x, y, 25.75, 1.9, 10), '#5aa05a', { bias: 222, cull: false });
+  // chopsticks resting across the rim
+  const stick = (y, lift) => {
+    const a = [-34, y - 1, 26 + lift]; const b = [44, y + 1.5, 31 + lift];
+    const w = 1.3;
+    g.add([[a[0], a[1] - w, a[2]], [b[0], b[1] - w, b[2]], [b[0], b[1] + w, b[2]], [a[0], a[1] + w, a[2]]], '#c98a4a', { bias: 400, cull: false });
+    g.add([[a[0], a[1] + w, a[2]], [b[0], b[1] + w, b[2]], [b[0], b[1] + w, b[2] - 1.6], [a[0], a[1] + w, a[2] - 1.6]], '#a46a34', { bias: 401, cull: false });
+  };
+  stick(-6, 0); stick(-1, 0.8);
+  // steam: three soft wisps
+  for (const [x, y, h] of [[-8, 4, 26], [2, -2, 32], [12, 6, 22]]) {
+    const pts = [];
+    for (let i = 0; i <= 14; i++) { const t = i / 14; pts.push([x + 3 * Math.sin(t * Math.PI * 2), y, 30 + h * t]); }
+    const back = pts.map(([px, py, pz]) => [px + 2.2, py, pz]).reverse();
+    g.add([...pts, ...back], 'rgba(214, 196, 240, 0.75)', { bias: 600, cull: false });
+  }
+  return g;
+}
+
 const out = new URL('../assets/images/iso/', import.meta.url);
 mkdirSync(out, { recursive: true });
 const made = { moto: moto(), car: sedan(), suv: suv(), van: van(), truck: truck() };
 writeFileSync(new URL('moto-ride.svg', out), moto({ delivery: false }).svg()); // Ride's Motor: a passenger seat, no box
+writeFileSync(new URL('parcel.svg', out), parcel().svg());
+writeFileSync(new URL('food.svg', out), food().svg());
 for (const [name, d] of Object.entries(made)) writeFileSync(new URL(`${name}.svg`, out), d.svg());
 writeFileSync(new URL('fleet.svg', out), fleet(made));
 console.log('written: iso/', Object.keys(made).join(', '), '+ fleet');
